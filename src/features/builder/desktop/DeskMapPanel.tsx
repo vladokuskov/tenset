@@ -8,7 +8,6 @@ import { CoverageCard } from '../CoverageCard'
 import { groupName } from '../labels'
 import { useMediaQuery } from '../useMediaQuery'
 import { trainedGroups, type Focus, type LitEntry } from './coupling'
-import { useRegionHover } from './useRegionHover'
 
 export type DeskMapPanelProps = {
   view: WeekView
@@ -36,7 +35,6 @@ function Status({ view, focus, lit }: Pick<DeskMapPanelProps, 'view' | 'focus' |
 /** Week map with two-way coupling: a hovered or focused muscle lights the board entries that train it. */
 export function DeskMapPanel({ view, focus, lit, onFocusGroup, title = true }: DeskMapPanelProps) {
   const navigate = useNavigate()
-  const hover = useRegionHover(onFocusGroup)
   const { week } = view
   const highlight = focus ? (focus.kind === 'entry' ? focus.groups : [focus.group]) : undefined
   const trained = trainedGroups(week.weekly)
@@ -51,7 +49,7 @@ export function DeskMapPanel({ view, focus, lit, onFocusGroup, title = true }: D
             <Status view={view} focus={focus} lit={lit} />
           </p>
         </div>
-        <div {...hover} data-desk-map={highlight?.join(' ') ?? ''}>
+        <div data-desk-map={highlight?.join(' ') ?? ''}>
           <BodyMap
             className="mx-auto mt-3 max-w-[22rem]"
             view="both"
@@ -59,6 +57,7 @@ export function DeskMapPanel({ view, focus, lit, onFocusGroup, title = true }: D
             scale="week"
             highlight={highlight}
             onSelectGroup={(group) => void navigate({ to: '/body', search: { sheet: 'muscle', group } })}
+            onHoverGroup={onFocusGroup}
             label="Weekly volume by muscle"
           />
         </div>

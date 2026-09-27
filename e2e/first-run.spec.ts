@@ -16,8 +16,9 @@ test('first run: template to a filled, colored Plan', async ({ page }) => {
     await expect(coverage).toContainText('groups trained')
     const week = page.getByRole('list', { name: 'Week' })
     await expect(week.getByRole('listitem')).toHaveCount(7)
-    await expect(week.getByRole('link', { name: /^Mon Upper A 7 exercises/ })).toBeVisible()
-    await expect(week.getByRole('link', { name: /^Wed Rest/ })).toBeVisible()
+    // The current weekday's row also reads "Today".
+    await expect(week.getByRole('link', { name: /^Mon (Today )?Upper A 7 exercises/ })).toBeVisible()
+    await expect(week.getByRole('link', { name: /^Wed (Today )?Rest/ })).toBeVisible()
     expect(await volumePixels(coverage.getByRole('img', { name: 'Week coverage, front and back' }))).toBeGreaterThan(500)
   }
 

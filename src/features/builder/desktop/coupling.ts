@@ -26,23 +26,3 @@ export function trainedGroups(weekly: Readonly<Record<string, number>>): string[
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([g]) => g)
 }
-
-const quote = (s: string) => s.replace(/["\\]/g, '\\$&')
-
-// Board cards link to ?sheet=entry&entry=<id>; the id is the only stable hook the week board exposes.
-const CARD = 'a[href*="sheet=entry"]'
-
-/** Scoped rules that ring lit board cards (primary solid, secondary light) and fade the others. */
-export function litCss(scope: string, lit: readonly LitEntry[]): string {
-  const rules = [`${scope} ${CARD}{opacity:.4;transition:opacity .15s,box-shadow .15s}`]
-  for (const role of ['primary', 'secondary'] as const) {
-    // Match the whole entry param, so "e1" does not also light "e12".
-    const ids = lit
-      .filter((e) => e.role === role)
-      .flatMap((e) => [`${scope} ${CARD}[href$="entry=${quote(e.id)}"]`, `${scope} ${CARD}[href*="entry=${quote(e.id)}&"]`])
-    if (!ids.length) continue
-    const ring = role === 'primary' ? 'var(--color-accent)' : 'color-mix(in oklab,var(--color-accent) 45%,transparent)'
-    rules.push(`${ids.join(',')}{opacity:1;box-shadow:0 0 0 2px ${ring}}`)
-  }
-  return rules.join('\n')
-}

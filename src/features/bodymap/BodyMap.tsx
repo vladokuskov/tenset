@@ -1,5 +1,5 @@
 import { ZoomIn, ZoomOut } from 'lucide-react'
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import { hitTest, pickGroup, viewBoxToRaster } from '../../domain/idRaster'
 import type { MapScale } from '../../app/volumeScale'
 import { cx } from '../../ui/cx'
@@ -36,6 +36,8 @@ export type BodyMapProps = {
   tint?: BodyTint
   /** Tap on the map. Pointer only: the coverage list is the accessible equivalent. */
   onSelectGroup?: (group: string) => void
+  /** Mouse or pen over a muscle group, null when it leaves the muscles. Touch never hovers. */
+  onHoverGroup?: (group: string | null) => void
   /** Shows a zoom button that renders one view at 2x in a scroll box. */
   zoomable?: boolean
   /** Accessible name for the figure. */
@@ -46,6 +48,8 @@ export type BodyMapProps = {
 const GAP = 12
 // figcaption height (mt-1.5 + one xs line) so zooming keeps the panel height.
 const CAPTION_PX = 22
+// Tighter than a tap: hover follows the pointer and only names a group it is clearly over.
+const HOVER_RADIUS_PX = 3
 
 // Screen x to the subject's side: the front view shows the subject's right on the viewer's left.
 const sideAt = (view: AnatomyView, x: number): 'l' | 'r' => (x < MAP_WIDTH / 2) === (view === 'front') ? 'r' : 'l'
@@ -58,6 +62,7 @@ type FigureProps = {
   outline?: { groups: readonly string[]; side: 'l' | 'r' }
   caption?: boolean
   onTap?: (view: AnatomyView, e: MouseEvent<SVGSVGElement>) => void
+  onHover?: (view: AnatomyView, e: PointerEvent<SVGSVGElement> | null) => void
 }
 
 function Outline({ regions, width }: { regions: AnatomyRegion[]; width: number }) {
@@ -76,7 +81,7 @@ function Outline({ regions, width }: { regions: AnatomyRegion[]; width: number }
   ))
 }
 
-function Figure({ view, width, interactive, highlight, outline, caption, onTap }: FigureProps) {
+function Figure({ view, width, interactive, highlight, outline, caption, onTap, onHover }: FigureProps) {
   const doc = useAnatomy(view, 'full')
   const regions = doc?.regions ?? []
   return (
@@ -90,6 +95,8 @@ function Figure({ view, width, interactive, highlight, outline, caption, onTap }
             focusable="false"
             data-bodymap=""
             onClick={interactive && onTap ? (e) => onTap(view, e) : undefined}
+            onPointerMove={onHover ? (e) => onHover(view, e) : undefined}
+            onPointerLeave={onHover ? () => onHover(view, null) : undefined}
           >
             {doc.silhouette.map((p, i) => (
               <path key={i} d={p.d} fillRule={p.evenodd ? 'evenodd' : undefined} fill="var(--color-map-skin)" />
@@ -132,6 +139,7 @@ export function BodyMap({
   highlight,
   tint,
   onSelectGroup,
+  onHoverGroup,
   zoomable,
   label = 'Body map',
   className,
@@ -144,8 +152,10 @@ export function BodyMap({
   const interactive = Boolean(onSelectGroup)
   const views: AnatomyView[] = zoomed ? [zoomView] : view === 'both' ? ['front', 'back'] : [view]
 
-  const frontRaster = useIdRaster('front', interactive && views.includes('front'))
-  const backRaster = useIdRaster('back', interactive && views.includes('back'))
+  const sampled = interactive || Boolean(onHoverGroup)
+  const frontRaster = useIdRaster('front', sampled && views.includes('front'))
+  const backRaster = useIdRaster('back', sampled && views.includes('back'))
+  const hovered = useRef<string | null>(null)
   const zoomDoc = useAnatomy(zoomView, 'full')
 
   const vars = useMemo(() => (tint ? tintVars(tint) : valueVars(values, shade, scale)), [tint, values, shade, scale])
@@ -203,6 +213,23 @@ export function BodyMap({
     })
   }
 
+  const onHover = (v: AnatomyView, e: PointerEvent<SVGSVGElement> | null) => {
+    if (e?.pointerType === 'touch') return
+    let group: string | null = null
+    const raster = v === 'front' ? frontRaster : backRaster
+    if (e && raster) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * MAP_WIDTH
+      const y = ((e.clientY - rect.top) / rect.height) * MAP_HEIGHT
+      const [cx, cy] = viewBoxToRaster(raster, x, y)
+      const top = hitTest(raster, cx, cy, (HOVER_RADIUS_PX * raster.height) / rect.height)[0]
+      group = top && top.share >= 0.5 ? top.group : null
+    }
+    if (group === hovered.current) return
+    hovered.current = group
+    onHoverGroup?.(group)
+  }
+
   const figureWidth = `calc((100cqw - ${GAP}px) / 2)`
   const figures = views.map((v) => (
     <Figure
@@ -214,6 +241,7 @@ export function BodyMap({
       outline={chooser && chooser.view === v ? { groups: chooser.groups, side: chooser.side } : undefined}
       caption={!zoomed}
       onTap={onTap}
+      onHover={onHoverGroup ? onHover : undefined}
     />
   ))
 

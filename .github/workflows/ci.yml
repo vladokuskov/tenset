@@ -39,20 +39,16 @@ jobs:
       - run: pnpm test
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
 
-      # Third-party cue corpus (never committed). The script refetches wger when its copy is over 30 days old.
-      - id: month
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+      # Third-party cue corpus (never committed): two files pinned by commit and sha256 in cues.ts.
       - id: corpus
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         uses: actions/cache/restore@v4
         with:
           path: pipeline/.cache/compliance
-          key: compliance-corpus-${{ steps.month.outputs.month }}-${{ hashFiles('pipeline/compliance/cues.ts') }}
-          restore-keys: compliance-corpus-
+          key: compliance-corpus-${{ hashFiles('pipeline/compliance/cues.ts') }}
       - run: pnpm test:cues
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-      - if: always() && steps.corpus.outputs.cache-hit != 'true' && hashFiles('pipeline/.cache/compliance/wger-en.json') != ''
+      - if: always() && steps.corpus.outputs.cache-hit != 'true' && hashFiles('pipeline/.cache/compliance/wger-translations-*.json') != ''
         uses: actions/cache/save@v4
         with:
           path: pipeline/.cache/compliance

@@ -1,6 +1,6 @@
 import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit/react'
 import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
-import { LIST_PREFIX } from './useSortable'
+import { ITEM, LIST_PREFIX } from './useSortable'
 
 // Thin adapter over @dnd-kit/react (pre-1.0, pinned). Screens only see lists of ids and moves.
 
@@ -95,14 +95,24 @@ function reorderDraft(lists: SortLists, sourceId: string, target: TargetLike, po
   return next
 }
 
+/** A drag of another draggable type sharing the provider, such as a catalog row. */
+export type OtherDrag = { type: string; data: unknown }
+
 export type SortableListsProps = {
   lists: SortLists
   onMove: (move: SortMove) => void
   /** Renders with the in-flight order while dragging. */
   children: (lists: SortLists) => ReactNode
+  onOtherDragStart?: (drag: OtherDrag) => void
+  /** `list` is the list it was dropped on, or null when cancelled or dropped elsewhere. */
+  onOtherDragEnd?: (drag: OtherDrag, list: string | null) => void
 }
 
-export function SortableLists({ lists, onMove, children }: SortableListsProps) {
+type Source = { type?: unknown; data?: unknown } | null | undefined
+const otherDrag = (source: Source): OtherDrag | null =>
+  source && source.type !== ITEM ? { type: String(source.type), data: source.data } : null
+
+export function SortableLists({ lists, onMove, children, onOtherDragStart, onOtherDragEnd }: SortableListsProps) {
   const [draft, setDraft] = useState<SortLists | null>(null)
   const draftRef = useRef<SortLists | null>(null)
   const put = (next: SortLists | null) => {
@@ -114,8 +124,13 @@ export function SortableLists({ lists, onMove, children }: SortableListsProps) {
     <DragDropProvider
       sensors={sensors}
       plugins={plugins}
-      onDragStart={() => put(lists)}
+      onDragStart={(event) => {
+        const other = otherDrag(event.operation.source)
+        if (other) onOtherDragStart?.(other)
+        else put(lists)
+      }}
       onDragOver={(event, manager) => {
+        if (otherDrag(event.operation.source)) return
         const base = draftRef.current ?? lists
         const sourceId = event.operation.source?.id
         const next =
@@ -127,6 +142,13 @@ export function SortableLists({ lists, onMove, children }: SortableListsProps) {
         else put(next)
       }}
       onDragEnd={(event) => {
+        const other = otherDrag(event.operation.source)
+        if (other) {
+          const target = event.operation.target?.id
+          const list = !event.canceled && typeof target === 'string' && target.startsWith(LIST_PREFIX) ? target.slice(LIST_PREFIX.length) : null
+          onOtherDragEnd?.(other, list)
+          return
+        }
         const final = draftRef.current
         put(null)
         const id = event.operation.source?.id

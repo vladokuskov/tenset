@@ -1,5 +1,6 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { ChevronDown, Ellipsis } from 'lucide-react'
+import { useEffect } from 'react'
 import { NOT_MEDICAL_ADVICE } from '../../app/brand'
 import { dayFromSlug, daySlug, todayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
@@ -13,7 +14,7 @@ import { CoverageCard } from './CoverageCard'
 import { NoProgram } from './NoProgram'
 import { PlanMenu } from './PlanMenu'
 import { BOARD_QUERY, DesktopPlan } from './desktop/DesktopPlan'
-import { useMediaQuery } from './useMediaQuery'
+import { DESKTOP_QUERY, useMediaQuery } from './useMediaQuery'
 import { WeekList } from './WeekList'
 
 const route = getRouteApi('/')
@@ -22,11 +23,19 @@ export function PlanScreen() {
   const view = useWeek()
   const search = route.useSearch()
   const desktop = useMediaQuery(BOARD_QUERY)
+  const wide = useMediaQuery(DESKTOP_QUERY)
   const menu = useSheet('menu')
   const programs = useSheet('programs')
   const share = useSheet('share')
   const transfer = useSheet('export')
   const add = useSheet('add', ['day', 'tab', 'group'])
+  const { open: mapOpen, close: closeMap } = useSheet('map')
+
+  // The week map sheet (DesktopPlan) only exists at 1024-1279. Drop it outside that range so back never lands on a
+  // hidden sheet and resizing into the range again does not reopen it.
+  useEffect(() => {
+    if (mapOpen && (!desktop || wide)) closeMap()
+  }, [mapOpen, desktop, wide, closeMap])
 
   const firstTraining = view?.order.find((d) => view.days[d].kind === 'train') ?? todayIndex()
   const addDay = search.day ? dayFromSlug(search.day) : firstTraining

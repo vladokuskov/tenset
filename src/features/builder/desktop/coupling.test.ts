@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ResolveContext } from '../../../domain/resolve'
 import { BENCH, CATALOG, CURL, SQUAT, programOf } from '../../../domain/test-fixtures'
-import { entriesTraining, litCss, trainedGroups } from './coupling'
+import { entriesTraining, trainedGroups } from './coupling'
 
 const ctx = (patch: Partial<ResolveContext> = {}): ResolveContext => ({
   catalog: CATALOG,
@@ -40,27 +40,5 @@ describe('entriesTraining', () => {
 describe('trainedGroups', () => {
   it('keeps groups with sets, most first, ties by id', () => {
     expect(trainedGroups({ chest: 3, lats: 0, biceps: 6, abs: 3 })).toEqual(['biceps', 'abs', 'chest'])
-  })
-})
-
-describe('litCss', () => {
-  it('fades every card and rings lit ones by role', () => {
-    const css = litCss('[x]', [
-      { id: 'a1', day: 0, role: 'primary' },
-      { id: 'b2', day: 1, role: 'secondary' },
-    ])
-    expect(css).toContain('[x] a[href*="sheet=entry"]{opacity:.4')
-    expect(css).toContain('[x] a[href*="sheet=entry"][href*="entry=a1&"]{opacity:1;box-shadow:0 0 0 2px var(--color-accent)}')
-    expect(css).toMatch(/\[href\*="entry=b2&"\]\{opacity:1;box-shadow:0 0 0 2px color-mix/)
-  })
-
-  it('matches whole entry ids, so e1 does not light e12', () => {
-    const css = litCss('[x]', [{ id: 'e1', day: 0, role: 'primary' }])
-    expect(css).toContain('[href$="entry=e1"]')
-    expect(css).not.toMatch(/\[href\*="e1"\]/)
-  })
-
-  it('only fades when nothing trains the group', () => {
-    expect(litCss('[x]', []).split('\n')).toHaveLength(1)
   })
 })

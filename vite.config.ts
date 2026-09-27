@@ -52,7 +52,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,bin,glb,txt,woff2}'],
-        globIgnores: ['**/media/loops/**', '**/models/**'],
+        // The notices file (~250 KB) is only opened from /credits, so it stays network-only.
+        globIgnores: ['**/media/loops/**', '**/models/**', '**/THIRD_PARTY_NOTICES.txt'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         manifestTransforms: [precacheBudget],
       },
