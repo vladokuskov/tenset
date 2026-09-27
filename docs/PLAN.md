@@ -145,6 +145,14 @@ Rules: `groups` alone drives bands. `heads` is optional emphasis inside a listed
   - Cable pull direction and load enter the balance solve (lifter leans against the cable).
   - 711 dumbbell curl stays palms-forward (no supination); the supinating variant is 711 only if its cues change.
   - QA reads exercise records directly; data/motion-templates/variants.json is retired.
+- **Animation decisions (2026-09-27, after the first 24 loops)**:
+  - Production shows the live figure / loop only when media.status is "loop" (owner-approved); dev shows everything.
+  - Fix body proportions: the upper arm is ~20% short for a 1.84 m figure; lengthen it toward anthropometric ratios (upper arm ~0.186H) with MPFB2 CC0 targets, then re-register the atlas, re-extract the skeleton, re-run QA and re-bake. The front squat stays in v1.
+  - Squats use a rear three-quarter camera so glutes and quads both read. Frames keep a >= 6% margin and never clip equipment bases.
+  - Loop seam: encode first/last frames at higher quality (accept ~22% larger loops).
+  - Bar curls: gripWidth 1.1 (701 EZ, 713 cable), 1.15 (710 barbell). Goblet squat (405): cupped two-hand grip, dumbbell vertical against the chest.
+  - Accepted: 60 mm thigh-belly and 20 mm armpit soft-tissue tolerances, 112 deg leg press hip cap, 90 deg forearm supination limit, cable loads 15 kg (curls) / 6 kg (raises), wrist deviation -22..+12 deg, leg press camera behind the right shoulder, 32 mm post on 214.
+  - The penetration gate also covers drawn machine frames, rails, stacks and plates.
 
 ### Media pipeline (build-time, all in-house)
 1. **Body**: CC0 assets only from MPFB2 at a pinned commit (base.obj, macrodetail targets, `default_no_toes` rig + weights; MPFB2's license explicitly covers rigs, the MakeHuman 1.x repo's doesn't). Route: Blender 5.2 headless + MPFB2 v2.0.17 (`create_human` with athletic macros, `add_builtin_rig("default_no_toes")`, glTF export). Timebox 0.5 day for 5.2 compatibility; fallback is a Node loader written from the file formats (never porting MPFB2/MakeHuman code, which is GPL/AGPL). Post-process: smooth the face, merge face bones into `head`, strip helper geometry, keep clavicles and all spine bones, keep split limb bones as twist bones, gltf-transform meshopt. Target <= 600 KB.
