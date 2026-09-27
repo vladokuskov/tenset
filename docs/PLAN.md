@@ -135,7 +135,16 @@ Rules: `groups` alone drives bands. `heads` is optional emphasis inside a listed
   - `mechanic: compound` means "loaded like a main lift" (hip thrust, glute bridge, back extension stay compound).
   - Head emphasis 0 is allowed for heads of a listed group that do no work (e.g. wrist extensors on a wrist curl).
   - Reclined leg extension (412, hip ~40 deg) is the rectus femoris primary exercise (Larsen 2025).
-  - Media params are not normalized yet; lane C freezes one param schema per template before motion work, then all records are normalized in one pass.
+  - Media params were normalized to strict per-template schemas on 2026-09-27 (src/motion/templates/schemas.ts).
+- **Motion decisions (2026-09-27, after the biomechanics review)**:
+  - A body-vs-body and body-vs-prop penetration gate (segment capsules measured from the mesh) is required in pipeline/motion QA before any new template family.
+  - Front rack: wrist extension limit raised to 90 deg only for hold front_rack (real lifters exceed 70).
+  - Add an elbow carrying angle (~12 deg) to the rig instead of abducting the shoulder as a stand-in.
+  - Add scapular upward rotation (shoulder01 bone) driven by the scapulohumeral rhythm rule, alongside clavicle elevation.
+  - Standing arm exercises may keep the centre of mass within 3.5 cm of midfoot; unloaded squats may shift it toward the heel (more upright trunk).
+  - Cable pull direction and load enter the balance solve (lifter leans against the cable).
+  - 711 dumbbell curl stays palms-forward (no supination); the supinating variant is 711 only if its cues change.
+  - QA reads exercise records directly; data/motion-templates/variants.json is retired.
 
 ### Media pipeline (build-time, all in-house)
 1. **Body**: CC0 assets only from MPFB2 at a pinned commit (base.obj, macrodetail targets, `default_no_toes` rig + weights; MPFB2's license explicitly covers rigs, the MakeHuman 1.x repo's doesn't). Route: Blender 5.2 headless + MPFB2 v2.0.17 (`create_human` with athletic macros, `add_builtin_rig("default_no_toes")`, glTF export). Timebox 0.5 day for 5.2 compatibility; fallback is a Node loader written from the file formats (never porting MPFB2/MakeHuman code, which is GPL/AGPL). Post-process: smooth the face, merge face bones into `head`, strip helper geometry, keep clavicles and all spine bones, keep split limb bones as twist bones, gltf-transform meshopt. Target <= 600 KB.
