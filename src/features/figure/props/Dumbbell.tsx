@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { CylinderGeometry, LatheGeometry, Vector2 } from 'three'
-import { createPropMaterials } from './materials'
+import { propMaterials } from './materials'
 import { DUMBBELL_COLLAR, dumbbellDefaults, type DumbbellParams } from './sockets'
 
 /** round head with chamfered rims and a recessed face, revolved about +Y (turned onto X by the caller) */
@@ -16,7 +16,7 @@ function headProfile(r: number, w: number) {
 /** A generic round-head dumbbell, centred on its grip with the handle along X. */
 export function Dumbbell(props: DumbbellParams) {
   const o = { ...dumbbellDefaults, ...props }
-  const mats = useMemo(() => createPropMaterials(), [])
+  const mats = propMaterials()
   const geo = useMemo(() => {
     const collarW = DUMBBELL_COLLAR
     return {
@@ -30,8 +30,7 @@ export function Dumbbell(props: DumbbellParams) {
     geo.handle.dispose()
     geo.collar.dispose()
     geo.head.dispose()
-    Object.values(mats).forEach((m) => m.dispose())
-  }, [geo, mats])
+  }, [geo])
   const half = o.handle / 2
   return (
     <group rotation-z={-Math.PI / 2}>

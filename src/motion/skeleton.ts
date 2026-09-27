@@ -1,4 +1,4 @@
-import { DEG, qaxis, qid, qmul, type Quat, type V3 } from './math.ts'
+import { DEG, qaxis, qid, qmul, qrot, type Quat, type V3 } from './math.ts'
 
 // Canonical skeleton, ISB-style joint naming. World and zero-pose frames: X = figure's left, Y = up, Z = forward.
 // Zero pose: upright, arms hanging with straight elbows, forearms mid-position (thumbs forward), legs straight and
@@ -12,7 +12,7 @@ export type Unit = 'deg' | 'm' | 'ratio'
 
 type DofSpec = { key: string; axis: V3; min: number; max: number; unit?: Unit; note: string }
 
-export type JointKind = 'root' | 'euler' | 'swing' | 'scalar'
+export type JointKind = 'root' | 'euler' | 'swing' | 'scalar' | 'hinge'
 
 type JointSpec = {
   name: string
@@ -20,6 +20,9 @@ type JointSpec = {
   dofs: DofSpec[]
   /** segments driven by this joint and the share of its rotation each takes (shares sum to 1) */
   targets: [string, number][]
+  /** hinge only: fixed valgus of the distal segment about `carryAxis` (deg); the flexion axis is tilted by half of it */
+  carry?: number
+  carryAxis?: V3
 }
 
 const L: V3 = [1, 0, 0]
@@ -28,6 +31,10 @@ const F: V3 = [0, 0, 1]
 const nL: V3 = [-1, 0, 0]
 const nU: V3 = [0, -1, 0]
 const nF: V3 = [0, 0, -1]
+const SCAP_AXIS: V3 = [Math.sin(30 * DEG), 0, Math.cos(30 * DEG)]
+
+/** elbow carrying angle, deg (adult male ~10-13; Van Roy 2005, Zampagni 2008) */
+export const CARRY = 12
 
 const MIDLINE: JointSpec[] = [
   {
@@ -97,6 +104,13 @@ function limb(s: Side): JointSpec[] {
       targets: [[`clavicle_${s}`, 0.5], [`scapula_${s}`, 0.5]],
     },
     {
+      // drives the MPFB2 shoulder01 bone; rotates about the normal of the scapular plane (~30 deg anterolateral)
+      name: `scapula_${s}`,
+      kind: 'euler',
+      dofs: [{ key: 'uprot', axis: SCAP_AXIS, min: -15, max: 45, note: '+ upward rotation (glenoid up); set by shoulderRhythm unless a template leads it' }],
+      targets: [[`scapula_${s}`, 1]],
+    },
+    {
       // humerothoracic swing-twist: swing by `elev` towards the plane direction, then axial rotation
       name: `shoulder_${s}`,
       kind: 'swing',
@@ -108,15 +122,18 @@ function limb(s: Side): JointSpec[] {
       targets: [[`humerus_${s}`, 1]],
     },
     {
+      // oblique hinge: the forearm deviates laterally by CARRY in extension and folds onto the humerus in full flexion
       name: `elbow_${s}`,
-      kind: 'euler',
-      dofs: [{ key: 'flex', axis: nL, min: 0, max: 150, note: '+ flexion, 0 straight' }],
+      kind: 'hinge',
+      dofs: [{ key: 'flex', axis: nL, min: 0, max: 150, note: '+ flexion, 0 straight (plus the fixed carrying angle)' }],
       targets: [[`forearm_${s}`, 1]],
+      carry: CARRY,
+      carryAxis: F,
     },
     {
       name: `forearm_${s}`,
       kind: 'euler',
-      dofs: [{ key: 'pro', axis: nU, min: -85, max: 85, note: '+ pronation, - supination, 0 thumb forward' }],
+      dofs: [{ key: 'pro', axis: nU, min: -90, max: 85, note: '+ pronation, - supination (active ~85-90), 0 thumb forward' }],
       targets: [[`forearm_${s}`, 1]],
     },
     {
@@ -176,6 +193,7 @@ function mirrorJoints(js: JointSpec[]): JointSpec[] {
     name: j.name.replace(/_l$/, '_r'),
     dofs: j.dofs.map((d) => ({ ...d, axis: mirrorAxis(d.axis) })),
     targets: j.targets.map(([s, w]) => [s.replace(/_l$/, '_r'), w] as [string, number]),
+    carryAxis: j.carryAxis && mirrorAxis(j.carryAxis),
   }))
 }
 
@@ -243,6 +261,9 @@ export const BODY_MASS = 80
 
 export type SiteData = { segment: string; local: V3; axis?: V3; normal?: V3 }
 
+/** collision capsule rigid with a segment: axis a-b in segment-local metres, radius measured from the skinned mesh */
+export type CapsuleData = { segment: string; region: string; a: V3; b: V3; r: number }
+
 export type SkeletonData = {
   version: 1
   source: { model: string; sha256: string; rig: string }
@@ -267,6 +288,23 @@ export type SkeletonData = {
     head: V3
   }>
   sites: Record<string, SiteData>
+  capsules: Record<string, CapsuleData>
+}
+
+/**
+ * Content hash of everything baked motion depends on: joint definitions (axes, limits, carrying angle) and the
+ * extracted geometry. Baked files carry it; QA fails them when the skeleton changes. FNV-1a, 2 x 32 bit.
+ */
+export function skeletonHash(data: SkeletonData): string {
+  const { source: _source, ...geometry } = data
+  const text = JSON.stringify({ joints: JOINTS, segments: SEGMENTS, geometry })
+  let h1 = 0x811c9dc5, h2 = 0x01000193 ^ 0x5bd1e995
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i)
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0
+    h2 = Math.imul(h2 ^ c, 0x0100019d) >>> 0
+  }
+  return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0').slice(0, 4)
 }
 
 // ---------- runtime skeleton ----------
@@ -283,7 +321,7 @@ export type Dof = {
   note: string
 }
 
-export type JointRt = { name: string; kind: JointKind; dofs: number[]; targets: { segment: number; weight: number }[] }
+export type JointRt = { name: string; kind: JointKind; dofs: number[]; targets: { segment: number; weight: number }[]; carry?: number; carryAxis?: V3 }
 
 export type SegmentRt = {
   index: number
@@ -324,7 +362,7 @@ export function createSkeleton(data: SkeletonData): Skeleton {
       ids.push(dofs.length)
       dofs.push({ index: dofs.length, name, joint: j.name, key: d.key, axis: d.axis, unit: d.unit ?? 'deg', min: d.min, max: d.max, note: d.note })
     }
-    joints.push({ name: j.name, kind: j.kind, dofs: ids, targets: j.targets.map(([s, w]) => ({ segment: seg[s], weight: w })) })
+    joints.push({ name: j.name, kind: j.kind, dofs: ids, targets: j.targets.map(([s, w]) => ({ segment: seg[s], weight: w })), carry: j.carry, carryAxis: j.carryAxis })
   }
   const segments: SegmentRt[] = SEGMENTS.map((s, i) => {
     const d = data.segments[s.name]
@@ -421,6 +459,17 @@ export function swingAxis(planeDeg: number, side: Side): V3 {
   return side === 'l' ? [-Math.sin(p), 0, Math.cos(p)] : [-Math.sin(p), 0, -Math.cos(p)]
 }
 
+/**
+ * Oblique hinge: flexion about the nominal axis tilted by carry/2 towards the carry axis, applied after a fixed
+ * valgus of `carry` degrees, so the distal segment folds exactly onto the proximal one at 180 deg.
+ */
+export function hingeRotation(j: Pick<JointRt, 'carry' | 'carryAxis'>, flexDeg: number, axis: V3): Quat {
+  if (!j.carry) return ax(axis, flexDeg)
+  const tilt = qaxis(j.carryAxis!, (j.carry / 2) * DEG)
+  const tilted = qrot(tilt, axis)
+  return qmul(ax(tilted, flexDeg), ax(j.carryAxis!, j.carry))
+}
+
 /** local rotation of a joint from its DOF values (intrinsic, in DOF order) */
 export function jointRotation(skel: Skeleton, j: JointRt, q: ArrayLike<number>): Quat {
   const d = skel.dofs
@@ -430,6 +479,7 @@ export function jointRotation(skel: Skeleton, j: JointRt, q: ArrayLike<number>):
     return qmul(ax(swingAxis(q[ip], side), q[ie]), ax(d[ir].axis, q[ir]))
   }
   if (j.kind === 'scalar') return qid()
+  if (j.kind === 'hinge') return hingeRotation(j, q[j.dofs[0]], d[j.dofs[0]].axis)
   const ids = j.kind === 'root' ? j.dofs.slice(3) : j.dofs
   let r = qid()
   for (const i of ids) r = qmul(r, ax(d[i].axis, q[i]))
@@ -439,12 +489,23 @@ export function jointRotation(skel: Skeleton, j: JointRt, q: ArrayLike<number>):
 // ---------- scapulohumeral rhythm ----------
 
 /**
- * Clavicle elevation/protraction that accompany humerothoracic elevation. Heuristic: no girdle motion below
- * 30 deg, then roughly 1 deg of clavicle elevation per 7 deg of arm elevation, protraction growing with
- * forward planes. Author judgment, to be fitted from video.
+ * Shoulder girdle motion that accompanies humerothoracic elevation: clavicle elevation and protraction plus scapular
+ * upward rotation (shoulder01). Little girdle motion below ~30 deg (setting phase, smooth onset), then about 1 deg of
+ * clavicle elevation per 17 deg and 1 deg of scapular upward rotation per 7 deg of arm elevation; protraction grows
+ * with forward planes. Scapular rotation is smaller than the ~50 deg measured in vivo (Ludewig 2009) because the rig's
+ * shoulder01 pivots medial of the acromion and would otherwise lift the glenohumeral joint too far. Author judgment.
  */
-export function shoulderRhythm(elevDeg: number, planeDeg: number): { elev: number; prot: number } {
-  const e = Math.max(0, elevDeg - 30)
+export function shoulderRhythm(elevDeg: number, planeDeg: number): { elev: number; prot: number; uprot: number } {
+  const x = elevDeg - 30
+  const e = x <= -10 ? 0 : x < 10 ? ((x + 10) * (x + 10)) / 40 : x
   const fwd = Math.sin(Math.max(-30, Math.min(120, planeDeg)) * DEG)
-  return { elev: e * 0.14, prot: e * 0.06 * fwd }
+  return { elev: e * RHYTHM.elev, prot: e * 0.06 * fwd, uprot: e * RHYTHM.uprot }
+}
+
+export const RHYTHM = { elev: 0.06, uprot: 0.14 }
+
+/** scapular upward rotation from the current humerothoracic angles (plus an optional lead or lag, deg) */
+export function setScapula(skel: Skeleton, q: Float64Array, side: Side, offset = 0) {
+  const d = skel.dof
+  q[d[`scapula_${side}.uprot`]] = shoulderRhythm(q[d[`shoulder_${side}.elev`]], q[d[`shoulder_${side}.plane`]]).uprot + offset
 }

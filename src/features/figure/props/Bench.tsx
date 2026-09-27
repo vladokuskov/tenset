@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { BoxGeometry, CylinderGeometry, Quaternion, Vector3, type Material } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
-import { createPropMaterials } from './materials'
+import { propMaterials } from './materials'
 import { BENCH, benchDefaults, benchSockets, type BenchParams } from './sockets'
 
 const SEAT = BENCH.seat
@@ -23,7 +23,7 @@ function Tube({ from, to, size, material }: { from: Vector3; to: Vector3; size: 
 
 export function Bench(props: BenchParams) {
   const o = { ...benchDefaults, ...props }
-  const mats = useMemo(() => createPropMaterials(), [])
+  const mats = propMaterials()
   const s = benchSockets(o)
   const geo = useMemo(() => ({
     seat: new RoundedBoxGeometry(SEAT.width, SEAT.thick, SEAT.len, 4, 0.022),
@@ -32,10 +32,7 @@ export function Bench(props: BenchParams) {
     cap: new RoundedBoxGeometry(0.07, 0.035, 0.06, 2, 0.012),
     pin: new CylinderGeometry(0.012, 0.012, 0.09, 16),
   }), [])
-  useEffect(() => () => {
-    Object.values(geo).forEach((g) => g.dispose())
-    Object.values(mats).forEach((m) => m.dispose())
-  }, [geo, mats])
+  useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo])
 
   const b = (o.back * Math.PI) / 180
   const seatTilt = (o.seat * Math.PI) / 180

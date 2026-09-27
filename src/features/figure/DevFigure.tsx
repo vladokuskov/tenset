@@ -4,6 +4,7 @@ import type { FigureHandle } from './Figure'
 import { FigureStage, type Focus } from './FigureStage'
 import { parseHighlight } from './highlight'
 import { isPoseName, poseNames, poses } from './poses'
+import PropsGallery from './props/Gallery'
 import type { Pose } from './rig'
 import { SceneProps } from './SceneProps'
 import { isSceneName, scenes, type ExerciseScene } from './scenes'
@@ -57,6 +58,7 @@ export default function DevFigure({ scene: sceneName, pose: poseArg, view: viewA
   }, [])
 
   const resolved = useMemo(() => resolvePose(pose), [pose])
+  if (sceneName?.startsWith('props')) return <PropsGallery name={sceneName} view={viewArg} hl={hl} />
   if (!resolved || !isViewName(view)) {
     return (
       <pre className="p-4 text-sm">

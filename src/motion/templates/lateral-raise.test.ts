@@ -1,30 +1,33 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { handFrame } from '../constraints.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
-import { testSkeleton } from '../testing.ts'
+import { shoulderRhythm } from '../skeleton.ts'
+import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
 const skel = testSkeleton()
-type Variant = { slug: string; template: string; laterality: string; params: Record<string, unknown> }
-const variants = (JSON.parse(readFileSync(new URL('../../../data/motion-templates/variants.json', import.meta.url), 'utf8')) as Variant[]).filter((v) => v.template === 'lateral-raise')
+const variants = motionRecords('lateral-raise')
 const baked = new Map(variants.map((v) => [v.slug, bake(getTemplate('lateral-raise'), parseParams('lateral-raise', v.params, v.laterality), skel)]))
 const get = (slug: string) => baked.get(slug)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
 
 describe('lateral-raise template', () => {
-  it('dumbbell: scapular plane, ~10 -> 85 deg elevation, fixed soft elbow, clavicle follows the rhythm', () => {
+  it('dumbbell: scapular plane, ~10 -> 85 deg elevation, fixed soft elbow, girdle follows the rhythm', () => {
     const b = get('203-dumbbell-lateral-raise')
     expect(dof(b, 0.3, 'shoulder_l.plane')).toBeCloseTo(20, 5)
     expect(dof(b, 0.625, 'shoulder_l.elev')).toBeCloseTo(10, 5)
     expect(dof(b, 0, 'shoulder_l.elev')).toBeCloseTo(85, 5)
     expect(dof(b, 0.3, 'elbow_l.flex')).toBeCloseTo(15, 5)
     expect(dof(b, 0.625, 'clavicle_l.elev')).toBeLessThan(0.5)
-    expect(dof(b, 0, 'clavicle_l.elev')).toBeGreaterThan(5)
+    expect(dof(b, 0, 'clavicle_l.elev')).toBeGreaterThan(2)
+    // scapular upward rotation (shoulder01) carries most of the girdle motion
+    expect(dof(b, 0.625, 'scapula_l.uprot')).toBeLessThan(0.5)
+    expect(dof(b, 0, 'scapula_l.uprot')).toBeCloseTo(shoulderRhythm(85, 20).uprot, 3)
+    expect(dof(b, 0, 'scapula_l.uprot')).toBeGreaterThan(dof(b, 0, 'clavicle_l.elev'))
   })
 
   it.each([...baked.keys()])('%s: loads stay in the hands', (slug) => {

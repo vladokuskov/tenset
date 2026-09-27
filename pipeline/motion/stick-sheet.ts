@@ -5,7 +5,7 @@ import path from 'node:path'
 import { parseArgs } from 'node:util'
 import { bake, frameImplements, frameQ, type Baked } from '../../src/motion/bake.ts'
 import { fk, segPos, sitePos, sticks, type FK } from '../../src/motion/fk.ts'
-import { siteWorld, type ImplementSpec, type Part } from '../../src/motion/implements.ts'
+import { cableForce, siteWorld, type ImplementSpec, type Part } from '../../src/motion/implements.ts'
 import { add, qrot, type V3 } from '../../src/motion/math.ts'
 import type { ImplementPose, Skeleton } from '../../src/motion/skeleton.ts'
 import { getTemplate, parseParams } from '../../src/motion/templates/index.ts'
@@ -27,6 +27,7 @@ const MID: RGB = [55, 55, 55]
 const IMPL: RGB = [125, 125, 125]
 const CONTACT: RGB = [0, 150, 90]
 const INK: RGB = [40, 40, 40]
+const CABLE: RGB = [150, 60, 150]
 
 const colorOf = (segment: string): RGB => (segment.endsWith('_l') ? LEFT : segment.endsWith('_r') ? RIGHT : MID)
 
@@ -73,6 +74,11 @@ function drawFrame(c: Canvas, skel: Skeleton, b: Baked, fr: Frame, view: View, m
       } else line(c, x0, y0, x1, y1, col, Math.max(1, 2 * rPx), alpha * 0.55)
     }
   })
+  for (const cable of b.cables ?? []) {
+    const k = b.implements.findIndex((x) => x.id === cable.implement)
+    const [x0, y0] = P(cable.pulley), [x1, y1] = P(cableForce(cable, fr.impl[k]).at)
+    line(c, x0, y0, x1, y1, tint ?? CABLE, 1, alpha * 0.8)
+  }
   for (const s of sticks(skel, fr.f)) {
     const [x0, y0] = P(s.a), [x1, y1] = P(s.b)
     line(c, x0, y0, x1, y1, tint ?? colorOf(s.segment), 2.2, alpha)

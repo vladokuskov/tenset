@@ -8,21 +8,35 @@ import { testSkeleton } from './testing.ts'
 const skel = testSkeleton()
 
 describe('MPFB2 retarget', () => {
-  it('zero pose gives the extracted zero-pose orientations (twist bones: same long axis)', () => {
-    const w = boneWorld(skel, boneRotations(skel, fk(skel, zeroQ(skel))))
+  it('zero pose gives the extracted zero-pose orientations, turned by the carrying angle below the elbow', () => {
+    const f = fk(skel, zeroQ(skel))
+    const w = boneWorld(skel, boneRotations(skel, f))
     const twisty = new Set(skel.segments.flatMap((s) => s.bones.filter((b) => b.twist !== undefined).map((b) => b.name)))
     for (const [name, b] of Object.entries(skel.data.bones)) {
       if (!b.segment) continue
       const got = w.get(name)!.rot
-      if (twisty.has(name)) expect(dist(qrot(got, Y), qrot(b.zeroWorld, Y))).toBeLessThan(1e-3)
-      else expect(qdiff(got, b.zeroWorld)).toBeLessThan(1e-3)
+      const want = qmul(f.rot[skel.seg[b.segment]], b.zeroWorld)
+      if (twisty.has(name)) expect(dist(qrot(got, Y), qrot(want, Y))).toBeLessThan(1e-3)
+      else expect(qdiff(got, want)).toBeLessThan(1e-3)
+      if (!/^(forearm|hand)_/.test(b.segment)) expect(qdiff(f.rot[skel.seg[b.segment]], [0, 0, 0, 1])).toBeLessThan(1e-9)
     }
+  })
+
+  it('scapular upward rotation turns the shoulder01 bone and carries the upper arm with it', () => {
+    const q = zeroQ(skel)
+    setDofs(skel, q, { 'scapula_l.uprot': 20 })
+    const f = fk(skel, q)
+    const w = boneWorld(skel, boneRotations(skel, f))
+    const rest = boneWorld(skel, boneRotations(skel, fk(skel, zeroQ(skel))))
+    expect(qdiff(w.get('shoulder01_L')!.rot, rest.get('shoulder01_L')!.rot) * 180 / Math.PI).toBeCloseTo(20, 3)
+    expect(w.get('upperarm01_L')!.head[1]).toBeGreaterThan(rest.get('upperarm01_L')!.head[1] + 0.01)
+    expect(dist(w.get('upperarm01_L')!.head, f.pos[skel.seg.humerus_l])).toBeLessThan(5e-4)
   })
 
   it('bone heads land on the canonical joint positions for an arbitrary pose', () => {
     const q = zeroQ(skel)
     setDofs(skel, q, {
-      'pelvis.tilt': 25, 'pelvis.rot': 15, 'lumbar.flex': 10, 'thorax.rot': 12, 'clavicle_l.elev': 15,
+      'pelvis.tilt': 25, 'pelvis.rot': 15, 'lumbar.flex': 10, 'thorax.rot': 12, 'clavicle_l.elev': 15, 'scapula_l.uprot': 18,
       'shoulder_l.plane': 40, 'shoulder_l.elev': 110, 'shoulder_l.rot': -30, 'elbow_l.flex': 70, 'forearm_l.pro': -60,
       'hip_r.flex': 80, 'hip_r.abd': 15, 'hip_r.rot': -20, 'knee_r.flex': 95, 'ankle_r.df': 15,
     })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { bake, compactSize, decode, encode, frameQ, sampler, STEP } from './bake.ts'
+import { bake, compactSize, decode, encode, frameQ, sampler, staleReason, STEP } from './bake.ts'
+import { createSkeleton, skeletonHash, type SkeletonData } from './skeleton.ts'
 import { getTemplate, parseParams } from './templates/index.ts'
 import { testSkeleton } from './testing.ts'
 
@@ -41,5 +42,21 @@ describe('bake', () => {
       expect(Math.abs(a[k] - z[k])).toBeLessThan(1e-3)
       expect(w[k]).toBeCloseTo(z[k], 3)
     }
+  })
+
+  it('stamps the skeleton hash and refuses motion baked against another skeleton', () => {
+    const c = encode(bake(getTemplate('curl'), parseParams('curl', {}), skel), skel)
+    expect(c.skeleton).toBe(skeletonHash(skel.data))
+    expect(staleReason(c, skel)).toBeNull()
+    // any geometry change (here one capsule radius) changes the hash
+    const data = JSON.parse(JSON.stringify(skel.data)) as SkeletonData
+    data.capsules.fist_l.r += 0.001
+    const other = createSkeleton(data)
+    expect(skeletonHash(data)).not.toBe(c.skeleton)
+    expect(staleReason(c, other)).toMatch(/re-bake/)
+    expect(() => decode(c, other)).toThrow(/stale motion/)
+    expect(decode(c, other, { allowStale: true }).frames).toBe(c.frames)
+    // the model file name alone does not matter, geometry does
+    expect(skeletonHash({ ...skel.data, source: { ...skel.data.source, model: 'x.glb' } })).toBe(c.skeleton)
   })
 })

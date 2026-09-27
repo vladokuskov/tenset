@@ -6,9 +6,10 @@ import type { ImplementPose } from './skeleton.ts'
 
 export type ImplementKind = 'barbell' | 'dumbbell' | 'ez_bar' | 'cable_handle' | 'bench' | 'pullup_bar'
 
+/** `pad`: a padded support surface (bench pad, seat, knee pad, foot plate); the body may sink into it a little */
 export type Part =
-  | { shape: 'cylinder'; a: V3; b: V3; r: number }
-  | { shape: 'box'; center: V3; size: V3; rot?: Quat }
+  | { shape: 'cylinder'; a: V3; b: V3; r: number; pad?: boolean }
+  | { shape: 'box'; center: V3; size: V3; rot?: Quat; pad?: boolean }
 
 /** a grip or contact point; `axis` is the handle direction the hand's pinky-to-index line aligns with */
 export type Site = { pos: V3; axis?: V3; normal?: V3 }
@@ -132,24 +133,32 @@ export function cableHandle(o: { id?: string; attachment: Attachment }): Impleme
 }
 
 /** Bench with a seat and a back pad hinged at the local origin (on the seat surface); back angle 0 = flat, 90 = upright. +Z is the seat end. */
-export function bench(o: { id?: string; backAngle?: number; seatHeight?: number }): ImplementSpec {
+export function bench(o: { id?: string; backAngle?: number; seatHeight?: number; backLength?: number; seat?: boolean }): ImplementSpec {
   const h = o.seatHeight ?? 0.43
   const a = ((o.backAngle ?? 0) * Math.PI) / 180
+  const L = o.backLength ?? 0.84
   const back: V3 = [0, Math.sin(a), -Math.cos(a)]
   const backRot: Quat = [Math.sin(a / 2), 0, 0, Math.cos(a / 2)]
+  const pad: Part = { shape: 'box', center: add(scale3(back, L / 2), qrot(backRot, [0, -0.03, 0])), size: [0.28, 0.06, L], rot: backRot, pad: true }
+  const sites = { seat: { pos: [0, 0, 0.2] as V3, normal: [0, 1, 0] as V3 }, back: { pos: scale3(back, L * 0.48), normal: qrot(backRot, [0, 1, 0]) } }
+  if (o.seat === false) {
+    // a pad on a single post (chest-supported work where the legs go under the pad's lower end)
+    const mid = scale3(back, L / 2)
+    return { id: o.id ?? 'bench', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [pad, cyl([0, mid[1] - 0.06, mid[2]], [0, -h, mid[2]], 0.03), cyl([0, -h + 0.02, mid[2] - 0.35], [0, -h + 0.02, mid[2] + 0.35], 0.03)], sites }
+  }
   return {
     id: o.id ?? 'bench',
     kind: 'bench',
     mass: 0,
     com: [0, 0, 0],
     parts: [
-      { shape: 'box', center: [0, -0.03, 0.22], size: [0.28, 0.06, 0.44] },
-      { shape: 'box', center: add(scale3(back, 0.42), qrot(backRot, [0, -0.03, 0])), size: [0.28, 0.06, 0.84], rot: backRot },
+      { shape: 'box', center: [0, -0.03, 0.22], size: [0.28, 0.06, 0.44], pad: true },
+      pad,
       cyl([0, -0.06, 0.4], [0, -h, 0.4], 0.025),
       cyl([0, -0.06, -0.5], [0, -h, -0.5], 0.025),
       cyl([0, -h + 0.02, -0.6], [0, -h + 0.02, 0.5], 0.03),
     ],
-    sites: { seat: { pos: [0, 0, 0.2], normal: [0, 1, 0] }, back: { pos: scale3(back, 0.4), normal: qrot(backRot, [0, 1, 0]) } },
+    sites,
   }
 }
 
@@ -181,4 +190,16 @@ export function siteWorld(spec: ImplementSpec, pose: ImplementPose, name: string
 
 export function comWorld(spec: ImplementSpec, pose: ImplementPose): V3 {
   return add(pose.pos, qrot(pose.rot, spec.com))
+}
+
+/** a cable from a fixed pulley to a point on an implement (implement-local), pulling with the stack weight */
+export type Cable = { pulley: V3; implement: string; point: V3; kg: number }
+
+/** where a cable attaches this frame and the force it applies there, newtons */
+export function cableForce(c: Cable, pose: ImplementPose): { at: V3; force: V3 } {
+  const at = add(pose.pos, qrot(pose.rot, c.point))
+  const d = [c.pulley[0] - at[0], c.pulley[1] - at[1], c.pulley[2] - at[2]]
+  const n = Math.hypot(d[0], d[1], d[2]) || 1
+  const k = (c.kg * 9.81) / n
+  return { at, force: [d[0] * k, d[1] * k, d[2] * k] }
 }

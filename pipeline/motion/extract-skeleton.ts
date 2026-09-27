@@ -1,6 +1,7 @@
 // Reads the body GLB bind pose and writes data/motion-templates/skeleton.json: canonical zero-pose segment
-// offsets, lengths, bind/zero bone orientations and contact sites, so solver, QA and renderer agree.
-// node pipeline/motion/extract-skeleton.ts [--model public/models/body-a.glb]
+// offsets, lengths, bind/zero bone orientations, contact sites and collision capsules measured from the skinned
+// mesh, so solver, QA and renderer agree.
+// node pipeline/motion/extract-skeleton.ts [--model public/models/body.glb]
 import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -13,9 +14,9 @@ import {
   add, addScaled, cross, dist, dot, norm, qaxis, qfromMat, qfromTo, qalign, qid, qmul, qrot, reject, scale,
   signedAngle, sub, Y, Z, type Quat, type V3,
 } from '../../src/motion/math.ts'
-import { COM_RATIO, MASS_FRACTION, SEGMENTS, type SkeletonData, type SiteData } from '../../src/motion/skeleton.ts'
+import { COM_RATIO, MASS_FRACTION, SEGMENTS, type CapsuleData, type SkeletonData, type SiteData } from '../../src/motion/skeleton.ts'
 
-const { values: args } = parseArgs({ options: { model: { type: 'string', default: 'public/models/body-a.glb' } } })
+const { values: args } = parseArgs({ options: { model: { type: 'string', default: 'public/models/body.glb' } } })
 const modelPath = path.resolve(ROOT, args.model!)
 const OUT = path.join(DATA, 'motion-templates/skeleton.json')
 
@@ -57,16 +58,11 @@ const B = (n: string) => {
   return b
 }
 
-// vertices in bind world space, with their dominant bone
-const body = root.listMeshes().reduce((best, m) => {
-  const n = m.listPrimitives()[0]?.getAttribute('POSITION')?.getCount() ?? 0
-  const bn = best.listPrimitives()[0]?.getAttribute('POSITION')?.getCount() ?? 0
-  return n > bn ? m : best
-})
-const prim = body.listPrimitives()[0]
-const posA = prim.getAttribute('POSITION')!
-const jA = prim.getAttribute('JOINTS_0')!
-const wA = prim.getAttribute('WEIGHTS_0')!
+// vertices in bind world space, with their dominant bone. The body mesh gives the landmarks; shorts and hair are
+// part of the outer surface for collision capsules. Eyes sit inside the head.
+const primOf = (name: string) => root.listNodes().find((n) => n.getName() === name)?.getMesh()?.listPrimitives()[0]
+const body = primOf('body')
+if (!body) throw new Error('GLB has no body mesh')
 const ibm = skin.getInverseBindMatrices()!
 const mul4 = (a: ArrayLike<number>, b: ArrayLike<number>) => {
   const o = new Array<number>(16).fill(0)
@@ -76,8 +72,12 @@ const mul4 = (a: ArrayLike<number>, b: ArrayLike<number>) => {
 // quantized positions: joint world * inverse bind is the same dequantization matrix for every joint
 const dq = mul4(joints[0].getWorldMatrix(), ibm.getElement(0, []))
 const jointNames = joints.map((j) => j.getName())
-const verts: { p: V3; bone: string }[] = []
-{
+type Vert = { p: V3; bone: string }
+function readVerts(prim: NonNullable<ReturnType<typeof primOf>>): Vert[] {
+  const posA = prim.getAttribute('POSITION')!
+  const jA = prim.getAttribute('JOINTS_0')!
+  const wA = prim.getAttribute('WEIGHTS_0')!
+  const out: Vert[] = []
   const p: number[] = [], jj: number[] = [], ww: number[] = []
   for (let i = 0; i < posA.getCount(); i++) {
     posA.getElement(i, p)
@@ -85,12 +85,18 @@ const verts: { p: V3; bone: string }[] = []
     wA.getElement(i, ww)
     let k = 0
     for (let m = 1; m < 4; m++) if (ww[m] > ww[k]) k = m
-    verts.push({
+    out.push({
       p: [dq[0] * p[0] + dq[4] * p[1] + dq[8] * p[2] + dq[12], dq[1] * p[0] + dq[5] * p[1] + dq[9] * p[2] + dq[13], dq[2] * p[0] + dq[6] * p[1] + dq[10] * p[2] + dq[14]],
       bone: jointNames[jj[k]],
     })
   }
+  return out
 }
+const verts = readVerts(body)
+const surfaceVerts = [...verts, ...(['shorts', 'hair'] as const).flatMap((n) => {
+  const pr = primOf(n)
+  return pr ? readVerts(pr) : []
+})]
 
 // ---------- zero-pose corrections per segment (bind world -> zero world) ----------
 const DOWN: V3 = [0, -1, 0]
@@ -220,6 +226,8 @@ for (const side of ['l', 'r'] as const) {
   const across = norm(sub(mcp[0], mcp[3]))
   const palm = scale(norm(cross(handAxis, across)), side === 'l' ? 1 : -1)
   site(`grip_${side}`, `hand_${side}`, addScaled(addScaled(mc, palm, 0.028), handAxis, 0.012), { axis: r3v(across), normal: r3v(palm) })
+  // fingertip grip (front rack): the bar lies across the palmar side of the proximal phalanges
+  site(`fingers_${side}`, `hand_${side}`, addScaled(addScaled(mc, palm, 0.022), handAxis, 0.035), { axis: r3v(across), normal: r3v(palm) })
 }
 
 // load sites on the trunk from the mesh surface
@@ -262,6 +270,185 @@ const BAR_R = 0.014
 for (const side of ['l', 'r'] as const) {
   const t = sites[`toe_${side}`]
   distal[`toes_${side}`] = add(segOrigin.get(`foot_${side}`)!, [t.local[0], t.local[1] + (segOrigin.get(`toes_${side}`)![1] - segOrigin.get(`foot_${side}`)![1]), t.local[2]])
+}
+
+
+// ---------- collision capsules (zero pose, segment-local), measured from the skinned surface ----------
+// Each capsule's radius is a robust percentile of the distances from its vertices to its axis, so a few outlying
+// vertices (nipples, knuckles, hair tufts) do not inflate it. Limbs taper, so they get two or three capsules along
+// the bone with axes through the flesh centroids; the trunk, neck and head are stadium pairs (two parallel vertical
+// capsules) that match their wide, shallow cross-sections.
+const RADIUS_PCT = 0.7
+const capsules: Record<string, CapsuleData> = {}
+const segments0: Record<string, number> = Object.fromEntries(SEGMENTS.map((sg) => [sg.name, dist(segOrigin.get(sg.name)!, distal[sg.name] ?? segOrigin.get(sg.name)!)]))
+const pct = (xs: number[], q: number) => {
+  const a = [...xs].sort((x, y) => x - y)
+  return a[Math.min(a.length - 1, Math.max(0, Math.round(q * (a.length - 1))))]
+}
+const r5c = (v: V3): V3 => [r5(v[0]), r5(v[1]), r5(v[2])]
+const segDist = (p: V3, a: V3, b: V3) => {
+  const ab = sub(b, a)
+  const t = Math.max(0, Math.min(1, dot(sub(p, a), ab) / Math.max(1e-12, dot(ab, ab))))
+  return dist(p, addScaled(a, ab, t))
+}
+const along = (p: V3, a: V3, b: V3) => dot(sub(p, a), sub(b, a)) / Math.max(1e-12, dot(sub(b, a), sub(b, a)))
+const centroid = (vs: V3[]): V3 => scale(vs.reduce((acc, v) => add(acc, v), [0, 0, 0] as V3), 1 / Math.max(1, vs.length))
+const surface = surfaceVerts.map((v) => ({ seg: segmentFor(v.bone), p: zv(v) }))
+/** zero-pose surface points whose dominant bone belongs to one of `segs`, in the frame of `frame` */
+const localPts = (segs: string[], frame: string) => {
+  const o = segOrigin.get(frame)!
+  return surface.filter((v) => v.seg && segs.includes(v.seg)).map((v) => sub(v.p, o))
+}
+const addCapsule = (name: string, segment: string, region: string, a: V3, b: V3, pts: V3[], tLo = 0, tHi = 1) => {
+  const inside = pts.filter((p) => {
+    const t = along(p, a, b)
+    return t >= tLo && t <= tHi
+  })
+  if (inside.length < 20) throw new Error(`capsule ${name}: only ${inside.length} vertices`)
+  capsules[name] = { segment, region, a: r5c(a), b: r5c(b), r: r5(pct(inside.map((p) => segDist(p, a, b)), RADIUS_PCT)) }
+}
+
+/** limb split into n pieces along the bone (segment-local -Y in the zero pose), each a stadium fit of its section */
+function limbCapsules(name: string, segment: string, region: string, n: number) {
+  const len = segments0[segment]
+  const pts = localPts([segment], segment)
+  for (let k = 0; k < n; k++) {
+    slabCapsules(`${name}${n > 1 ? k + 1 : ''}`, segment, region, pts, -((k + 1) / n) * len, -(k / n) * len, { lo: false, hi: false })
+  }
+}
+
+/** vertical stadium pair (or a single capsule when the section is round) over a slab of vertices */
+function slabCapsules(name: string, segment: string, region: string, pts: V3[], yLo: number, yHi: number, ends: { lo: boolean; hi: boolean } = { lo: true, hi: true }) {
+  const slab = pts.filter((p) => p[1] >= yLo && p[1] <= yHi)
+  const xs = slab.map((p) => p[0]), zs = slab.map((p) => p[2])
+  const xc = (pct(xs, 0.03) + pct(xs, 0.97)) / 2, zc = (pct(zs, 0.03) + pct(zs, 0.97)) / 2
+  const W = (pct(xs, 0.97) - pct(xs, 0.03)) / 2, D = (pct(zs, 0.97) - pct(zs, 0.03)) / 2
+  const wide = W >= D
+  const off = Math.abs(W - D) > 0.15 * Math.min(W, D) ? Math.abs(W - D) : 0
+  // a free end is inset by the radius so the dome meets the extreme vertices; slab ends inside the trunk are not
+  const inset = Math.min(W, D)
+  const y0 = yLo + (ends.lo ? inset : 0), y1 = Math.max(y0 + 0.005, yHi - (ends.hi ? inset : 0))
+  const axes: [V3, V3][] = off === 0
+    ? [[[xc, y0, zc], [xc, y1, zc]]]
+    : [-1, 1].map((s) => {
+        const c: V3 = wide ? [xc + s * off, 0, zc] : [xc, 0, zc + s * off]
+        return [[c[0], y0, c[2]], [c[0], y1, c[2]]] as [V3, V3]
+      })
+  const nearest = (p: V3) => axes.reduce((best, ab, i) => (segDist(p, ab[0], ab[1]) < segDist(p, axes[best][0], axes[best][1]) ? i : best), 0)
+  const suffix = (i: number) => (axes.length === 1 ? '' : wide ? (i === 0 ? 'a' : 'b') : (i === 0 ? 'p' : 'q'))
+  axes.forEach(([a, b], i) => {
+    const mine = slab.filter((p) => nearest(p) === i)
+    capsules[`${name}${suffix(i)}`] = { segment, region, a: r5c(a), b: r5c(b), r: r5(pct(mine.map((p) => segDist(p, a, b)), RADIUS_PCT)) }
+  })
+}
+
+const yRange = (pts: V3[]) => [pct(pts.map((p) => p[1]), 0.02), pct(pts.map((p) => p[1]), 0.98)] as const
+// trunk: every vertex skinned mainly to the spine, pelvis or clavicles, as a stack of horizontal capsules (one per
+// 4 cm band, left to right, round front and back). Each band rides on the torso segment at its height, so the stack
+// bends with the spine, and its lateral profile follows the waist and chest within a few mm between bands.
+const TORSO = ['pelvis', 'lumbar1', 'lumbar2', 'lumbar3', 'thorax1', 'thorax2']
+const trunkPts = surface.filter((v) => v.seg && (TORSO.includes(v.seg) || v.seg.startsWith('clavicle_'))).map((v) => v.p)
+const shoulderLine = segOrigin.get('thorax2')![1] + 0.11
+const standing0 = segOrigin.get('pelvis')![1]
+// above the armpit the trunk merges into the shoulder; those bands stop at the chest wall width at the armpit
+// (the upper arm and shoulder-line capsules cover the rest)
+const armPts = surface.filter((v) => v.seg === 'humerus_l').map((v) => v.p)
+let armpit = shoulderLine, armpitX = Infinity
+for (let y = 1.1 * standing0; y < shoulderLine; y += 0.01) {
+  const tx = trunkPts.filter((p) => Math.abs(p[1] - y) < 0.01 && p[0] > 0).map((p) => p[0])
+  const ax = armPts.filter((p) => Math.abs(p[1] - y) < 0.01).map((p) => p[0])
+  if (tx.length > 5 && ax.length > 5 && pct(tx, 0.95) > pct(ax, 0.05)) {
+    armpit = y
+    armpitX = pct(ax, 0.05)
+    break
+  }
+}
+{
+  const BAND = 0.04
+  const bottom = pct(trunkPts.map((p) => p[1]), 0.02)
+  const n = Math.round((shoulderLine - bottom) / BAND)
+  for (let k = 0; k < n; k++) {
+    const yc = bottom + (k + 0.5) * ((shoulderLine - bottom) / n)
+    const band = trunkPts.filter((p) => Math.abs(p[1] - yc) <= BAND * 0.75 && (yc < armpit || Math.abs(p[0]) <= armpitX))
+    const xs = band.map((p) => p[0]), zs = band.map((p) => p[2])
+    const x0 = pct(xs, 0.02), x1 = pct(xs, 0.98), z0 = pct(zs, 0.02), z1 = pct(zs, 0.98)
+    const D = (z1 - z0) / 2, zc = (z0 + z1) / 2, xc = (x0 + x1) / 2
+    const L = Math.max(0, (x1 - x0) / 2 - D)
+    const seg = [...TORSO].reverse().find((s) => segOrigin.get(s)![1] <= yc) ?? 'pelvis'
+    const o = segOrigin.get(seg)!
+    // the lowest and highest bands sit a little inside so their domes do not overhang the crotch and shoulders
+    const y = k === 0 ? yc + D * 0.4 : k === n - 1 ? yc - D * 0.4 : yc
+    const a = sub([xc - L, y, zc], o), b = sub([xc + L, y, zc], o)
+    // section radius: horizontal distance to the axis (the band is 6 cm tall; its height is the stack's business)
+    const flat = (v: V3): V3 => [v[0], 0, v[2]]
+    const local = band.map((p) => flat(sub(p, o)))
+    // a band narrower than deep (below the hips, which skin to the thighs) is a ball as deep as the band
+    const r = L > 0 ? pct(local.map((p) => segDist(p, flat(a), flat(b))), RADIUS_PCT) : D
+    capsules[`trunk${String(k + 1).padStart(2, '0')}`] = { segment: seg, region: 'trunk', a: r5c(a), b: r5c(b), r: r5(r) }
+  }
+}
+{
+  const pts = localPts(['neck1', 'neck2', 'neck3'], 'neck1')
+  const [lo, hi] = yRange(pts)
+  slabCapsules('neck', 'neck1', 'neck', pts, lo, hi)
+}
+{
+  const pts = localPts(['head'], 'head')
+  const [lo, hi] = yRange(pts)
+  slabCapsules('head', 'head', 'head', pts, lo, hi)
+}
+for (const side of ['l', 'r'] as const) {
+  const S = side.toUpperCase()
+  {
+    // shoulder line (upper trapezius over the clavicle to the acromion), carried by the scapula
+    const lat = side === 'l' ? 1 : -1
+    const o = segOrigin.get(`scapula_${side}`)!
+    const gh = segOrigin.get(`humerus_${side}`)!
+    const pts = trunkPts.filter((p) => p[1] >= shoulderLine && p[0] * lat > 0.04 && p[0] * lat < gh[0] * lat)
+    const c = centroid(pts)
+    addCapsule(`shoulder_${side}`, `scapula_${side}`, `girdle_${side}`, sub([0.05 * lat, c[1], c[2]], o), sub([gh[0] - 0.04 * lat, c[1], c[2]], o), pts.map((p) => sub(p, o)), -0.3, 1.3)
+  }
+  limbCapsules(`upperarm_${side}`, `humerus_${side}`, `upperarm_${side}`, 2)
+  limbCapsules(`forearm_${side}`, `forearm_${side}`, `forearm_${side}`, 2)
+  limbCapsules(`thigh_${side}`, `femur_${side}`, `thigh_${side}`, 3)
+  limbCapsules(`shank_${side}`, `tibia_${side}`, `shank_${side}`, 2)
+  {
+    // palm: wrist to the knuckle line, fingers excluded (straight in the bind pose, wrapped when gripping)
+    const o = segOrigin.get(`hand_${side}`)!
+    const mcps = ['finger2-1', 'finger3-1', 'finger4-1', 'finger5-1'].map((n) => sub(zeroHead.get(`${n}_${S}`)!, o))
+    const knuckles = centroid(mcps)
+    const palmBones = new RegExp(`^(wrist|metacarpal\\d)_${S}$`)
+    const pts = surfaceVerts.filter((v) => palmBones.test(v.bone)).map((v) => sub(zv(v), o))
+    slabCapsules(`palm_${side}`, `hand_${side}`, `hand_${side}`, pts, knuckles[1] * 0.8, knuckles[1] * 0.15, { lo: false, hi: false })
+    // fist around a handle: centred on the grip site, radius = how far the knuckles stand proud of the handle axis,
+    // axis just long enough that the fist is as wide as the knuckle row plus a finger
+    const g = sites[`grip_${side}`]
+    const knucklePts = localPts([`hand_${side}`], `hand_${side}`).filter((p) => mcps.some((m) => dist(p, m) < 0.02))
+    const span = dist(mcps[0], mcps[3]) / 2
+    const r = pct(knucklePts.map((p) => segDist(p, addScaled(g.local, g.axis!, -span), addScaled(g.local, g.axis!, span))), 0.9)
+    const half = Math.max(0, span + 0.009 - r)
+    const ga = addScaled(g.local, g.axis!, -half), gb = addScaled(g.local, g.axis!, half)
+    capsules[`fist_${side}`] = { segment: `hand_${side}`, region: `hand_${side}`, a: r5c(ga), b: r5c(gb), r: r5(r) }
+  }
+  {
+    // foot: rear foot (heel to ball) and forefoot (ball to toe tip), axes through the section centroids
+    const o = segOrigin.get(`foot_${side}`)!
+    const pts = localPts([`foot_${side}`, `toes_${side}`], `foot_${side}`)
+    const heel = sites[`heel_${side}`].local, ball = sites[`ball_${side}`].local, toe = sites[`toe_${side}`].local
+    const zc = (z0: number, z1: number) => centroid(pts.filter((p) => p[2] >= z0 && p[2] <= z1))
+    const rear0 = zc(heel[2] - 0.03, heel[2] + 0.02), rear1 = zc(ball[2] - 0.03, ball[2] + 0.01)
+    addCapsule(`rearfoot_${side}`, `foot_${side}`, `foot_${side}`, rear0, rear1, pts, -0.5, 1)
+    const fore1 = zc(toe[2] - 0.03, toe[2] + 0.01)
+    addCapsule(`forefoot_${side}`, `foot_${side}`, `foot_${side}`, rear1, fore1, pts, 0, 1.5)
+    // the sole is flat: lift each axis end so the capsule bottom stays on the sole plane
+    const sole = heel[1]
+    for (const n of [`rearfoot_${side}`, `forefoot_${side}`]) {
+      const c = capsules[n]
+      c.a = r5c([c.a[0], Math.max(c.a[1], sole + c.r), c.a[2]])
+      c.b = r5c([c.b[0], Math.max(c.b[1], sole + c.r), c.b[2]])
+    }
+    void o
+  }
 }
 
 // ---------- assemble ----------
@@ -308,6 +495,7 @@ const data: SkeletonData = {
   segments,
   bones: boneOut,
   sites,
+  capsules,
 }
 
 // sanity: zero pose limbs must hang straight
@@ -321,3 +509,4 @@ writeFileSync(OUT, JSON.stringify(data, null, 1) + '\n')
 console.log(`wrote ${path.relative(ROOT, OUT)}: height ${data.height} m, shoulderWidth ${data.shoulderWidth} m, hipWidth ${data.hipWidth} m, standing pelvis ${data.standingHeight} m, lift ${(lift[1] * 1000).toFixed(1)} mm`)
 for (const s of ['humerus_l', 'forearm_l', 'hand_l', 'femur_l', 'tibia_l', 'foot_l']) console.log(`  ${s.padEnd(10)} length ${segments[s].length.toFixed(4)}`)
 for (const [k, v] of Object.entries(sites)) console.log(`  site ${k.padEnd(11)} ${v.segment.padEnd(9)} ${v.local.map((x) => x.toFixed(3)).join(', ')}`)
+for (const [k, c] of Object.entries(capsules)) console.log(`  capsule ${k.padEnd(14)} ${c.segment.padEnd(10)} r ${(c.r * 100).toFixed(1)} cm, axis ${(dist(c.a, c.b) * 100).toFixed(1)} cm`)

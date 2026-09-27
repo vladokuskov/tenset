@@ -7,7 +7,7 @@ import type { AnyTemplate, Driver, Template } from './types.ts'
 import { verticalPull } from './vertical-pull.ts'
 
 export { SCHEMAS, TEMPLATE_IDS, type ParamsOf, type TemplateId } from './schemas.ts'
-export type { AnyTemplate, BalanceSpec, Driver, Setup, Template } from './types.ts'
+export type { AnyTemplate, BalanceSpec, Cable, Driver, Rest, Setup, Template } from './types.ts'
 
 const DRIVERS: Record<TemplateId, Driver> = {
   'horizontal-press': 'implement',

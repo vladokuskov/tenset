@@ -1,7 +1,7 @@
 import type { ImplementSpec } from './implements.ts'
 import { qdot, qnorm, type Quat, type V3 } from './math.ts'
-import type { Contact, ImplementPose, Pose, Skeleton } from './skeleton.ts'
-import type { AnyTemplate, BalanceSpec } from './templates/types.ts'
+import { skeletonHash, type Contact, type ImplementPose, type Pose, type Skeleton } from './skeleton.ts'
+import type { AnyTemplate, BalanceSpec, Cable, Rest } from './templates/types.ts'
 import { frameCount, loopDuration, type Tempo } from './timing.ts'
 
 // Baked loop: every DOF plus implement transforms (position + quaternion) at a fixed rate; frame i sits at loop
@@ -24,6 +24,9 @@ export type Baked = {
   contacts: Contact[]
   balance?: BalanceSpec
   symmetric: boolean
+  cables?: Cable[]
+  rests?: Rest[]
+  limits?: Record<string, [number, number]>
 }
 
 export function bake(t: AnyTemplate, params: Record<string, unknown>, skel: Skeleton, fps = 30): Baked {
@@ -60,6 +63,9 @@ export function bake(t: AnyTemplate, params: Record<string, unknown>, skel: Skel
     contacts: setup.contacts,
     balance: setup.balance,
     symmetric: setup.symmetric,
+    cables: setup.cables,
+    rests: setup.rests,
+    limits: setup.limits,
   }
 }
 
@@ -122,7 +128,7 @@ export type CompactMotion = {
   frames: number
   duration: number
   tempo: Tempo
-  /** DOF count and skeleton model hash the channels were baked against */
+  /** DOF count and skeletonHash() of the skeleton the channels were baked against */
   dofs: number
   skeleton: string
   /** channel ids that vary: 0..dofs-1 are DOFs, then 7 per implement */
@@ -134,6 +140,9 @@ export type CompactMotion = {
   contacts: Contact[]
   balance?: BalanceSpec
   symmetric: boolean
+  cables?: Cable[]
+  rests?: Rest[]
+  limits?: Record<string, [number, number]>
 }
 
 function channelStep(skel: Skeleton, ch: number): number {
@@ -194,7 +203,7 @@ export function encode(b: Baked, skel: Skeleton): CompactMotion {
     duration: round(b.duration, 4),
     tempo: b.tempo,
     dofs: b.nDof,
-    skeleton: skel.data.source.sha256.slice(0, 12),
+    skeleton: skeletonHash(skel.data),
     vary,
     fixed,
     data: toBase64(bytes),
@@ -202,12 +211,24 @@ export function encode(b: Baked, skel: Skeleton): CompactMotion {
     contacts: roundDeep(b.contacts),
     balance: b.balance,
     symmetric: b.symmetric,
+    ...(b.cables ? { cables: roundDeep(b.cables) } : {}),
+    ...(b.rests ? { rests: b.rests } : {}),
+    ...(b.limits ? { limits: b.limits } : {}),
   }
 }
 
-export function decode(c: CompactMotion, skel: Skeleton): Baked {
+/** why a compact motion cannot be played on this skeleton, or null */
+export function staleReason(c: CompactMotion, skel: Skeleton): string | null {
+  if (c.dofs !== skel.dofs.length) return `baked for ${c.dofs} DOFs, skeleton has ${skel.dofs.length}`
+  const h = skeletonHash(skel.data)
+  return c.skeleton === h ? null : `baked against skeleton ${c.skeleton}, current skeleton is ${h}; re-bake`
+}
+
+export function decode(c: CompactMotion, skel: Skeleton, o: { allowStale?: boolean } = {}): Baked {
   if (c.format !== 'gym-motion' || c.v !== 1) throw new Error('not a gym-motion v1 file')
   if (c.dofs !== skel.dofs.length) throw new Error(`motion baked for ${c.dofs} DOFs, skeleton has ${skel.dofs.length}`)
+  const stale = staleReason(c, skel)
+  if (stale && !o.allowStale) throw new Error(`stale motion: ${stale}`)
   const n = c.frames
   const ni = c.implements.length
   const q = new Float32Array(n * c.dofs)
@@ -253,6 +274,9 @@ export function decode(c: CompactMotion, skel: Skeleton): Baked {
     contacts: c.contacts,
     balance: c.balance,
     symmetric: c.symmetric,
+    cables: c.cables,
+    rests: c.rests,
+    limits: c.limits,
   }
 }
 

@@ -1,8 +1,9 @@
 import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
+import { bodyCapsules, restAgainst } from '../collide.ts'
 import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { cableHandle, pullupBar, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { add, DEG, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
-import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -26,8 +27,15 @@ const PULLDOWN_TOP_ELBOW: Record<'bar' | 'v_bar', number> = { bar: 10, v_bar: 18
 const BOW = 0.04
 const TILT = -18 * DEG
 const LEAN: Record<'bar' | 'v_bar', [number, number]> = { bar: [6, 16], v_bar: [8, 24] }
+/** V-bar finish: how far out the elbows point (0 = straight down by the ribs); they end ~6 cm closer in than before */
+const VBAR_ELBOW_OUT = 0.25
+/** V-bar finish relative to the sternum, m: handles low and in front so the forearms clear the ribs */
+const VBAR_FINISH: V3 = [0, -0.05, 0.18]
+/** arm elevation at the hang and at the top, for the scapular upward rotation the lead curve moves between */
+const HANG_ELEV = 165
+const TOP_ELEV = 45
 
-type Hang = { kind: 'hang'; bar: ImplementSpec; barPose: ImplementPose; yHang: number; yTop: number; kneeling: boolean }
+type Hang = { kind: 'hang'; bar: ImplementSpec; barPose: ImplementPose; yHang: number; yTop: number; kneeling: boolean; height: (c: number) => number }
 type Seated = {
   kind: 'seated'
   handle: ImplementSpec
@@ -51,7 +59,9 @@ function palm(p: P, side: 'l' | 'r'): V3 {
 function pole(p: P, side: 'l' | 'r'): V3 {
   const lat = side === 'l' ? 1 : -1
   if (p.grip === 'pronated') return [lat, 0, 0.35]
-  if (p.grip === 'supinated') return [-lat * 0.3, 0, 1]
+  // elbows straight forward: any further in and the upper arms press into the chest at the top, any further out and
+  // the forearms run out of supination
+  if (p.grip === 'supinated') return [0, 0, 1]
   return [lat * 0.6, 0, 0.8]
 }
 
@@ -62,19 +72,45 @@ function gripContacts(id: string): Contact[] {
   ]
 }
 
-/** hanging: elbows out (pronated) or forward; pulldown: elbows also tipped down, and a close V-bar keeps them in by the ribs */
+/** hanging: elbows out (pronated) or forward; pulldown: elbows also tipped down, and a close V-bar brings them down by the ribs */
 function elbowPole(p: P, side: 'l' | 'r', seated: boolean, c: number): V3 {
   if (!seated) return pole(p, side)
-  if (p.attachment === 'v_bar') return add(scale(pole(p, side), 1 - c), scale([side === 'l' ? 0.5 : -0.5, -1, -0.2], c))
+  if (p.attachment === 'v_bar') return add(scale(pole(p, side), 1 - c), scale([side === 'l' ? VBAR_ELBOW_OUT : -VBAR_ELBOW_OUT, -1, 0.1], c))
   return add(pole(p, side), [0, -0.8, 0])
 }
 
-function arms(skel: Skeleton, q: Float64Array, p: P, spec: ImplementSpec, pose: ImplementPose, seated = false, c = 0) {
-  for (const s of ['l', 'r'] as const) {
-    const g = siteWorld(spec, pose, s)
-    attachHand(skel, q, s, { pos: g.pos, axis: g.axis!, palm: palm(p, s) }, { pole: elbowPole(p, s, seated, c), planeHint: 20 })
+/**
+ * Scapular share of the pull: depression and downward rotation lead the elbows on the way up (the first third of
+ * the concentric does most of it) and release last on the way down.
+ */
+export const scapularLead = (c: number) => 1 - (1 - c) ** 2.2
+/** elbow flexion progress = c^ELBOW_LAG through the pull (the scapulae follow scapularLead) */
+const ELBOW_LAG = 1.5
+
+/** piecewise-cubic Hermite through (xs, ys) with Fritsch-Carlson tangents: smooth and without overshoot */
+function monotoneCubic(xs: number[], ys: number[]): (x: number) => number {
+  const n = xs.length
+  const d = xs.slice(1).map((x, i) => (ys[i + 1] - ys[i]) / (x - xs[i]))
+  const m = xs.map((_, i) => (i === 0 ? d[0] : i === n - 1 ? d[n - 2] : d[i - 1] * d[i] <= 0 ? 0 : (2 * d[i - 1] * d[i]) / (d[i - 1] + d[i])))
+  return (x) => {
+    const k = Math.min(n - 2, Math.max(0, Math.floor(((x - xs[0]) / (xs[n - 1] - xs[0])) * (n - 1))))
+    const h = xs[k + 1] - xs[k], t = (x - xs[k]) / h
+    const t2 = t * t, t3 = t2 * t
+    return (2 * t3 - 3 * t2 + 1) * ys[k] + (t3 - 2 * t2 + t) * h * m[k] + (-2 * t3 + 3 * t2) * ys[k + 1] + (t3 - t2) * h * m[k + 1]
   }
 }
+
+/** hands onto the bar or handle; bilateral grips solve the left arm and mirror it, so both sides match exactly */
+function arms(skel: Skeleton, q: Float64Array, p: P, spec: ImplementSpec, pose: ImplementPose, seated = false, c = 0, uprot?: number) {
+  const mirror = p.laterality === 'bilateral'
+  for (const s of mirror ? (['l'] as const) : (['l', 'r'] as const)) {
+    const g = siteWorld(spec, pose, s)
+    attachHand(skel, q, s, { pos: g.pos, axis: g.axis!, palm: palm(p, s) }, { pole: elbowPole(p, s, seated, c), planeHint: 20, uprot })
+  }
+  if (mirror) for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
+}
+
+const MIRRORED = ['scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev']
 
 // ---------- hanging ----------
 
@@ -91,9 +127,10 @@ function barSpec(p: P, skel: Skeleton): ImplementSpec {
 
 function hangBody(skel: Skeleton, q: Float64Array, c: number, p: P, kneeling: boolean) {
   const bent = p.legs !== 'straight'
+  const sc = scapularLead(c)
   setDofs(skel, q, {
-    'clavicle_*.elev': lerp(20, -4, c),
-    'clavicle_*.prot': lerp(4, -12, c),
+    'clavicle_*.elev': lerp(20, -4, sc),
+    'clavicle_*.prot': lerp(4, -12, sc),
     'thorax.flex': lerp(0, -12, c),
     'lumbar.flex': lerp(-2, -5, c),
     'neck.flex': lerp(0, -16, c),
@@ -107,25 +144,34 @@ function hangBody(skel: Skeleton, q: Float64Array, c: number, p: P, kneeling: bo
   q[skel.dof['pelvis.tilt']] = lerp(-3, -8, c)
 }
 
+function leadUprot(c: number, plane = 20) {
+  return shoulderRhythm(lerp(HANG_ELEV, TOP_ELEV, scapularLead(c)), plane).uprot
+}
+
 function hangPose(skel: Skeleton, c: number, y: number, p: P, v: Pick<Hang, 'bar' | 'barPose' | 'kneeling'>): Float64Array {
   const q = zeroQ(skel)
   hangBody(skel, q, c, p, v.kneeling)
   q[skel.dof['pelvis.ty']] = y
+  const up = leadUprot(c)
   const r = root1d((z) => {
     q[skel.dof['pelvis.tz']] = z
-    arms(skel, q, p, v.bar, v.barPose)
+    arms(skel, q, p, v.bar, v.barPose, false, c, up)
     return centerOfMass(skel, fk(skel, q))[2] - v.barPose.pos[2]
   }, -0.5, 0.5, { tol: 1e-7 })
   q[skel.dof['pelvis.tz']] = r.x
-  arms(skel, q, p, v.bar, v.barPose)
+  arms(skel, q, p, v.bar, v.barPose, false, c, up)
   return q
 }
 
-/** knee pad under the shins, following the knees */
+const KNEE_PAD: Part = { shape: 'box', center: [0, 0, 0], size: [0.42, 0.07, 0.34], pad: true }
+
+/** knee pad under the shins, following the knees; it sits where the shins rest on it */
 function padPose(skel: Skeleton, q: Float64Array): ImplementPose {
   const f = fk(skel, q)
   const knees = scale(add(segPos(skel, f, 'tibia_l'), segPos(skel, f, 'tibia_r')), 0.5)
-  return { id: 'pad', pos: add(knees, [0, -0.07, -0.12]), rot: qid() }
+  const shins = bodyCapsules(skel, f).filter((c) => c.region.startsWith('shank_'))
+  const placed = restAgainst(shins, { ...KNEE_PAD, center: add(knees, [0, -0.07, -0.12]) } as Part & { shape: 'box' }, [0, -1, 0])
+  return { id: 'pad', pos: placed.center, rot: qid() }
 }
 
 function hangContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
@@ -137,8 +183,14 @@ function hangContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const yHang = root1d((y) => elbow(0, y) - HANG_ELBOW, BAR_HEIGHT - 1.6, BAR_HEIGHT - 0.9, { tol: 1e-6 }).x
   const chin = (y: number) => sitePos(skel, fk(skel, hangPose(skel, 1, y, p, base)), 'chin')[1] - (BAR_HEIGHT + CHIN_CLEARANCE)
   const yTop = root1d(chin, yHang, yHang + 0.7, { tol: 1e-6 }).x
+  // body height along the rep: solved at a few points so the elbows follow a lagging curve while the scapulae lead
+  // (the first part of the pull is the shoulders coming down with the arms still long)
+  const topElbow = elbow(1, yTop)
+  const cs = Array.from({ length: 9 }, (_, k) => k / 8)
+  const ys = cs.map((c, k) => (k === 0 ? yHang : k === 8 ? yTop : root1d((y) => elbow(c, y) - lerp(HANG_ELBOW, topElbow, c ** ELBOW_LAG), yHang - 0.1, yTop + 0.05, { tol: 1e-6 }).x))
+  const height = monotoneCubic(cs, ys)
   const implements_: ImplementSpec[] = [bar]
-  if (kneeling) implements_.push({ id: 'pad', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [{ shape: 'box', center: [0, 0, 0], size: [0.42, 0.07, 0.34] }], sites: {} })
+  if (kneeling) implements_.push({ id: 'pad', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [KNEE_PAD], sites: {} })
   const setup: Setup = {
     implements: implements_,
     contacts: gripContacts(bar.id),
@@ -146,12 +198,12 @@ function hangContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     symmetric: p.laterality === 'bilateral',
     balance: { point: 'com', over: { implement: bar.id, sites: ['l', 'r'] }, tol: 0.025 },
   }
-  return { tempo, setup, v: { kind: 'hang', ...base, yHang, yTop } }
+  return { tempo, setup, v: { kind: 'hang', ...base, yHang, yTop, height } }
 }
 
 function sampleHang(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Hang): Pose {
   const c = phaseAt(u, ctx.tempo).c
-  const q = hangPose(skel, c, lerp(v.yHang, v.yTop, c), p, v)
+  const q = hangPose(skel, c, v.height(c), p, v)
   const implements_ = [v.barPose]
   if (v.kneeling) implements_.push(padPose(skel, q))
   return { q, implements: implements_, contacts: ctx.setup.contacts }
@@ -179,9 +231,10 @@ function seatedBody(skel: Skeleton, q: Float64Array, c: number, v: Pick<Seated, 
   const [l0, l1] = LEAN[v.vbar ? 'v_bar' : 'bar']
   const thorax = lerp(2, -8, c)
   const lumbar = lerp(0, -4, c)
+  const sc = scapularLead(c)
   setDofs(skel, q, {
-    'clavicle_*.elev': lerp(16, -4, c),
-    'clavicle_*.prot': lerp(4, -12, c),
+    'clavicle_*.elev': lerp(16, -4, sc),
+    'clavicle_*.prot': lerp(4, -12, sc),
     'thorax.flex': thorax,
     'lumbar.flex': lumbar,
     'neck.flex': lerp(-6, 2, c),
@@ -218,28 +271,31 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const elbowAt = (y: number) => {
     const q = Float64Array.from(q0)
     const top = topAt(y)
-    arms(skel, q, p, spec, handlePose(spec, top, pulleyFor(top)), true)
+    arms(skel, q, p, spec, handlePose(spec, top, pulleyFor(top)), true, 0, leadUprot(0, 30))
     return q[skel.dof['elbow_l.flex']]
   }
   const top = topAt(root1d((y) => elbowAt(y) - PULLDOWN_TOP_ELBOW[vbar ? 'v_bar' : 'bar'], gh[1] + 0.3, gh[1] + 0.75, { tol: 1e-6 }).x)
   const pulley = pulleyFor(top)
-  // finish: the bar at the upper chest (the V-bar handles lower, at the sternum)
+  // finish: the bar at the upper chest (the V-bar handles lower, in front of the sternum)
   const q1 = zeroQ(skel)
   seatedBody(skel, q1, 1, base)
   const f1 = fk(skel, q1)
-  const bottom = vbar ? add(sitePos(skel, f1, 'sternum'), [0, 0.03, 0.06]) : add(sitePos(skel, f1, 'front_rack'), [0, -0.02, 0.07])
+  const bottom = vbar ? add(sitePos(skel, f1, 'sternum'), VBAR_FINISH) : add(sitePos(skel, f1, 'front_rack'), [0, -0.02, 0.07])
   // thigh pad just above the knees, seat under the pelvis, column and top arm to the pulley (static, drawn only)
   const knee = localToWorld(skel, f0, 'femur_l', [0, -femur.length + 0.1, 0])
-  const pad: V3 = [0, knee[1] + 0.1, knee[2]]
+  const caps0 = bodyCapsules(skel, f0)
+  const thighs = caps0.filter((c) => c.region.startsWith('thigh_'))
+  const seat = restAgainst(caps0.filter((c) => c.region === 'trunk' || /^thigh_[lr]1/.test(c.name)), { shape: 'box', center: [0, SEAT_HIP[1] - 0.13, SEAT_HIP[2] + 0.05], size: [0.4, 0.06, 0.4], pad: true } as Part & { shape: 'box' }, [0, -1, 0])
+  const thighPad = restAgainst(thighs, { ...cyl([-0.3, knee[1] + 0.1, knee[2]], [0.3, knee[1] + 0.1, knee[2]], 0.06), pad: true }, [0, 1, 0])
   const frame: ImplementSpec = {
     id: 'station',
     kind: 'bench',
     mass: 0,
     com: [0, 0, 0],
     parts: [
-      { shape: 'box', center: [0, SEAT_HIP[1] - 0.13, SEAT_HIP[2] + 0.05], size: [0.4, 0.06, 0.4] },
-      cyl([0, 0, SEAT_HIP[2] + 0.05], [0, SEAT_HIP[1] - 0.16, SEAT_HIP[2] + 0.05], 0.035),
-      cyl([-0.3, pad[1], pad[2]], [0.3, pad[1], pad[2]], 0.06),
+      seat,
+      cyl([0, 0, SEAT_HIP[2] + 0.05], [0, seat.center[1] - 0.03, SEAT_HIP[2] + 0.05], 0.035),
+      thighPad,
       cyl([0, 0, -0.45], [0, BAR_HEIGHT + 0.1, -0.45], 0.05),
       cyl([0, BAR_HEIGHT + 0.1, -0.45], [0, BAR_HEIGHT + 0.1, pulley[2]], 0.04),
       cyl([0, BAR_HEIGHT + 0.1, pulley[2]], pulley, 0.03),
@@ -261,7 +317,7 @@ function sampleSeated(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Seated): Pos
   seatedBody(skel, q, c, v)
   // the bar bows forward a little so it passes in front of the face
   const hp = handlePose(v.handle, add(add(scale(v.top, 1 - c), scale(v.bottom, c)), [0, 0, BOW * Math.sin(Math.PI * c)]), v.pulley)
-  arms(skel, q, p, v.handle, hp, true, c)
+  arms(skel, q, p, v.handle, hp, true, c, leadUprot(c, 30))
   return { q, implements: [hp, { id: 'station', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
 }
 

@@ -269,7 +269,7 @@ export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOpt
     roughness: o.roughness,
     metalness: 0,
     vertexColors: true,
-    side: name === 'shorts' ? DoubleSide : undefined,
+    ...(name === 'shorts' ? { side: DoubleSide } : {}),
     transparent: name === 'hair',
   })
   mat.name = name

@@ -21,6 +21,8 @@ import { Route as SharedRouteImport } from './routes/shared'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as DayDowRouteImport } from './routes/day.$dow'
 import { Route as DevFigureRouteImport } from './routes/dev.figure'
+import { Route as DevMotionRouteImport } from './routes/dev.motion'
+import { Route as DevReviewRouteImport } from './routes/dev.review'
 import { Route as ExerciseSlugRouteImport } from './routes/exercise.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +85,16 @@ const DevFigureRoute = DevFigureRouteImport.update({
   path: '/dev/figure',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevMotionRoute = DevMotionRouteImport.update({
+  id: '/dev/motion',
+  path: '/dev/motion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevReviewRoute = DevReviewRouteImport.update({
+  id: '/dev/review',
+  path: '/dev/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExerciseSlugRoute = ExerciseSlugRouteImport.update({
   id: '/exercise/$slug',
   path: '/exercise/$slug',
@@ -102,6 +114,8 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/day/$dow': typeof DayDowRoute
   '/dev/figure': typeof DevFigureRoute
+  '/dev/motion': typeof DevMotionRoute
+  '/dev/review': typeof DevReviewRoute
   '/exercise/$slug': typeof ExerciseSlugRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +131,8 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/day/$dow': typeof DayDowRoute
   '/dev/figure': typeof DevFigureRoute
+  '/dev/motion': typeof DevMotionRoute
+  '/dev/review': typeof DevReviewRoute
   '/exercise/$slug': typeof ExerciseSlugRoute
 }
 export interface FileRoutesById {
@@ -133,6 +149,8 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/day/$dow': typeof DayDowRoute
   '/dev/figure': typeof DevFigureRoute
+  '/dev/motion': typeof DevMotionRoute
+  '/dev/review': typeof DevReviewRoute
   '/exercise/$slug': typeof ExerciseSlugRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +168,8 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/day/$dow'
     | '/dev/figure'
+    | '/dev/motion'
+    | '/dev/review'
     | '/exercise/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +185,8 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/day/$dow'
     | '/dev/figure'
+    | '/dev/motion'
+    | '/dev/review'
     | '/exercise/$slug'
   id:
     | '__root__'
@@ -180,6 +202,8 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/day/$dow'
     | '/dev/figure'
+    | '/dev/motion'
+    | '/dev/review'
     | '/exercise/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +220,8 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   DayDowRoute: typeof DayDowRoute
   DevFigureRoute: typeof DevFigureRoute
+  DevMotionRoute: typeof DevMotionRoute
+  DevReviewRoute: typeof DevReviewRoute
   ExerciseSlugRoute: typeof ExerciseSlugRoute
 }
 
@@ -285,6 +311,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevFigureRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/motion': {
+      id: '/dev/motion'
+      path: '/dev/motion'
+      fullPath: '/dev/motion'
+      preLoaderRoute: typeof DevMotionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/review': {
+      id: '/dev/review'
+      path: '/dev/review'
+      fullPath: '/dev/review'
+      preLoaderRoute: typeof DevReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exercise/$slug': {
       id: '/exercise/$slug'
       path: '/exercise/$slug'
@@ -308,6 +348,8 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   DayDowRoute: DayDowRoute,
   DevFigureRoute: DevFigureRoute,
+  DevMotionRoute: DevMotionRoute,
+  DevReviewRoute: DevReviewRoute,
   ExerciseSlugRoute: ExerciseSlugRoute,
 }
 export const routeTree = rootRouteImport

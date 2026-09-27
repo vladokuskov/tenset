@@ -2,15 +2,16 @@
 
 Frozen param vocabulary for `media.params` of every template id in `data/backlog.csv`. Source of truth is
 `src/motion/templates/schemas.ts` (zod, strict: unknown keys fail); the per-template tables below are generated
-from it. Legacy record params map onto this vocabulary with `pipeline/motion/normalize-params.ts`
-(dry run output: `normalized-params.json`, all 106 records parse).
+from it. All 106 exercise records were normalized onto this vocabulary on 2026-09-27 (the one-pass mapping is
+summarized below; the script and its dry-run output are retired). `src/motion/params.test.ts` checks every record's
+`media.params` against its strict schema, and motion QA (`pipeline/motion/qa.ts`) reads the records directly.
 
 ## Conventions
 
 - Angles in degrees. Joint angles use 0 = straight / anatomical neutral, flexion positive.
 - World axes: X = figure's left, Y = up, Z = forward (same as the figure and glTF). Metres.
 - `gripWidth`: hand-centre distance as a multiple of skeleton `shoulderWidth` (distance between the shoulder
-  joint centres; 0.454 m on body-a). 1.0 = hands directly above/below the shoulder joints. Literature quotes
+  joint centres; 0.454 m on body.glb). 1.0 = hands directly above/below the shoulder joints. Literature quotes
   biacromial breadth (BAD), which is narrower; assuming BAD of about 0.40 m, BAD 1.4x is roughly gripWidth 1.25.
 - `benchAngle`: back pad angle from horizontal. 0 flat, positive incline, negative decline, 90 upright seat back.
 - `torsoAngle`: trunk angle from vertical. 0 upright, 90 horizontal.
@@ -40,7 +41,7 @@ from it. Legacy record params map onto this vocabulary with `pipeline/motion/nor
 | elbowFlare | 0..90 | upper-arm abduction from the torso (bottom of presses, finish of rows) |
 | shoulderFlexion | -60..180 | upper-arm angle relative to the torso in the sagittal plane |
 
-## Legacy to canonical (normalize-params.ts)
+## Legacy to canonical (applied once, 2026-09-27)
 
 - `stance: standing|seated`, `seated: true`, `prone: true` become `posture`; `stance: parallel` becomes `hip`.
 - `handle` becomes `attachment` (`v-bar` to `v_bar`, `long-bar` to `long_bar`, `single` to `single_handle`).

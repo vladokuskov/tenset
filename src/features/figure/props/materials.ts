@@ -35,7 +35,28 @@ export function createPropMaterials() {
   handle.bumpMap!.repeat.set(10, 3)
   const plate = new MeshPhysicalMaterial({ color: '#8d9197', roughness: 0.36, metalness: 0.45, clearcoat: 0.3, clearcoatRoughness: 0.35 })
   const plateFace = new MeshPhysicalMaterial({ color: '#a4a8ae', roughness: 0.3, metalness: 0.5 })
-  return { frame, frameDark, pad, rubber, handle, plate, plateFace }
+  // knurled bars: the kit's knurl geometry scales v by length, so one tile is about 2.5 cm long
+  const gripTex = knurlTexture().clone()
+  gripTex.repeat.set(12, 1)
+  gripTex.needsUpdate = true
+  const grip = new MeshPhysicalMaterial({ color: '#2a2b2f', roughness: 0.42, metalness: 0.55, bumpMap: gripTex, bumpScale: 0.6 })
+  const steel = new MeshPhysicalMaterial({ color: '#d3d6db', roughness: 0.26, metalness: 0.62, clearcoat: 0.2, clearcoatRoughness: 0.2 })
+  const steelDark = new MeshPhysicalMaterial({ color: '#34363b', roughness: 0.35, metalness: 0.6 })
+  const cable = new MeshPhysicalMaterial({ color: '#3a3c41', roughness: 0.45, metalness: 0.5 })
+  const rope = new MeshPhysicalMaterial({ color: '#232427', roughness: 0.78, sheen: 0.3, sheenColor: '#5a5e68' })
+  const hole = new MeshPhysicalMaterial({ color: '#5d6168', roughness: 0.9 })
+  const stack = new MeshPhysicalMaterial({ color: '#8f9399', roughness: 0.34, metalness: 0.45, clearcoat: 0.3, clearcoatRoughness: 0.3 })
+  const pulley = new MeshPhysicalMaterial({ color: '#2b2c30', roughness: 0.5, metalness: 0.1 })
+  return { frame, frameDark, pad, rubber, handle, plate, plateFace, grip, steel, steelDark, cable, rope, hole, stack, pulley }
 }
 
 export type PropMaterials = ReturnType<typeof createPropMaterials>
+export type MatKey = keyof PropMaterials
+
+let shared: PropMaterials | null = null
+
+/** One material set shared by every prop (never disposed; a few small materials for the app's lifetime). */
+export function propMaterials(): PropMaterials {
+  shared ??= createPropMaterials()
+  return shared
+}

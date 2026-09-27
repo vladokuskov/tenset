@@ -60,3 +60,17 @@ export function dumbbellSockets(p: DumbbellParams = {}) {
     headRadius: o.headRadius,
   }
 }
+
+/** a grip point: handle centre under the hand, `axis` along the handle (little finger -> index, as src/motion Site.axis) */
+export type GripSocket = { position: Vector3; axis: Vector3 }
+
+/** a contact surface: centre on the surface, outward normal, optional extent (m) along `along` and across it */
+export type SurfaceSocket = { position: Vector3; normal: Vector3; along?: Vector3; size?: [number, number] }
+
+/** where a cable leaves its pulley: wheel centre, the tangent point it leaves from, unit direction towards the load */
+export type CableSocket = { pulley: Vector3; exit: Vector3; direction: Vector3 }
+
+export function gripSocket(site: { pos: readonly number[]; axis?: readonly number[] }): GripSocket {
+  const a = site.axis ?? [1, 0, 0]
+  return { position: new Vector3(site.pos[0], site.pos[1], site.pos[2]), axis: new Vector3(a[0], a[1], a[2]).normalize() }
+}

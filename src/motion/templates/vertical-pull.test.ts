@@ -1,15 +1,13 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { fk, sitePos } from '../fk.ts'
+import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist } from '../math.ts'
-import { testSkeleton } from '../testing.ts'
+import { dist, qconj, qrot, sub } from '../math.ts'
+import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
 const skel = testSkeleton()
-type Variant = { slug: string; template: string; laterality: string; params: Record<string, unknown> }
-const variants = (JSON.parse(readFileSync(new URL('../../../data/motion-templates/variants.json', import.meta.url), 'utf8')) as Variant[]).filter((v) => v.template === 'vertical-pull')
+const variants = motionRecords('vertical-pull')
 const baked = new Map(variants.map((v) => [v.slug, bake(getTemplate('vertical-pull'), parseParams('vertical-pull', v.params, v.laterality), skel)]))
 const get = (slug: string) => baked.get(slug)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
@@ -44,6 +42,28 @@ describe('vertical-pull template', () => {
     expect(dof(b, 0.625, 'clavicle_l.elev')).toBeGreaterThan(dof(b, 0, 'clavicle_l.elev') + 15)
     const top = fk(skel, frameQ(b, 0))
     expect(sitePos(skel, top, 'chin')[1]).toBeGreaterThan(frameImplements(b, 0)[0].pos[1])
+  })
+
+  it('pull-up: scapular depression and downward rotation lead the elbows (not a linear blend)', () => {
+    const b = get('301-pull-up')
+    const n = b.frames
+    // concentric frames from the bottom pause to the top
+    const frames = Array.from({ length: n }, (_, i) => i).filter((i) => i / n > 0.68 && i / n < 0.93)
+    const share = (i: number, name: string, lo: number, hi: number) => (frameQ(b, i)[skel.dof[name]] - lo) / (hi - lo)
+    const [cHang, cTop] = [dof(b, 0.625, 'clavicle_l.elev'), dof(b, 0, 'clavicle_l.elev')]
+    const [eHang, eTop] = [dof(b, 0.625, 'elbow_l.flex'), dof(b, 0, 'elbow_l.flex')]
+    const early = frames.find((i) => share(i, 'elbow_l.flex', eHang, eTop) > 0.25)!
+    expect(share(early, 'clavicle_l.elev', cHang, cTop)).toBeGreaterThan(0.5)
+    expect(dof(b, 0.625, 'scapula_l.uprot')).toBeGreaterThan(dof(b, 0, 'scapula_l.uprot') + 10)
+  })
+
+  it('close-grip pulldown finishes with the elbows by the sides', () => {
+    const b = get('311-close-grip-pulldown')
+    const f = fk(skel, frameQ(b, 0))
+    const th = f.rot[skel.seg.thorax2]
+    const e = qrot(qconj(th), sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'thorax2')))
+    expect(Math.abs(e[0])).toBeLessThan(0.26)
+    expect(dof(b, 0, 'shoulder_l.elev')).toBeLessThan(25)
   })
 
   it('pulldowns fix the pelvis to the seat and bring the bar past the face to the chest', () => {

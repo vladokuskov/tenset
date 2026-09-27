@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { attachHand, legKinematics, plantFoot, writeLeg } from './constraints.ts'
+import { attachHand, elbowRotation, legKinematics, plantFoot, writeLeg } from './constraints.ts'
 import { fk, segPos, sitePos } from './fk.ts'
-import { eulerAngles, limbRotation, shoulderAngles, twoBone } from './ik.ts'
-import { dist, qdiff, qrot, sub, type V3 } from './math.ts'
-import { jointRotation, setDofs, zeroQ, type Side } from './skeleton.ts'
+import { eulerAngles, hingeIK, limbRotation, shoulderAngles, twoBone } from './ik.ts'
+import { add, DEG, dist, qaxis, qdiff, qrot, sub, type V3 } from './math.ts'
+import { CARRY, jointRotation, setDofs, zeroQ, type Side } from './skeleton.ts'
 import { rng, testSkeleton } from './testing.ts'
 
 const skel = testSkeleton()
@@ -59,7 +59,7 @@ describe('FK / IK round trips', () => {
       const s = skel.data.sites.grip_l
       const q2 = zeroQ(skel)
       const pole = sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'humerus_l'))
-      const err = attachHand(skel, q2, 'l', { pos: target, axis: qrot(hand, s.axis!), palm: qrot(hand, s.normal!), hand }, { pole })
+      const err = attachHand(skel, q2, 'l', { pos: target, axis: qrot(hand, s.axis!), palm: qrot(hand, s.normal!), hand }, { pole, uprot: 0 })
       expect(err).toBeLessThan(1e-6)
       expect(dist(sitePos(skel, fk(skel, q2), 'grip_l'), target)).toBeLessThan(1e-6)
       expect(q2[skel.dof['elbow_l.flex']]).toBeCloseTo(q[skel.dof['elbow_l.flex']], 4)
@@ -80,6 +80,38 @@ describe('FK / IK round trips', () => {
       expect(dist(segPos(skel, f2, 'foot_l'), foot.ankle)).toBeLessThan(1e-6)
       expect(qdiff(f2.rot[skel.seg.foot_l], foot.rot)).toBeLessThan(1e-6)
       expect(leg.residual).toBeLessThan(1e-6)
+    }
+  })
+})
+
+describe('elbow carrying angle', () => {
+  const at = (flex: number, pro = -85) => {
+    const q = zeroQ(skel)
+    setDofs(skel, q, { 'elbow_l.flex': flex, 'elbow_r.flex': flex, 'forearm_l.pro': pro, 'forearm_r.pro': pro })
+    const f = fk(skel, q)
+    const fore = (s: Side) => sub(segPos(skel, f, `hand_${s}`), segPos(skel, f, `forearm_${s}`))
+    return { l: fore('l'), r: fore('r') }
+  }
+  it('angles the straight forearm out by ~12 deg on both sides and folds it onto the upper arm at full flexion', () => {
+    const straight = at(0)
+    const deg = (v: V3) => (Math.atan2(Math.abs(v[0]), -v[1]) * 180) / Math.PI
+    expect(deg(straight.l)).toBeCloseTo(12, 1)
+    expect(straight.l[0]).toBeGreaterThan(0)
+    expect(straight.r[0]).toBeLessThan(0)
+    const folded = qrot(elbowRotation(skel, 'l', 180), [0, -1, 0])
+    expect(dist(folded, [0, 1, 0])).toBeLessThan(1e-9)
+  })
+
+  it('hinge IK with the carrying angle reaches the target and reports the joint flexion', () => {
+    const r = rng(9)
+    for (let k = 0; k < 30; k++) {
+      const flex = 5 + 140 * r()
+      const pole: V3 = [0.3 * r(), -0.2, -1]
+      const target = add([0, 0, 0], qrot(qaxis([1, 0, 0], -(20 + 60 * r()) * DEG), add([0, -0.27, 0], qrot(elbowRotation(skel, 'l', flex), [0, -0.28, 0]))))
+      const ik = hingeIK([0, 0, 0], target, 0.27, 0.28, (x) => elbowRotation(skel, 'l', x), pole, { carry: CARRY, minFlex: 1, soft: 1 })
+      expect(dist(ik.end, target)).toBeLessThan(1e-9)
+      expect(ik.flex).toBeCloseTo(flex, 6)
+      expect(dist(add(qrot(ik.upper, [0, -0.27, 0]), qrot(ik.lower, [0, -0.28, 0])), target)).toBeLessThan(1e-9)
     }
   })
 })

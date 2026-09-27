@@ -79,6 +79,29 @@ export function centerOfMass(skel: Skeleton, f: FK, loads: PointMass[] = []): V3
   return scale(acc, 1 / m)
 }
 
+export const GRAVITY = 9.81
+
+/** a force applied at a point, newtons (cable pulls) */
+export type PointForce = { at: V3; force: V3 }
+
+/**
+ * Centre of pressure on the floor for static equilibrium of body + loads under gravity plus external point forces:
+ * moments about the floor origin give c_h = (sum m g p_h + a_y F_h - a_h F_y) / (M g - F_y) for h in {x, z}.
+ * Returns [x, z]; with no forces it is the centre of mass.
+ */
+export function centerOfPressure(skel: Skeleton, f: FK, loads: PointMass[] = [], forces: PointForce[] = []): [number, number] {
+  let m = loads.reduce((a, l) => a + l.mass, 0)
+  for (const s of skel.segments) m += s.mass * BODY_MASS
+  const com = centerOfMass(skel, f, loads)
+  let nx = m * GRAVITY * com[0], nz = m * GRAVITY * com[2], den = m * GRAVITY
+  for (const { at, force } of forces) {
+    nx += at[1] * force[0] - at[0] * force[1]
+    nz += at[1] * force[2] - at[2] * force[1]
+    den -= force[1]
+  }
+  return [nx / den, nz / den]
+}
+
 /** stick-figure joint chain for drawing: [from, to] world points per segment */
 export function sticks(skel: Skeleton, f: FK): { segment: string; a: V3; b: V3 }[] {
   const out: { segment: string; a: V3; b: V3 }[] = []

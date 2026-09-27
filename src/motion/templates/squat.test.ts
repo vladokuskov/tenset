@@ -1,15 +1,13 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { fk, segPos, sitePos } from '../fk.ts'
+import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
-import { testSkeleton } from '../testing.ts'
+import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
 const skel = testSkeleton()
-type Variant = { slug: string; template: string; laterality: string; params: Record<string, unknown> }
-const variants = (JSON.parse(readFileSync(new URL('../../../data/motion-templates/variants.json', import.meta.url), 'utf8')) as Variant[]).filter((v) => v.template === 'squat')
+const variants = motionRecords('squat')
 const run = (raw: Record<string, unknown>) => bake(getTemplate('squat'), parseParams('squat', raw), skel)
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 /** trunk angle from vertical at the bottom of the rep, deg */
@@ -69,6 +67,32 @@ describe('squat template', () => {
     expect(kneeP[0]).toBeGreaterThan(onLine)
   })
 
+  it('front squat: fingertips on the bar with the wrists extended past the default 70 deg limit (front rack only)', () => {
+    const b = run({ implement: 'barbell', hold: 'front_rack', depth: 'full', gripWidth: 1.5 })
+    expect(b.limits?.['wrist_l.flex']).toEqual([-90, 75])
+    expect(b.contacts.filter((c) => c.site.startsWith('fingers_'))).toHaveLength(2)
+    for (let i = 0; i < b.frames; i += 7) {
+      const q = frameQ(b, i)
+      expect(q[skel.dof['wrist_l.flex']]).toBeLessThan(-70)
+      expect(q[skel.dof['wrist_l.flex']]).toBeGreaterThanOrEqual(-90.01)
+      const f = fk(skel, q)
+      const bar = frameImplements(b, i)[0]
+      for (const s of ['l', 'r'] as const) expect(dist(sitePos(skel, f, `fingers_${s}`), siteWorld(b.implements[0], bar, s).pos)).toBeLessThan(0.005)
+    }
+    expect(run({ hold: 'back_high' }).limits).toBeUndefined()
+  })
+
+  it('unloaded squat keeps the centre of mass toward the heel for a more upright trunk', () => {
+    const b = run({ implement: 'bodyweight', hold: 'hands', depth: 'full', armPosition: 'forward' })
+    expect(b.balance?.target).toBeLessThan(0)
+    const q = frameQ(b, at(b, 0.625))
+    const f = fk(skel, q)
+    const mid = (sitePos(skel, f, 'midfoot_l')[2] + sitePos(skel, f, 'midfoot_r')[2]) / 2
+    expect(centerOfMass(skel, f)[2] - mid).toBeCloseTo(b.balance!.target!, 2)
+    // trunk lean at the bottom was 48 deg with the COM held over the midfoot
+    expect(bottomLean(b)).toBeLessThan(40)
+  })
+
   it('leg press: pelvis fixed to the seat, feet ride the sled, hip flexion stays in range', () => {
     const b = run({ implement: 'machine', machine: 'leg_press', sledAngle: 45, footPosition: 'mid', stance: 'hip' })
     const p0 = frameQ(b, 0).slice(skel.dof['pelvis.tx'], skel.dof['pelvis.tz'] + 1)
@@ -76,12 +100,12 @@ describe('squat template', () => {
     for (let i = 0; i < b.frames; i += 3) {
       const q = frameQ(b, i)
       expect(q.slice(skel.dof['pelvis.tx'], skel.dof['pelvis.tz'] + 1)).toEqual(p0)
-      expect(q[skel.dof['hip_l.flex']]).toBeLessThanOrEqual(128.5)
+      expect(q[skel.dof['hip_l.flex']]).toBeLessThanOrEqual(112.5)
       const sled = frameImplements(b, i)[0]
       const f = fk(skel, q)
       expect(dist(sitePos(skel, f, 'heel_l'), siteWorld(b.implements[0], sled, 'heel_l').pos)).toBeLessThan(0.002)
       travel = Math.max(travel, dist(sled.pos, frameImplements(b, 0)[0].pos))
     }
-    expect(travel).toBeGreaterThan(0.2)
+    expect(travel).toBeGreaterThan(0.15)
   })
 })

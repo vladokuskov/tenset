@@ -6,7 +6,10 @@
 // --viewport 390x390, --spin yaw,pitch (degrees, turns the figure about the focus bone), --grip R:hook:0.033 (hands.ts
 // applyGrip on the posed figure), --pulse 0.45, --probe (hand vertices inside the held handle) and --perf (GPU timings) do too
 // inline poses use | as separator: --shot 'x={"base":"relaxed","joints":{...}}|front'
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+// live motion contact sheets (/dev/motion, one row of phases per exercise): <out>/figure-<id>.png
+// node pipeline/render/still.ts --out qa/out/animated --motion all [--phases 8] [--view hero|front|side|back] [--live]
+//   [--mfocus wrist_R:0.3] (close-up on a bone)
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { chromium, type Browser, type Page } from '@playwright/test'
 import { createServer, type ViteDevServer } from 'vite'
@@ -336,6 +339,49 @@ async function probeHandles() {
   return out
 }
 
+export type MotionSheet = { id: number; phases: number; view?: string; live?: boolean; viewport: [number, number]; focus?: string; size?: number }
+
+/** ids of the exercises with a shipped baked loop */
+export function motionIds(): number[] {
+  const dir = path.join(ROOT, 'src/features/figure/motion/baked')
+  return readdirSync(dir).map((f) => Number(/^(\d+)-/.exec(f)?.[1])).filter((n) => n > 0).sort((a, b) => a - b)
+}
+
+async function renderMotion(page: Page, base: string, m: MotionSheet, dir: string): Promise<{ files: string[]; captions: string[] }> {
+  const q = new URLSearchParams({ id: String(m.id), t: '0', paused: '1' })
+  if (m.view) q.set('view', m.view)
+  if (m.live) q.set('live', '1')
+  if (m.focus) q.set('focus', m.focus)
+  if (m.size) q.set('size', String(m.size))
+  const [w, h] = m.viewport
+  if (page.viewportSize()?.width !== w || page.viewportSize()?.height !== h) await page.setViewportSize({ width: w, height: h })
+  await page.goto(`${base}/dev/motion?${q}`)
+  await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, undefined, { timeout: 90_000 })
+  const files: string[] = [], captions: string[] = []
+  for (let k = 0; k < m.phases; k++) {
+    const t = k / m.phases
+    await page.evaluate((u) => (window as unknown as { renderAt(u: number): Promise<void> }).renderAt(u), t)
+    const file = path.join(dir, `${m.id}-${k}.png`)
+    await page.screenshot({ path: file, type: 'png' })
+    files.push(file)
+    captions.push(`t=${t.toFixed(3)}`)
+  }
+  return { files, captions }
+}
+
+async function gridSheet(page: Page, files: string[], captions: string[], title: string, cols: number, out: string) {
+  const cell = 240
+  const imgs = files
+    .map((f, i) => `<figure><img src="data:image/png;base64,${readFileSync(f).toString('base64')}"><figcaption>${captions[i]}</figcaption></figure>`)
+    .join('')
+  await page.setViewportSize({ width: cell * cols, height: 100 })
+  await page.setContent(
+    `<style>body{margin:0;font:12px system-ui;background:#fff}h1{font-size:14px;margin:6px 8px}main{display:grid;grid-template-columns:repeat(${cols},${cell}px)}figure{margin:0;text-align:center}img{width:${cell}px;display:block}</style><h1>${title}</h1><main>${imgs}</main>`,
+  )
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete))
+  await page.screenshot({ path: out, type: 'png', fullPage: true })
+}
+
 async function contactSheet(page: Page, files: string[], out: string) {
   const imgs = files
     .map((f) => `<figure><img src="data:image/png;base64,${readFileSync(f).toString('base64')}"><figcaption>${path.basename(f, '.png')}</figcaption></figure>`)
@@ -365,6 +411,12 @@ function parseArgs(argv: string[]) {
   let pulse: number | undefined
   const compose: string[] = []
   const only: string[] = []
+  let motion: number[] = []
+  let phases = 8
+  let view: string | undefined
+  let live = false
+  let mfocus: string | undefined
+  let msize: number | undefined
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--preset') preset = argv[++i]
@@ -382,6 +434,17 @@ function parseArgs(argv: string[]) {
     else if (a === '--perf') perf = true
     else if (a === '--pulse') pulse = Number(argv[++i])
     else if (a === '--compose') compose.push(argv[++i])
+    else if (a === '--motion') {
+      const v = argv[++i]
+      motion = v === 'all' ? motionIds() : v.split(',').map(Number)
+    } else if (a === '--phases') phases = Number(argv[++i])
+    else if (a === '--view') view = argv[++i]
+    else if (a === '--live') live = true
+    else if (a === '--mfocus') {
+      const [bone, sz] = argv[++i].split(':')
+      mfocus = bone
+      msize = sz ? Number(sz) : undefined
+    }
     else if (a === '--shot') {
       const arg = argv[++i]
       const name = arg.slice(0, arg.indexOf('='))
@@ -408,7 +471,8 @@ function parseArgs(argv: string[]) {
     if (perf) s.perf = true
     if (pulse !== undefined) s.pulse = pulse
   }
-  return { shots, out, sheet, preset, only, compose }
+  const motions: MotionSheet[] = motion.map((id) => ({ id, phases, view, live, viewport: viewport ?? [390, 480], focus: mfocus, size: msize }))
+  return { shots, out, sheet, preset, only, compose, motions }
 }
 
 async function main() {
@@ -418,7 +482,7 @@ async function main() {
   let shots = p ? p.shots : args.shots
   if (args.only.length) shots = shots.filter((s) => args.only.some((o) => s.name.includes(o)))
   const outDir = path.resolve(ROOT, args.out || p?.out || 'qa/out/tmp')
-  if (!shots.length && !args.compose.length) throw new Error('no shots')
+  if (!shots.length && !args.compose.length && !args.motions.length) throw new Error('no shots')
   mkdirSync(outDir, { recursive: true })
 
   const { browser, renderer } = await launchMetal()
@@ -443,6 +507,17 @@ async function main() {
       console.log(`${path.relative(ROOT, file)} (${Date.now() - t} ms)`)
     }
     const sheetPage = await browser.newPage()
+    for (const m of args.motions) {
+      const t = Date.now()
+      const tmp = path.join(outDir, '.frames')
+      mkdirSync(tmp, { recursive: true })
+      const { files, captions } = await renderMotion(page, url, m, tmp)
+      const tag = [m.view, m.focus].filter(Boolean).join('-')
+      const file = path.join(outDir, `figure-${m.id}${tag ? `-${tag}` : ''}.png`)
+      await gridSheet(sheetPage, files, captions, `${m.id}${tag ? ` ${tag}` : ''}`, Math.min(4, m.phases), file)
+      console.log(`${path.relative(ROOT, file)} (${Date.now() - t} ms)`)
+      rmSync(tmp, { recursive: true, force: true })
+    }
     for (const c of args.compose) {
       // --compose out.png=a.png,b.png: a captioned sheet of existing images (repo paths)
       const [out, list] = c.split('=')

@@ -301,15 +301,18 @@ function handleFallback(frames: Record<string, Frame>) {
   return { center, axis: ACROSS.clone().negate() }
 }
 
-function solveWrap(grip: GripName, def: WrapDef, diameter: number): GripSolution {
+/** a handle placed by the caller (motion grips): centre and axis (little finger -> index) in the left wrist frame */
+export type HandlePlacement = { center: Vector3; axis: Vector3 }
+
+function solveWrap(grip: GripName, def: WrapDef, diameter: number, place?: HandlePlacement): GripSolution {
   const R = diameter / 2
   // handle: across the palm, tilted, touching the most prominent metacarpal head
-  const axis = ACROSS.clone().negate().applyAxisAngle(PALM_N, def.tilt * DEG).normalize()
+  const axis = place ? place.axis.clone().normalize() : ACROSS.clone().negate().applyAxisAngle(PALM_N, def.tilt * DEG).normalize()
   const knuckle = rest['finger3-1'].p
   const along = new Vector3().crossVectors(PALM_N, axis).normalize()
   if (along.dot(new Vector3(0, 1, 0)) < 0) along.negate()
-  const center = knuckle.clone().addScaledVector(along, -def.depth)
-  let lift = -Infinity
+  const center = place ? place.center.clone() : knuckle.clone().addScaledVector(along, -def.depth)
+  let lift = place ? 0 : -Infinity
   for (const f of FINGERS) {
     const mc = `metacarpal${f - 1}`
     const fr = rest[mc]
@@ -323,7 +326,7 @@ function solveWrap(grip: GripName, def: WrapDef, diameter: number): GripSolution
       rel.addScaledVector(axis, -rel.dot(axis))
       const h = rel.dot(PALM_N)
       const side = rel.addScaledVector(PALM_N, -h).length()
-      if (side < R) lift = Math.max(lift, h + Math.sqrt(R * R - side * side))
+      if (side < R && !place) lift = Math.max(lift, h + Math.sqrt(R * R - side * side))
     }
   }
   center.addScaledVector(PALM_N, lift)
@@ -381,10 +384,18 @@ function solveWrap(grip: GripName, def: WrapDef, diameter: number): GripSolution
     const target = m.addScaledVector(outward(m), idx.rs + (HAND['finger1-3'].rz! + HAND['finger1-3'].rx!) / 2)
     Object.assign(deltas, fitThumb(deltas, target, ['finger2-1', 'finger2-2', 'finger2-3', 'finger3-2', 'finger3-3'], handle))
   }
+  if (place) return { grip, diameter, deltas, handle: { center, axis } }
   // centre the handle under the middle of the hand
   const fr = fk(deltas)
   const mid = fr['finger3-1'].p.clone().add(fr['finger4-1'].p).multiplyScalar(0.5).sub(center)
   return { grip, diameter, deltas, handle: { center: center.clone().addScaledVector(axis, mid.dot(axis)), axis } }
+}
+
+/** Wrap grip closed on a handle the caller placed (a motion's implement in the hand), left wrist frame. */
+export function computeGripAt(grip: GripName, diameter: number, place: HandlePlacement): GripSolution {
+  const w = WRAPS[grip]
+  if (!w) return computeGrip(grip, diameter)
+  return solveWrap(grip, w, diameter, place)
 }
 
 /** A fresh solve (no memo, no baked table). */
@@ -401,7 +412,7 @@ export function packGrip(s: GripSolution) {
   return [...POSED_BONES.flatMap((n) => eulerDeg(s.deltas[n])), ...s.handle.center.toArray().map((v) => r(v, 1e6)), ...s.handle.axis.toArray().map((v) => r(v, 1e6))]
 }
 
-function unpackGrip(grip: GripName, diameter: number, v: readonly number[]): GripSolution {
+export function unpackGrip(grip: GripName, diameter: number, v: readonly number[]): GripSolution {
   const deltas: Deltas = {}
   POSED_BONES.forEach((n, i) => {
     deltas[n] = new Quaternion().setFromEuler(new Euler(v[i * 3] * DEG, v[i * 3 + 1] * DEG, v[i * 3 + 2] * DEG, 'ZYX'))
@@ -469,6 +480,18 @@ export function applyGrip(rig: Rig, side: HandSide, grip: GripName, diameter?: n
     rig.bone(`${n}_${side}`).quaternion.copy(restQ).multiply(d)
   }
   rig.root.parent?.updateMatrixWorld(true)
+}
+
+/** Local finger bone rotations of a solution for one hand (rest times delta, mirrored for the right). */
+export function gripLocals(s: GripSolution, side: HandSide): [string, Quaternion][] {
+  const out: [string, Quaternion][] = []
+  for (const n of HAND_BONES) {
+    const d = s.deltas[n]
+    if (!d) continue
+    const q = REST[n].clone().multiply(d).normalize()
+    out.push([`${n}_${side}`, side === 'L' ? q : mirrorQ(q)])
+  }
+  return out
 }
 
 /** The memoized grip whose finger pose the rig's hand currently shows (within half a degree), if any. */

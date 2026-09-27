@@ -1,9 +1,10 @@
 // Numeric QA gates over every baked frame. Pure functions so tests can inject faults.
-import { frameImplements, frameQ, type Baked } from '../../src/motion/bake.ts'
-import { centerOfMass, fk, sitePos, type FK } from '../../src/motion/fk.ts'
-import { comWorld, siteWorld } from '../../src/motion/implements.ts'
+import { frameImplements, frameQ, staleReason, type Baked, type CompactMotion } from '../../src/motion/bake.ts'
+import { bodyCapsules, boundClearance, capsuleClearance, capsuleSolidClearance, placeParts, segmentDistance, type Capsule } from '../../src/motion/collide.ts'
+import { centerOfPressure, fk, sitePos, type FK } from '../../src/motion/fk.ts'
+import { cableForce, comWorld, siteWorld } from '../../src/motion/implements.ts'
 import { dist, qconj, qlog, qmul, type V3 } from '../../src/motion/math.ts'
-import { pairedDofs, type Skeleton } from '../../src/motion/skeleton.ts'
+import { pairedDofs, zeroQ, type Skeleton } from '../../src/motion/skeleton.ts'
 
 export type Gate = {
   name: string
@@ -32,9 +33,9 @@ export const LIMITS = {
   sizeBytes: 12 * 1024,
 }
 
-type Frames = { q: Float64Array[]; f: FK[]; impl: ReturnType<typeof frameImplements>[] }
+export type Frames = { q: Float64Array[]; f: FK[]; impl: ReturnType<typeof frameImplements>[] }
 
-function frames(b: Baked, skel: Skeleton): Frames {
+export function frames(b: Baked, skel: Skeleton): Frames {
   const q: Float64Array[] = [], f: FK[] = [], impl: ReturnType<typeof frameImplements>[] = []
   for (let i = 0; i < b.frames; i++) {
     q.push(frameQ(b, i))
@@ -99,7 +100,8 @@ function limitGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
       if (d.unit !== 'deg') continue
       if (nearPole(skel, F.q[i], d.name)) continue
       const v = F.q[i][d.index]
-      const e = Math.max(0, v - d.max, d.min - v)
+      const [min, max] = b.limits?.[d.name] ?? [d.min, d.max]
+      const e = Math.max(0, v - max, min - v)
       over.push({ v: e, frame: i, detail: `${d.name}=${v.toFixed(1)}` })
       if (/^(knee|elbow)_[lr]\.flex$/.test(d.name)) hinge.push({ v: -v, frame: i, detail: d.name })
     }
@@ -209,7 +211,9 @@ function balanceGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
     let point: V3
     if (spec.point === 'com') {
       const loads = b.implements.filter((s) => s.mass > 0).map((s) => ({ mass: s.mass, pos: comWorld(s, impl.find((x) => x.id === s.id)!) }))
-      point = centerOfMass(skel, f, loads)
+      const forces = (b.cables ?? []).map((c) => cableForce(c, impl.find((x) => x.id === c.implement)!))
+      const [x, z] = centerOfPressure(skel, f, loads, forces)
+      point = [x, 0, z]
     } else {
       const id = spec.point.implement
       point = comWorld(b.implements.find((s) => s.id === id)!, impl.find((x) => x.id === id)!)
@@ -224,9 +228,187 @@ function balanceGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
       const pose = impl.find((x) => x.id === implement)!
       support = sites.reduce((a, n) => a + siteWorld(s, pose, n).pos[2], 0) / sites.length
     }
-    vals.push({ v: Math.abs(point[2] - support) * 1000, frame: i })
+    vals.push({ v: Math.abs(point[2] - support - (spec.target ?? 0)) * 1000, frame: i })
   }
-  return [worst('balance (forward offset)', 'mm', spec.tol * 1000, vals)]
+  return [worst(spec.target ? `balance (forward offset from ${Math.round(spec.target * 1000)} mm)` : 'balance (forward offset)', 'mm', spec.tol * 1000, vals)]
+}
+
+
+// ---------- penetration ----------
+
+/**
+ * Tolerated penetration per body-region pair, mm. Hard contacts 3 mm; soft tissue that legitimately compresses
+ * (upper arm on the lats, thigh on the belly in deep flexion, elbows inside the knees) 8-15 mm. `same`/`other`
+ * restrict to the same or the opposite side; adjacent segments (upper arm and forearm of one arm, shoulder line
+ * and upper arm) and the trunk-neck-head chain are not checked.
+ */
+export const BODY_PAIRS: [string, string, 'any' | 'same' | 'other', number][] = [
+  ['upperarm', 'trunk', 'any', 12], ['forearm', 'trunk', 'any', 10], ['hand', 'trunk', 'any', 10],
+  ['upperarm', 'head', 'any', 10], ['upperarm', 'neck', 'any', 10], ['forearm', 'head', 'any', 5], ['forearm', 'neck', 'any', 8],
+  ['hand', 'head', 'any', 3], ['hand', 'neck', 'any', 5], ['hand', 'girdle', 'any', 10], ['forearm', 'girdle', 'any', 10],
+  ['hand', 'thigh', 'any', 8], ['forearm', 'thigh', 'any', 12], ['upperarm', 'thigh', 'any', 12],
+  ['hand', 'shank', 'any', 8], ['forearm', 'shank', 'any', 10], ['thigh', 'trunk', 'any', 15],
+  ['hand', 'upperarm', 'same', 10], ['hand', 'upperarm', 'other', 5], ['forearm', 'upperarm', 'other', 8],
+  ['hand', 'forearm', 'other', 5], ['hand', 'hand', 'other', 5], ['forearm', 'forearm', 'other', 8], ['upperarm', 'upperarm', 'other', 10],
+  ['thigh', 'thigh', 'other', 15], ['shank', 'shank', 'other', 10], ['thigh', 'shank', 'other', 10], ['foot', 'foot', 'other', 3], ['foot', 'shank', 'other', 5],
+]
+
+export const PROP_TOL = {
+  /** metal and frames */
+  rigid: 3,
+  /** bench pads, seats, knee pads, foot plates */
+  pad: 15,
+  /** the cable line against the body */
+  cable: 10,
+}
+
+/** cylinders up to this radius on an implement a hand grips are handles or uprights it wraps (heads, plates, sleeves are not) */
+export const HANDLE_R = 0.03
+
+/** capsule pairs overlapping more than this standing relaxed are anatomical junctions (arm root, hip), not contacts */
+export const JUNCTION_MM = 25
+
+/**
+ * Segment pairs that fold into each other about a joint: in hip flexion the thigh root presses into the belly below
+ * the navel (the crease runs from the hip bone to the groin), so those are not checked. Between navel and ribs the
+ * belly still gives way: every deep squat on this mesh puts 45-60 mm of thigh into it (vertex depth, rigid
+ * skinning), so it gets 60 mm; the ribs and chest keep the 15 mm thigh-trunk default.
+ */
+const JUNCTION_SEGMENTS = [/^femur_[lr]\|(pelvis|lumbar1|lumbar2)$/]
+/**
+ * The upper chest at the arm root is the pec and lat folds of the armpit: they bunch when the arm is raised
+ * forward or pulled in, so the upper arm gets 20 mm there instead of 12.
+ */
+const SEGMENT_TOL: [RegExp, number][] = [[/^femur_[lr]\|lumbar3$/, 60], [/^humerus_[lr]\|thorax2$/, 20]]
+
+const baseOf = (region: string) => region.replace(/_[lr]$/, '')
+const sideOf = (region: string) => region.match(/_([lr])$/)?.[1]
+
+function bodyTol(ra: string, rb: string): number | null {
+  const [ba, bb] = [baseOf(ra), baseOf(rb)]
+  const [sa, sb] = [sideOf(ra), sideOf(rb)]
+  for (const [x, y, rel, tol] of BODY_PAIRS) {
+    if (!((ba === x && bb === y) || (ba === y && bb === x))) continue
+    if (rel === 'same' && !(sa && sa === sb)) continue
+    if (rel === 'other' && !(sa && sb && sa !== sb)) continue
+    return tol
+  }
+  return null
+}
+
+type BodyPair = { i: number; j: number; label: string; tol: number; allowance: number }
+
+const pairCache = new WeakMap<Skeleton, BodyPair[]>()
+
+/** body capsule pairs to check, with the overlap they already have standing relaxed (zero pose) as an allowance */
+export function bodyPairs(skel: Skeleton): BodyPair[] {
+  let out = pairCache.get(skel)
+  if (out) return out
+  out = []
+  const rest = bodyCapsules(skel, fk(skel, zeroQ(skel)))
+  for (let i = 0; i < rest.length; i++) {
+    for (let j = i + 1; j < rest.length; j++) {
+      const tol = bodyTol(rest[i].region, rest[j].region)
+      if (tol === null) continue
+      const segs = [`${rest[i].segment}|${rest[j].segment}`, `${rest[j].segment}|${rest[i].segment}`]
+      if (JUNCTION_SEGMENTS.some((re) => segs.some((x) => re.test(x)))) continue
+      const c = capsuleClearance(rest[i], rest[j]) * 1000
+      if (c < -JUNCTION_MM) continue
+      const [a, b] = [rest[i].region, rest[j].region].sort()
+      const override = SEGMENT_TOL.find(([re]) => segs.some((x) => re.test(x)))?.[1]
+      const trunkSeg = rest[i].region === 'trunk' ? rest[i].segment : rest[j].segment
+      out.push({ i, j, label: override ? `${a} / ${b} (${trunkSeg})` : `${a} / ${b}`, tol: override ?? tol, allowance: Math.max(0, -c) })
+    }
+  }
+  pairCache.set(skel, out)
+  return out
+}
+
+export type Clearance = {
+  pair: string
+  kind: 'body' | 'prop'
+  /** smallest clearance over the loop, mm (negative = penetration) */
+  min: number
+  frame: number
+  tol: number
+  /** overlap the pair already has in the relaxed standing pose, mm */
+  allowance: number
+  /** penetration beyond allowance + tolerance, mm (0 = within) */
+  excess: number
+}
+
+/** closest approach per body-region pair and per body region vs implement part (or cable), over every frame */
+export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
+  F ??= frames(b, skel)
+  const pairs = bodyPairs(skel)
+  const rows = new Map<string, Clearance>()
+  const note = (pair: string, kind: 'body' | 'prop', mm: number, frame: number, tol: number, allowance: number) => {
+    const excess = Math.max(0, -mm - allowance - tol)
+    const r = rows.get(pair)
+    // keep the frame with the worst excess, then the smallest clearance
+    if (!r || excess > r.excess || (excess === r.excess && mm + allowance < r.min + r.allowance)) rows.set(pair, { pair, kind, min: mm, frame, tol, allowance, excess })
+  }
+  const grips = new Map<string, Set<string>>()
+  for (const c of b.contacts) {
+    if (c.kind !== 'grip' || !('implement' in c.target)) continue
+    const side = c.site.match(/_([lr])$/)?.[1]
+    if (!side || !/^(grip|fingers)_/.test(c.site)) continue
+    if (!grips.has(c.target.implement)) grips.set(c.target.implement, new Set())
+    grips.get(c.target.implement)!.add(`hand_${side}`)
+  }
+  const REACH = 0.25
+  for (let i = 0; i < b.frames; i++) {
+    const caps = bodyCapsules(skel, F.f[i])
+    for (const p of pairs) note(p.label, 'body', round(capsuleClearance(caps[p.i], caps[p.j]) * 1000), i, p.tol, p.allowance)
+    b.implements.forEach((spec, k) => {
+      const solids = placeParts(spec, F.impl[i][k])
+      const held = grips.get(spec.id)
+      const rest = b.rests?.find((r) => r.implement === spec.id)
+      for (const s of solids) {
+        const label = `${spec.id}#${s.index}`
+        for (const c of caps) {
+          if (held?.has(c.region) && s.part.shape === 'cylinder' && s.part.r <= HANDLE_R) continue
+          const bound = boundClearance(c, s)
+          if (bound > REACH) continue
+          const tol = s.part.pad ? PROP_TOL.pad : rest?.regions.includes(c.region) ? rest.tol : PROP_TOL.rigid
+          note(`${c.region} / ${label}`, 'prop', round(capsuleSolidClearance(c, s) * 1000), i, tol, 0)
+        }
+      }
+    })
+    for (const cable of b.cables ?? []) {
+      const k = b.implements.findIndex((x) => x.id === cable.implement)
+      const { at } = cableForce(cable, F.impl[i][k])
+      const line: Capsule = { name: 'cable', region: 'cable', segment: '', a: cable.pulley, b: at, r: 0.003 }
+      const held = grips.get(cable.implement)
+      for (const c of caps) {
+        if (held?.has(c.region)) continue
+        const mm = (segmentDistance(c.a, c.b, line.a, line.b).d - c.r - line.r) * 1000
+        if (mm > REACH * 1000) continue
+        note(`${c.region} / cable:${cable.implement}`, 'prop', round(mm), i, PROP_TOL.cable, 0)
+      }
+    }
+  }
+  return [...rows.values()].sort((x, y) => y.excess - x.excess || x.min + x.allowance - (y.min + y.allowance))
+}
+
+function penetrationGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
+  const rows = clearances(b, skel, F)
+  const gate = (kind: 'body' | 'prop', name: string): Gate => {
+    const mine = rows.filter((r) => r.kind === kind)
+    const w = mine[0]
+    const value = w ? round(w.excess) : 0
+    const detail = w ? `${w.pair} clearance ${w.min} mm${w.allowance ? ` (relaxed ${round(-w.allowance)})` : ''}, tol ${w.tol}` : undefined
+    return { name, unit: 'mm past tol', limit: 0, value, frame: w?.frame, detail, pass: value <= 0 }
+  }
+  return [gate('body', 'penetration body-body'), gate('prop', 'penetration body-prop')]
+}
+
+// ---------- skeleton freshness ----------
+
+/** a baked file must have been baked against the current skeleton */
+export function skeletonGate(c: CompactMotion, skel: Skeleton): Gate {
+  const why = staleReason(c, skel)
+  return { name: 'skeleton hash', unit: '', limit: 0, value: why ? 1 : 0, pass: !why, detail: why ?? c.skeleton }
 }
 
 export function runGates(b: Baked, skel: Skeleton, sizeBytes?: number): Gate[] {
@@ -238,6 +420,7 @@ export function runGates(b: Baked, skel: Skeleton, sizeBytes?: number): Gate[] {
     ...seamGates(b, skel, F),
     ...symmetryGates(b, skel, F),
     ...balanceGates(b, skel, F),
+    ...penetrationGates(b, skel, F),
   ]
   if (sizeBytes !== undefined) gates.push({ name: 'compact size', unit: 'bytes', limit: LIMITS.sizeBytes, value: sizeBytes, pass: sizeBytes <= LIMITS.sizeBytes })
   return gates

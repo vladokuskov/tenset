@@ -4,6 +4,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { reviewPlugin } from './src/features/review/devServer.ts'
 
 // Everything the service worker precaches. Raise deliberately when baked media lands.
 const PRECACHE_BUDGET = 8 * 1024 * 1024
@@ -56,6 +57,8 @@ export default defineConfig({
         manifestTransforms: [precacheBudget],
       },
     }),
+    // dev server only: /__review endpoints behind /dev/review
+    reviewPlugin(),
   ],
   optimizeDeps: { entries: ['index.html'] },
   test: {

@@ -1,8 +1,8 @@
 import { attachHand, handFrame, implementFromHand, root1d, solveLegs } from '../constraints.ts'
-import { centerOfMass, fk, segPos } from '../fk.ts'
-import { cableHandle, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { centerOfMass, centerOfPressure, fk, segPos } from '../fk.ts'
+import { cableForce, cableHandle, comWorld, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { add, cross, DEG, dist, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
-import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells, isWorking, sidePhase } from './arms.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
@@ -19,7 +19,11 @@ import { memo, type Setup, type Template } from './types.ts'
 type P = ParamsOf<'lateral-raise'>
 
 const DB_KG = 10
+/** cable stack load for the balance, kg */
+const CABLE_KG = 6
 const BOTTOM_ELEV = 10
+/** lean-away start: the carrying angle already swings the hanging dumbbell out, so the arm starts this much lower, deg */
+const LEAN_CARRY = 10
 /** cable start: hand pulled in front of the hips */
 const CABLE_START = { plane: 95, elev: 18 }
 /** share of the lean taken by the legs at the ankles and by the pelvis (a level-ish pelvis keeps both knees soft); the spine side-bends for the rest */
@@ -58,11 +62,21 @@ function arm(skel: Skeleton, q: Float64Array, s: Side, c: number, p: P, from = {
   q[d[`wrist_${s}.flex`]] = 0
   q[d[`clavicle_${s}.elev`]] = g.elev
   q[d[`clavicle_${s}.prot`]] = g.prot
+  q[d[`scapula_${s}.uprot`]] = g.uprot
   q[d[`grip_${s}.close`]] = 1
 }
 
 function relaxedArm(skel: Skeleton, q: Float64Array, s: Side) {
   setDofs(skel, q, { [`shoulder_${s}.plane`]: 30, [`shoulder_${s}.elev`]: 8, [`elbow_${s}.flex`]: 12, [`grip_${s}.close`]: 0.3 })
+  setScapula(skel, q, s)
+}
+
+/** cable handle pose for a hand: across the palm, carabiner towards the pulley */
+function handlePose(skel: Skeleton, q: Float64Array, work: Side, pulley: V3, handle: ImplementSpec): ImplementPose {
+  const h = handFrame(skel, fk(skel, q), work)
+  const toward = norm(sub(pulley, h.pos))
+  const rot = qfromBasis(h.axis, norm(cross(cross(h.axis, toward), h.axis)))
+  return { id: 'handle', pos: sub(h.pos, qrot(rot, handle.sites.c.pos)), rot }
 }
 
 // ---------- contexts ----------
@@ -95,10 +109,14 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     sites: {},
   }
   const contacts: Contact[] = [...plantedContacts(skel, stance), { site: `grip_${work}`, kind: 'grip', target: { implement: 'handle', grip: 'c' } }]
-  const setup: Setup = { implements: [handle, stack], contacts, tempo, symmetric: false, balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL } }
+  const cable = { pulley, implement: 'handle', point: [0, 0, 0] as V3, kg: CABLE_KG }
+  const setup: Setup = { implements: [handle, stack], contacts, tempo, symmetric: false, balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL }, cables: [cable] }
+  // centre of pressure: the cable pulls the hand down and across towards the far pulley
   const measure = (q: Float64Array) => {
     const f = fk(skel, q)
-    return centerOfMass(skel, f, [{ mass: handle.mass, pos: handFrame(skel, f, work).pos }])[2]
+    const hp = handlePose(skel, q, work, pulley, handle)
+    const { at, force } = cableForce(cable, hp)
+    return centerOfPressure(skel, f, [{ mass: handle.mass, pos: comWorld(handle, hp) }], [{ at, force }])[1]
   }
   return { kind: 'cable', tempo, setup, stance, work, pulley, handle, measure }
 }
@@ -135,7 +153,7 @@ function leanContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const q = zeroQ(skel)
   leanBody(skel, q, stance, lean, 0)
   // the upright stands on the free-hand side, a little in front, where the hand holds it just below shoulder height
-  // with the supporting arm nearly straight (elbow ~10-15 deg)
+  // with the supporting arm nearly straight (elbow ~10-15 deg); handle-thick, so the fingers close around it
   const f = fk(skel, q)
   const gh = segPos(skel, f, `humerus_${free}`)
   const out: V3 = [work === 'r' ? 1 : -1, 0, 0]
@@ -145,7 +163,7 @@ function leanContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     kind: 'bench',
     mass: 0,
     com: [0, 0, 0],
-    parts: [cyl([grip[0], 0, grip[2]], [grip[0], 2.1, grip[2]], 0.025)],
+    parts: [cyl([grip[0], 0, grip[2]], [grip[0], 2.1, grip[2]], 0.016)],
     sites: { h: { pos: grip, axis: [0, 1, 0] } },
   }
   const db = dumbbell({ id: `db_${work}`, mass: DB_KG })
@@ -218,11 +236,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const c = cOf(u, work, p, ctx.tempo)
   if (ctx.kind === 'cable') {
     standing(u, p, skel, ctx, q, ctx.sway)
-    const h = handFrame(skel, fk(skel, q), work)
-    // handle across the palm, carabiner towards the pulley
-    const toward = norm(sub(ctx.pulley!, h.pos))
-    const rot = qfromBasis(h.axis, norm(cross(cross(h.axis, toward), h.axis)))
-    const hp: ImplementPose = { id: 'handle', pos: sub(h.pos, qrot(rot, ctx.handle!.sites.c.pos)), rot }
+    const hp = handlePose(skel, q, work, ctx.pulley!, ctx.handle!)
     return { q, implements: [hp, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
   }
 
@@ -232,7 +246,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const free = other(work)
   const place = (qq: Float64Array, dz: number) => {
     leanBody(skel, qq, ctx.stance, lean, dz)
-    arm(skel, qq, work, c, p, { plane: p.plane, elev: BOTTOM_ELEV + p.leanAngle }, p.topElevation + p.leanAngle)
+    arm(skel, qq, work, c, p, { plane: p.plane, elev: BOTTOM_ELEV + p.leanAngle - LEAN_CARRY }, p.topElevation + p.leanAngle)
     const g = siteWorld(ctx.post!.spec, postPose, 'h')
     attachHand(skel, qq, free, { pos: g.pos, axis: g.axis!, palm: [0, 0, 1] }, { pole: [0, -1, -0.3], planeHint: 40 })
   }

@@ -1,6 +1,6 @@
 import {
-  add, addScaled, clamp, cross, DEG, eulerFrom, len, norm, qaxis, qconj, qfromBasis, qmul, qrot, RAD, reject, scale, sub,
-  twistAngle, wrapDeg, Y, Z, type Axis, type Quat, type V3,
+  add, addScaled, clamp, cross, DEG, dot, eulerFrom, len, norm, qalign, qaxis, qconj, qfromBasis, qmul, qrot, RAD, reject, scale,
+  sub, twistAngle, wrapDeg, Y, Z, type Axis, type Quat, type V3,
 } from './math.ts'
 import { swingAxis, type JointRt, type Side, type Skeleton } from './skeleton.ts'
 
@@ -56,6 +56,54 @@ export function twoBone(root: V3, target: V3, l1: number, l2: number, pole: V3, 
   const mid = add(root, add(scale(axis, l1 * cosA), scale(p, l1 * Math.sin(a))))
   const end = addScaled(root, axis, d)
   return { mid, end, flex: flexAtDistance(l1, l2, d), pole: p, hinge: norm(cross(p, axis)), shortfall: Math.max(0, d0 - d) }
+}
+
+export type HingeIK = { upper: Quat; lower: Quat; flex: number; mid: V3; end: V3; shortfall: number }
+
+/**
+ * Two-bone IK for a hinge whose distal segment is not collinear with the proximal one when straight (elbow carrying
+ * angle). `hinge(flex)` is the joint's local rotation. The root-to-end distance is monotonic in flexion, so flexion
+ * comes from a bisection on it; the upper segment's orientation then maps the local root-mid-end triangle onto the
+ * world triangle whose mid joint points towards `pole`. With a collinear hinge this matches twoBone + limbRotation.
+ */
+export function hingeIK(root: V3, target: V3, l1: number, l2: number, hinge: (flex: number) => Quat, pole: V3, o: TwoBoneOptions & { maxFlex?: number; carry?: number } = {}): HingeIK {
+  const minFlex = o.minFlex ?? 2
+  const soft = o.soft ?? 8
+  const maxFlex = o.maxFlex ?? 175
+  const endLocal = (flex: number): V3 => add([0, -l1, 0], qrot(hinge(flex), [0, -l2, 0]))
+  // bisecting oblique hinge: the distal direction's component along the proximal segment is s^2 - cos(flex) c^2
+  const hs = Math.sin(((o.carry ?? 0) / 2) * DEG) ** 2, hc = Math.cos(((o.carry ?? 0) / 2) * DEG) ** 2
+  const reach = (flex: number) => Math.sqrt(Math.max(0, l1 * l1 + l2 * l2 - 2 * l1 * l2 * (hs - Math.cos(flex * DEG) * hc)))
+  const toT = sub(target, root)
+  const d0 = len(toT)
+  const axis = d0 > 1e-9 ? scale(toT, 1 / d0) : norm(pole)
+  const dMax = reach(minFlex), dSoft = reach(minFlex + soft), dMin = reach(maxFlex)
+  let d = d0
+  if (d > dSoft) d = dSoft + (dMax - dSoft) * Math.tanh((d - dSoft) / (dMax - dSoft))
+  if (d < dMin) d = dMin
+  const flex = Math.acos(clamp((hs - (l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2)) / hc, -1, 1)) * RAD
+  let p = reject(pole, axis)
+  if (len(p) < 1e-6) p = reject(Math.abs(axis[1]) < 0.9 ? Y : Z, axis)
+  p = norm(p)
+  if (o.swivel) p = qrot(qaxis(axis, o.swivel * DEG), p)
+  const e = endLocal(flex)
+  const dl = len(e)
+  const cosB = clamp((l1 * l1 + dl * dl - l2 * l2) / (2 * l1 * dl), -1, 1)
+  const mid0 = add(root, add(scale(axis, l1 * cosB), scale(p, l1 * Math.sqrt(1 - cosB * cosB))))
+  const end = addScaled(root, axis, dl)
+  let upper = qalign([0, -1, 0], e, sub(mid0, root), sub(end, root))
+  // With a carrying angle the root-mid-end triangle leans out of the flexion plane, and near full extension its plane
+  // is set by the carrying angle, not by the bend. Turn the solution about the root-end axis so the flexion axis
+  // lines up with the hinge a collinear limb would have for this pole: the twist then stays smooth through extension.
+  const h1 = hinge(1), h0 = hinge(0)
+  const rel = qmul(h1, qconj(h0))
+  const flexAxis = norm([rel[0], rel[1], rel[2]])
+  const want = norm(cross(p, axis))
+  const have = qrot(upper, flexAxis)
+  const phi = Math.atan2(dot(cross(reject(have, axis), reject(want, axis)), axis), dot(reject(have, axis), reject(want, axis)))
+  upper = qmul(qaxis(axis, phi), upper)
+  const mid = add(root, qrot(upper, [0, -l1, 0]))
+  return { upper, lower: qmul(upper, hinge(flex)), flex, mid, end, shortfall: Math.max(0, d0 - dl) }
 }
 
 /** world rotation of an upper limb segment from IK: local -Y along the limb, the hinge on `hingeLocal` */

@@ -14,7 +14,8 @@ import { addToDays } from './addToPlan'
 import { alternativesFor } from './alternatives'
 import { CountsSheet } from './CountsSheet'
 import { shortCite } from './detail'
-import { ExerciseCardMedia } from './ExerciseCardMedia'
+import { hasMotion } from '../figure/motion/library'
+import { ExerciseMedia } from './ExerciseMotion'
 import { ExerciseRow } from './ExerciseRow'
 import { MuscleSection } from './MuscleSection'
 import { LEVEL_LABEL, PATTERN_LABEL } from './patterns'
@@ -103,8 +104,8 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
         back={addTo !== undefined ? { to: '/', label: dayName(addTo, 'long') } : { to: '/exercises', label: 'Exercises' }}
       />
       <PageBody>
-        <ExerciseCardMedia exercise={exercise} size="lg" />
-        {exercise.media.status === 'card' && (
+        <ExerciseMedia exercise={exercise} />
+        {exercise.media.status === 'card' && !hasMotion(exercise.id) && (
           <p className="mt-2 text-center text-sm text-ink-3">Demo coming. Until then the map shows the muscles worked.</p>
         )}
 
