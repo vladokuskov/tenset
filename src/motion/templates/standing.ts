@@ -87,9 +87,13 @@ export function stand(skel: Skeleton, q: Float64Array, stance: StanceSetup, t: S
   solveLegs(skel, q, stance.feet)
 }
 
+/** ankle lean held near `ref`; only `follow` of each balancing correction is applied */
+export type Sway = { ref: number; follow: number }
+
 /**
  * Stand with the ankle dorsiflexion chosen by a 1-D root find so `measure` (e.g. system COM forward coordinate)
  * sits over the midfoot. `upper` sets whatever else depends on the lower body (arms by IK, etc.).
+ * Returns the dorsiflexion used (x) and the remaining forward offset of `measure` from the midfoot.
  */
 export function standBalanced(
   skel: Skeleton,
@@ -99,13 +103,34 @@ export function standBalanced(
   measure: (q: Float64Array) => number,
   upper?: (q: Float64Array) => void,
   dfRange: [number, number] = [-12, 25],
+  sway?: Sway,
 ) {
   const r = root1d((df) => {
     stand(skel, q, stance, { knee: t.knee, df, tilt: t.tilt })
     upper?.(q)
     return measure(q) - stance.midfoot[2]
   }, dfRange[0], dfRange[1], { tol: 1e-7 })
-  stand(skel, q, stance, { knee: t.knee, df: r.x, tilt: t.tilt })
+  const df = sway ? sway.ref + sway.follow * (r.x - sway.ref) : r.x
+  stand(skel, q, stance, { knee: t.knee, df, tilt: t.tilt })
   upper?.(q)
-  return r
+  return { x: df, offset: measure(q) - stance.midfoot[2], bracketed: r.bracketed }
+}
+
+/**
+ * Balance tolerance for standing arm work, m. The bar-over-midfoot 2.5 cm band is for loaded squats and hinges;
+ * here the COM only has to stay well inside the base of support (ball of the foot 5.7 cm ahead of the midfoot).
+ */
+export const ARM_BALANCE_TOL = 0.035
+
+/**
+ * Arm work while standing: a loaded arm moving forward shifts the COM several cm, which a real lifter absorbs by
+ * moving the centre of pressure inside the foot, not by rocking at the ankles. Holds the ankle halfway between the
+ * balanced angles at the ends of the rep and follows only as much as keeps the COM within `keep` m of the midfoot.
+ */
+export function limitSway(balance: (u: number, sway?: Sway) => { x: number; offset: number }, keep = ARM_BALANCE_TOL - 0.005, n = 16): Sway {
+  const us = Array.from({ length: n }, (_, i) => i / n)
+  const dfs = us.map((u) => balance(u).x)
+  const ref = (Math.min(...dfs) + Math.max(...dfs)) / 2
+  const h = Math.max(...us.map((u) => Math.abs(balance(u, { ref, follow: 0 }).offset)))
+  return { ref, follow: h > keep ? 1 - keep / h : 0 }
 }

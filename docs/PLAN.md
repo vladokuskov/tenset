@@ -168,6 +168,8 @@ Rules: `groups` alone drives bands. `heads` is optional emphasis inside a listed
 - D map: S2, then the map component and M1 cards.
 Critical path: S1 look approval > first template family approved > remaining families > owner motion review. Owner review for lane C always goes before polish in A/B.
 
+**Status 2026-09-27**: S2 map approved by owner. S1 look approved by owner in the illustration style (look v2) with head B (stylized); remaining polish: raised-arm shoulders, serratus/flank relief, hands/grips, hair, B lips/eyes, shader cost. M1 planner complete and green (not deployed; owner deploys once the first animated families exist). Motion core + 4 worst-case templates built.
+
 **Phase 0: spikes (week 1)**
 - S1 figure, in kill order. Day 1: GLB + clay shader, one 390 px still to the owner (look iteration 1). Day 2: FK-only stress poses (arms overhead, 90 deg abduction, full pronation/supination, deep squat, dead hang); kill if deformation fails after code-only fixes (weight smoothing, angle-keyed corrective morphs). Then IK, QA harness, 4 motions (back squat, DB lateral raise, pull-up, supinating curl). Pass: foot/grip <= 5 mm; harness catches an injected 1-frame IK flip and a 10 mm foot slide; owner rates "premium" at 390 px within 6 iterations; bake asserts Metal; GLB <= 600 KB; 3rd motion <= 1 agent-day. Kill: 2D rig on the same motion data.
 - S2 map (parallel from day 1): bake front/back from BodyParts3D. Pass: owner reads regions correctly; <= 150 KB gz per view. Kill: coarser ~25-region map drawn over our own MakeHuman renders; fitmitwith only with owner sign-off.
