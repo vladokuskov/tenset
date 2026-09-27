@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { Prefs, Program } from '../../domain/schema'
 import { runMigrations, type MigrationChain } from '../../store/migrations'
+import { uniqueName } from '../share/names'
 
 export const BACKUP_FORMAT = 'gym-builder-backup'
 export const BACKUP_VERSION = 1
@@ -73,6 +74,16 @@ export function serializeBackup(backup: Backup): string {
 export function backupFileName(now: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `gym-builder-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`
+}
+
+/** Names imports the way share links do: "PPL" becomes "PPL 2" when taken, also within one file. */
+export function withUniqueNames(programs: readonly Program[], taken: Iterable<string>): Program[] {
+  const used = [...taken]
+  return programs.map((p) => {
+    const name = uniqueName(p.name, used)
+    used.push(name)
+    return name === p.name ? p : { ...p, name }
+  })
 }
 
 export function parseBackup(text: string): ParseBackupResult {

@@ -5,20 +5,27 @@ import { formatSets } from './format'
 
 export type GoalId = Prefs['goal']
 
+/** A band as the copy names it. Optional groups have no "light": below their first edge they read "some sets". */
+export type DisplayBand = BandId | 'some'
+
 export const BAND_ORDER: readonly BandId[] = ['none', 'light', 'moderate', 'target', 'high', 'very_high']
 
-export type BandCopyOptions = { goal?: GoalId; optional?: boolean }
+export type BandCopyOptions = { goal?: GoalId }
 
-/** Optional groups have no "light" band: below the first edge they read as moderate. */
-export function displayBand(band: BandId, optional = false): BandId {
-  return optional && band === 'light' ? 'moderate' : band
+// The engine files optional groups under their first edge as moderate; the copy keeps that apart.
+export function displayBand(result: Pick<BandResult, 'band' | 'value' | 'edges' | 'optional'>): DisplayBand {
+  if (!result.optional) return result.band
+  if (result.band === 'light' || (result.value > 0 && result.value < result.edges[0])) return 'some'
+  return result.band
 }
 
 /** Pill text. Never "optimal", "under" or "maintenance". */
-export function bandLabel(band: BandId, { goal, optional }: BandCopyOptions = {}): string {
-  switch (displayBand(band, optional)) {
+export function bandLabel(band: DisplayBand, { goal }: BandCopyOptions = {}): string {
+  switch (band) {
     case 'none':
       return 'not trained'
+    case 'some':
+      return 'some sets'
     case 'light':
       return 'light'
     case 'moderate':
@@ -33,7 +40,7 @@ export function bandLabel(band: BandId, { goal, optional }: BandCopyOptions = {}
 }
 
 export function bandLabelFor(result: BandResult, goal?: GoalId): string {
-  return bandLabel(result.band, { goal, optional: result.optional })
+  return bandLabel(displayBand(result), { goal })
 }
 
 /** "target 10-20" (optional groups carry their own edges, e.g. "target 6-16"). */
@@ -42,15 +49,16 @@ export function targetText(edges: BandEdges): string {
 }
 
 /** Weekly set range a band covers, for legends and the "why?" popover. */
-export function bandRange(band: BandId, edges: BandEdges, optional = false): string {
+export function bandRange(band: DisplayBand, edges: BandEdges): string {
   const [a, b, c, d] = edges.map(formatSets)
-  switch (displayBand(band, optional)) {
+  switch (band) {
     case 'none':
       return '0 sets'
+    case 'some':
     case 'light':
       return `fewer than ${a} sets`
     case 'moderate':
-      return optional ? `fewer than ${b} sets` : `${a} to ${b} sets`
+      return `${a} to ${b} sets`
     case 'target':
       return `${b} to ${c} sets`
     case 'high':
@@ -61,16 +69,17 @@ export function bandRange(band: BandId, edges: BandEdges, optional = false): str
 }
 
 /** One plain sentence explaining a band. Neutral: no warnings, no advice to cut back. */
-export function bandExplanation(band: BandId, edges: BandEdges, { goal, optional }: BandCopyOptions = {}): string {
+export function bandExplanation(band: DisplayBand, edges: BandEdges, { goal }: BandCopyOptions = {}): string {
   const [a, b, c, d] = edges.map(formatSets)
-  switch (displayBand(band, optional)) {
+  switch (band) {
     case 'none':
       return 'No sets count toward this group this week.'
+    case 'some':
+      return `Fewer than ${a} weekly sets. This group is optional.`
     case 'light':
       return `Fewer than ${a} weekly sets.`
     case 'moderate':
-      if (goal === 'general') return `Fewer than ${b} weekly sets, which is plenty for general fitness.`
-      return optional ? `Fewer than ${b} weekly sets. This group is optional.` : `${a} to ${b} weekly sets.`
+      return goal === 'general' ? `${a} to ${b} weekly sets, which is plenty for general fitness.` : `${a} to ${b} weekly sets.`
     case 'target':
       return `${b} to ${c} weekly sets, the range most studies use for muscle growth.`
     case 'high':
@@ -78,4 +87,8 @@ export function bandExplanation(band: BandId, edges: BandEdges, { goal, optional
     case 'very_high':
       return `More than ${d} weekly sets.`
   }
+}
+
+export function bandExplanationFor(result: BandResult, goal?: GoalId): string {
+  return bandExplanation(displayBand(result), result.edges, { goal })
 }

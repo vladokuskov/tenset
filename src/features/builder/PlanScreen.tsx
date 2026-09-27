@@ -1,6 +1,5 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { ChevronDown, Ellipsis } from 'lucide-react'
-import { useState } from 'react'
 import { NOT_MEDICAL_ADVICE } from '../../app/brand'
 import { dayFromSlug, daySlug, todayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
@@ -11,11 +10,10 @@ import { InstallNudge } from '../../sw'
 import { Button, IconButton, Page, PageBody, PageHeader, Section, useSheet } from '../../ui'
 import { AddSheet } from './AddSheet'
 import { CoverageCard } from './CoverageCard'
-import { MapPanel } from './MapPanel'
 import { NoProgram } from './NoProgram'
 import { PlanMenu } from './PlanMenu'
-import { DESKTOP_QUERY, useMediaQuery } from './useMediaQuery'
-import { WeekBoard } from './WeekBoard'
+import { BOARD_QUERY, DesktopPlan } from './desktop/DesktopPlan'
+import { useMediaQuery } from './useMediaQuery'
 import { WeekList } from './WeekList'
 
 const route = getRouteApi('/')
@@ -23,13 +21,12 @@ const route = getRouteApi('/')
 export function PlanScreen() {
   const view = useWeek()
   const search = route.useSearch()
-  const desktop = useMediaQuery(DESKTOP_QUERY)
+  const desktop = useMediaQuery(BOARD_QUERY)
   const menu = useSheet('menu')
   const programs = useSheet('programs')
   const share = useSheet('share')
   const transfer = useSheet('export')
   const add = useSheet('add', ['day', 'tab', 'group'])
-  const [hover, setHover] = useState<string[] | null>(null)
 
   const firstTraining = view?.order.find((d) => view.days[d].kind === 'train') ?? todayIndex()
   const addDay = search.day ? dayFromSlug(search.day) : firstTraining
@@ -67,36 +64,25 @@ export function PlanScreen() {
     )
   }
 
-  const header = (
-    <PageHeader
-      title={
-        <button
-          type="button"
-          onClick={() => programs.show()}
-          className="hit -ml-1 inline-flex max-w-full items-center gap-1 rounded-md px-1 text-left"
-        >
-          <span className="truncate">{view.program.name}</span>
-          <ChevronDown size={22} strokeWidth={2} className="shrink-0 text-ink-3" aria-hidden />
-          <span className="sr-only">, switch program</span>
-        </button>
-      }
-      actions={<IconButton icon={Ellipsis} label="More" onClick={() => menu.show()} />}
-    />
+  const title = (
+    <button
+      type="button"
+      onClick={() => programs.show()}
+      className="hit -ml-1 inline-flex max-w-full items-center gap-1 rounded-md px-1 text-left"
+    >
+      <span className="truncate">{view.program.name}</span>
+      <ChevronDown size={22} strokeWidth={2} className="shrink-0 text-ink-3" aria-hidden />
+      <span className="sr-only">, switch program</span>
+    </button>
   )
+  const more = <IconButton icon={Ellipsis} label="More" onClick={() => menu.show()} />
+  const header = <PageHeader title={title} actions={more} />
 
   if (desktop) {
     return (
-      <Page width="wide">
-        {header}
-        <PageBody>
-          <InstallNudge className="mb-4" />
-          <div className="grid grid-cols-[minmax(0,1fr)_19rem] items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_25rem]">
-            <WeekBoard view={view} onAdd={(d) => add.show({ day: daySlug(d), tab: undefined, group: undefined })} onHover={setHover} />
-            <MapPanel view={view} highlight={hover} />
-          </div>
-        </PageBody>
+      <DesktopPlan view={view} title={title} actions={more} onAdd={(d) => add.show({ day: daySlug(d), tab: undefined, group: undefined })}>
         {sheets}
-      </Page>
+      </DesktopPlan>
     )
   }
 

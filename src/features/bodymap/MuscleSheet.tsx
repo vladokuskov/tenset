@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { bandExplanation, bandLabelFor, targetText } from '../../app/bands'
+import { bandExplanationFor, bandLabelFor, targetText } from '../../app/bands'
 import { dayName, daySlug, type DayIndex } from '../../app/days'
 import { formatMath, formatSets, plural } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
@@ -109,7 +109,7 @@ function Body({
                 <Why topic={`${getGroup(group)?.name} band`} sources={band.sourceIds}>
                   {band.band === 'target' && band.sourceIds.includes('rp-2023')
                     ? `${formatSets(band.edges[1])} to ${formatSets(band.edges[2])} weekly sets, this group's target range.`
-                    : bandExplanation(band.band, band.edges, { goal: prefs.goal, optional: band.optional })}
+                    : bandExplanationFor(band, prefs.goal)}
                 </Why>
               </>
             ) : (

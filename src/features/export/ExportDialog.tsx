@@ -7,7 +7,7 @@ import { Button } from '../../ui/Button'
 import { LinkButton } from '../../ui/links'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
-import { backupFileName, createBackup, parseBackup, serializeBackup, type BackupError, type ParsedBackup } from './backup'
+import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames, type BackupError, type ParsedBackup } from './backup'
 
 export type ExportDialogProps = { open: boolean; onClose: () => void }
 
@@ -92,8 +92,9 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
 
   const runImport = () => {
     if (!pending) return
-    const before = programStore.getState().activeId
-    const added = pending.backup.programs.map((p) => ({ from: p.id, id: importProgram(p) }))
+    const { activeId: before, programs } = programStore.getState()
+    const named = withUniqueNames(pending.backup.programs, Object.values(programs).map((p) => p.name))
+    const added = named.map((p) => ({ from: p.id, id: importProgram(p) }))
     const ids = added.map((a) => a.id).filter((id): id is string => id !== null)
     // Keep the program the user was on; a restore onto an empty device reopens the backup's active one.
     const restored = added.find((a) => a.from === pending.activeId)?.id ?? ids[0]

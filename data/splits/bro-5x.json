@@ -34,7 +34,7 @@
         { "pattern": "squat", "group": "quads", "sets": 3, "options": [402, 407, 403] },
         { "pattern": "knee_flexion", "group": "hamstrings", "sets": 4, "options": [503, 504, 512] },
         { "pattern": "knee_extension", "group": "quads", "sets": 3, "options": [404, 412, 409] },
-        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604] }
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604, 606] }
       ]
     },
     {
@@ -57,7 +57,7 @@
         { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [702, 712] },
         { "pattern": "elbow_extension", "group": "triceps", "sets": 3, "options": [704, 715, 717] },
         { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [703, 719] },
-        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604] }
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604, 606] }
       ]
     }
   ]

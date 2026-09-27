@@ -86,7 +86,7 @@ export function PageHeader({ title, subtitle, back, actions, children, className
         />
       </div>
       <header className={cx('mx-auto w-full max-w-[var(--page-max)] px-gutter pb-4 pt-1', className)}>
-        <h1 ref={titleRef} className="text-2xl font-bold tracking-[-0.022em] text-ink">
+        <h1 ref={titleRef} tabIndex={-1} className="text-2xl font-bold tracking-[-0.022em] text-ink outline-none">
           {title}
         </h1>
         {subtitle && <p className="mt-1 text-base text-ink-2">{subtitle}</p>}

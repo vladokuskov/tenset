@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { bandFor } from '../domain/volume'
-import { bandExplanation, bandLabel, bandLabelFor, bandRange, targetText } from './bands'
+import { bandExplanation, bandExplanationFor, bandLabel, bandLabelFor, bandRange, displayBand, targetText } from './bands'
 
 const words = /\b(risk|too soon|overtrained|optimal|under|under-?trained|maintenance|danger|warning)\b/i
 
 describe('band copy', () => {
   it('labels every band', () => {
     expect(bandLabel('none')).toBe('not trained')
+    expect(bandLabel('some')).toBe('some sets')
     expect(bandLabel('light')).toBe('light')
     expect(bandLabel('moderate')).toBe('moderate')
     expect(bandLabel('target')).toBe('target range')
@@ -14,9 +15,16 @@ describe('band copy', () => {
     expect(bandLabel('very_high')).toBe('very high')
   })
 
-  it('never shows light for optional groups', () => {
-    expect(bandLabel('light', { optional: true })).toBe('moderate')
-    expect(bandLabelFor(bandFor('abs', 2)!)).toBe('moderate')
+  it('reads optional groups below their first edge as "some sets", never light or moderate', () => {
+    expect(displayBand(bandFor('abs', 2)!)).toBe('some')
+    expect(bandLabelFor(bandFor('abs', 2)!)).toBe('some sets')
+    expect(bandLabelFor(bandFor('abs', 3.5)!)).toBe('some sets')
+    expect(bandLabelFor(bandFor('abs', 4)!)).toBe('moderate')
+    expect(bandLabelFor(bandFor('abs', 6)!)).toBe('target range')
+    expect(bandLabelFor(bandFor('abs', 0)!)).toBe('not trained')
+    expect(bandLabelFor(bandFor('chest', 2)!)).toBe('light')
+    expect(bandLabelFor(bandFor('abs', 2)!, 'general')).toBe('some sets')
+    expect(bandLabelFor(bandFor('abs', 2)!)).not.toMatch(/light/)
   })
 
   it('uses general-fitness wording for moderate under the general goal', () => {
@@ -28,15 +36,24 @@ describe('band copy', () => {
     expect(targetText([4, 10, 20, 30])).toBe('target 10-20')
     expect(targetText([4, 6, 16, 26])).toBe('target 6-16')
     expect(bandRange('moderate', [4, 10, 20, 30])).toBe('4 to 10 sets')
+    expect(bandRange('moderate', [4, 6, 16, 26])).toBe('4 to 6 sets')
+    expect(bandRange('some', [4, 6, 16, 26])).toBe('fewer than 4 sets')
     expect(bandRange('very_high', [4, 10, 20, 30])).toBe('over 30 sets')
   })
 
+  it('explains the band a result reads as', () => {
+    expect(bandExplanationFor(bandFor('abs', 2)!)).toBe('Fewer than 4 weekly sets. This group is optional.')
+    expect(bandExplanationFor(bandFor('abs', 5)!)).toBe('4 to 6 weekly sets.')
+    expect(bandExplanationFor(bandFor('chest', 6)!, 'general')).toBe('4 to 10 weekly sets, which is plenty for general fitness.')
+  })
+
   it('keeps explanations neutral', () => {
-    for (const b of ['none', 'light', 'moderate', 'target', 'high', 'very_high'] as const) {
-      for (const opts of [{}, { optional: true }, { goal: 'general' as const }]) {
+    for (const b of ['none', 'some', 'light', 'moderate', 'target', 'high', 'very_high'] as const) {
+      for (const opts of [{}, { goal: 'general' as const }]) {
         expect(bandExplanation(b, [4, 10, 20, 30], opts)).not.toMatch(words)
         expect(bandExplanation(b, [4, 10, 20, 30], opts)).not.toContain(String.fromCharCode(0x2014))
-        expect(bandRange(b, [4, 10, 20, 30], opts.optional)).not.toMatch(words)
+        expect(bandRange(b, [4, 10, 20, 30])).not.toMatch(words)
+        expect(bandLabel(b, opts)).not.toMatch(words)
       }
     }
   })

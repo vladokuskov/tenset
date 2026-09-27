@@ -7,7 +7,13 @@ describe('volume scale', () => {
     expect(groupShade('chest', 3)).toBe('light')
     expect(groupShade('chest', 12)).toBe('target')
     expect(groupShade('chest', 31)).toBe('very_high')
-    expect(groupShade('abs', 2)).toBe('moderate')
+  })
+
+  it('shades optional groups below their first edge on the light step', () => {
+    expect(groupShade('abs', 2)).toBe('light')
+    expect(groupShade('abs', 4)).toBe('moderate')
+    expect(groupShade('abs', 1, 'day')).toBe('light')
+    expect(headShade('rectus_abdominis', 2)).toBe('light')
   })
 
   it('scales day edges by 10/30', () => {

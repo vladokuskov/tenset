@@ -81,7 +81,7 @@ function AboutPage() {
             </p>
             <p>
               Optional groups ({optional.map((g) => g.name.toLowerCase()).join(', ')}) show "{targetText(optional[0]?.bandEdges ?? [4, 6, 16, 26])}"
-              and never read as light. {tracked.map((g) => g.name).join(', ')} are tracked as a number only, without a
+              and read "some sets" instead of light below {optional[0]?.bandEdges?.[0] ?? 4} weekly sets. {tracked.map((g) => g.name).join(', ')} are tracked as a number only, without a
               band.
             </p>
             <p>

@@ -1,0 +1,3 @@
+# Generic cue phrases exempt from the shared 7-gram check in pipeline/compliance/cues.ts.
+# One phrase per line, compared after normalization (lowercase, no punctuation).
+# Add only short, common coaching language nobody owns, with the lead's sign-off. Rewriting a cue beats listing it.

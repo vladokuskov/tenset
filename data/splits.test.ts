@@ -130,6 +130,18 @@ describe('applying templates to equipment presets', () => {
     }
   })
 
+  it('bodyweight trains every required group except the known gaps', () => {
+    const gaps: { preset: string; groups: string[] }[] = readJson('known-gaps.json').gaps
+    const known = new Set(gaps.find((g) => g.preset === 'bodyweight')?.groups)
+    for (const { template } of templates) {
+      const { week } = fill(template, 'bodyweight')
+      for (const g of bandedGroupIds.filter((x) => !isOptional(x) && !known.has(x))) {
+        expect(week.weekly[g], `${template.id} ${g}`).toBeGreaterThan(0)
+      }
+      expect(week.weekly.calves, `${template.id} calves`).toBeGreaterThanOrEqual(4)
+    }
+  })
+
   it('dropped slots per preset (filled / total)', () => {
     const out: Record<string, Record<string, string>> = {}
     for (const { template } of templates) {
@@ -143,27 +155,27 @@ describe('applying templates to equipment presets', () => {
     expect(out).toMatchInlineSnapshot(`
       {
         "bro-5x": {
-          "bodyweight": "11/29",
+          "bodyweight": "13/29",
           "dumbbells_bench": "26/29",
           "full_gym": "29/29",
         },
         "full-body-3x": {
-          "bodyweight": "12/23",
+          "bodyweight": "14/23",
           "dumbbells_bench": "23/23",
           "full_gym": "23/23",
         },
         "ppl-3x": {
-          "bodyweight": "9/18",
+          "bodyweight": "10/18",
           "dumbbells_bench": "17/18",
           "full_gym": "18/18",
         },
         "ppl-6x": {
-          "bodyweight": "18/36",
+          "bodyweight": "20/36",
           "dumbbells_bench": "34/36",
           "full_gym": "36/36",
         },
         "upper-lower-4x": {
-          "bodyweight": "13/27",
+          "bodyweight": "15/27",
           "dumbbells_bench": "27/27",
           "full_gym": "27/27",
         },

@@ -67,3 +67,9 @@ test('view and shading toggles respond to taps', async ({ page }) => {
   await expect(page).toHaveURL(/shade=heads/)
   await expect(page.getByRole('radiogroup', { name: 'Shading' }).getByRole('radio', { name: 'Heads' })).toHaveAttribute('aria-checked', 'true')
 })
+
+test('optional groups under their range read "some sets", not light or moderate', async ({ page }) => {
+  const row = page.getByRole('button', { name: /^Forearms/ }).first()
+  await expect(row).toContainText('some sets')
+  await expect(row).not.toContainText(/light|moderate/)
+})

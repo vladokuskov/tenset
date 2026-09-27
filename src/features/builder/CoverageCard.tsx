@@ -1,7 +1,9 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { formatSets, plural } from '../../app/format'
+import { gapNote } from '../../app/knownGaps'
 import type { WeekView } from '../../app/useWeek'
+import { usePrefsStore } from '../../store/prefs.store'
 import { cx } from '../../ui'
 import { groupName } from './labels'
 import { PulseMini } from './PulseMini'
@@ -12,6 +14,7 @@ const chip =
 /** Week coverage: mini map, trained count, not-trained chips (to the muscle sheet), total sets. */
 export function CoverageCard({ view, compact }: { view: WeekView; compact?: boolean }) {
   const [showOptional, setShowOptional] = useState(false)
+  const gaps = gapNote(usePrefsStore((s) => s.equipment))
   const { coverage, days, week } = view
   const totalSets = days.reduce((s, d) => s + d.hardSets, 0)
   const { required, optional } = coverage.untrained
@@ -75,6 +78,7 @@ export function CoverageCard({ view, compact }: { view: WeekView; compact?: bool
           )}
         </div>
       )}
+      {gaps && <p className="mt-3 border-t border-line pt-3 text-sm text-ink-2">{gaps}</p>}
     </section>
   )
 }

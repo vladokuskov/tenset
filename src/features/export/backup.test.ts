@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { blankProgram } from '../../domain/program'
 import { defaultPrefs } from '../../store/prefs.store'
-import { backupFileName, createBackup, parseBackup, serializeBackup } from './backup'
+import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames } from './backup'
 
 const a = blankProgram('a', 'Upper Lower', [0, 1, 3, 4])
 a.days[0].entries.push({ id: 'e1', exerciseId: 101, sets: 3, reps: '8-12' })
@@ -36,6 +36,14 @@ describe('backup', () => {
     expect(res.ok && res.backup.programs.length).toBe(1)
     expect(res.ok && res.backup.skipped).toBe(1)
     expect(res.ok && res.backup.prefs).toBeNull()
+  })
+
+  it('gives imported programs free names, like share links', () => {
+    const c = blankProgram('c', 'upper lower', [0])
+    const named = withUniqueNames([a, b, c], ['Upper Lower', 'Push Pull Legs'])
+    expect(named.map((p) => p.name)).toEqual(['Upper Lower 2', 'Full body', 'upper lower 3'])
+    expect(named[1]).toBe(b)
+    expect(a.name).toBe('Upper Lower')
   })
 
   it('names files by date', () => {

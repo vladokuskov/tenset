@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { cx } from './cx'
 import { IconButton } from './IconButton'
+import { sheetClosed, sheetOpened } from './sheetFocus'
 
 export type SheetProps = {
   open: boolean
@@ -36,6 +37,7 @@ export function Sheet({
   className,
 }: SheetProps) {
   const ref = useRef<HTMLDialogElement>(null)
+  const titleRef = useRef<HTMLHeadingElement>(null)
   const openRef = useRef(open)
   const onCloseRef = useRef(onClose)
   const titleId = useId()
@@ -48,13 +50,20 @@ export function Sheet({
     onCloseRef.current = onClose
   })
 
+  // Runs before showModal so the opener is read while it still has focus.
+  useEffect(() => {
+    if (!open) return
+    sheetOpened()
+    return sheetClosed
+  }, [open])
+
   useEffect(() => {
     const d = ref.current
     if (!d) return
     if (open && !d.open) {
-      // Focus the dialog itself, not its first control, so no keyboard or focus ring pops up on open.
-      d.setAttribute('autofocus', '')
       d.showModal()
+      // The title, not the first control, so no keyboard or focus ring pops up, also on a deep link.
+      titleRef.current?.focus({ preventScroll: true })
     }
     else if (!open && d.open) d.close()
   }, [open])
@@ -102,7 +111,7 @@ export function Sheet({
           </div>
           <header className="flex shrink-0 items-start gap-2 pb-2 pl-5 pr-2 pt-2 lg:pt-4">
             <div className="min-w-0 flex-1 pt-2.5">
-              <h2 id={titleId} className="text-lg font-semibold tracking-[-0.01em] text-ink">
+              <h2 ref={titleRef} id={titleId} tabIndex={-1} className="text-lg font-semibold tracking-[-0.01em] text-ink outline-none">
                 {title}
               </h2>
               {description && (

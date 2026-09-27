@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - id: install
+        run: pnpm install --frozen-lockfile
+
+      # Gates run independently after a good install, so one failure does not hide the others.
+      - run: pnpm typecheck
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: pnpm lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: pnpm test
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+
+      # Third-party cue corpus (never committed). The script refetches wger when its copy is over 30 days old.
+      - id: month
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+      - id: corpus
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: pipeline/.cache/compliance
+          key: compliance-corpus-${{ steps.month.outputs.month }}-${{ hashFiles('pipeline/compliance/cues.ts') }}
+          restore-keys: compliance-corpus-
+      - run: pnpm test:cues
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - if: always() && steps.corpus.outputs.cache-hit != 'true' && hashFiles('pipeline/.cache/compliance/wger-en.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: pipeline/.cache/compliance
+          key: ${{ steps.corpus.outputs.cache-primary-key }}
+
+      - run: pnpm licenses:check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+
+      - id: build
+        run: pnpm build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+
+      # Pure Node gates; CI never renders media.
+      - run: node pipeline/motion/qa.ts
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node pipeline/render/check-media.ts
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+
+      - id: playwright
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # Headless Chromium falls back to SwiftShader for WebGL, which is enough for the UI tests.
+      - run: pnpm exec playwright install --with-deps chromium
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+      - run: pnpm e2e
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          E2E_SKIP_BUILD: 1
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

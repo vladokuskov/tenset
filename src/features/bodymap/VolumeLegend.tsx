@@ -18,7 +18,7 @@ function caption(scale: MapScale): string {
   const [, lo, hi] = taxonomy.bandEdgesDefault as BandEdges
   const range = `${formatSets(lo)} to ${formatSets(hi)}`
   return scale === 'week'
-    ? `Week scale: weekly sets per muscle. Target for most groups: ${range}.`
+    ? `Week scale: weekly sets per muscle. Target for most groups: ${range}. Optional groups on the light step read "some sets".`
     : `Day scale: sets in one session, shaded on a third of the weekly ranges.`
 }
 

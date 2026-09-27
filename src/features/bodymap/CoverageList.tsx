@@ -83,7 +83,7 @@ export function CoverageList({ week, coverage, goal, day, selected, onSelect }: 
       action={
         <Why topic="How bands work" sources={taxonomy.bandSources}>
           Each set counts 1.0 for a primary muscle and 0.5 for a secondary one. Weekly totals fall into bands; most
-          groups sit in the target range at 10 to 20 sets. Optional groups use their own range and never read as light.
+          groups sit in the target range at 10 to 20 sets. Optional groups use their own range and read "some sets" instead of light below it.
         </Why>
       }
     >

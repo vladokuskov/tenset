@@ -1,5 +1,5 @@
 import { classifyBand, DAY_INTENSITY_SETS, WEEK_INTENSITY_SETS, type BandId } from '../domain/volume'
-import { bandEdges, headGroup, isOptional, taxonomy, type BandEdges } from '../domain/taxonomy'
+import { bandEdges, headGroup, taxonomy, type BandEdges } from '../domain/taxonomy'
 
 export type MapScale = 'week' | 'day'
 
@@ -28,10 +28,13 @@ function edgesFor(group: string): BandEdges {
   return bandEdges(group) ?? ([...taxonomy.bandEdgesDefault] as BandEdges)
 }
 
-/** Band step used to shade a group. Unbanded groups shade on the default edges but never get a label. */
+/**
+ * Band step used to shade a group. Unbanded groups shade on the default edges but never get a label.
+ * Optional groups below their first edge take the light step (their label reads "some sets").
+ */
 export function groupShade(group: string, sets: number, scale: MapScale = 'week'): BandId {
   const edges = edgesFor(group)
-  return classifyBand(sets, scale === 'day' ? dayEdges(edges) : edges, isOptional(group))
+  return classifyBand(sets, scale === 'day' ? dayEdges(edges) : edges, false)
 }
 
 /** Heads shade on their group's edges (same set scale, never labeled). */

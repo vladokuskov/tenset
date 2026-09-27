@@ -11,7 +11,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:cues": "node pipeline/compliance/cues.ts",
+    "licenses:check": "node pipeline/compliance/licenses.ts",
+    "licenses:notices": "node pipeline/compliance/licenses.ts --write"
   },
   "dependencies": {
     "@dnd-kit/react": "0.5.0",

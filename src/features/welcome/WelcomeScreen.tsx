@@ -4,6 +4,7 @@ import { APP_NAME, NOT_MEDICAL_ADVICE } from '../../app/brand'
 import { BrandMark } from '../../app/BrandMark'
 import { sortDays, type DayIndex } from '../../app/days'
 import { countLabel, joinMeta, plural } from '../../app/format'
+import { gapNote } from '../../app/knownGaps'
 import { useCatalog } from '../../app/useCatalog'
 import { computeCoverage } from '../../domain/coverage'
 import { equipment as allEquipment, matchPreset, presetEquipment, presets } from '../../domain/equipment'
@@ -53,6 +54,7 @@ export function WelcomeScreen() {
   const template = choice === BLANK ? undefined : splitById.get(choice)
   const trainingDays = days ?? template?.defaultDays ?? [0, 2, 4]
   const preset = custom ? null : matchPreset(equip)
+  const gaps = gapNote(equip)
 
   const previews = useMemo(() => {
     const out = new Map<string, { weekly: Record<string, number>; trained: number; total: number; sets: number }>()
@@ -117,6 +119,7 @@ export function WelcomeScreen() {
         <p className="mt-2 text-base text-ink-2">{sub}</p>
 
         <div className="mt-6">
+          {step === 1 && gaps && <p className="mb-3 text-sm text-ink-2">{gaps}</p>}
           {step === 1 && (
             <ul className="space-y-3">
               {splits.map((s) => {
@@ -212,6 +215,7 @@ export function WelcomeScreen() {
                   },
                 )}
               </ul>
+              {gaps && <p className="mt-4 text-sm text-ink-2">{gaps}</p>}
               {preset === null && <EquipmentChecklist className="mt-4" value={equip} onChange={setEquip} />}
             </>
           )}

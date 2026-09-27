@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Check, Plus, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { bandLabel } from '../../app/bands'
+import { bandLabelFor } from '../../app/bands'
 import { dayName, type DayIndex } from '../../app/days'
 import { formatDelta, formatSets, joinMeta, plural } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
@@ -122,7 +122,7 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
       .sort((a, b) => week.weekly[a] - week.weekly[b])
     for (const g of below) {
       const band = week.bands[g]
-      push(g, joinMeta([`${formatSets(week.weekly[g])} sets`, band && bandLabel(band.band, { goal: prefs.goal })]), 2)
+      push(g, joinMeta([`${formatSets(week.weekly[g])} sets`, band && bandLabelFor(band, prefs.goal)]), 2)
     }
     for (const g of untrained.filter((x) => isOptional(x))) push(g, 'not trained, optional', 2)
     return out
@@ -422,7 +422,7 @@ function AddPreview({
               <li key={d.group} className="num text-sm">
                 <span className="font-medium text-ink">{groupName(d.group)}</span>{' '}
                 <span className="text-ink">{formatDelta(d.from, d.to)}</span>
-                {band && <span className="text-ink-2">, {bandLabel(band.band, { goal, optional: band.optional })}</span>}
+                {band && <span className="text-ink-2">, {bandLabelFor(band, goal)}</span>}
               </li>
             )
           })}

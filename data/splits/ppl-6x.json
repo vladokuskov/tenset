@@ -35,7 +35,7 @@
         { "pattern": "hinge", "group": "glute_max", "sets": 3, "options": [501, 509, 511] },
         { "pattern": "knee_extension", "group": "quads", "sets": 3, "options": [404, 412, 409] },
         { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [503, 504, 512] },
-        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [601, 605, 604] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [601, 605, 604, 606] },
         { "pattern": "spinal_flexion", "group": "abs", "sets": 3, "options": [801, 805] }
       ]
     },
@@ -68,7 +68,7 @@
         { "pattern": "squat", "group": "quads", "sets": 3, "options": [402, 407, 405] },
         { "pattern": "hip_extension", "group": "glute_max", "sets": 3, "options": [502, 511] },
         { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [504, 503, 512] },
-        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [602, 601, 604] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [602, 601, 604, 606] },
         { "pattern": "hip_flexion", "group": "abs", "sets": 3, "options": [802, 806, 807] }
       ]
     }

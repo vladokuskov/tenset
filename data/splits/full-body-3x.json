@@ -15,7 +15,7 @@
         { "pattern": "hinge", "group": "glute_max", "sets": 3, "options": [501, 509, 511] },
         { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [203, 204] },
         { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [704, 715, 717] },
-        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604] }
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604, 606] }
       ]
     },
     {
@@ -41,7 +41,7 @@
         { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 2, "options": [204, 203] },
         { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [703, 719] },
         { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [705, 716] },
-        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604] }
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604, 606] }
       ]
     }
   ]

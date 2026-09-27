@@ -1,6 +1,7 @@
 import { Check, Copy, Ellipsis, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { countLabel, joinMeta, setsLabel } from '../../app/format'
+import { gapNote } from '../../app/knownGaps'
 import { toastWithUndo } from '../../app/undo'
 import { useCatalog } from '../../app/useCatalog'
 import { NAME_MAX } from '../../domain/program'
@@ -23,6 +24,7 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
   const activeId = useProgramStore((s) => s.activeId)
   const store = useProgramStore((s) => s)
   const equipment = usePrefsStore((s) => s.equipment)
+  const gaps = gapNote(equipment)
   const { splits, catalog } = useCatalog()
   const change = useChange()
   const [menu, setMenu] = useState<string | null>(null)
@@ -165,6 +167,7 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
 
       <h3 className="mt-6 text-sm font-semibold">New program</h3>
       <p className="mt-0.5 text-sm text-ink-2">New programs never replace an existing one.</p>
+      {gaps && <p className="mt-1 text-sm text-ink-2">{gaps}</p>}
       <Button className="mt-3" icon={Plus} onClick={createBlank}>
         Blank program
       </Button>
