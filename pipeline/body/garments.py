@@ -8,10 +8,11 @@ import bpy
 import numpy as np
 from mathutils import Vector
 
-from meshops import SurfaceBind, get_co, laplacian_smooth, mesh_adjacency, padded_neighbors, set_co, smoothstep, triangles, vertex_normals
+from meshops import SurfaceBind, get_co, laplacian_smooth, mesh_adjacency, padded_neighbors, set_co, smoothstep, subdivide_full, triangles, vertex_normals
+from shading import set_channel
 from skinning import set_weights, skin_arrays
 
-HAIR_MIN = 0.0012
+HAIR_MIN = 0.0006
 
 
 def extract_faces(obj, faces, name):
@@ -38,8 +39,30 @@ def extract_faces(obj, faces, name):
     return new, src
 
 
+def value_noise(P, scale, seed=0):
+    """Smooth 3D value noise in [0, 1] (trilinear over a hashed lattice with smoothstep weights)."""
+    Q = P / scale
+    i = np.floor(Q).astype(np.int64)
+    f = Q - i
+    f = f * f * (3 - 2 * f)
+
+    def h(dx, dy, dz):
+        a = (i[:, 0] + dx) * 73856093 ^ (i[:, 1] + dy) * 19349663 ^ (i[:, 2] + dz) * 83492791 ^ seed * 2654435761
+        return ((a * 1103515245 + 12345) & 0xFFFF) / 65535.0
+
+    out = 0
+    for dx in (0, 1):
+        for dy in (0, 1):
+            for dz in (0, 1):
+                w = (f[:, 0] if dx else 1 - f[:, 0]) * (f[:, 1] if dy else 1 - f[:, 1]) * (f[:, 2] if dz else 1 - f[:, 2])
+                out = out + w * h(dx, dy, dz)
+    return out
+
+
 def make_hair(body, frame):
-    """Scalp faces inside the hairline, boundary snapped onto the hairline iso-line, offset along the normals."""
+    """Short textured crop: scalp faces inside the hairline, boundary snapped onto the hairline iso-line, subdivided
+    once, offset along the normals. Volume on top (more towards the front), tapered sides and nape, combed clumps.
+    COLOR_0.g fades the shell out towards its edge: crisp at the front hairline, a long gradient on the sides."""
     me = body.data
     P = get_co(me)
     N = vertex_normals(P, triangles(me))
@@ -51,34 +74,51 @@ def make_hair(body, frame):
     for m in list(hair.modifiers):
         if m.type != "ARMATURE":
             hair.modifiers.remove(m)
-    fs, Ps, Ns = f[src], P[src], N[src]
+    fs, Ps = f[src], P[src]
     ring = [set() for _ in src]
     for p in hair.data.polygons:
         for i in p.vertices:
             ring[i].update(p.vertices)
-    Pc, Nc = Ps.copy(), Ns.copy()
+    Pc = Ps.copy()
     for j in np.nonzero(fs <= 0)[0]:
         ins = [u for u in ring[j] if fs[u] > 0]
         t = np.array([fs[u] / (fs[u] - fs[j]) for u in ins])[:, None]
         Pc[j] = (Ps[ins] + (Ps[j] - Ps[ins]) * t).mean(0)
-        Nc[j] = (Ns[ins] + (Ns[j] - Ns[ins]) * t).mean(0)
-    Nc /= np.linalg.norm(Nc, axis=1, keepdims=True)
-    a, e = az[src], el[src]
-    top = smoothstep(15, 50, e)
-    back = smoothstep(90, 160, a)
-    tmax = (0.0030 + 0.0030 * top + 0.0010 * back * (1 - top)) * k
-    t = HAIR_MIN + (tmax - HAIR_MIN) * smoothstep(0, 1.6, np.maximum(fs, 0))
-    Q = Pc + Nc * t[:, None]
-    edges = mesh_adjacency(hair.data)
-    table, deg = padded_neighbors(edges, len(Q))
+    set_co(hair.data, Pc)
+    subdivide_full(hair)
+    X = get_co(hair.data)
+    Nc = vertex_normals(X, triangles(hair.data))
+    depth, clear, a, e = frame.hair(X)
+    fp = np.maximum(np.minimum(depth / 6.0, clear / (0.008 * k)), 0)
     bm = bmesh.new()
     bm.from_mesh(hair.data)
     free = np.array([0.0 if v.is_boundary else 1.0 for v in bm.verts])
     bm.free()
-    for _ in range(3):
-        Q = laplacian_smooth(Q, table, deg, 1, 0.5, free)
-        Q = laplacian_smooth(Q, table, deg, 1, -0.53, free)
+    fp *= free
+    front = smoothstep(75, 15, a)
+    back = smoothstep(120, 170, a)
+    side = 0.0018 - 0.0006 * back
+    crown = 0.0055 + 0.0012 * front
+    # extra length where the skull turns from top to sides: a squared silhouette instead of a dome
+    corner = 0.0025 * np.exp(-(((e - 38) / 11) ** 2)) * (1 - 0.5 * back) * smoothstep(10, 30, e)
+    T = side + (crown - side) * smoothstep(16, 40, e) + corner
+    ramp = 2.2 + 0.6 * smoothstep(35, 75, a)
+    T = HAIR_MIN + (T - HAIR_MIN) * smoothstep(0, ramp, fp)
+    # clumps, elongated front to back like combed short hair
+    C = X / np.array([1.0, 1.9, 1.0])
+    clumps = (value_noise(C, 0.016 * k, 1) - 0.5) * 0.004 + (value_noise(C, 0.007 * k, 2) - 0.5) * 0.0016
+    T += clumps * smoothstep(14, 36, e) * smoothstep(0.3, 1.5, fp)
+    Q = X + Nc * (T * k)[:, None]
+    table, deg = padded_neighbors(mesh_adjacency(hair.data), len(Q))
+    Q = laplacian_smooth(Q, table, deg, 1, 0.5, free)
+    Q = laplacian_smooth(Q, table, deg, 1, -0.53, free)
     set_co(hair.data, Q)
+    # fade band in degrees above the hairline: short at the front, long where the sides and nape taper
+    taper = smoothstep(35, 75, a)
+    band = 8 + 14 * taper + 10 * back
+    # the tapered sides stay sparse (skin showing through) for longer before the hair turns solid
+    u = smoothstep(0, band / 6.0, fp) ** (1 + 0.6 * taper)
+    set_channel(hair, 1, 1 - 0.62 * u - 0.38 * smoothstep(band / 6.0, band / 6.0 + 1.5, fp))
     return hair
 
 
@@ -136,7 +176,7 @@ def make_shorts(tights, body, rig, frame):
     loosen(shorts, body, sf)
     hem(shorts, 0.006)
     fill_uvs(shorts)
-    bind_weights(shorts, body)
+    bind_weights(shorts, body, crotch_mask(rig, get_co(shorts.data)))
     return shorts
 
 
@@ -219,13 +259,26 @@ def hem(shorts, depth):
     bm.free()
 
 
-def bind_weights(obj, body):
+def crotch_mask(rig, P, inner=0.04, outer=0.11):
+    """1 on the fabric between the legs (|x| < inner), 0 from `outer` outwards and above the groin"""
+    hip = np.array(rig.data.bones["upperleg01_L"].head_local)
+    return smoothstep(outer, inner, np.abs(P[:, 0])) * smoothstep(hip[2] + 0.06, hip[2] - 0.01, P[:, 2])
+
+
+def bind_weights(obj, body, smooth=None, iters=40):
+    """Skin weights from the closest body point. `smooth` (per-vertex 0..1) diffuses them over the fabric there,
+    so neighbouring fabric points never follow different bones (between the legs they would pinch into a V)."""
     names = [g.name for g in body.vertex_groups]
     idx, w = skin_arrays(body, names)
     W = np.zeros((len(idx), len(names)))
     np.put_along_axis(W, idx, w, axis=1)
     bind = SurfaceBind(get_co(body.data), triangles(body.data), get_co(obj.data))
     Wi = bind.interp(W)
+    if smooth is not None:
+        table, deg = padded_neighbors(mesh_adjacency(obj.data), len(Wi))
+        for _ in range(iters):
+            avg = (Wi[table].sum(1) - Wi * (table.shape[1] - deg)[:, None]) / deg[:, None]
+            Wi += 0.5 * smooth[:, None] * (avg - Wi)
     top = np.argsort(-Wi, axis=1)[:, :4]
     tw = np.take_along_axis(Wi, top, axis=1)
     tw /= tw.sum(1, keepdims=True)

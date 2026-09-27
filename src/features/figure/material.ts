@@ -1,4 +1,5 @@
-import { Color, DoubleSide, Matrix4, MeshPhysicalMaterial, ShaderChunk, Vector2, type Texture } from 'three'
+import { Color, DoubleSide, Matrix4, MeshStandardMaterial, ShaderChunk, Vector2, type Texture } from 'three'
+import { ATLAS_CODEC } from './atlas'
 import { patchDqs } from './dqs'
 import { highlightColors } from './highlight'
 
@@ -44,7 +45,8 @@ export type MaterialOptions = {
   secondary?: string
 }
 
-/** atlas textures for the skin (atlas.ts) and the baked highlight mask (mask.ts) */
+/** atlas textures for the skin (atlas.ts, relief and fibre are the packed surface and slope textures) and the baked
+ * highlight mask (mask.ts) */
 export type FigureAtlasInput = {
   regions: Texture
   relief: Texture
@@ -60,7 +62,8 @@ export type FigureAtlasInput = {
 export const skinDefaults: Required<MaterialOptions> = {
   color: '#c4c4c2',
   roughness: 0.62,
-  specular: 0.5,
+  // the approved look rendered the atlas skin at full dielectric specular
+  specular: 1,
   sheen: 0.1,
   sheenColor: '#ffffff',
   ao: 0.9,
@@ -90,10 +93,22 @@ export const figureMaterialDefaults: Record<FigureMaterialName, Required<Materia
 }
 
 const LAMBERT = 'reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );'
+// wrap diffuse, plus a light sheen: Charlie distribution at a fixed roughness of 0.6 with the Neubelt visibility and the
+// same energy compensation three's physical sheen uses, folded into constants (MeshStandardMaterial has no sheen)
 const WRAPPED = `float figNL = dot( geometryNormal, directLight.direction );
 	float figWrap = saturate( ( figNL + uWrap ) / ( 1.0 + uWrap ) );
 	vec3 figTint = mix( uWrapTint, vec3( 1.0 ), smoothstep( 0.0, 0.6, figNL ) );
-	reflectedLight.directDiffuse += figWrap * figTint * directLight.color * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );`
+	float figComp = 1.0;
+	#ifdef FIG_SHEEN
+	float figNV = saturate( dot( geometryNormal, geometryViewDir ) );
+	float figNLs = saturate( figNL );
+	float figNH = saturate( dot( geometryNormal, normalize( directLight.direction + geometryViewDir ) ) );
+	float figD = 0.76041 * pow( max( 1.0 - figNH * figNH, 0.0078125 ), 1.3889 );
+	float figV = saturate( 1.0 / ( 4.0 * ( figNLs + figNV - figNLs * figNV ) ) );
+	figSheen += irradiance * uSheenColor * ( figD * figV );
+	figComp = 1.0 - max3( uSheenColor ) * saturate( exp( -2.34075 * min( figNV, figNLs ) - 0.61653 ) );
+	#endif
+	reflectedLight.directDiffuse += figComp * figWrap * figTint * directLight.color * BRDF_Lambert( material.diffuseContribution ) * ( 1.0 - F );`
 
 // iris and pupil from the planar eye UVs (pupil centre at 0.5, 0.5; eyeball radius 0.5)
 const EYE = `
@@ -119,11 +134,13 @@ const HAIR_GRAIN = `
   diffuseColor.a *= 1.0 - smoothstep( 0.55, 1.05, hairEdge );`
 
 const ATLAS_PARS = `
-uniform sampler2D uRegions;
 uniform sampler2D uRelief;
 uniform sampler2D uFibre;
-uniform sampler2D uLut;
 uniform sampler2D uMask;
+#ifdef FIG_ATLAS_FLAT
+uniform sampler2D uRegions;
+uniform sampler2D uLut;
+#endif
 uniform vec2 uReliefRange;
 uniform float uFibreAmp;
 uniform float uReliefStrength;
@@ -137,26 +154,20 @@ uniform float uHighlight;
 uniform vec3 uPrimary;
 uniform vec3 uSecondary;
 uniform float uPulse;
-uniform float uAtlasFlat;`
+${ATLAS_CODEC}`
 
-// relief: belly height over a 3-texel stencil (smooth against 8-bit steps), fibres from their own map;
-// highlight: the baked mask thresholded at 0.5, so region borders come out as smooth contours
+// Three texture reads per pixel: the packed surface (height, wide Laplacian, fibre), the packed slopes (relief over
+// 3 texels, fibre over 2) and the highlight mask, thresholded at 0.5 so region borders come out as smooth contours.
 const ATLAS_COLOR = `
   vec2 atlasTexel = 1.0 / vec2( textureSize( uRelief, 0 ) );
   float hRange = uReliefRange.y - uReliefRange.x;
-  float atlasC = texture2D( uRelief, vUv ).r;
-  vec4 atlasH = vec4(
-    texture2D( uRelief, vUv - vec2( atlasTexel.x * 1.5, 0.0 ) ).r, texture2D( uRelief, vUv + vec2( atlasTexel.x * 1.5, 0.0 ) ).r,
-    texture2D( uRelief, vUv - vec2( 0.0, atlasTexel.y * 1.5 ) ).r, texture2D( uRelief, vUv + vec2( 0.0, atlasTexel.y * 1.5 ) ).r );
-  // wide Laplacian (4-texel stencil) for the belly / valley contrast; stays inside the map's 12-texel padding at seams
-  float atlasLap = texture2D( uRelief, vUv - vec2( atlasTexel.x * 4.0, 0.0 ) ).r + texture2D( uRelief, vUv + vec2( atlasTexel.x * 4.0, 0.0 ) ).r
-    + texture2D( uRelief, vUv - vec2( 0.0, atlasTexel.y * 4.0 ) ).r + texture2D( uRelief, vUv + vec2( 0.0, atlasTexel.y * 4.0 ) ).r - 4.0 * atlasC;
-  vec2 fibTexel = 1.0 / vec2( textureSize( uFibre, 0 ) );
-  const float FIB = 255.0 / 127.0;
-  float fibC = ( texture2D( uFibre, vUv ).r - 0.502 ) * FIB;
-  vec4 fibH = ( vec4(
-    texture2D( uFibre, vUv - vec2( fibTexel.x, 0.0 ) ).r, texture2D( uFibre, vUv + vec2( fibTexel.x, 0.0 ) ).r,
-    texture2D( uFibre, vUv - vec2( 0.0, fibTexel.y ) ).r, texture2D( uFibre, vUv + vec2( 0.0, fibTexel.y ) ).r ) - 0.502 ) * FIB;
+  vec4 atlasS = texture2D( uRelief, vUv );
+  vec4 atlasD = texture2D( uFibre, vUv );
+  float atlasC = atlasS.r;
+  float atlasLap = atlasDec( atlasS.g, ATLAS_LAP );
+  float fibC = ( atlasS.b - 0.502 ) * ( 255.0 / 127.0 );
+  vec2 hSlope = vec2( atlasDec( atlasD.r, ATLAS_SLOPE ), atlasDec( atlasD.g, ATLAS_SLOPE ) );
+  vec2 fSlope = vec2( atlasDec( atlasD.b, ATLAS_FIBRE ), atlasDec( atlasD.a, ATLAS_FIBRE ) );
   vec4 hlMask = uHighlight > 0.5 ? texture2D( uMask, vUv ) : vec4( 0.0 );
   vec2 hlAA = max( vec2( uEdge ), fwidth( hlMask.rg ) );
   float hlP = smoothstep( 0.5 - hlAA.x, 0.5 + hlAA.x, hlMask.r );
@@ -177,18 +188,18 @@ const ATLAS_COLOR = `
 
 // QA: unlit region colours from the debug lookup
 const ATLAS_FLAT = `
-  if ( uAtlasFlat > 0.5 ) {
+  #ifdef FIG_ATLAS_FLAT
     ivec2 regSize = textureSize( uRegions, 0 );
-    int atlasId = int( texelFetch( uRegions, clamp( ivec2( vUv * vec2( regSize ) ), ivec2( 0 ), regSize - 1 ), 0 ).r * 255.0 + 0.5 );
+    int atlasId = int( texelFetch( uRegions, clamp( ivec2( vUv * vec2( regSize ) ), ivec2( 0 ), regSize - 1 ), 0 ).a * 255.0 + 0.5 );
     gl_FragColor = vec4( texelFetch( uLut, ivec2( atlasId, 0 ), 0 ).rgb, 1.0 );
-  }`
+  #endif`
 
 // bump from the height gradient in UV space, via the surface gradient (Mikkelsen 2010); height in metres
 const ATLAS_NORMAL = `
   {
     float fibK = uFibreAmp * mix( uFiber, uFiberHl, hlA );
-    float dhdu = ( atlasH.y - atlasH.x ) / ( 3.0 * atlasTexel.x ) * hRange * uReliefStrength + ( fibH.y - fibH.x ) / ( 2.0 * fibTexel.x ) * fibK;
-    float dhdv = ( atlasH.w - atlasH.z ) / ( 3.0 * atlasTexel.y ) * hRange * uReliefStrength + ( fibH.w - fibH.z ) / ( 2.0 * fibTexel.y ) * fibK;
+    float dhdu = ( hSlope.x * hRange * uReliefStrength / 3.0 + fSlope.x * fibK / 2.0 ) / atlasTexel.x;
+    float dhdv = ( hSlope.y * hRange * uReliefStrength / 3.0 + fSlope.y * fibK / 2.0 ) / atlasTexel.y;
     vec3 sigX = dFdx( - vViewPosition );
     vec3 sigY = dFdy( - vViewPosition );
     vec2 uvX = dFdx( vUv );
@@ -213,7 +224,7 @@ export function setPulsePhase(u: FigureUniforms, phase: number | null) {
   u.uPulse.value = phase === null ? -1 : Math.min(1, Math.max(0, phase))
 }
 
-/** One of the figure's materials: PBR base, blended DQS skinning, wrap diffuse, baked AO, soft fresnel rim. */
+/** One of the figure's materials: standard PBR base, blended DQS skinning, wrap diffuse, light sheen, baked AO, soft fresnel rim. */
 export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOptions = {}, dqsBones: number[] = [1], vertexMix = true, atlas?: FigureAtlasInput) {
   const o = { ...figureMaterialDefaults[name], ...opts }
   const useAtlas = name === 'skin' && !!atlas
@@ -237,7 +248,6 @@ export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOpt
     uSecondary: { value: new Color(o.secondary) },
     /** concentric pulse phase 0..1 inside highlighted muscles; negative = off */
     uPulse: { value: -1 },
-    uAtlasFlat: { value: atlas?.flat ? 1 : 0 },
     uAO: { value: o.ao },
     uRim: { value: o.rim },
     uRimColor: { value: new Color(o.rimColor) },
@@ -246,26 +256,31 @@ export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOpt
     uHairColor: { value: new Color(o.hairColor) },
     uHairTint: { value: o.hairTint },
     uHairEdgeColor: { value: new Color('#5a524b') },
+    uSpecular: { value: o.specular },
+    uSheenColor: { value: new Color(o.sheenColor).multiplyScalar(o.sheen) },
     uDQS: { value: o.dqs },
     /** position dequantization folded into the bone matrices, see Rig.dequant */
     uDequant: { value: new Matrix4() },
     uDequantInv: { value: new Matrix4() },
     uDqsBone: { value: dqsBones },
   }
-  const mat = new MeshPhysicalMaterial({
+  const mat = new MeshStandardMaterial({
     color: o.color,
     roughness: o.roughness,
     metalness: 0,
-    specularIntensity: o.specular,
-    sheen: o.sheen,
-    sheenColor: new Color(o.sheenColor),
-    sheenRoughness: 0.6,
     vertexColors: true,
     side: name === 'shorts' ? DoubleSide : undefined,
     transparent: name === 'hair',
   })
   mat.name = name
-  if (name === 'eyes' || useAtlas) mat.defines = { USE_UV: '' }
+  const flat = useAtlas && !!atlas.flat
+  const sheen = o.sheen > 0
+  mat.defines = {
+    STANDARD: '',
+    ...(name === 'eyes' || useAtlas ? { USE_UV: '' } : {}),
+    ...(sheen ? { FIG_SHEEN: '' } : {}),
+    ...(flat ? { FIG_ATLAS_FLAT: '' } : {}),
+  }
   if (name === 'hair' || name === 'shorts') {
     // shells sit a few millimetres above the skin
     mat.polygonOffset = true
@@ -295,7 +310,18 @@ uniform vec3 uWrapTint;
 uniform vec3 uHairColor;
 uniform float uHairTint;
 uniform vec3 uHairEdgeColor;
+uniform float uSpecular;
+uniform vec3 uSheenColor;
+vec3 figSheen = vec3( 0.0 );
 ${pars}`,
+      )
+      .replace(
+        '#include <lights_physical_fragment>',
+        // dielectric specular strength, as MeshPhysicalMaterial's specularIntensity (metalness is 0)
+        `#include <lights_physical_fragment>
+        material.specularColor *= uSpecular;
+        material.specularColorBlended = material.specularColor;
+        material.specularF90 = uSpecular;`,
       )
       .replace('#include <lights_physical_pars_fragment>', wrapped)
       .replace(
@@ -311,8 +337,15 @@ ${pars}`,
         reflectedLight.indirectDiffuse *= figAO;
         reflectedLight.indirectSpecular *= figAO * figAO;
         reflectedLight.directDiffuse *= mix( 1.0, figAO, 0.4 );
-        reflectedLight.directSpecular *= figAO;`,
+        reflectedLight.directSpecular *= figAO;
+        #ifdef FIG_SHEEN
+        float figIBL = saturate( exp( -2.34075 * saturate( dot( normal, normalize( vViewPosition ) ) ) - 0.61653 ) );
+        reflectedLight.indirectDiffuse *= 1.0 - max3( uSheenColor ) * figIBL;
+        reflectedLight.indirectSpecular *= 1.0 - max3( uSheenColor ) * figIBL;
+        figSheen += ( irradiance + iblIrradiance ) * uSheenColor * figIBL * RECIPROCAL_PI;
+        #endif`,
       )
+      .replace('#include <opaque_fragment>', '#ifdef FIG_SHEEN\noutgoingLight += figSheen;\n#endif\n#include <opaque_fragment>')
       .replace(
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
@@ -320,6 +353,6 @@ ${pars}`,
         totalEmissiveRadiance += uRimColor * rimF * uRim * mix( 1.0, vColor.r, 0.8 );`,
       )
   }
-  mat.customProgramCacheKey = () => `figure-v9-${name}-${dqsBones.length}-${vertexMix ? 'v' : 'b'}-${useAtlas ? 'a' : ''}`
+  mat.customProgramCacheKey = () => `figure-v10-${name}-${dqsBones.length}-${vertexMix ? 'v' : 'b'}-${useAtlas ? 'a' : ''}${flat ? 'f' : ''}${sheen ? 's' : ''}`
   return { material: mat, uniforms }
 }

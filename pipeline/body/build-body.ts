@@ -1,6 +1,5 @@
-// Builds public/models/body-a.glb (realistic head) and body-b.glb (stylized head): MPFB2 (pinned) in headless
-// Blender, then gltf-transform. Both share skeleton, UVs, hair, shorts and corrective morphs.
-// node pipeline/body/build-body.ts [--skip-blender] [--variant a|b]
+// Builds public/models/body.glb (stylized head): MPFB2 (pinned) in headless Blender, then gltf-transform.
+// node pipeline/body/build-body.ts [--skip-blender]
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -8,20 +7,18 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 import { type Document, NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
-import { dedup, meshopt, prune, quantize, reorder, weld } from '@gltf-transform/functions'
-import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer'
+import { compactPrimitive, dedup, meshopt, prune, quantize, reorder, weld } from '@gltf-transform/functions'
+import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer'
 import { CACHE, PUBLIC, ROOT } from '../lib/paths.ts'
 import { MPFB2 } from './mpfb2-pin.ts'
 
 const BLENDER = process.env.BLENDER ?? 'blender'
 const WORK = path.join(CACHE, 'body')
-const VARIANTS = ['a', 'b'] as const
-type Variant = (typeof VARIANTS)[number]
-const raw = (v: Variant) => path.join(WORK, `body-${v}.raw.glb`)
-const reportPath = (v: Variant) => path.join(WORK, `report-${v}.json`)
-const out = (v: Variant) => path.join(PUBLIC, `models/body-${v}.glb`)
-const LEGACY = path.join(PUBLIC, 'models/body.glb')
-const BUDGET = 900 * 1024
+const RAW = path.join(WORK, 'body.raw.glb')
+const REPORT = path.join(WORK, 'report.json')
+const OUT = path.join(PUBLIC, 'models/body.glb')
+const LEGACY = ['body-a.glb', 'body-b.glb'].map((f) => path.join(PUBLIC, 'models', f))
+const BUDGET = 700 * 1024
 
 function sh(cmd: string, args: string[]) {
   return execFileSync(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 }).toString()
@@ -53,10 +50,10 @@ async function ensureMpfb() {
   if (installedVersion() !== MPFB2.version) throw new Error('MPFB2 install did not take')
 }
 
-function blender(v: Variant) {
+function blender() {
   const log = sh(BLENDER, [
     '-b', '--factory-startup', '-P', path.join(ROOT, 'pipeline/body/build_body.py'),
-    '--', '--variant', v, '--out', raw(v), '--report', reportPath(v), '--blend', path.join(WORK, `body-${v}.blend`),
+    '--', '--out', RAW, '--report', REPORT, '--blend', path.join(WORK, 'body.blend'),
   ])
   const ok = log.split('\n').find((l) => l.startsWith('BUILD_BODY_OK'))
   if (!ok) throw new Error(`Blender build failed:\n${log.slice(-4000)}`)
@@ -67,18 +64,6 @@ function meshNode(doc: Document, name: string) {
   const node = doc.getRoot().listNodes().find((n) => n.getName() === name && n.getMesh())
   if (!node) throw new Error(`no mesh node ${name}`)
   return node
-}
-
-function attr(doc: Document, mesh: string, semantic: string) {
-  const prim = meshNode(doc, mesh).getMesh()!.listPrimitives()[0]
-  return prim.getAttribute(semantic)!.getArray()!
-}
-
-/** equal within `tol`: quantized arrays may differ by one step because both variants round independently */
-function sameArray(a: ArrayLike<number>, b: ArrayLike<number>, tol = 1) {
-  if (a.length !== b.length) return false
-  for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > tol) return false
-  return true
 }
 
 /**
@@ -106,28 +91,99 @@ function adoptMorphNormals(doc: Document) {
   }
 }
 
-/** Variants must be interchangeable: same skeleton, body UVs and topology, identical hair and shorts. */
-function assertCompatible(a: Document, b: Document) {
-  const skin = (d: Document) => d.getRoot().listSkins()
-  if (skin(a).length !== 1 || skin(b).length !== 1) throw new Error('expected exactly one skin per variant')
-  const joints = (d: Document) => skin(d)[0].listJoints().map((j) => j.getName()).join(',')
-  if (joints(a) !== joints(b)) throw new Error('variant skeletons differ')
-  if (!sameArray(skin(a)[0].getInverseBindMatrices()!.getArray()!, skin(b)[0].getInverseBindMatrices()!.getArray()!, 1e-5)) {
-    throw new Error('variant bind poses differ')
+/**
+ * Size trims that change nothing on screen: sub-millimetre corrective deltas become exact zeros (meshopt stores
+ * runs of zeros almost for free), all-zero targets are dropped per mesh (the shorts never see the shoulder keys),
+ * and UVs the shaders never read (hair, shorts) are removed. Correctives look targets up by name per mesh.
+ */
+function trim(doc: Document, { minDelta = 0.0003, minNormal = 0.02 } = {}) {
+  for (const mesh of doc.getRoot().listMeshes()) {
+    const extras = mesh.getExtras() as { targetNames?: string[] }
+    const names = extras.targetNames ?? []
+    const keep: boolean[] = []
+    for (const prim of mesh.listPrimitives()) {
+      if (['hair', 'shorts'].includes(prim.getMaterial()?.getName() ?? '')) prim.setAttribute('TEXCOORD_0', null)
+      prim.listTargets().forEach((t, i) => {
+        const pos = t.getAttribute('POSITION')!.getArray()!
+        const nrm = t.getAttribute('NORMAL')?.getArray()
+        let any = false
+        for (let v = 0; v < pos.length; v += 3) {
+          if (Math.hypot(pos[v], pos[v + 1], pos[v + 2]) < minDelta) pos[v] = pos[v + 1] = pos[v + 2] = 0
+          else any = true
+          if (nrm && Math.hypot(nrm[v], nrm[v + 1], nrm[v + 2]) < minNormal) nrm[v] = nrm[v + 1] = nrm[v + 2] = 0
+        }
+        keep[i] = any
+      })
+      prim.listTargets().forEach((t, i) => { if (!keep[i]) prim.removeTarget(t) })
+    }
+    if (!names.length) continue
+    mesh.setExtras({ ...extras, targetNames: names.filter((_, i) => keep[i]) })
+    mesh.setWeights(mesh.getWeights().filter((_, i) => keep[i]))
   }
-  for (const [mesh, semantic] of [['body', 'TEXCOORD_0'], ['body', 'JOINTS_0'], ['hair', 'POSITION'], ['shorts', 'POSITION'], ['shorts', 'TEXCOORD_0']]) {
-    // positions are 14-bit values in 16-bit storage: one quantization step is 4 units
-    const tol = semantic === 'POSITION' ? 4 : 1
-    if (!sameArray(attr(a, mesh, semantic), attr(b, mesh, semantic), tol)) throw new Error(`variant ${mesh}.${semantic} differs`)
+}
+
+// bone groups whose weight shares steer the simplifier (deformation must stay smooth where they blend)
+const GROUPS = [/^upperarm0\d_L/, /^upperarm0\d_R/, /^(lowerarm0\d|wrist)_L/, /^(lowerarm0\d|wrist)_R/, /^(metacarpal|finger).*_L/, /^(metacarpal|finger).*_R/,
+  /^upperleg0\d_L/, /^upperleg0\d_R/, /^lowerleg0\d_L/, /^lowerleg0\d_R/, /^(clavicle|shoulder01)_L/, /^(clavicle|shoulder01)_R/,
+  /^spine0[12]$/, /^(spine0[345]|root|pelvis_.)$/, /^(neck0\d|head)$/, /^(foot|toe).*_L/, /^(foot|toe).*_R/]
+
+/**
+ * Drops body vertices that carry no information: meshopt collapses edges where position, normal, UV, skin weight
+ * shares and corrective deltas all stay (near) linear, keeping UV seams and borders. Relief and muscle detail live in
+ * the atlas textures, so the smooth subdivision surface does not need its full density.
+ */
+async function simplifyBody(doc: Document, ratio: number, error: number) {
+  await MeshoptSimplifier.ready
+  const prim = meshNode(doc, 'body').getMesh()!.listPrimitives()[0]
+  const pos = prim.getAttribute('POSITION')!
+  const n = pos.getCount()
+  const P = new Float32Array(pos.getArray()!)
+  const scale = MeshoptSimplifier.getScale(P, 3)
+  const nrm = prim.getAttribute('NORMAL')!
+  const uv = prim.getAttribute('TEXCOORD_0')!
+  const joints = prim.getAttribute('JOINTS_0')!
+  const weights = prim.getAttribute('WEIGHTS_0')!
+  const bones = doc.getRoot().listSkins()[0].listJoints().map((j) => j.getName())
+  const group = bones.map((b) => GROUPS.findIndex((re) => re.test(b)))
+  const targets = prim.listTargets()
+  // corrective delta magnitude summed per joint and side (the simplifier takes at most 32 attributes)
+  const names = (meshNode(doc, 'body').getMesh()!.getExtras() as { targetNames: string[] }).targetNames
+  const families = [...new Set(names.map((t) => t.replace(/^cor_([a-z]+).*_([LR])$/, '$1_$2')))]
+  const family = names.map((t) => families.indexOf(t.replace(/^cor_([a-z]+).*_([LR])$/, '$1_$2')))
+  const K = 5 + GROUPS.length + families.length
+  const A = new Float32Array(n * K)
+  const wts = [0.02, 0.02, 0.02, 1.5, 1.5, ...GROUPS.map(() => 0.15), ...families.map(() => 1 / scale)]
+  const v3 = [0, 0, 0], v2 = [0, 0], j4 = [0, 0, 0, 0], w4 = [0, 0, 0, 0]
+  for (let i = 0; i < n; i++) {
+    const o = i * K
+    nrm.getElement(i, v3)
+    A.set(v3, o)
+    uv.getElement(i, v2)
+    A.set(v2, o + 3)
+    joints.getElement(i, j4)
+    weights.getElement(i, w4)
+    for (let k = 0; k < 4; k++) if (group[j4[k]] >= 0) A[o + 5 + group[j4[k]]] += w4[k]
+    targets.forEach((t, k) => {
+      t.getAttribute('POSITION')!.getElement(i, v3)
+      A[o + 5 + GROUPS.length + family[k]] += Math.hypot(v3[0], v3[1], v3[2])
+    })
   }
+  // the face, hands and feet carry their shape in geometry alone (no relief texture): keep them as built
+  const lock = new Uint8Array(n)
+  const locked = [4, 5, 14, 15, 16].map((g) => 5 + g)
+  for (let i = 0; i < n; i++) if (locked.some((c) => A[i * K + c] > 0.3)) lock[i] = 1
+  const idx = new Uint32Array(prim.getIndices()!.getArray()!)
+  const [out, err] = MeshoptSimplifier.simplifyWithAttributes(idx, P, 3, A, K, wts, lock, Math.floor(idx.length * ratio / 3) * 3, error, ['LockBorder'])
+  prim.getIndices()!.setArray(n > 65535 ? new Uint32Array(out) : new Uint16Array(out))
+  compactPrimitive(prim)
+  return { before: n, after: prim.getAttribute('POSITION')!.getCount(), error: +(err * scale * 1000).toFixed(2) }
 }
 
 async function main() {
   mkdirSync(WORK, { recursive: true })
-  const only = process.argv.includes('--variant') ? [process.argv[process.argv.indexOf('--variant') + 1] as Variant] : VARIANTS
   if (!process.argv.includes('--skip-blender')) {
     await ensureMpfb()
-    for (const v of only) blender(v)
+    blender()
   }
 
   await MeshoptEncoder.ready
@@ -135,41 +191,37 @@ async function main() {
   const io = new NodeIO()
     .registerExtensions(ALL_EXTENSIONS)
     .registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder })
-  const docs: Partial<Record<Variant, Document>> = {}
-  const summary = []
-  for (const v of only) {
-    const report = JSON.parse(readFileSync(reportPath(v), 'utf8'))
-    const doc = await io.read(raw(v))
-    const asset = doc.getRoot().getAsset()
-    asset.generator = 'gym-builder build-body'
-    asset.copyright = 'Base mesh, rig, targets and tights proxy: MakeHuman/MPFB2 assets, CC0 1.0'
-    meshNode(doc, 'body').setExtras({ variant: v, correctives: report.correctives })
-    adoptMorphNormals(doc)
-    // one quantization volume for every mesh, so all skins share inverse binds and Rig.dequant (meshopt re-runs quantize).
-    // Blender splits vertices whose per-corner morph normals differ in the last float bits; weld after quantizing.
-    const q = { quantizationVolume: 'scene', quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 14, quantizeColor: 8, quantizeWeight: 8 } as const
-    await doc.transform(
-      dedup({ keepUniqueNames: true }),
-      prune({ keepAttributes: true }),
-      reorder({ encoder: MeshoptEncoder }),
-      quantize(q),
-      weld(),
-      meshopt({ encoder: MeshoptEncoder, level: 'high', ...q }),
-    )
-    mkdirSync(path.dirname(out(v)), { recursive: true })
-    await io.write(out(v), doc)
-    docs[v] = doc
-    const bytes = statSync(out(v)).size
-    const meshes = Object.fromEntries(['body', 'shorts', 'hair', 'eyes'].map((m) => {
-      const prim = meshNode(doc, m).getMesh()!.listPrimitives()[0]
-      return [m, { vertices: prim.getAttribute('POSITION')!.getCount(), triangles: prim.getIndices()!.getCount() / 3, morphs: prim.listTargets().length }]
-    }))
-    summary.push({ out: path.relative(ROOT, out(v)), bytes, kb: +(bytes / 1024).toFixed(1), meshes, bones: report.bones.length })
-    if (bytes > BUDGET) throw new Error(`body-${v}.glb is ${bytes} bytes, over the ${BUDGET} budget`)
-  }
-  if (docs.a && docs.b) assertCompatible(docs.a, docs.b)
-  if (existsSync(LEGACY)) rmSync(LEGACY)
-  console.log(JSON.stringify(summary, null, 1))
+  const report = JSON.parse(readFileSync(REPORT, 'utf8'))
+  const doc = await io.read(RAW)
+  const asset = doc.getRoot().getAsset()
+  asset.generator = 'gym-builder build-body'
+  asset.copyright = 'Base mesh, rig, targets and tights proxy: MakeHuman/MPFB2 assets, CC0 1.0'
+  meshNode(doc, 'body').setExtras({ correctives: report.correctives })
+  adoptMorphNormals(doc)
+  trim(doc)
+  // error is relative to the figure's extent: 0.0005 is under a millimetre
+  const simplified = await simplifyBody(doc, 0.3, 0.0005)
+  // one quantization volume for every mesh, so all skins share inverse binds and Rig.dequant (meshopt re-runs quantize).
+  // Blender splits vertices whose per-corner morph normals differ in the last float bits; weld after quantizing.
+  const q = { quantizationVolume: 'scene', quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 14, quantizeColor: 8, quantizeWeight: 8 } as const
+  await doc.transform(
+    dedup({ keepUniqueNames: true }),
+    prune({ keepAttributes: true }),
+    reorder({ encoder: MeshoptEncoder }),
+    quantize(q),
+    weld(),
+    meshopt({ encoder: MeshoptEncoder, level: 'high', ...q }),
+  )
+  mkdirSync(path.dirname(OUT), { recursive: true })
+  await io.write(OUT, doc)
+  const bytes = statSync(OUT).size
+  const meshes = Object.fromEntries(['body', 'shorts', 'hair', 'eyes'].map((m) => {
+    const prim = meshNode(doc, m).getMesh()!.listPrimitives()[0]
+    return [m, { vertices: prim.getAttribute('POSITION')!.getCount(), triangles: prim.getIndices()!.getCount() / 3, morphs: prim.listTargets().length }]
+  }))
+  console.log(JSON.stringify({ out: path.relative(ROOT, OUT), bytes, kb: +(bytes / 1024).toFixed(1), meshes, simplified, bones: report.bones.length }, null, 1))
+  if (bytes > BUDGET) throw new Error(`body.glb is ${bytes} bytes, over the ${BUDGET} budget`)
+  for (const f of LEGACY) if (existsSync(f)) rmSync(f)
 }
 
 await main()

@@ -3,9 +3,10 @@
  "credit": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
  "source": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/ (Release 4.0)",
  "license": "https://creativecommons.org/licenses/by/4.0/",
- "comment": "Region atlas and muscle relief derived from BodyParts3D: superficial muscles registered onto the MakeHuman body, projected along its normals, relabelled to our taxonomy and baked into its UV layout. The latissimus dorsi and rectus abdominis regions and the relief shapes are our own.",
- "version": 3,
+ "comment": "Region atlas and muscle relief derived from BodyParts3D: superficial muscles registered onto the MakeHuman body, projected along its normals, relabelled to our taxonomy and baked into its UV layout. The latissimus dorsi and rectus abdominis regions, the serratus anterior digitations, the relief shapes and the illustration clip regions are our own; wrists, sternum, brachialis and the posterior thigh strips are adjusted to our 2D body map (also derived from BodyParts3D).",
+ "version": 4,
  "uv": "TEXCOORD_0 of the body mesh, glTF orientation (flipY = false)",
+ "gutter": "12 texels past each UV island, carrying the surface across the seam (seam-aware padding)",
  "textures": {
   "regions": {
    "file": "atlas-regions.webp",
@@ -15,8 +16,8 @@
   "relief": {
    "file": "atlas-relief.webp",
    "size": 2048,
-   "minMm": -0.4,
-   "maxMm": 5.5,
+   "minMm": 0,
+   "maxMm": 6,
    "encoding": "R = height, minMm + R / 255 * (maxMm - minMm) millimetres along the normal; linear, mipmapped"
   },
   "fibre": {
@@ -685,6 +686,26 @@
    "head": null,
    "untracked": "fibularis",
    "group": null,
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 83,
+   "head": null,
+   "clipOf": "trap_upper",
+   "clip": "illustration",
+   "group": "upper_traps",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 84,
+   "head": null,
+   "clipOf": "trap_upper",
+   "clip": "illustration",
+   "group": "upper_traps",
    "side": "r",
    "views": "FB",
    "present": true

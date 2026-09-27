@@ -1,5 +1,6 @@
+import type { GripName } from './hands'
 import type { FigureHighlight } from './highlight'
-import type { PoseName } from './poses'
+import { DUMBBELL_D, DUMBBELL_GRIP, type PoseName } from './poses'
 import type { BenchParams } from './props/sockets'
 import type { ViewName } from './views'
 
@@ -12,6 +13,8 @@ export type ExerciseScene = {
   view: ViewName
   highlight: FigureHighlight
   dumbbells?: boolean
+  /** the hands' grip (hands.ts), carried by the pose; held props find the handle from it */
+  grip?: { name: GripName; diameter: number }
   /** bench fitted under a seated figure */
   bench?: BenchParams
 }
@@ -23,6 +26,7 @@ export const scenes = {
     view: 'hero',
     highlight: { primary: ['biceps_brachii', 'brachialis'], secondary: ['forearms'] },
     dumbbells: true,
+    grip: { name: DUMBBELL_GRIP.curl, diameter: DUMBBELL_D },
   },
   'db-lateral-raise': {
     exercise: 203,
@@ -30,6 +34,7 @@ export const scenes = {
     view: 'hero',
     highlight: { primary: ['side_delt'], secondary: ['rear_delt', 'rotator_cuff', 'upper_traps'] },
     dumbbells: true,
+    grip: { name: DUMBBELL_GRIP.raise, diameter: DUMBBELL_D },
   },
   'db-shoulder-press': {
     exercise: 202,
@@ -37,6 +42,7 @@ export const scenes = {
     view: 'hero',
     highlight: { primary: ['front_delt'], secondary: ['side_delt', 'triceps', 'upper_traps', 'serratus'] },
     dumbbells: true,
+    grip: { name: DUMBBELL_GRIP.press, diameter: DUMBBELL_D },
     bench: { back: 85 },
   },
 } satisfies Record<string, ExerciseScene>

@@ -1,7 +1,10 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { gripJoints } from './hands'
 import { resolveHighlight } from './highlight'
-import { scenes } from './scenes'
+import { poses } from './poses'
+import { dumbbellDefaults } from './props/sockets'
+import { scenes, type ExerciseScene } from './scenes'
 
 const dir = new URL('../../../data/exercises/', import.meta.url)
 
@@ -24,6 +27,18 @@ describe('exercise scenes', () => {
       const got = resolveHighlight(scene.highlight)
       expect(sorted(got.primary), name).toEqual(sorted(want.primary))
       expect(sorted(got.secondary), name).toEqual(sorted(want.secondary))
+    }
+  })
+
+  it('pose their hands in the declared grip, around the handle the props draw', () => {
+    for (const [name, scene] of Object.entries(scenes) as [string, ExerciseScene][]) {
+      if (!scene.dumbbells) continue
+      expect(scene.grip, name).toBeDefined()
+      expect(scene.grip!.diameter, name).toBeCloseTo(dumbbellDefaults.handleRadius * 2, 6)
+      const joints = poses[scene.pose].joints as Record<string, unknown>
+      for (const side of ['L', 'R'] as const) {
+        for (const [bone, spec] of Object.entries(gripJoints(side, scene.grip!.name, scene.grip!.diameter))) expect(joints[bone], `${name} ${bone}`).toEqual(spec)
+      }
     }
   })
 })

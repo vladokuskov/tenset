@@ -8,7 +8,6 @@ type Search = {
   scene?: string
   pose?: string
   view?: string
-  head?: 'a' | 'b'
   cor?: number
   focus?: string
   size?: number
@@ -25,7 +24,6 @@ export const Route = createFileRoute('/dev/figure')({
     scene: typeof s.scene === 'string' ? s.scene : undefined,
     pose: typeof s.pose === 'string' ? s.pose : s.pose && typeof s.pose === 'object' ? JSON.stringify(s.pose) : undefined,
     view: typeof s.view === 'string' ? s.view : undefined,
-    head: s.head === 'b' ? 'b' : s.head === 'a' ? 'a' : undefined,
     cor: s.cor === 0 ? 0 : undefined,
     focus: typeof s.focus === 'string' ? s.focus : undefined,
     size: typeof s.size === 'number' ? s.size : undefined,
@@ -39,7 +37,7 @@ export const Route = createFileRoute('/dev/figure')({
 })
 
 function DevFigureRoute() {
-  const { scene, pose, view, head, cor, focus, size, lift, hl, pulse, atlas, ortho } = Route.useSearch()
+  const { scene, pose, view, cor, focus, size, lift, hl, pulse, atlas, ortho } = Route.useSearch()
   if (!DevFigure) return null
   return (
     <Suspense fallback={null}>
@@ -47,7 +45,6 @@ function DevFigureRoute() {
         scene={scene}
         pose={pose}
         view={view}
-        head={head}
         correctives={cor !== 0}
         focus={focus ? { bone: focus, size: size ?? 0.4, lift } : undefined}
         hl={hl}

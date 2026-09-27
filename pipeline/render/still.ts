@@ -3,6 +3,8 @@
 // node pipeline/render/still.ts --out qa/out/tmp [--head b] --shot look=relaxed:front --shot crop=deep-squat:side:lowerleg01_R:0.6 [--sheet sheet]
 // node pipeline/render/still.ts --out qa/out/tmp --scene curl=db-curl --scene curl-arm=db-curl:hero:lowerarm01_R:0.5
 // --atlas flat|off and --hl 'biceps:p,forearms:s' apply to every --shot / --scene of the run
+// --viewport 390x390, --spin yaw,pitch (degrees, turns the figure about the focus bone), --grip R:hook:0.033 (hands.ts
+// applyGrip on the posed figure), --pulse 0.45, --probe (hand vertices inside the held handle) and --perf (GPU timings) do too
 // inline poses use | as separator: --shot 'x={"base":"relaxed","joints":{...}}|front'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -29,6 +31,17 @@ export type Shot = {
   ortho?: boolean
   /** CSS pixels, default 390 x 844 (always at 3x) */
   viewport?: [number, number]
+  /** degrees: turn the posed figure about the focus bone (hand close-ups) */
+  spin?: [number, number]
+  /** 'R:1,0.5,0': turn the figure so this wrist-frame direction (palmar, distal, thumb side) faces a front camera,
+   * fingers up (hand close-ups; use with view front) */
+  handview?: string
+  /** 'hook', 'R:hook' or 'L:rope:0.03', applied with hands.ts applyGrip after posing */
+  grip?: string
+  /** print how far hand vertices sink into the held handle */
+  probe?: boolean
+  /** print GPU timings: full frame, frame with flat skin, highlight change */
+  perf?: boolean
 }
 
 const VIEWPORT = { width: 390, height: 844 }
@@ -180,7 +193,147 @@ async function renderShot(page: Page, base: string, shot: Shot, file: string) {
   if (page.viewportSize()?.width !== w || page.viewportSize()?.height !== h) await page.setViewportSize({ width: w, height: h })
   await page.goto(`${base}/dev/figure?${q}`)
   await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true, undefined, { timeout: 90_000 })
+  if (shot.grip || shot.spin || shot.handview) await page.evaluate(adjustFigure, { grip: shot.grip, spin: shot.spin, focus: shot.focus, handview: shot.handview })
   await page.screenshot({ path: file, type: 'png' })
+  if (shot.probe) console.log(`  probe ${shot.name}: ${JSON.stringify(await page.evaluate(probeHandles))}`)
+  if (shot.perf) console.log(`  perf ${shot.name}: ${JSON.stringify(await page.evaluate(perfProbe))}`)
+}
+
+// runs in the page. Synchronous loops, each call followed by a 1-pixel readPixels that waits for the GPU.
+async function perfProbe() {
+  type R = import('three').WebGLRenderer
+  const f = (window as unknown as FigureWindow).__figure
+  const mesh = f.rig.mesh
+  const { r, s, c } = await new Promise<{ r: R; s: import('three').Scene; c: import('three').Camera }>((done) => {
+    const prev = mesh.onBeforeRender
+    mesh.onBeforeRender = function (...args) {
+      mesh.onBeforeRender = prev
+      prev.apply(this, args)
+      done({ r: args[0], s: args[1], c: args[2] })
+    }
+  })
+  const threeUrl = performance.getEntriesByType('resource').map((e) => e.name).find((n) => n.includes('/.vite/deps/three.js'))
+  const THREE = await import(/* @vite-ignore */ String(threeUrl))
+  const gl = r.getContext() as WebGL2RenderingContext
+  const px = new Uint8Array(4)
+  const sync = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+  // wall time per call, each followed by a GPU sync; the GPU is kept busy for a second first so its clock is up
+  const handle = f as unknown as { setHighlight(h: unknown): void }
+  const hls = [{ primary: ['chest'], secondary: ['front_delt', 'triceps'] }, { primary: ['quads', 'glute_max'], secondary: ['adductors'] }]
+  let k = 0
+  const frameFn = () => r.render(s, c)
+  const hlFrameFn = () => { handle.setHighlight(hls[k++ % 2]); r.render(s, c) }
+  const warm = performance.now()
+  while (performance.now() - warm < 1000) { r.render(s, c); sync() }
+  const stats = (fn: () => void, n = 120) => {
+    const t: number[] = []
+    for (let i = 0; i < n; i++) {
+      const t0 = performance.now()
+      fn()
+      sync()
+      t.push(performance.now() - t0)
+    }
+    t.sort((a, b) => a - b)
+    const q = (p: number) => Math.round(t[Math.floor(p * (n - 1))] * 100) / 100
+    return { p10: q(0.1), med: q(0.5) }
+  }
+  const skin = mesh.material
+  const flatMat = new THREE.MeshBasicMaterial({ color: 0xc4c4c2 })
+  const out: Record<string, unknown> = { px: [gl.drawingBufferWidth, gl.drawingBufferHeight] }
+  out.frame = stats(frameFn)
+  out.frameWithHighlightChange = stats(hlFrameFn)
+  mesh.material = flatMat
+  out.frameFlatSkin = stats(frameFn)
+  mesh.material = skin
+  out.frameAgain = stats(frameFn)
+  flatMat.dispose()
+  return out
+}
+
+type FigureWindow = {
+  __figure: {
+    rig: { mesh: import('three').SkinnedMesh; bone(n: string): import('three').Bone }
+    scene: import('three').Object3D
+  }
+}
+
+// runs in the page: dev modules are served by Vite at their source paths, so these are the app's own instances
+async function adjustFigure({ grip, spin, focus, handview }: { grip?: string; spin?: [number, number]; focus?: string; handview?: string }) {
+  const f = (window as unknown as FigureWindow).__figure
+  if (grip) {
+    const { applyGrip } = await import(/* @vite-ignore */ String('/src/features/figure/hands.ts'))
+    const parts = grip.split(':')
+    const sides = parts[0] === 'L' || parts[0] === 'R' ? [parts.shift()!] : ['L', 'R']
+    for (const side of sides) applyGrip(f.rig, side, parts[0], parts[1] ? Number(parts[1]) : undefined)
+  }
+  if (spin || handview) {
+    const s = f.scene
+    const V = s.position.constructor as typeof import('three').Vector3
+    const Q = s.quaternion.constructor as typeof import('three').Quaternion
+    const E = s.rotation.constructor as typeof import('three').Euler
+    const M = s.matrix.constructor as typeof import('three').Matrix4
+    s.updateMatrixWorld(true)
+    const pivot = f.rig.bone(focus ?? 'root').getWorldPosition(new V())
+    let q = new Q()
+    if (spin) q.setFromEuler(new E((spin[1] * Math.PI) / 180, (spin[0] * Math.PI) / 180, 0, 'YXZ'))
+    if (handview) {
+      const [side, vec] = handview.split(':')
+      const [a, b, c] = vec.split(',').map(Number)
+      const w = f.rig.bone(`wrist_${side}`).matrixWorld
+      const X = new V(side === 'L' ? 1 : -1, 0, 0).transformDirection(w)
+      const Y = new V(0, 1, 0).transformDirection(w)
+      const Z = new V(0, 0, 1).transformDirection(w)
+      const dir = X.multiplyScalar(a).addScaledVector(Y, b).addScaledVector(Z, c).normalize()
+      const basis = (d: import('three').Vector3, up: import('three').Vector3) => {
+        const u = up.clone().addScaledVector(d, -up.dot(d)).normalize()
+        return new M().makeBasis(new V().crossVectors(u, d), u, d)
+      }
+      const from = basis(dir, Y.clone())
+      const to = basis(new V(0, 0.08, 1).normalize(), new V(0, 1, 0))
+      q = new Q().setFromRotationMatrix(to.multiply(from.transpose()))
+    }
+    s.quaternion.premultiply(q)
+    s.position.sub(pivot).applyQuaternion(q).add(pivot)
+    s.updateMatrixWorld(true)
+  }
+  await new Promise<void>((done) => {
+    const step = (k: number) => (k ? requestAnimationFrame(() => step(k - 1)) : done())
+    step(4)
+  })
+}
+
+// per hand: the deepest hand vertex inside the dumbbell handle (mm, negative = inside) by dominant bone
+async function probeHandles() {
+  const f = (window as unknown as FigureWindow).__figure
+  const { skinnedPositions } = await import(/* @vite-ignore */ String('/src/features/figure/props/fit.ts'))
+  const { gripFrame } = await import(/* @vite-ignore */ String('/src/features/figure/props/grip.ts'))
+  const { dumbbellDefaults } = await import(/* @vite-ignore */ String('/src/features/figure/props/sockets.ts'))
+  const mesh = f.rig.mesh
+  f.scene.updateMatrixWorld(true)
+  const P = skinnedPositions(mesh) as Float32Array
+  const si = mesh.geometry.getAttribute('skinIndex')
+  const sw = mesh.geometry.getAttribute('skinWeight')
+  const names = mesh.skeleton.bones.map((b) => b.name)
+  const R = dumbbellDefaults.handleRadius as number
+  const out: Record<string, { worst: number; inside: number; bone: string }> = {}
+  for (const side of ['L', 'R']) {
+    const g = gripFrame(f.rig, side)
+    let worst = Infinity, inside = 0, bone = ''
+    for (let i = 0; i < si.count; i++) {
+      let b = 0, w = 0
+      for (let k = 0; k < 4; k++) if (sw.getComponent(i, k) > w) { w = sw.getComponent(i, k); b = si.getComponent(i, k) }
+      const n = names[b]
+      if (!n.endsWith(`_${side}`) || !/^(finger|metacarpal|wrist)/.test(n)) continue
+      const dx = P[i * 3] - g.position.x, dy = P[i * 3 + 1] - g.position.y, dz = P[i * 3 + 2] - g.position.z
+      const t = dx * g.axis.x + dy * g.axis.y + dz * g.axis.z
+      if (Math.abs(t) > (dumbbellDefaults.handle as number) / 2) continue
+      const d = Math.sqrt(Math.max(0, dx * dx + dy * dy + dz * dz - t * t)) - R
+      if (d < -0.0005) inside++
+      if (d < worst) { worst = d; bone = n }
+    }
+    out[side] = { worst: Math.round(worst * 10000) / 10, inside, bone }
+  }
+  return out
 }
 
 async function contactSheet(page: Page, files: string[], out: string) {
@@ -203,6 +356,14 @@ function parseArgs(argv: string[]) {
   let head: 'a' | 'b' | undefined
   let atlas: Shot['atlas']
   let hl: string | undefined
+  let viewport: [number, number] | undefined
+  let spin: [number, number] | undefined
+  let grip: string | undefined
+  let handview: string | undefined
+  let probe = false
+  let perf = false
+  let pulse: number | undefined
+  const compose: string[] = []
   const only: string[] = []
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
@@ -213,6 +374,14 @@ function parseArgs(argv: string[]) {
     else if (a === '--head') head = argv[++i] === 'b' ? 'b' : 'a'
     else if (a === '--atlas') atlas = argv[++i] === 'flat' ? 'flat' : 'off'
     else if (a === '--hl') hl = argv[++i]
+    else if (a === '--viewport') viewport = argv[++i].split('x').map(Number) as [number, number]
+    else if (a === '--spin') spin = argv[++i].split(',').map(Number) as [number, number]
+    else if (a === '--grip') grip = argv[++i]
+    else if (a === '--handview') handview = argv[++i]
+    else if (a === '--probe') probe = true
+    else if (a === '--perf') perf = true
+    else if (a === '--pulse') pulse = Number(argv[++i])
+    else if (a === '--compose') compose.push(argv[++i])
     else if (a === '--shot') {
       const arg = argv[++i]
       const name = arg.slice(0, arg.indexOf('='))
@@ -220,19 +389,26 @@ function parseArgs(argv: string[]) {
       const [pose, view = 'front', focus, size] = spec.split(spec.includes('|') ? '|' : ':')
       shots.push({ name, pose, view, focus, size: size ? Number(size) : undefined })
     } else if (a === '--scene') {
-      // --scene name=db-curl[:view[:focus:size]]
+      // --scene name=db-curl[:view[:focus:size[:R/1,0,0 handview]]]
       const arg = argv[++i]
       const name = arg.slice(0, arg.indexOf('='))
-      const [scene, view, focus, size] = arg.slice(arg.indexOf('=') + 1).split(':')
-      shots.push({ name, scene, view: view || undefined, focus, size: size ? Number(size) : undefined })
+      const [scene, view, focus, size, hv] = arg.slice(arg.indexOf('=') + 1).split(':')
+      shots.push({ name, scene, view: view || undefined, focus, size: size ? Number(size) : undefined, ...(hv ? { handview: hv.replace('/', ':') } : {}) })
     }
   }
   for (const s of shots) {
     if (head) s.head = head
     if (atlas) s.atlas = atlas
     if (hl) s.hl = hl
+    if (viewport) s.viewport = viewport
+    if (spin) s.spin = spin
+    if (grip) s.grip = grip
+    if (handview) s.handview = handview
+    if (probe) s.probe = true
+    if (perf) s.perf = true
+    if (pulse !== undefined) s.pulse = pulse
   }
-  return { shots, out, sheet, preset, only }
+  return { shots, out, sheet, preset, only, compose }
 }
 
 async function main() {
@@ -242,7 +418,7 @@ async function main() {
   let shots = p ? p.shots : args.shots
   if (args.only.length) shots = shots.filter((s) => args.only.some((o) => s.name.includes(o)))
   const outDir = path.resolve(ROOT, args.out || p?.out || 'qa/out/tmp')
-  if (!shots.length) throw new Error('no shots')
+  if (!shots.length && !args.compose.length) throw new Error('no shots')
   mkdirSync(outDir, { recursive: true })
 
   const { browser, renderer } = await launchMetal()
@@ -259,6 +435,7 @@ async function main() {
     })
     const page = await ctx.newPage()
     page.on('pageerror', (e) => console.error('pageerror:', e.message))
+    page.on('console', (m) => { if (m.type() === 'error') console.error('console:', m.text()) })
     for (const shot of shots) {
       const file = path.join(outDir, `${shot.name}.png`)
       const t = Date.now()
@@ -266,6 +443,12 @@ async function main() {
       console.log(`${path.relative(ROOT, file)} (${Date.now() - t} ms)`)
     }
     const sheetPage = await browser.newPage()
+    for (const c of args.compose) {
+      // --compose out.png=a.png,b.png: a captioned sheet of existing images (repo paths)
+      const [out, list] = c.split('=')
+      await contactSheet(sheetPage, list.split(',').map((f) => path.join(ROOT, f)), path.join(ROOT, out))
+      console.log(out)
+    }
     const sheets = { ...(p?.sheets ?? {}), ...(args.sheet ? { [args.sheet]: shots.map((s) => s.name) } : {}) }
     for (const [name, names] of Object.entries(sheets)) {
       // names are shots of this run; paths (with a slash) are existing images from elsewhere in the repo

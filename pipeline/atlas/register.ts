@@ -35,7 +35,7 @@ const percentile = (a: number[], p: number) => {
 
 async function main() {
   const started = Date.now()
-  const fig = await loadFigure('a')
+  const fig = await loadFigure()
   const nv = fig.rest.length / 3
 
   const { posed, mapped, tps, names, src, dst, jointCount, skipped } = alignFigure(fig)

@@ -1,4 +1,4 @@
-"""Head landmarks, face variants (A realistic, B stylized), brow/hairline masks and eye UVs. Our own code."""
+"""Head landmarks, the stylized face, brow/hairline masks and eye UVs. Our own code."""
 import math
 
 import bmesh
@@ -40,7 +40,7 @@ class HeadFrame:
         return az, el
 
     # hairline elevation (deg) against azimuth from the front (deg), short crew cut with sideburns
-    HAIRLINE = [(0, 30), (22, 29), (40, 25), (54, 16), (62, 2), (70, -9), (76, -9), (82, 12), (100, 17), (118, 8), (132, -12), (150, -27), (180, -31)]
+    HAIRLINE = [(0, 31), (15, 30.5), (28, 28), (38, 23.5), (46, 19.5), (54, 15), (60, 4), (66, -6), (74, -8), (81, 10), (92, 16), (104, 16), (118, 9), (132, -7), (150, -19), (165, -23), (180, -24)]
 
     def hairline(self, az):
         a, e = zip(*self.HAIRLINE)
@@ -75,6 +75,13 @@ class HeadFrame:
         m *= smoothstep(0.2, 0.5, -N[:, 1]) * (P[:, 1] < self.eye_mid[1] + 0.03)
         return m
 
+    def mouth_mask(self, P):
+        """1 on the lips and philtrum, fading out over ~1.5 cm"""
+        k = self.k
+        d = (P - self.mouth) / (np.array([0.03, 0.02, 0.022]) * k)
+        d[:, 2] = np.where(d[:, 2] > 0, d[:, 2] * 0.6, d[:, 2])
+        return smoothstep(1.0, 0.45, np.linalg.norm(d, axis=1))
+
     def face(self, P):
         """1 on the face (brow to chin, in front of the ears), fading out over ~2 cm."""
         k = self.k
@@ -101,6 +108,7 @@ def stylize_face(body, frame):
         near.update(nbrs[i])
     s[list(boundary)] = 0
     s[list(near - boundary)] *= 0.35
+    s *= 1 - 0.85 * frame.mouth_mask(P)
     ears = frame.ear_distance(P) < (frame.ear["r"] * 1.1 if frame.ear else 0)
     s = np.maximum(s, 0.6 * ears)
     idx = np.nonzero(s > 1e-3)[0]
@@ -118,11 +126,14 @@ def stylize_face(body, frame):
     set_co(me, P)
 
 
-def eye_uvs(eyes, frame):
-    """Planar UVs per eyeball, pupil at (0.5, 0.5), so the eye shader can draw iris and pupil."""
+def eye_uvs(eyes, frame, up=4.0):
+    """Planar UVs per eyeball, pupil at (0.5, 0.5), so the eye shader can draw iris and pupil.
+    The gaze is tilted `up` degrees above straight ahead: the elevated camera otherwise reads it as looking down."""
     me = eyes.data
     P = get_co(me)
     uv = me.uv_layers.active.data
+    t = math.radians(up)
+    ex, ey = np.array([1.0, 0, 0]), np.array([0, math.sin(t), math.cos(t)])
     centers = {}
     for s in (1, -1):
         sel = P[:, 0] * s > 0
@@ -133,8 +144,26 @@ def eye_uvs(eyes, frame):
         p = P[loop.vertex_index]
         c, r = centers[1 if p[0] > 0 else -1]
         d = (p - c) / r
-        uv[loop.index].uv = (0.5 + 0.5 * d[0], 0.5 + 0.5 * d[2])
+        uv[loop.index].uv = (0.5 + 0.5 * d @ ex, 0.5 + 0.5 * d @ ey)
     return {("L" if s > 0 else "R"): dict(center=c.tolist(), radius=float(r)) for s, (c, r) in centers.items()}
+
+
+def prune_eyes(eyes):
+    """Drop the back of each eyeball (always inside the head)."""
+    me = eyes.data
+    P = get_co(me)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    dead = []
+    for s in (1, -1):
+        sel = P[:, 0] * s > 0
+        c = P[sel].mean(0)
+        r = np.linalg.norm(P[sel] - c, axis=1).max()
+        dead += [v for v in bm.verts if (v.co.x > 0) == (s > 0) and (v.co.y - c[1]) / r > 0.35]
+    bmesh.ops.delete(bm, geom=dead, context="VERTS")
+    bm.to_mesh(me)
+    bm.free()
+    return len(dead)
 
 
 def angle_deg(a, b):

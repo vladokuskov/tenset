@@ -31,13 +31,14 @@ def _read(attr, n):
     return c.reshape(-1, 4)
 
 
-def write_colors(body, frame, variant):
+def write_colors(body, frame):
     me = body.data
     P = get_co(me)
     N = vertex_normals(P, triangles(me))
-    brow = frame.brow(P, N) * (0.85 if variant == "a" else 0.7)
-    depth, clear, _, _ = frame.hair(P)
-    fade = smoothstep(-5.0, 0.0, depth) * (clear > 0) * 0.7
+    brow = frame.brow(P, N) * 0.7
+    depth, clear, az, _ = frame.hair(P)
+    # stubble shade under the hair edge: short at the front hairline, longer where the sides taper
+    fade = smoothstep(-4.0 - 5.0 * smoothstep(40, 80, az), 0.0, depth) * (clear > 0) * 0.7
     set_channel(body, 1, np.maximum(brow, fade))
 
 

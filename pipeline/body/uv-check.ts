@@ -1,5 +1,5 @@
 // Verifies that each figure mesh's TEXCOORD_0 is non-overlapping and writes its UV layout for texture baking.
-// node pipeline/body/uv-check.ts [public/models/body-a.glb] [--out qa/out/s1v2]
+// node pipeline/body/uv-check.ts [public/models/body.glb] [--out qa/out/s1v2]
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { NodeIO } from '@gltf-transform/core'
@@ -12,7 +12,7 @@ const RES = 1024
 
 async function main() {
   const args = process.argv.slice(2)
-  const file = path.resolve(ROOT, args.find((a) => a.endsWith('.glb')) ?? 'public/models/body-a.glb')
+  const file = path.resolve(ROOT, args.find((a) => a.endsWith('.glb')) ?? 'public/models/body.glb')
   const out = args.includes('--out') ? path.resolve(ROOT, args[args.indexOf('--out') + 1]) : null
   await MeshoptDecoder.ready
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder })

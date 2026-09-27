@@ -1,6 +1,6 @@
 """Build the CC0 athletic body with MPFB2 inside headless Blender.
 
-blender -b --factory-startup -P pipeline/body/build_body.py -- --variant a --out body-a.raw.glb --report report-a.json
+blender -b --factory-startup -P pipeline/body/build_body.py -- --out body.raw.glb --report report.json
 
 MPFB2 is used only as a tool (create_human, add_builtin_rig) plus its bundled CC0 assets (base mesh with
 its helper geometry, targets, rig and weights). Everything after that is our own mesh processing.
@@ -20,8 +20,8 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from correctives import build_correctives  # noqa: E402
-from garments import make_hair, make_shorts, shorts_frame  # noqa: E402
-from head import HeadFrame, eye_uvs, stylize_face  # noqa: E402
+from garments import crotch_mask, make_hair, make_shorts, shorts_frame  # noqa: E402
+from head import HeadFrame, eye_uvs, prune_eyes, stylize_face  # noqa: E402
 from meshops import SurfaceBind, adjacency, flatten_patch, get_co, mesh_adjacency, padded_neighbors, rings, subdivide_full, subdivide_partial, taubin, triangles, triangulate_fixed  # noqa: E402
 from shading import bake_ao, set_channel, write_colors  # noqa: E402
 from skinning import dqs_mix  # noqa: E402
@@ -56,23 +56,21 @@ TARGETS = [
     )
 ]
 
-# calm, relaxed lids for both heads
-EXPRESSION = [
-    ("expression/units/caucasian/eye-left-closure.target.gz", 0.18),
-    ("expression/units/caucasian/eye-right-closure.target.gz", 0.18),
-]
+# calm, open lids: the eyes stay as modelled
+EXPRESSION = []
 
-# stylized head (variant B): simpler, softer features from bundled CC0 targets, then smoothed in head.py
-FACE_B = [
+# stylized head: simpler, softer features from bundled CC0 targets, then smoothed in head.py (lips kept)
+FACE = [
     ("nose/nose-volume-decr.target.gz", 0.5),
     ("nose/nose-nostrils-width-decr.target.gz", 0.6),
     ("nose/nose-flaring-decr.target.gz", 0.8),
     ("nose/nose-point-width-decr.target.gz", 0.5),
     ("nose/nose-scale-vert-decr.target.gz", 0.25),
-    ("mouth/mouth-lowerlip-volume-decr.target.gz", 0.7),
-    ("mouth/mouth-upperlip-volume-decr.target.gz", 0.7),
-    ("mouth/mouth-cupidsbow-decr.target.gz", 0.8),
-    ("mouth/mouth-scale-horiz-decr.target.gz", 0.25),
+    ("mouth/mouth-lowerlip-volume-incr.target.gz", 0.15),
+    ("mouth/mouth-upperlip-volume-decr.target.gz", 0.35),
+    ("mouth/mouth-cupidsbow-decr.target.gz", 0.25),
+    ("mouth/mouth-philtrum-volume-incr.target.gz", 0.5),
+    ("mouth/mouth-scale-horiz-decr.target.gz", 0.2),
     ("chin/chin-prominent-decr.target.gz", 0.4),
 ] + [
     (f"{part}/{s}-{name}.target.gz", w)
@@ -94,7 +92,6 @@ MERGE_INTO = {"breast.L": "spine02", "breast.R": "spine02"}
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     p = argparse.ArgumentParser()
-    p.add_argument("--variant", choices=("a", "b"), default="a")
     p.add_argument("--out", required=True)
     p.add_argument("--report")
     p.add_argument("--blend")
@@ -353,24 +350,19 @@ def main():
     for m in list(human.modifiers):
         if m.type != "ARMATURE":
             human.modifiers.remove(m)
-    # skeleton, landmarks, hair and shorts all come from the shared shape; variant B only moves face vertices
+    # skeleton, landmarks, hair and shorts come from the shape before the face targets, which only move face vertices
     base = extract(human, group_members(human, ["body"]), "base")
     tights = extract(human, group_members(human, ["helper-tights"]), "tights")
     frame = HeadFrame(base, rig)
-    if args.variant == "b":
-        for rel, weight in FACE_B:
-            TargetService.load_target(human, os.path.join(tdir, rel), weight=weight)
-        bake_shape_keys(human)
-        body = extract(human, group_members(human, ["body"]), "body")
-    else:
-        body = base
-        body.name = body.data.name = "body"
+    for rel, weight in FACE:
+        TargetService.load_target(human, os.path.join(tdir, rel), weight=weight)
+    bake_shape_keys(human)
+    body = extract(human, group_members(human, ["body"]), "body")
     eyes = extract(human, group_members(human, ["helper-l-eye", "helper-r-eye"]), "eyes")
     bpy.data.objects.remove(human)
 
-    if args.variant == "b":
-        stylize_face(body, frame)
-    surfaces = [body] if base is body else [body, base]
+    stylize_face(body, frame)
+    surfaces = [body, base]
     stats = [soften_hidden(o) for o in surfaces][0]
 
     ears = group_members(body, ["ears"])
@@ -392,10 +384,10 @@ def main():
     for o in meshes:
         process_weights(o, rig, {})
     eyes_info = eye_uvs(eyes, frame)
+    eyes_info["pruned"] = prune_eyes(eyes)
 
     hair = make_hair(base, frame)
-    if base is not body:
-        bpy.data.objects.remove(base)
+    bpy.data.objects.remove(base)
     shorts = make_shorts(tights, body, rig, frame)
     bpy.data.objects.remove(tights)
 
@@ -412,10 +404,11 @@ def main():
     for o in (hair, eyes):
         t, d = padded_neighbors(mesh_adjacency(o.data), len(o.data.vertices))
         set_channel(o, 2, dqs_mix(o, names, t, d))
-    write_colors(body, frame, args.variant)
+    write_colors(body, frame)
     ao = {o.name: bake_ao(o, occ) for o, occ in ((body, [body, hair, eyes]), (shorts, [shorts, body]))}
 
-    corr = [] if args.no_correctives else build_correctives(rig, body, [(shorts, shorts_mix)], mix)
+    SY = get_co(shorts.data)
+    corr = [] if args.no_correctives else build_correctives(rig, body, [(shorts, shorts_mix, crotch_mask(rig, SY, 0.02, 0.06), 0.004 * crotch_mask(rig, SY))], mix)
 
     bpy.ops.object.select_all(action="DESELECT")
     for o in (rig, body, shorts, hair, eyes):
@@ -449,11 +442,10 @@ def main():
     )
 
     report = dict(
-        variant=args.variant,
         mpfb=MPFB_VERSION,
         rig=RIG,
         macros=MACROS,
-        targets=TARGETS + EXPRESSION + (FACE_B if args.variant == "b" else []),
+        targets=TARGETS + EXPRESSION + FACE,
         blender=bpy.app.version_string,
         meshes={o.name: dict(vertices=len(o.data.vertices), triangles=sum(len(p.vertices) - 2 for p in o.data.polygons))
                 for o in (body, shorts, hair, eyes)},
@@ -469,7 +461,7 @@ def main():
     if args.report:
         with open(args.report, "w") as f:
             json.dump(report, f, indent=2)
-    print("BUILD_BODY_OK", json.dumps({k: report[k] for k in ("variant", "meshes", "height")}))
+    print("BUILD_BODY_OK", json.dumps({k: report[k] for k in ("meshes", "height")}))
 
 
 main()

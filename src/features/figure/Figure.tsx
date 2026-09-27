@@ -3,11 +3,10 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, type Ref } from 'react'
 import type { Material, Mesh, Object3D } from 'three'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js'
-import { BODY_URL, bodyUrl, type FigureVariant } from './assets'
+import { BODY_URL, type FigureVariant } from './assets'
 import { createRegionLut, fillDebugLut, fillHighlightLut, useFigureAtlas } from './atlas'
 import { Correctives } from './correctives'
 import { dqsBoneFactors } from './dqs'
-import { prepareHair } from './hair'
 import { resolveHighlight, type FigureHighlight } from './highlight'
 import { HighlightMask } from './mask'
 import { createFigureMaterial, setHighlightEnabled, setPulsePhase, type FigureMaterialName, type FigureUniforms, type MaterialOptions } from './material'
@@ -29,6 +28,7 @@ export type FigureHandle = {
 
 export type FigureProps = {
   pose?: Pose | PoseName
+  /** @deprecated ignored: one head ships */
   variant?: FigureVariant
   /** skin material options */
   skin?: MaterialOptions
@@ -54,7 +54,6 @@ function resolve(pose: Pose | PoseName): Pose {
 
 export function Figure({
   pose = 'relaxed',
-  variant = 'a',
   skin,
   materials,
   correctives: useCorrectives = true,
@@ -67,7 +66,7 @@ export function Figure({
   ref,
 }: FigureProps) {
   const gl = useThree((s) => s.gl)
-  const gltf = useGLTF(bodyUrl(variant), false, true)
+  const gltf = useGLTF(BODY_URL, false, true)
   const atlas = useFigureAtlas()
   const lut = useMemo(() => createRegionLut(), [])
   const mask = useMemo(() => new HighlightMask(atlas.regions, lut), [atlas, lut])
@@ -76,14 +75,7 @@ export function Figure({
     mask.dispose()
   }, [lut, mask])
   const scene = useMemo(() => cloneSkinned(gltf.scene), [gltf.scene])
-  const rig = useMemo(() => {
-    const r = new Rig(scene)
-    scene.traverse((o) => {
-      const m = o as Mesh
-      if (m.isMesh && (m.material as Material).name === 'hair') prepareHair(m.geometry, r.dequant)
-    })
-    return r
-  }, [scene])
+  const rig = useMemo(() => new Rig(scene), [scene])
   const correctives = useMemo(() => Correctives.fromScene(rig, scene, useCorrectives), [rig, scene, useCorrectives])
   const built = useMemo(() => {
     const bones = dqsBoneFactors(rig.mesh.skeleton.bones.map((b) => b.name))

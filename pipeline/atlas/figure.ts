@@ -48,7 +48,7 @@ export type FigureMesh = {
   pose(p: Pose | string): { positions: Float32Array; joints: Record<string, [number, number, number]> }
 }
 
-export async function loadFigure(variant: 'a' | 'b' = 'a'): Promise<FigureMesh> {
+export async function loadFigure(): Promise<FigureMesh> {
   const THREE = await import('three')
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
   const { MeshoptDecoder } = await import('meshoptimizer')
@@ -56,7 +56,7 @@ export async function loadFigure(variant: 'a' | 'b' = 'a'): Promise<FigureMesh> 
   const { poses } = (await load('poses.ts')) as { poses: Record<string, Pose> }
   const { Correctives } = await load('correctives.ts')
   await MeshoptDecoder.ready
-  const buf = fs.readFileSync(path.join(ROOT, `public/models/body-${variant}.glb`))
+  const buf = fs.readFileSync(path.join(ROOT, 'public/models/body.glb'))
   const loader = new GLTFLoader()
   loader.setMeshoptDecoder(MeshoptDecoder)
   const gltf = await loader.parseAsync(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer, '')

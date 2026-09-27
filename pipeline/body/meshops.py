@@ -183,7 +183,7 @@ def subdivide_partial(obj, lowres):
     bmesh.ops.delete(bm, geom=dead, context="VERTS")
     for f, ring in rebuild:
         # quads stay quads; rings with edge points become a fan from the first edge point (topological, so
-        # every variant triangulates identically and none of the fan triangles lies along one original edge)
+        # every build triangulates identically and none of the fan triangles lies along one original edge)
         tris = [ring] if len(ring) <= 4 else _fan(ring, V0)
         for tri in tris:
             face = bm.faces.new([v for v, _ in tri])

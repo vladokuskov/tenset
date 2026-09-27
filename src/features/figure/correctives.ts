@@ -14,6 +14,8 @@ export type CorrectiveSpec = {
   start: number
   /** joint angle (deg) of the key pose, where the morph is fully on */
   end: number
+  /** past `end`, the morph fades out again towards this angle (where the next key of its pair is full) */
+  fade?: number | null
   /** shoulder keys only: which plane of elevation the key was made in */
   plane?: 'side' | 'front' | null
 }
@@ -115,6 +117,7 @@ export class Correctives {
   weight(s: CorrectiveSpec): number {
     const a = this.angle(s.kind, s.side)
     let w = smoothstep(s.start, s.end, a)
+    if (s.fade) w *= 1 - smoothstep(s.end, s.fade, a)
     if (s.plane) {
       // near vertical the plane is undefined and the side key takes over
       const t = smoothstep(30, 70, this.shoulderPlane(s.side)) * smoothstep(178, 165, a)

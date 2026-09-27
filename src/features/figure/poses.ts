@@ -1,3 +1,4 @@
+import { gripJoints, type GripName } from './hands.ts'
 import { mirrorSpec, type JointSpec, type Pose } from './rig.ts'
 
 type Joints = Record<string, JointSpec>
@@ -30,18 +31,9 @@ function forearm(rotation: number): Joints {
   return { lowerarm01: { twist: rotation * 0.4 }, lowerarm02: { twist: rotation * 0.6 } }
 }
 
-/** curl in degrees per joint (knuckle, middle, tip); close pulls the spread fingers together */
-function fingers(curl: number, thumb = curl * 0.5, close = 0.75): Joints {
-  const out: Joints = {}
-  for (const f of [2, 3, 4, 5]) {
-    const k = 1 + (f - 2) * 0.12
-    out[`finger${f}-1`] = { flex: curl * 0.7 * k, close }
-    out[`finger${f}-2`] = { flex: curl * k }
-    out[`finger${f}-3`] = { flex: curl * 0.6 * k }
-  }
-  out['finger1-2'] = { local: [thumb, 0, 0] }
-  out['finger1-3'] = { local: [thumb, 0, 0] }
-  return out
+/** both hands in a grip (hands.ts) */
+function grip(name: GripName, diameter?: number): Joints {
+  return { ...gripJoints('L', name, diameter), ...gripJoints('R', name, diameter) }
 }
 
 /** rest stance has feet ~40 cm apart: adduct the hips by `deg` and keep the soles flat */
@@ -53,16 +45,19 @@ function shoulderGirdle(elevation: number): Joints {
   return { clavicle: { rot: [0, 0, elevation * 0.5] }, shoulder01: { rot: [0, 0, elevation * 0.5] } }
 }
 
+/** dumbbell handle diameter (props/sockets.ts dumbbellDefaults) and the grip of each exercise still */
+export const DUMBBELL_D = 0.033
+export const DUMBBELL_GRIP = { curl: 'supinated', raise: 'pronated', press: 'pronated' } as const satisfies Record<string, GripName>
+
 export const poses = {
   rest: { joints: {} },
   relaxed: {
-    joints: sym(merge(
+    joints: merge(sym(merge(
       stance(4.5),
       { upperarm01: { aim: [0.3, -0.95, 0.03] } },
       elbow(12),
       forearm(0),
-      fingers(14),
-    )),
+    )), grip('relaxed')),
   },
   // BodyParts3D's anatomical position (arms at the sides, palms forward, legs straight); atlas registration and QA
   anatomical: {
@@ -73,42 +68,38 @@ export const poses = {
     )),
   },
   'arms-overhead': {
-    joints: sym(merge(
+    joints: merge(sym(merge(
       stance(4.5),
       shoulderGirdle(12),
       { upperarm01: { aim: [0.18, 1, 0.04] } },
       elbow(0),
       forearm(0),
-      fingers(10),
-    )),
+    )), grip('open')),
   },
   'abduction-90': {
-    joints: sym(merge(
+    joints: merge(sym(merge(
       stance(4.5),
       shoulderGirdle(14),
       { upperarm01: { aim: [1, 0, 0] } },
       elbow(0),
       forearm(0),
-      fingers(10),
-    )),
+    )), grip('open')),
   },
   pronation: {
-    joints: sym(merge(
+    joints: merge(sym(merge(
       stance(4.5),
       { upperarm01: { aim: [0.12, -1, -0.02] } },
       elbow(90),
       forearm(85),
-      fingers(10),
-    )),
+    )), grip('relaxed')),
   },
   supination: {
-    joints: sym(merge(
+    joints: merge(sym(merge(
       stance(4.5),
       { upperarm01: { aim: [0.12, -1, -0.02] } },
       elbow(90),
       forearm(-85),
-      fingers(10),
-    )),
+    )), grip('relaxed')),
   },
   'deep-squat': {
     joints: merge(
@@ -128,8 +119,8 @@ export const poses = {
         { upperarm01: { aim: [0.12, -0.05, 1] } },
         elbow(4),
         forearm(0),
-        fingers(12),
       )),
+      grip('relaxed'),
     ),
   },
   'dead-hang': {
@@ -140,22 +131,21 @@ export const poses = {
         { upperarm01: { aim: [0.3, 1, 0.06] } },
         elbow(0),
         forearm(90),
-        fingers(70, 40),
         { upperleg01: { rot: [-8, 0, -6] } },
         { lowerleg01: { local: [14, 0, 0] } },
         { foot: { rot: [0, 0, 6], local: [25, 0, 0] } },
       )),
+      grip('pronated'),
     ),
   },
   // exercise stills (FK only, dumbbells in both hands via props/HandProp)
   'db-curl-mid': {
-    joints: sym(merge(
+    joints: merge(sym(merge(
       stance(4.5),
       { upperarm01: { aim: [0.1, -1, 0.1], twist: 15 } },
       elbow(88),
       forearm(-80),
-      fingers(78, 45),
-    )),
+    )), grip(DUMBBELL_GRIP.curl, DUMBBELL_D)),
   },
   'db-lateral-raise-top': {
     joints: merge(
@@ -167,8 +157,8 @@ export const poses = {
         { upperarm01: { aim: [1, -0.03, 0.15] } },
         elbow(16),
         forearm(0),
-        fingers(78, 45),
       )),
+      grip(DUMBBELL_GRIP.raise, DUMBBELL_D),
     ),
   },
   'db-shoulder-press-bottom': {
@@ -183,8 +173,8 @@ export const poses = {
         { upperarm01: { aim: [0.84, -0.46, 0.3], twist: -18 }, upperarm02: { twist: -66 } },
         elbow(112),
         forearm(0),
-        fingers(78, 45),
       )),
+      grip(DUMBBELL_GRIP.press, DUMBBELL_D),
     ),
   },
 } satisfies Record<string, Pose>

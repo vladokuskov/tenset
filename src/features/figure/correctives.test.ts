@@ -76,4 +76,26 @@ describe('Correctives', () => {
     expect(c.weights.cor_shoulder_fwd_L).toBeCloseTo(1, 2)
     expect(c.weights.cor_shoulder_up_L).toBeCloseTo(0, 2)
   })
+
+  it('hands a raised arm over from the 90 degree key to the overhead key', () => {
+    const { armature, rig } = makeFigure()
+    const pair: CorrectiveSpec[] = [
+      { name: 'cor_shoulder_side_L', kind: 'shoulder', side: 'L', start: 20, end: 90, fade: 160, plane: 'side' },
+      { name: 'cor_shoulder_up_L', kind: 'shoulder', side: 'L', start: 90, end: 160, plane: 'side' },
+    ]
+    const c = new Correctives(rig, armature, pair)
+    const raise = (deg: number) => {
+      const a = (deg * Math.PI) / 180
+      rig.apply({ joints: { upperarm01_L: { aim: [Math.sin(a), -Math.cos(a), 0] } }, anchor: 'none' })
+      c.update()
+      return [c.weights.cor_shoulder_side_L, c.weights.cor_shoulder_up_L]
+    }
+    expect(raise(90)[0]).toBeCloseTo(1, 3)
+    expect(raise(90)[1]).toBeCloseTo(0, 3)
+    const [side, up] = raise(125)
+    expect(side + up).toBeCloseTo(1, 3)
+    expect(side).toBeGreaterThan(0.1)
+    expect(raise(160)[0]).toBeCloseTo(0, 3)
+    expect(raise(160)[1]).toBeCloseTo(1, 3)
+  })
 })

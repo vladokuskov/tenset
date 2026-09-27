@@ -1,13 +1,25 @@
 import { Matrix4, Vector3 } from 'three'
+import { detectGrip, handleInWrist } from '../hands'
 import type { Rig } from '../rig'
 
 export type Side = 'L' | 'R'
 
 const v = () => new Vector3()
 
-/** Grip socket of a closed hand, in world space: centre of a ~33 mm handle held in a power grip, `axis` along the
- * knuckle line (pinky -> index), `palmar` out of the palm, `distal` towards the fingers. */
+/** Grip socket in world space: the handle centre under the hand, `axis` along the handle (little finger -> index),
+ * `palmar` out of the palm, `distal` towards the fingers. Exact for hands posed with a grip from hands.ts;
+ * otherwise estimated from the knuckles for a ~33 mm handle. */
 export function gripFrame(rig: Rig, side: Side, { palm = 0.024, forward = 0.012 } = {}) {
+  const solved = detectGrip(rig, side)
+  if (solved) {
+    const m = rig.bone(`wrist_${side}`).matrixWorld
+    const h = handleInWrist(solved, side)
+    const position = h.center.applyMatrix4(m)
+    const axis = h.axis.transformDirection(m)
+    const palmar = h.palmar.transformDirection(m)
+    palmar.addScaledVector(axis, -palmar.dot(axis)).normalize()
+    return { position, axis, palmar, distal: v().crossVectors(axis, palmar).multiplyScalar(side === 'L' ? -1 : 1) }
+  }
   const p = (name: string) => rig.bone(`${name}_${side}`).getWorldPosition(v())
   const wrist = p('wrist')
   const index = p('finger2-1'), middle = p('finger3-1'), ring = p('finger4-1'), pinky = p('finger5-1')

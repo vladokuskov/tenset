@@ -1,4 +1,4 @@
-export { BODY_URL, bodyUrl, figureVariants, type FigureVariant } from './assets'
+export { BODY_URL, type FigureVariant } from './assets'
 export { Figure, type FigureHandle, type FigureProps } from './Figure'
 export { FigureStage, type FigureStageProps } from './FigureStage'
 export { createFigureMaterial, figureMaterialDefaults, skinDefaults, type FigureAtlasInput, type FigureMaterialName, type MaterialOptions } from './material'

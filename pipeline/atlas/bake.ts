@@ -3,13 +3,15 @@
 //   public/models/atlas-relief.webp   8-bit height map (lossy): muscle bellies and grooves
 //   public/models/atlas-fibre.webp    8-bit fibre striation (lossy), kept apart for precision
 //   public/models/atlas.json          region table (index -> head, group, side) and texture list
-// node pipeline/atlas/bake.ts [--debug]
+// node pipeline/atlas/register.ts, then node pipeline/atlas/bake.ts [--debug: qa/out/polish/atlas-uv-*.png, cached fields for charts]
 import fs from 'node:fs'
 import path from 'node:path'
 import { PUBLIC, ROOT } from '../lib/paths.ts'
 import { conceptFiles } from './bp3d.ts'
 import { loadFigure } from './figure.ts'
-import { closeGaps, dropSpecks, fillHoles, fillUnknown, modeFilter, pad, texelArea, UNKNOWN } from './labels.ts'
+import { closeGaps, dropSpecks, fillHoles, fillUnknown, modeFilter, texelArea, UNKNOWN } from './labels.ts'
+import { seamPadSources } from './pad.ts'
+import { clipTrapezius, refineLabels } from './refine.ts'
 import { bakeRelief } from './relief.ts'
 import { loadTexels } from './texels.ts'
 import { encodeWebp, writePng } from './webp.ts'
@@ -17,7 +19,7 @@ import type { RegionEntry, Segment } from './anatomy3d.ts'
 import { ATLAS_CACHE } from './paths.ts'
 
 const OUT = path.join(PUBLIC, 'models')
-const DEBUG_DIR = path.join(ROOT, 'qa/out/s1v2')
+const DEBUG_DIR = path.join(ROOT, 'qa/out/polish')
 const DEBUG = process.argv.includes('--debug')
 export const CREDIT = 'BodyParts3D, © The Database Center for Life Science, CC BY 4.0, modified'
 const PAD = 12
@@ -38,7 +40,7 @@ async function main() {
   const T = loadTexels(ATLAS_CACHE)
   const meta = JSON.parse(fs.readFileSync(path.join(ATLAS_CACHE, 'register.json'), 'utf8')) as Meta
   const N = T.res
-  const fig = await loadFigure('a')
+  const fig = await loadFigure()
   const area = texelArea(T, fig.rest, fig.uv, fig.indices)
   const inside = (k: number) => T.tri[k] >= 0
 
@@ -60,9 +62,13 @@ async function main() {
   modeFilter(L, inside, N, 3, 3)
   dropSpecks(L, inside, area, N, (v) => (v === 0 ? 60 : MIN_REGION_MM2))
   fillUnknown(L, inside, N)
+  const refined = refineLabels(T, L, area, fig, meta.regions)
+  for (const line of refined.log) console.log(`refine: ${line}`)
+  const baseSegments = meta.segments.length
+  const segments = [...meta.segments, ...refined.segments]
 
   // relief segments must agree with the final label; refill the ones that don't from same-label neighbours
-  const segLabel = (s: number) => (s === 0 ? 0 : meta.segments[s - 1].label)
+  const segLabel = (s: number) => (s === 0 ? 0 : segments[s - 1].label)
   const S = new Uint16Array(N * N).fill(UNKNOWN)
   for (let k = 0; k < N * N; k++) if (inside(k) && segLabel(T.segment[k]) === L[k] && !Number.isNaN(T.skin[k * 3])) S[k] = T.segment[k]
   dropSpecks(S, inside, area, N, () => MIN_SEGMENT_MM2)
@@ -70,18 +76,21 @@ async function main() {
   modeFilter(S, inside, N, 4, 3)
   for (let k = 0; k < N * N; k++) if (inside(k) && segLabel(S[k]) !== L[k]) S[k] = UNKNOWN
   fillSegments(S, L, inside, N, segLabel)
-
-  const regions = new Uint8Array(N * N)
-  const filled = new Uint8Array(N * N)
   for (let k = 0; k < N * N; k++) {
-    if (!inside(k)) continue
-    regions[k] = L[k]
-    filled[k] = 1
+    const f = refined.fingerOf[k]
+    if (f >= 0 && L[k] === refined.segments[f].label) S[k] = baseSegments + f + 1
   }
-  pad(regions, 1, filled, N, PAD)
+
+  // illustration clip: the upper trapezius high on the neck keeps its relief but gets a region of its own
+  const clipRegions = (['l', 'r'] as const).map((side) => ({ index: meta.regions.length + (side === 'l' ? 1 : 2), side }))
+  const clipped = clipTrapezius(T, L, meta.regions, (side) => clipRegions.find((c) => c.side === side)!.index)
+
+  const padSrc = seamPadSources(T, fig, PAD)
+  const regions = new Uint8Array(N * N)
+  for (let k = 0; k < N * N; k++) if (padSrc[k] >= 0) regions[k] = L[padSrc[k]]
 
   const bones = new Set([...conceptFiles('bone organ'), ...conceptFiles('cartilage organ')])
-  const relief = bakeRelief({ T, area, S, segments: meta.segments, bones, fig, debug: DEBUG ? DEBUG_DIR : null })
+  const relief = bakeRelief({ T, area, S, L, segments, regions: meta.regions, bones, fig, fibreDir: refined.fibreDir, padSrc, debug: DEBUG ? DEBUG_DIR : null })
 
   const rgbIds = new Uint8Array(N * N * 4)
   for (let k = 0; k < N * N; k++) {
@@ -102,23 +111,37 @@ async function main() {
     credit: 'BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International',
     source: 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/ (Release 4.0)',
     license: 'https://creativecommons.org/licenses/by/4.0/',
-    comment: 'Region atlas and muscle relief derived from BodyParts3D: superficial muscles registered onto the MakeHuman body, projected along its normals, relabelled to our taxonomy and baked into its UV layout. The latissimus dorsi and rectus abdominis regions and the relief shapes are our own.',
-    version: 3,
+    comment: 'Region atlas and muscle relief derived from BodyParts3D: superficial muscles registered onto the MakeHuman body, projected along its normals, relabelled to our taxonomy and baked into its UV layout. The latissimus dorsi and rectus abdominis regions, the serratus anterior digitations, the relief shapes and the illustration clip regions are our own; wrists, sternum, brachialis and the posterior thigh strips are adjusted to our 2D body map (also derived from BodyParts3D).',
+    version: 4,
     uv: 'TEXCOORD_0 of the body mesh, glTF orientation (flipY = false)',
+    gutter: `${PAD} texels past each UV island, carrying the surface across the seam (seam-aware padding)`,
     textures: {
       regions: { file: 'atlas-regions.webp', size: N, encoding: 'R = region index (0 = none), lossless; sample with texelFetch / nearest' },
       relief: { file: 'atlas-relief.webp', size: relief.res, minMm: relief.minMm, maxMm: relief.maxMm, encoding: 'R = height, minMm + R / 255 * (maxMm - minMm) millimetres along the normal; linear, mipmapped' },
       fibre: { file: 'atlas-fibre.webp', size: relief.res, amplitudeMm: relief.fibreMm, encoding: 'R = fibre striation, (R - 128) / 127 * amplitudeMm millimetres along the normal; linear, mipmapped' },
     },
-    regions: meta.regions.map((r, i) => ({
-      index: i + 1,
-      head: r.untracked ? null : r.id,
-      untracked: r.untracked ? r.id : undefined,
-      group: r.group,
-      side: r.side,
-      views: r.views.join(''),
-      present: present.has(i + 1),
-    })),
+    regions: [
+      ...meta.regions.map((r, i) => ({
+        index: i + 1,
+        head: r.untracked ? null : r.id,
+        untracked: r.untracked ? r.id : undefined,
+        group: r.group,
+        side: r.side,
+        views: r.views.join(''),
+        present: present.has(i + 1),
+      })),
+      // same muscle as `clipOf`, left out of highlights: exercise illustrations stop the upper trapezius low on the neck
+      ...clipRegions.map((c) => ({
+        index: c.index,
+        head: null,
+        clipOf: 'trap_upper',
+        clip: 'illustration',
+        group: 'upper_traps',
+        side: c.side,
+        views: 'FB',
+        present: present.has(c.index),
+      })),
+    ],
   }
   fs.writeFileSync(path.join(OUT, 'atlas.json'), JSON.stringify(atlas, null, 1) + '\n')
 
@@ -129,16 +152,20 @@ async function main() {
       png.set([...c, 255], k * 4)
     }
     writePng(path.join(DEBUG_DIR, 'atlas-uv-regions.png'), N, N, png)
+    const dbg = path.join(ATLAS_CACHE, 'debug')
+    fs.mkdirSync(dbg, { recursive: true })
+    for (const [f, a] of [['label', L], ['segment', S], ['height', relief.field], ...Object.entries(relief.dumps)] as const) fs.writeFileSync(path.join(dbg, `${f}.bin`), new Uint8Array(a.buffer, a.byteOffset, a.byteLength))
   }
   const summary = {
     res: N,
     missedFilled: missed,
     specksDropped: specks,
     gapTexelsClosed: gaps,
+    trapClipTexels: clipped,
     holesFilled: holes,
     files: files.map((f) => ({ file: path.relative(ROOT, f.out), bytes: f.bytes })),
     totalBytes: total,
-    absent: atlas.regions.filter((r) => !r.present).map((r) => `${r.head ?? r.untracked}:${r.side}`),
+    absent: atlas.regions.filter((r) => !r.present).map((r) => `${r.head ?? ('untracked' in r ? r.untracked : r.clipOf)}:${r.side}`),
     seconds: (Date.now() - started) / 1000,
   }
   console.log(JSON.stringify(summary, null, 1))
