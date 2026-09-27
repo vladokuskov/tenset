@@ -1,0 +1,71 @@
+{
+  "id": 513,
+  "slug": "cable-pull-through",
+  "name": "Cable Pull-Through",
+  "aliases": [
+    "pull-through",
+    "pull through",
+    "rope pull-through",
+    "cable hip hinge"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    509,
+    502,
+    511
+  ],
+  "media": {
+    "status": "card",
+    "template": "hinge",
+    "params": {
+      "implement": "cable",
+      "grip": "neutral",
+      "stance": "wide",
+      "attachment": "rope",
+      "cableHeight": "low"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Face away from a low pulley with the rope between your legs",
+    "Walk out until the stack lifts, then set a wide stance",
+    "Push your hips back and let your arms follow the rope through",
+    "Snap your hips forward and squeeze your glutes to stand tall"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": 515,
+  "slug": "cable-hip-adduction",
+  "name": "Cable Hip Adduction",
+  "aliases": [
+    "standing cable hip adduction",
+    "cable leg adduction"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "hip_adduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "adductors": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    507,
+    405,
+    408
+  ],
+  "media": {
+    "status": "card",
+    "template": "hip-abduction",
+    "params": {
+      "implement": "cable",
+      "direction": "adduction",
+      "posture": "standing",
+      "hipAngle": 0,
+      "attachment": "ankle_strap",
+      "cableHeight": "low"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand side-on to a low pulley with the strap on your near ankle",
+    "Step away until the cable holds that leg slightly out to the side",
+    "Sweep the strapped leg across in front of your standing leg",
+    "Stay upright and let the leg return slowly"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

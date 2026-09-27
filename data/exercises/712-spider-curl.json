@@ -1,0 +1,66 @@
+{
+  "id": 712,
+  "slug": "spider-curl",
+  "name": "Spider Curl",
+  "aliases": [
+    "prone incline curl",
+    "chest supported curl",
+    "db spider curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    713,
+    701,
+    711
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "lying_prone",
+      "benchAngle": 45
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie chest down on a bench set to about 45 degrees",
+    "Let your arms hang straight down from your shoulders",
+    "Curl without letting your elbows drift forward",
+    "Squeeze hard at the top of each rep"
+  ],
+  "basis": [
+    "anatomy-general",
+    "varovic-2025"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

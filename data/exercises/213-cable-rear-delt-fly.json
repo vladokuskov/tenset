@@ -1,0 +1,70 @@
+{
+  "id": 213,
+  "slug": "cable-rear-delt-fly",
+  "name": "Cable Rear Delt Fly",
+  "aliases": [
+    "cable reverse fly",
+    "cable rear fly",
+    "rear delt cable crossover"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "secondary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.5,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    205,
+    210,
+    206
+  ],
+  "media": {
+    "status": "card",
+    "template": "rear-raise",
+    "params": {
+      "implement": "cable",
+      "torsoAngle": 0,
+      "cableHeight": "mid",
+      "crossed": true
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Set both pulleys at shoulder height and cross the cables",
+    "Hold each cable in the opposite hand",
+    "Pull your arms out and back until they line up with your shoulders",
+    "Keep your elbows soft and your chest up"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

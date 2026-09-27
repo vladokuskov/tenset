@@ -1,0 +1,76 @@
+{
+  "id": 501,
+  "slug": "barbell-romanian-deadlift",
+  "name": "Barbell Romanian Deadlift",
+  "aliases": [
+    "RDL",
+    "BB RDL",
+    "romanian deadlift",
+    "barbell RDL"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back",
+    "lats"
+  ],
+  "alternatives": [
+    509,
+    513,
+    505
+  ],
+  "media": {
+    "status": "card",
+    "template": "hinge",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "stance": "hip",
+      "kneeAngle": 20
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Push your hips back and keep a soft bend in your knees",
+    "Slide the bar down your thighs, keeping it close",
+    "Lower until you feel a strong hamstring stretch with your back still flat",
+    "Drive your hips forward to stand without leaning back at the top"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

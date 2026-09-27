@@ -1,0 +1,60 @@
+{
+  "id": 209,
+  "slug": "dumbbell-front-raise",
+  "name": "Dumbbell Front Raise",
+  "aliases": [
+    "front raise",
+    "DB front raise",
+    "front delt raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "shoulder_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    201,
+    208,
+    202
+  ],
+  "media": {
+    "status": "card",
+    "template": "front-raise",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "standing",
+      "grip": "pronated"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand tall with the dumbbells in front of your thighs",
+    "Raise the weights forward to shoulder height with a soft elbow bend",
+    "Keep your torso still",
+    "Lower slowly under control"
+  ],
+  "basis": [
+    "coratella-2020",
+    "campos-2020"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

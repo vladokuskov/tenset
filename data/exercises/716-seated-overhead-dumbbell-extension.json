@@ -1,0 +1,67 @@
+{
+  "id": 716,
+  "slug": "seated-overhead-dumbbell-extension",
+  "name": "Seated Overhead Dumbbell Extension",
+  "aliases": [
+    "seated triceps extension",
+    "overhead db extension",
+    "dumbbell french press",
+    "overhead tricep extension"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    705,
+    706,
+    717
+  ],
+  "media": {
+    "status": "card",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "posture": "seated",
+      "benchAngle": 90,
+      "shoulderFlexion": 170,
+      "hold": "two_hand"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit upright with your back flat against the pad",
+    "Cup the top plate of one dumbbell with both hands overhead",
+    "Lower it behind your head until your elbows are fully bent",
+    "Keep your elbows pointing up, not out"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

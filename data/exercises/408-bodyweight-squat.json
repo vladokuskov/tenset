@@ -1,0 +1,67 @@
+{
+  "id": 408,
+  "slug": "bodyweight-squat",
+  "name": "Bodyweight Squat",
+  "aliases": [
+    "air squat",
+    "BW squat",
+    "free squat"
+  ],
+  "family": "squat",
+  "equipment": [],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-25"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    405,
+    401,
+    402
+  ],
+  "media": {
+    "status": "card",
+    "template": "squat",
+    "params": {
+      "implement": "bodyweight",
+      "hold": "hands",
+      "stance": "shoulder",
+      "depth": "full",
+      "armPosition": "forward"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Reach your arms forward as you sit down",
+    "Keep your heels on the floor",
+    "Let your knees track over your toes",
+    "Stand all the way up and squeeze your glutes at the top"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

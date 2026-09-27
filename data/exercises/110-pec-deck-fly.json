@@ -1,0 +1,66 @@
+{
+  "id": 110,
+  "slug": "pec-deck-fly",
+  "name": "Machine Chest Fly (Pec Deck)",
+  "aliases": [
+    "pec deck",
+    "machine fly",
+    "butterfly",
+    "chest fly machine"
+  ],
+  "family": "chest",
+  "equipment": [
+    "pec_deck"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    105,
+    112,
+    111
+  ],
+  "media": {
+    "status": "card",
+    "template": "fly",
+    "params": {
+      "implement": "machine",
+      "machine": "pec_deck",
+      "posture": "seated",
+      "benchAngle": 90,
+      "grip": "neutral"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the seat so the handles sit at chest height",
+    "Keep a slight bend in your elbows throughout",
+    "Bring the handles together by squeezing your chest",
+    "Let your arms open slowly to a comfortable stretch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

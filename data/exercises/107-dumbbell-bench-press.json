@@ -1,0 +1,70 @@
+{
+  "id": 107,
+  "slug": "dumbbell-bench-press",
+  "name": "Dumbbell Bench Press",
+  "aliases": [
+    "DB bench press",
+    "dumbbell bench",
+    "flat DB press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    101,
+    108,
+    113
+  ],
+  "media": {
+    "status": "card",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "dumbbell",
+      "benchAngle": 0,
+      "grip": "pronated"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Kick the dumbbells up from your thighs as you lie back",
+    "Keep your shoulder blades pulled back against the bench",
+    "Lower until the dumbbells sit level with your chest",
+    "Press up in a slight arc with forearms vertical"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": 409,
+  "slug": "dumbbell-reverse-lunge",
+  "name": "Dumbbell Reverse Lunge",
+  "aliases": [
+    "reverse lunge",
+    "DB reverse lunge",
+    "backward lunge",
+    "step-back lunge"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    411,
+    403,
+    408
+  ],
+  "media": {
+    "status": "card",
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "reverse"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Step straight back and drop your back knee toward the floor",
+    "Keep your weight in your front heel",
+    "Stand up by driving through the front foot",
+    "Stay tall with the dumbbells hanging at your sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

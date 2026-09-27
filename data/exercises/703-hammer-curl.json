@@ -1,0 +1,66 @@
+{
+  "id": 703,
+  "slug": "hammer-curl",
+  "name": "Hammer Curl",
+  "aliases": [
+    "db hammer curl",
+    "dumbbell hammer curl",
+    "neutral grip curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.75,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    719,
+    714,
+    711
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "posture": "standing"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the dumbbells with palms facing each other",
+    "Keep your thumbs pointing up through the whole rep",
+    "Pin your elbows just in front of your hips",
+    "Stand tall and skip the swing"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

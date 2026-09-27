@@ -1,0 +1,64 @@
+{
+  "id": 808,
+  "slug": "pallof-press",
+  "name": "Pallof Press",
+  "aliases": [
+    "anti-rotation press",
+    "cable anti-rotation press",
+    "pallof hold"
+  ],
+  "family": "core",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "anti_rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "obliques": "primary"
+  },
+  "stabilizers": [
+    "abs",
+    "glute_med",
+    "front_delt"
+  ],
+  "alternatives": [
+    803,
+    809
+  ],
+  "media": {
+    "status": "card",
+    "template": "hold",
+    "params": {
+      "kind": "pallof_press",
+      "implement": "cable",
+      "attachment": "single_handle",
+      "cableHeight": "mid",
+      "stance": "hip",
+      "pressOut": true
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand side-on to the cable with the handle at your chest",
+    "Square your hips and shoulders to the front",
+    "Press the handle straight out without letting it turn you",
+    "Pause with long arms before bringing it back in"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

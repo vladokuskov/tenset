@@ -1,0 +1,71 @@
+{
+  "id": 302,
+  "slug": "assisted-pull-up",
+  "name": "Assisted Pull-Up",
+  "aliases": [
+    "machine-assisted pull-up",
+    "assisted pullup"
+  ],
+  "family": "back",
+  "equipment": [
+    "assisted_pullup"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-12",
+    "strengthReps": "4-6"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    303,
+    301,
+    311
+  ],
+  "media": {
+    "status": "card",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "machine",
+      "machine": "assisted_pullup",
+      "posture": "kneeling",
+      "grip": "pronated",
+      "gripWidth": 1.5
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Pick an assistance level that lets you finish every rep cleanly",
+    "Grip the handles just wider than your shoulders",
+    "Pull your chest toward the handles, driving your elbows down",
+    "Lower all the way to straight arms"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

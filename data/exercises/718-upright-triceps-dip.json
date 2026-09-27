@@ -1,0 +1,68 @@
+{
+  "id": 718,
+  "slug": "upright-triceps-dip",
+  "name": "Triceps Dip",
+  "aliases": [
+    "upright dip",
+    "parallel bar dip",
+    "dips",
+    "bar dip"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dip_station"
+  ],
+  "pattern": "dip",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-12"
+  },
+  "groups": {
+    "triceps": "primary",
+    "chest": "secondary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.5,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back"
+  ],
+  "alternatives": [
+    707,
+    706,
+    704
+  ],
+  "media": {
+    "status": "card",
+    "template": "dip",
+    "params": {
+      "torsoAngle": 5,
+      "grip": "neutral"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Keep your torso upright and your chest up",
+    "Point your elbows straight back, not out",
+    "Lower until your upper arms are about parallel to the floor",
+    "Press to straight arms without shrugging"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

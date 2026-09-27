@@ -1,0 +1,68 @@
+{
+  "id": 713,
+  "slug": "cable-curl",
+  "name": "Cable Curl",
+  "aliases": [
+    "cable bicep curl",
+    "standing cable curl",
+    "low pulley curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    701,
+    711,
+    710
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "cable",
+      "grip": "supinated",
+      "gripWidth": 1,
+      "posture": "standing",
+      "attachment": "straight_bar",
+      "cableHeight": "low"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulley at its lowest position",
+    "Step back so the cable stays tight at the bottom",
+    "Keep your elbows at your sides",
+    "Lower until your elbows are straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

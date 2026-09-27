@@ -1,0 +1,74 @@
+{
+  "id": 101,
+  "slug": "barbell-bench-press",
+  "name": "Barbell Bench Press",
+  "aliases": [
+    "bench press",
+    "BB bench",
+    "flat bench",
+    "bench"
+  ],
+  "family": "chest",
+  "equipment": [
+    "barbell",
+    "flat_bench",
+    "rack"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "3-6"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    107,
+    108,
+    113
+  ],
+  "media": {
+    "status": "card",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "barbell",
+      "benchAngle": 0,
+      "grip": "pronated",
+      "gripWidth": 1.4
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set your eyes under the bar and grip wide enough for vertical forearms",
+    "Squeeze your shoulder blades together and keep them pinned",
+    "Touch the bar to your lower chest with elbows slightly tucked",
+    "Drive your feet into the floor as you press",
+    "Finish with the bar stacked over your shoulders"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "anatomy-general"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

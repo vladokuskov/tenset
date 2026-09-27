@@ -1,0 +1,693 @@
+{
+ "copyright": "BodyParts3D, © The Database Center for Life Science, CC BY 4.0, modified",
+ "credit": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
+ "source": "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/ (Release 4.0)",
+ "license": "https://creativecommons.org/licenses/by/4.0/",
+ "comment": "Region atlas and muscle relief derived from BodyParts3D: superficial muscles registered onto the MakeHuman body, projected along its normals, relabelled to our taxonomy and baked into its UV layout. The latissimus dorsi and rectus abdominis regions and the relief shapes are our own.",
+ "version": 3,
+ "uv": "TEXCOORD_0 of the body mesh, glTF orientation (flipY = false)",
+ "textures": {
+  "regions": {
+   "file": "atlas-regions.webp",
+   "size": 2048,
+   "encoding": "R = region index (0 = none), lossless; sample with texelFetch / nearest"
+  },
+  "relief": {
+   "file": "atlas-relief.webp",
+   "size": 2048,
+   "minMm": -0.4,
+   "maxMm": 5.5,
+   "encoding": "R = height, minMm + R / 255 * (maxMm - minMm) millimetres along the normal; linear, mipmapped"
+  },
+  "fibre": {
+   "file": "atlas-fibre.webp",
+   "size": 2048,
+   "amplitudeMm": 0.07975,
+   "encoding": "R = fibre striation, (R - 128) / 127 * amplitudeMm millimetres along the normal; linear, mipmapped"
+  }
+ },
+ "regions": [
+  {
+   "index": 1,
+   "head": "pec_clavicular",
+   "group": "chest",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 2,
+   "head": "pec_clavicular",
+   "group": "chest",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 3,
+   "head": "pec_sternal",
+   "group": "chest",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 4,
+   "head": "pec_sternal",
+   "group": "chest",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 5,
+   "head": "delt_anterior",
+   "group": "front_delt",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 6,
+   "head": "delt_anterior",
+   "group": "front_delt",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 7,
+   "head": "delt_lateral",
+   "group": "side_delt",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 8,
+   "head": "delt_lateral",
+   "group": "side_delt",
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 9,
+   "head": "delt_posterior",
+   "group": "rear_delt",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 10,
+   "head": "delt_posterior",
+   "group": "rear_delt",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 11,
+   "head": "biceps_brachii",
+   "group": "biceps",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 12,
+   "head": "biceps_brachii",
+   "group": "biceps",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 13,
+   "head": "brachialis",
+   "group": "biceps",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 14,
+   "head": "brachialis",
+   "group": "biceps",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 15,
+   "head": "brachioradialis",
+   "group": "forearms",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 16,
+   "head": "brachioradialis",
+   "group": "forearms",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 17,
+   "head": "wrist_flexors",
+   "group": "forearms",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 18,
+   "head": "wrist_flexors",
+   "group": "forearms",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 19,
+   "head": "wrist_extensors",
+   "group": "forearms",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 20,
+   "head": "wrist_extensors",
+   "group": "forearms",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 21,
+   "head": "triceps_long",
+   "group": "triceps",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 22,
+   "head": "triceps_long",
+   "group": "triceps",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 23,
+   "head": "triceps_lateral",
+   "group": "triceps",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 24,
+   "head": "triceps_lateral",
+   "group": "triceps",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 25,
+   "head": "trap_upper",
+   "group": "upper_traps",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 26,
+   "head": "trap_upper",
+   "group": "upper_traps",
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 27,
+   "head": "trap_middle",
+   "group": "upper_back",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 28,
+   "head": "trap_middle",
+   "group": "upper_back",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 29,
+   "head": "trap_lower",
+   "group": "upper_back",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 30,
+   "head": "trap_lower",
+   "group": "upper_back",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 31,
+   "head": "latissimus_dorsi",
+   "group": "lats",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 32,
+   "head": "latissimus_dorsi",
+   "group": "lats",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 33,
+   "head": "teres_major",
+   "group": "lats",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 34,
+   "head": "teres_major",
+   "group": "lats",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 35,
+   "head": "infraspinatus",
+   "group": "rotator_cuff",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 36,
+   "head": "infraspinatus",
+   "group": "rotator_cuff",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 37,
+   "head": "serratus_anterior",
+   "group": "serratus",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 38,
+   "head": "serratus_anterior",
+   "group": "serratus",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 39,
+   "head": "rectus_abdominis",
+   "group": "abs",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 40,
+   "head": "rectus_abdominis",
+   "group": "abs",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 41,
+   "head": "external_oblique",
+   "group": "obliques",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 42,
+   "head": "external_oblique",
+   "group": "obliques",
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 43,
+   "head": "erector_spinae",
+   "group": "lower_back",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 44,
+   "head": "erector_spinae",
+   "group": "lower_back",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 45,
+   "head": "gluteus_maximus",
+   "group": "glute_max",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 46,
+   "head": "gluteus_maximus",
+   "group": "glute_max",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 47,
+   "head": "gluteus_medius",
+   "group": "glute_med",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 48,
+   "head": "gluteus_medius",
+   "group": "glute_med",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 49,
+   "head": "tfl",
+   "group": "glute_med",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 50,
+   "head": "tfl",
+   "group": "glute_med",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 51,
+   "head": "iliopsoas",
+   "group": "hip_flexors",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 52,
+   "head": "iliopsoas",
+   "group": "hip_flexors",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 53,
+   "head": "rectus_femoris",
+   "group": "quads",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 54,
+   "head": "rectus_femoris",
+   "group": "quads",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 55,
+   "head": "vastus_lateralis",
+   "group": "quads",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 56,
+   "head": "vastus_lateralis",
+   "group": "quads",
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 57,
+   "head": "vastus_medialis",
+   "group": "quads",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 58,
+   "head": "vastus_medialis",
+   "group": "quads",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 59,
+   "head": "adductor_longus",
+   "group": "adductors",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 60,
+   "head": "adductor_longus",
+   "group": "adductors",
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 61,
+   "head": "adductor_magnus",
+   "group": "adductors",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 62,
+   "head": "adductor_magnus",
+   "group": "adductors",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 63,
+   "head": "biceps_femoris_long",
+   "group": "hamstrings",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 64,
+   "head": "biceps_femoris_long",
+   "group": "hamstrings",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 65,
+   "head": "semitendinosus",
+   "group": "hamstrings",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 66,
+   "head": "semitendinosus",
+   "group": "hamstrings",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 67,
+   "head": "semimembranosus",
+   "group": "hamstrings",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 68,
+   "head": "semimembranosus",
+   "group": "hamstrings",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 69,
+   "head": "gastroc_medial",
+   "group": "calves",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 70,
+   "head": "gastroc_medial",
+   "group": "calves",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 71,
+   "head": "gastroc_lateral",
+   "group": "calves",
+   "side": "l",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 72,
+   "head": "gastroc_lateral",
+   "group": "calves",
+   "side": "r",
+   "views": "B",
+   "present": true
+  },
+  {
+   "index": 73,
+   "head": "soleus",
+   "group": "calves",
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 74,
+   "head": "soleus",
+   "group": "calves",
+   "side": "r",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 75,
+   "head": "tibialis_anterior",
+   "group": "tibialis",
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 76,
+   "head": "tibialis_anterior",
+   "group": "tibialis",
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 77,
+   "head": null,
+   "untracked": "sternocleidomastoid",
+   "group": null,
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 78,
+   "head": null,
+   "untracked": "sternocleidomastoid",
+   "group": null,
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 79,
+   "head": null,
+   "untracked": "sartorius",
+   "group": null,
+   "side": "l",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 80,
+   "head": null,
+   "untracked": "sartorius",
+   "group": null,
+   "side": "r",
+   "views": "F",
+   "present": true
+  },
+  {
+   "index": 81,
+   "head": null,
+   "untracked": "fibularis",
+   "group": null,
+   "side": "l",
+   "views": "FB",
+   "present": true
+  },
+  {
+   "index": 82,
+   "head": null,
+   "untracked": "fibularis",
+   "group": null,
+   "side": "r",
+   "views": "FB",
+   "present": true
+  }
+ ]
+}

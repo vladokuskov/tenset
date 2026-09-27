@@ -1,0 +1,59 @@
+{
+  "id": 805,
+  "slug": "crunch",
+  "name": "Crunch",
+  "aliases": [
+    "ab crunch",
+    "floor crunch",
+    "abdominal crunch"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "spinal_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    801,
+    807,
+    806
+  ],
+  "media": {
+    "status": "card",
+    "template": "crunch",
+    "params": {
+      "posture": "lying_supine",
+      "kneeAngle": 90
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie on your back with knees bent and feet flat",
+    "Curl your shoulder blades off the floor",
+    "Keep a fist of space between chin and chest",
+    "Pause briefly at the top"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

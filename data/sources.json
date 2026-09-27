@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "sources": [
+    { "id": "pelland-2026", "cite": "Pelland et al. (2026). The resistance training dose-response: meta-regressions on weekly volume and frequency. Sports Medicine 56(2):481-505.", "pmid": "41343037", "use": "fractional set counting (direct 1.0, indirect 0.5); volume tiers; square-root dose-response" },
+    { "id": "acsm-2026", "cite": "Currier et al. (2026). ACSM Position Stand: resistance training. Medicine & Science in Sports & Exercise 58(4):851-872.", "pmid": "41843416", "use": ">=10 sets/muscle/week for hypertrophy; frequency irrelevant when volume is equated" },
+    { "id": "baz-valle-2022", "cite": "Baz-Valle et al. (2022). A systematic review of the effects of different resistance training volumes on muscle hypertrophy. Journal of Human Kinetics 81:199-210.", "use": "12-20 weekly sets as a standard recommendation for trained men" },
+    { "id": "schoenfeld-2017", "cite": "Schoenfeld, Ogborn, Krieger (2017). Dose-response relationship between weekly resistance training volume and increases in muscle mass. Journal of Sports Sciences 35(11):1073-1082.", "use": "origin of the 10+ sets rule of thumb" },
+    { "id": "rp-2023", "cite": "Renaissance Periodization per-muscle training guides (2023-2024). Expert opinion, not peer-reviewed.", "use": "per-muscle volume landmark overrides (labeled expert opinion)" },
+    { "id": "maeo-2023", "cite": "Maeo et al. (2023). Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. European Journal of Sport Science 23:1240.", "use": "overhead extension >= pushdown for all triceps heads" },
+    { "id": "maeo-2021", "cite": "Maeo et al. (2021). Greater hamstrings muscle hypertrophy but similar damage protection after training at long versus short muscle lengths. Medicine & Science in Sports & Exercise 53:825.", "use": "seated > lying leg curl for biarticular hamstrings" },
+    { "id": "kinoshita-2023", "cite": "Kinoshita et al. (2023). Standing vs seated calf raise training and triceps surae hypertrophy.", "use": "standing grows gastrocnemius; soleus similar in both" },
+    { "id": "larsen-2025-legext", "cite": "Larsen et al. (2025). Leg extension training at different hip angles and regional quadriceps hypertrophy.", "use": "rectus femoris growth depends on hip angle" },
+    { "id": "larsen-2025-lateral", "cite": "Larsen et al. (2025). Dumbbell versus cable lateral raises and lateral deltoid hypertrophy. Frontiers in Physiology.", "pmid": "40692697", "use": "equipment-family invariant for lateral raises" },
+    { "id": "rodriguez-ridao-2020", "cite": "Rodriguez-Ridao et al. (2020). Effect of five bench inclinations on the electromyographic activity of the pectoralis major, anterior deltoid, and triceps brachii. IJERPH.", "use": "~30 degree incline maximizes clavicular pec activity" },
+    { "id": "albarello-2022", "cite": "Albarello et al. (2022). Journal of Electromyography and Kinesiology.", "pmid": "36334406", "use": "45 degree incline: clavicular > sternocostal pec" },
+    { "id": "chaves-2020", "cite": "Chaves et al. (2020). Effects of horizontal and incline bench press on neuromuscular adaptations. International Journal of Exercise Science 13:859.", "use": "incline training grew upper pec more" },
+    { "id": "campos-2020", "cite": "Campos et al. (2020). Different shoulder exercises affect the activation of deltoid portions in resistance-trained individuals. Journal of Human Kinetics.", "use": "lateral raise loads side/rear delt; press loads front delt" },
+    { "id": "coratella-2020", "cite": "Coratella et al. (2020). An electromyographic analysis of lateral raise variations and frontal raise in competitive bodybuilders. IJERPH.", "use": "delt head emphasis by raise variation" },
+    { "id": "kubo-2019", "cite": "Kubo et al. (2019). Effects of squat training with different depths on lower limb muscle volumes. European Journal of Applied Physiology.", "use": "squat grows glutes and adductors, not rectus femoris" },
+    { "id": "plotkin-2023", "cite": "Plotkin et al. (2023). Hip thrust and back squat training elicit similar gluteus muscle hypertrophy. Journal of Applied Physiology.", "use": "same glute max role for hip thrust and squat" },
+    { "id": "bourne-2017", "cite": "Bourne et al. (2017). Impact of exercise selection on hamstring muscle activation. British Journal of Sports Medicine.", "use": "Nordic favors semitendinosus; hip extension favors BF long head and semimembranosus" },
+    { "id": "ekstrom-2003", "cite": "Ekstrom et al. (2003). Surface electromyographic analysis of exercises for the trapezius and serratus anterior muscles. JOSPT.", "use": "prone overhead raise for lower trap; push-up plus for serratus" },
+    { "id": "zabaleta-korta-2021", "cite": "Zabaleta-Korta et al. (2021). Journal of Sports Sciences.", "pmid": "34743671", "use": "leg extension grows rectus femoris, Smith squat does not" },
+    { "id": "mannarino-2021", "cite": "Mannarino et al. (2021). Journal of Strength and Conditioning Research.", "pmid": "31268995", "use": "single-joint work grows elbow flexors more than rows (secondary role)" },
+    { "id": "varovic-2025", "cite": "Varovic et al. (2025). International Journal of Sports Medicine.", "pmid": "40570881", "use": "muscle length/ROM has trivial effects on regional hypertrophy" },
+    { "id": "anatomy-general", "cite": "Standard functional anatomy (prime movers and synergists by joint action).", "use": "role assignment where no specific study exists; confidence should be medium or low" }
+  ]
+}

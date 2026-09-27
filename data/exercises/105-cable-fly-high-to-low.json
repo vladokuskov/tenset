@@ -1,0 +1,64 @@
+{
+  "id": 105,
+  "slug": "cable-fly-high-to-low",
+  "name": "High-to-Low Cable Fly",
+  "aliases": [
+    "cable crossover",
+    "high cable fly",
+    "decline cable fly"
+  ],
+  "family": "chest",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary"
+  },
+  "heads": {
+    "pec_sternal": 1,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    110,
+    112,
+    111
+  ],
+  "media": {
+    "status": "card",
+    "template": "fly",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "cableHeight": "high",
+      "stance": "split"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulleys above head height and take a split stance",
+    "Keep a soft, fixed bend in your elbows",
+    "Sweep your hands down and together in front of your hips",
+    "Control the return until you feel a stretch across your chest"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

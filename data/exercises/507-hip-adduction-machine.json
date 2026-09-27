@@ -1,0 +1,59 @@
+{
+  "id": 507,
+  "slug": "hip-adduction-machine",
+  "name": "Hip Adduction Machine",
+  "aliases": [
+    "adductor machine",
+    "seated hip adduction",
+    "inner thigh machine"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "hip_adduction"
+  ],
+  "pattern": "hip_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "adductors": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    515,
+    405,
+    408
+  ],
+  "media": {
+    "status": "card",
+    "template": "hip-abduction",
+    "params": {
+      "implement": "machine",
+      "machine": "hip_adduction",
+      "direction": "adduction",
+      "hipAngle": 90
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Sit tall with the pads against the inside of your knees",
+    "Start from a wide stretch you can control",
+    "Squeeze your knees together until the pads meet",
+    "Let them open slowly instead of letting the stack pull you apart"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

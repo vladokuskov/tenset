@@ -1,0 +1,73 @@
+{
+  "id": 403,
+  "slug": "bulgarian-split-squat",
+  "name": "Bulgarian Split Squat",
+  "aliases": [
+    "BSS",
+    "rear foot elevated split squat",
+    "RFESS",
+    "split squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    409,
+    410,
+    402
+  ],
+  "media": {
+    "status": "card",
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "in_place",
+      "rearFootElevated": true,
+      "platformHeight": "knee",
+      "torsoAngle": 10
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest the top of your back foot on the bench",
+    "Find a stance where your front heel stays planted at the bottom",
+    "Drop your back knee straight down toward the floor",
+    "Keep most of your weight on the front foot",
+    "Let your torso tip slightly forward as you descend"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

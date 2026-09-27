@@ -1,0 +1,70 @@
+{
+  "id": 407,
+  "slug": "smith-squat",
+  "name": "Smith Machine Squat",
+  "aliases": [
+    "smith squat",
+    "machine squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "smith"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "lower_back"
+  ],
+  "alternatives": [
+    401,
+    402,
+    405
+  ],
+  "media": {
+    "status": "card",
+    "template": "squat",
+    "params": {
+      "implement": "smith",
+      "hold": "back_high",
+      "stance": "shoulder",
+      "depth": "parallel",
+      "footPosition": "forward"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set your feet slightly in front of the bar",
+    "Set the safety stops just below your lowest position",
+    "Sit down and back with your whole foot planted",
+    "Push the bar straight up the rails"
+  ],
+  "basis": [
+    "zabaleta-korta-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

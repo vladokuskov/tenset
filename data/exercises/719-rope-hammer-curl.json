@@ -1,0 +1,68 @@
+{
+  "id": 719,
+  "slug": "rope-hammer-curl",
+  "name": "Rope Hammer Curl",
+  "aliases": [
+    "cable hammer curl",
+    "rope curl",
+    "cable rope curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.75,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    703,
+    714,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "cable",
+      "grip": "neutral",
+      "posture": "standing",
+      "attachment": "rope",
+      "cableHeight": "low"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulley low and hold the rope with thumbs up",
+    "Keep your elbows pinned at your sides",
+    "Pull the rope ends up toward your shoulders",
+    "Lower all the way to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

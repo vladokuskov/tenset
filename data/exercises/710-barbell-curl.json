@@ -1,0 +1,67 @@
+{
+  "id": 710,
+  "slug": "barbell-curl",
+  "name": "Barbell Curl",
+  "aliases": [
+    "bb curl",
+    "straight bar curl",
+    "standing barbell curl",
+    "bicep curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    701,
+    711,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "barbell",
+      "grip": "supinated",
+      "gripWidth": 1,
+      "posture": "standing"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Grip the bar palms up, a little wider than your hips",
+    "Keep your elbows by your sides",
+    "Curl without leaning back",
+    "Lower until your arms are fully straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

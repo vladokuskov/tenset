@@ -1,0 +1,65 @@
+{
+  "id": 804,
+  "slug": "plank",
+  "name": "Plank",
+  "aliases": [
+    "front plank",
+    "forearm plank",
+    "front hold",
+    "prone bridge"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "30-60"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75
+  },
+  "stabilizers": [
+    "serratus",
+    "front_delt",
+    "glute_max",
+    "quads"
+  ],
+  "alternatives": [
+    807,
+    805,
+    801
+  ],
+  "media": {
+    "status": "card",
+    "template": "hold",
+    "params": {
+      "kind": "front_plank",
+      "support": "forearm"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set your elbows under your shoulders",
+    "Squeeze your glutes and tuck your pelvis slightly",
+    "Hold a straight line from head to heels",
+    "Push the floor away so your upper back stays full"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

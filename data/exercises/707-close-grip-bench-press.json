@@ -1,0 +1,73 @@
+{
+  "id": 707,
+  "slug": "close-grip-bench-press",
+  "name": "Close-Grip Bench Press",
+  "aliases": [
+    "CGBP",
+    "close grip bench",
+    "narrow grip bench press",
+    "triceps bench press"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell",
+    "flat_bench",
+    "rack"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "4-6"
+  },
+  "groups": {
+    "triceps": "primary",
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.5,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back"
+  ],
+  "alternatives": [
+    107,
+    113,
+    718
+  ],
+  "media": {
+    "status": "card",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "barbell",
+      "benchAngle": 0,
+      "grip": "pronated",
+      "gripWidth": 1
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip the bar about shoulder width, no narrower",
+    "Pin your shoulder blades back and down",
+    "Keep your elbows close to your torso as the bar comes down",
+    "Touch your lower chest and press back up over your shoulders",
+    "Stack your wrists over your elbows"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

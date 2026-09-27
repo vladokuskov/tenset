@@ -1,0 +1,70 @@
+{
+  "id": 410,
+  "slug": "dumbbell-step-up",
+  "name": "Dumbbell Step-Up",
+  "aliases": [
+    "step-up",
+    "box step-up",
+    "DB step up",
+    "step ups"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell",
+    "step"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    403,
+    409,
+    402
+  ],
+  "media": {
+    "status": "card",
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "step_up",
+      "platformHeight": "knee"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Plant your whole foot on the box",
+    "Drive up through the top leg without pushing off the bottom foot",
+    "Stand fully tall on the box before stepping down",
+    "Lower yourself under control with the same leg"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

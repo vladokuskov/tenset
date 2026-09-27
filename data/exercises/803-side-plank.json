@@ -1,0 +1,63 @@
+{
+  "id": 803,
+  "slug": "side-plank",
+  "name": "Side Plank",
+  "aliases": [
+    "side bridge",
+    "lateral plank",
+    "side hold"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_lateral_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "30-45"
+  },
+  "groups": {
+    "obliques": "primary",
+    "lower_back": "secondary",
+    "glute_med": "secondary"
+  },
+  "heads": {
+    "erector_spinae": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "serratus"
+  ],
+  "alternatives": [
+    808,
+    809
+  ],
+  "media": {
+    "status": "card",
+    "template": "hold",
+    "params": {
+      "kind": "side_plank",
+      "support": "forearm",
+      "legs": "stacked"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Stack your elbow directly under your shoulder",
+    "Lift your hips until your body forms one straight line",
+    "Keep your hips from sagging or rolling back",
+    "Match the time on both sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

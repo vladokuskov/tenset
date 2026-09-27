@@ -1,0 +1,71 @@
+{
+  "id": 205,
+  "slug": "reverse-pec-deck",
+  "name": "Reverse Pec Deck",
+  "aliases": [
+    "rear delt machine",
+    "reverse fly machine",
+    "reverse machine fly"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "pec_deck"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "secondary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.5,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    210,
+    213,
+    206
+  ],
+  "media": {
+    "status": "card",
+    "template": "rear-raise",
+    "params": {
+      "implement": "machine",
+      "machine": "pec_deck",
+      "posture": "seated",
+      "torsoAngle": 0,
+      "grip": "neutral"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Face the pad and set the handles at shoulder height",
+    "Keep your arms nearly straight",
+    "Sweep the handles back until your arms line up with your body",
+    "Keep your chest on the pad and shoulders down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

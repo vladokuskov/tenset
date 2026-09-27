@@ -1,0 +1,57 @@
+{
+  "id": "upper-lower-4x",
+  "name": "Upper/Lower 4x",
+  "level": 2,
+  "daysPerWeek": 4,
+  "description": "Four sessions a week alternating upper and lower body, so each muscle is trained twice. The A days lead with barbell presses, rows and squats; the B days use more dumbbell, cable and machine work. Chest, back, quads, glutes and hamstrings reach the target range; shoulders and arms sit in the moderate to target range.",
+  "defaultDays": [0, 1, 3, 4],
+  "sessions": [
+    {
+      "label": "Upper A",
+      "slots": [
+        { "pattern": "horizontal_push", "group": "chest", "sets": 4, "options": [101, 108, 107, 113] },
+        { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [304, 305, 306] },
+        { "pattern": "vertical_push", "group": "front_delt", "sets": 3, "options": [201, 208, 202] },
+        { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [303, 302, 301, 307] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [203, 204] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [701, 710, 711] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [704, 715, 717] }
+      ]
+    },
+    {
+      "label": "Lower A",
+      "slots": [
+        { "pattern": "squat", "group": "quads", "sets": 4, "options": [401, 407, 402, 405, 408] },
+        { "pattern": "hinge", "group": "glute_max", "sets": 3, "options": [501, 509, 511] },
+        { "pattern": "knee_extension", "group": "quads", "sets": 3, "options": [404, 412, 409] },
+        { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [503, 504, 512] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604] },
+        { "pattern": "spinal_flexion", "group": "abs", "sets": 2, "options": [801, 805] }
+      ]
+    },
+    {
+      "label": "Upper B",
+      "slots": [
+        { "pattern": "incline_push", "group": "chest", "sets": 3, "options": [102, 109, 103, 115] },
+        { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [301, 302, 303, 307] },
+        { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [306, 312] },
+        { "pattern": "dip", "group": "chest", "sets": 3, "options": [104, 108, 107, 113] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [204, 214, 203] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 2, "options": [206, 213, 210] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [702, 713, 711] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [705, 716] }
+      ]
+    },
+    {
+      "label": "Lower B",
+      "slots": [
+        { "pattern": "lunge", "group": "quads", "sets": 3, "options": [403, 409, 410, 408] },
+        { "pattern": "hip_extension", "group": "glute_max", "sets": 3, "options": [502, 511] },
+        { "pattern": "squat", "group": "quads", "sets": 3, "options": [402, 407, 405] },
+        { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [504, 503, 512] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604] },
+        { "pattern": "hip_flexion", "group": "abs", "sets": 3, "options": [802, 806, 807] }
+      ]
+    }
+  ]
+}

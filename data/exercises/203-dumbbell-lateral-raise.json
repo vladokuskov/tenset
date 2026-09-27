@@ -1,0 +1,69 @@
+{
+  "id": 203,
+  "slug": "dumbbell-lateral-raise",
+  "name": "Dumbbell Lateral Raise",
+  "aliases": [
+    "lateral raise",
+    "side raise",
+    "DB lateral raise",
+    "side lateral raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "rear_delt": "secondary",
+    "rotator_cuff": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    204,
+    214
+  ],
+  "media": {
+    "status": "card",
+    "template": "lateral-raise",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "standing",
+      "grip": "neutral"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand tall with a slight forward lean",
+    "Raise the dumbbells out to your sides to shoulder height",
+    "Lead with your elbows, keeping a soft bend",
+    "Lower slowly without swinging"
+  ],
+  "basis": [
+    "campos-2020",
+    "coratella-2020",
+    "larsen-2025-lateral"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

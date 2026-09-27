@@ -1,0 +1,67 @@
+{
+  "id": 809,
+  "slug": "cable-woodchop",
+  "name": "Cable Woodchop",
+  "aliases": [
+    "wood chop",
+    "woodchopper",
+    "cable chop",
+    "high-to-low chop"
+  ],
+  "family": "core",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "front_delt",
+    "glute_med"
+  ],
+  "alternatives": [
+    808,
+    803
+  ],
+  "media": {
+    "status": "card",
+    "template": "rotation",
+    "params": {
+      "implement": "cable",
+      "attachment": "single_handle",
+      "cableHeight": "high",
+      "direction": "high_to_low",
+      "stance": "wide"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulley high and stand side-on in a wide stance",
+    "Keep your arms long as you pull down and across",
+    "Turn your hips and torso together, pivoting on the foot nearest the stack",
+    "Finish outside your far knee and return under control"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

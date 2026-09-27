@@ -1,0 +1,68 @@
+{
+  "id": 108,
+  "slug": "machine-chest-press",
+  "name": "Machine Chest Press",
+  "aliases": [
+    "chest press",
+    "seated chest press",
+    "machine press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "chest_press_machine"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    101,
+    107,
+    113
+  ],
+  "media": {
+    "status": "card",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "machine",
+      "machine": "chest_press_machine",
+      "posture": "seated",
+      "grip": "neutral",
+      "gripWidth": 1.4
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Adjust the seat so the handles line up with your mid chest",
+    "Keep your back and head against the pad",
+    "Press forward without letting your shoulders roll up",
+    "Return slowly until you feel a stretch in your chest"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

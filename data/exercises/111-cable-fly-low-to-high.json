@@ -1,0 +1,65 @@
+{
+  "id": 111,
+  "slug": "cable-fly-low-to-high",
+  "name": "Low-to-High Cable Fly",
+  "aliases": [
+    "low cable fly",
+    "incline cable fly",
+    "cable upper chest fly"
+  ],
+  "family": "chest",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.5,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    110,
+    112,
+    105
+  ],
+  "media": {
+    "status": "card",
+    "template": "fly",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "cableHeight": "low",
+      "stance": "split"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulleys low and step forward into a split stance",
+    "Keep your elbows softly bent and your chest up",
+    "Sweep your hands up and together to about chin height",
+    "Lower under control until your hands are just behind your hips"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

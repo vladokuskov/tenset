@@ -1,0 +1,2258 @@
+{
+ "source": "BodyParts3D 4.0, isa tree (isa_element_parts.txt). Right-side names resolved; left = same concept with \"left\".",
+ "coordinates": "mm; +x = subject left, +y = posterior, +z = superior",
+ "skin": {
+  "name": "skin",
+  "fma": "FMA7163",
+  "files": [
+   "FJ2810"
+  ]
+ },
+ "regions": [
+  {
+   "id": "pec_clavicular",
+   "kind": "head",
+   "group": "chest",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "clavicular part of right pectoralis major",
+      "fma": "FMA34690",
+      "files": [
+       "FJ1447"
+      ]
+     },
+     "l": {
+      "name": "clavicular part of left pectoralis major",
+      "fma": "FMA34691",
+      "files": [
+       "FJ1447M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "pec_sternal",
+   "kind": "head",
+   "group": "chest",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "sternocostal part of right pectoralis major",
+      "fma": "FMA79979",
+      "files": [
+       "FJ1464"
+      ]
+     },
+     "l": {
+      "name": "sternocostal part of left pectoralis major",
+      "fma": "FMA79980",
+      "files": [
+       "FJ1464M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "abdominal part of right pectoralis major",
+      "fma": "FMA45874",
+      "files": [
+       "FJ1446"
+      ]
+     },
+     "l": {
+      "name": "abdominal part of left pectoralis major",
+      "fma": "FMA45875",
+      "files": [
+       "FJ1446M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delt_anterior",
+   "kind": "head",
+   "group": "front_delt",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "clavicular part of right deltoid",
+      "fma": "FMA34680",
+      "files": [
+       "FJ1468"
+      ]
+     },
+     "l": {
+      "name": "clavicular part of left deltoid",
+      "fma": "FMA34681",
+      "files": [
+       "FJ1468M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delt_lateral",
+   "kind": "head",
+   "group": "side_delt",
+   "views": [
+    "F",
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "acromial part of right deltoid",
+      "fma": "FMA34682",
+      "files": [
+       "FJ1467"
+      ]
+     },
+     "l": {
+      "name": "acromial part of left deltoid",
+      "fma": "FMA34683",
+      "files": [
+       "FJ1467M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "delt_posterior",
+   "kind": "head",
+   "group": "rear_delt",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "spinal part of right deltoid",
+      "fma": "FMA34684",
+      "files": [
+       "FJ1513"
+      ]
+     },
+     "l": {
+      "name": "spinal part of left deltoid",
+      "fma": "FMA34685",
+      "files": [
+       "FJ1513M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "biceps_brachii",
+   "kind": "head",
+   "group": "biceps",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "long head of right biceps brachii",
+      "fma": "FMA37686",
+      "files": [
+       "FJ1478"
+      ]
+     },
+     "l": {
+      "name": "long head of left biceps brachii",
+      "fma": "FMA37687",
+      "files": [
+       "FJ1478M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "short head of right biceps brachii",
+      "fma": "FMA37684",
+      "files": [
+       "FJ1512"
+      ]
+     },
+     "l": {
+      "name": "short head of left biceps brachii",
+      "fma": "FMA37685",
+      "files": [
+       "FJ1512M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "brachialis",
+   "kind": "head",
+   "group": "biceps",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right brachialis",
+      "fma": "FMA37668",
+      "files": [
+       "FJ1486"
+      ]
+     },
+     "l": {
+      "name": "left brachialis",
+      "fma": "FMA37669",
+      "files": [
+       "FJ1486M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "brachioradialis",
+   "kind": "head",
+   "group": "forearms",
+   "views": [
+    "F"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 822
+    },
+    "B": {
+     "zMin": 822
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right brachioradialis",
+      "fma": "FMA38486",
+      "files": [
+       "FJ1487"
+      ]
+     },
+     "l": {
+      "name": "left brachioradialis",
+      "fma": "FMA38487",
+      "files": [
+       "FJ1487M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wrist_flexors",
+   "kind": "head",
+   "group": "forearms",
+   "views": [
+    "F"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 822
+    },
+    "B": {
+     "zMin": 822
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right flexor carpi radialis",
+      "fma": "FMA38460",
+      "files": [
+       "FJ1496"
+      ]
+     },
+     "l": {
+      "name": "left flexor carpi radialis",
+      "fma": "FMA38461",
+      "files": [
+       "FJ1496M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right palmaris longus",
+      "fma": "FMA38463",
+      "files": [
+       "FJ1502"
+      ]
+     },
+     "l": {
+      "name": "left palmaris longus",
+      "fma": "FMA38464",
+      "files": [
+       "FJ1502M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "humeral head of right flexor carpi ulnaris",
+      "fma": "FMA38617",
+      "files": [
+       "FJ1473"
+      ]
+     },
+     "l": {
+      "name": "humeral head of left flexor carpi ulnaris",
+      "fma": "FMA38618",
+      "files": [
+       "FJ1473M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "ulnar head of right flexor carpi ulnaris",
+      "fma": "FMA38619",
+      "files": [
+       "FJ1518"
+      ]
+     },
+     "l": {
+      "name": "ulnar head of left flexor carpi ulnaris",
+      "fma": "FMA38620",
+      "files": [
+       "FJ1518M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right flexor digitorum superficialis",
+      "fma": "FMA38470",
+      "files": [
+       "FJ1475",
+       "FJ1499"
+      ]
+     },
+     "l": {
+      "name": "left flexor digitorum superficialis",
+      "fma": "FMA38471",
+      "files": [
+       "FJ1475M",
+       "FJ1499M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "humeral head of right pronator teres",
+      "fma": "FMA38560",
+      "files": [
+       "FJ1474"
+      ]
+     },
+     "l": {
+      "name": "humeral head of left pronator teres",
+      "fma": "FMA38561",
+      "files": [
+       "FJ1474M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "ulnar head of right pronator teres",
+      "fma": "FMA38562",
+      "files": [
+       "FJ1516"
+      ]
+     },
+     "l": {
+      "name": "ulnar head of left pronator teres",
+      "fma": "FMA38563",
+      "files": [
+       "FJ1516M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "wrist_extensors",
+   "kind": "head",
+   "group": "forearms",
+   "views": [
+    "B"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 822
+    },
+    "B": {
+     "zMin": 822
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right extensor carpi radialis longus",
+      "fma": "FMA38495",
+      "files": [
+       "FJ1490"
+      ]
+     },
+     "l": {
+      "name": "left extensor carpi radialis longus",
+      "fma": "FMA38496",
+      "files": [
+       "FJ1490M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right extensor carpi radialis brevis",
+      "fma": "FMA38498",
+      "files": [
+       "FJ1489"
+      ]
+     },
+     "l": {
+      "name": "left extensor carpi radialis brevis",
+      "fma": "FMA38499",
+      "files": [
+       "FJ1489M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right extensor digitorum",
+      "fma": "FMA38501",
+      "files": [
+       "FJ1492"
+      ]
+     },
+     "l": {
+      "name": "left extensor digitorum",
+      "fma": "FMA38502",
+      "files": [
+       "FJ1492M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right extensor digiti minimi",
+      "fma": "FMA38504",
+      "files": [
+       "FJ1491"
+      ]
+     },
+     "l": {
+      "name": "left extensor digiti minimi",
+      "fma": "FMA38505",
+      "files": [
+       "FJ1491M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right extensor carpi ulnaris",
+      "fma": "FMA38507",
+      "files": [
+       "FJ1472",
+       "FJ1517"
+      ]
+     },
+     "l": {
+      "name": "left extensor carpi ulnaris",
+      "fma": "FMA38508",
+      "files": [
+       "FJ1472M",
+       "FJ1517M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right abductor pollicis longus",
+      "fma": "FMA38516",
+      "files": [
+       "FJ1484"
+      ]
+     },
+     "l": {
+      "name": "left abductor pollicis longus",
+      "fma": "FMA38517",
+      "files": [
+       "FJ1484M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right extensor pollicis brevis",
+      "fma": "FMA38519",
+      "files": [
+       "FJ1494"
+      ]
+     },
+     "l": {
+      "name": "left extensor pollicis brevis",
+      "fma": "FMA38520",
+      "files": [
+       "FJ1494M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "triceps_long",
+   "kind": "head",
+   "group": "triceps",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "long head of right triceps brachii",
+      "fma": "FMA37699",
+      "files": [
+       "FJ1479"
+      ]
+     },
+     "l": {
+      "name": "long head of left triceps brachii",
+      "fma": "FMA37700",
+      "files": [
+       "FJ1479M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "triceps_lateral",
+   "kind": "head",
+   "group": "triceps",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "lateral head of right triceps brachii",
+      "fma": "FMA37697",
+      "files": [
+       "FJ1477"
+      ]
+     },
+     "l": {
+      "name": "lateral head of left triceps brachii",
+      "fma": "FMA37698",
+      "files": [
+       "FJ1477M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trap_upper",
+   "kind": "head",
+   "group": "upper_traps",
+   "views": [
+    "F",
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "descending part of right trapezius",
+      "fma": "FMA33586",
+      "files": [
+       "FJ1521"
+      ]
+     },
+     "l": {
+      "name": "descending part of left trapezius",
+      "fma": "FMA33587",
+      "files": [
+       "FJ1521M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trap_middle",
+   "kind": "head",
+   "group": "upper_back",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "transverse part of right trapezius",
+      "fma": "FMA33584",
+      "files": [
+       "FJ1554"
+      ]
+     },
+     "l": {
+      "name": "transverse part of left trapezius",
+      "fma": "FMA33585",
+      "files": [
+       "FJ1554M"
+      ]
+     }
+    },
+    {
+     "clip": {
+      "B": {
+       "above": [
+        [
+         0,
+         1282
+        ],
+        [
+         100,
+         1302
+        ]
+       ]
+      },
+      "F": {
+       "above": [
+        [
+         0,
+         1282
+        ],
+        [
+         100,
+         1302
+        ]
+       ]
+      }
+     },
+     "r": {
+      "name": "ascending part of right trapezius",
+      "fma": "FMA33581",
+      "files": [
+       "FJ1520"
+      ]
+     },
+     "l": {
+      "name": "ascending part of left trapezius",
+      "fma": "FMA33583",
+      "files": [
+       "FJ1520M"
+      ]
+     }
+    },
+    {
+     "deep": "rhomboids",
+     "r": {
+      "name": "right rhomboid major",
+      "fma": "FMA13381",
+      "files": [
+       "FJ1536"
+      ]
+     },
+     "l": {
+      "name": "left rhomboid major",
+      "fma": "FMA13382",
+      "files": [
+       "FJ1536M"
+      ]
+     }
+    },
+    {
+     "deep": "rhomboids",
+     "r": {
+      "name": "right rhomboid minor",
+      "fma": "FMA13383",
+      "files": [
+       "FJ1537"
+      ]
+     },
+     "l": {
+      "name": "left rhomboid minor",
+      "fma": "FMA13384",
+      "files": [
+       "FJ1537M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trap_lower",
+   "kind": "head",
+   "group": "upper_back",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "clip": {
+      "B": {
+       "below": [
+        [
+         0,
+         1282
+        ],
+        [
+         100,
+         1302
+        ]
+       ]
+      },
+      "F": {
+       "below": [
+        [
+         0,
+         1282
+        ],
+        [
+         100,
+         1302
+        ]
+       ]
+      }
+     },
+     "r": {
+      "name": "ascending part of right trapezius",
+      "fma": "FMA33581",
+      "files": [
+       "FJ1520"
+      ]
+     },
+     "l": {
+      "name": "ascending part of left trapezius",
+      "fma": "FMA33583",
+      "files": [
+       "FJ1520M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "latissimus_dorsi",
+   "kind": "head",
+   "group": "lats",
+   "views": [
+    "B"
+   ],
+   "source": "hand-polygon",
+   "parts": []
+  },
+  {
+   "id": "teres_major",
+   "kind": "head",
+   "group": "lats",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right teres major",
+      "fma": "FMA32551",
+      "files": [
+       "FJ1507"
+      ]
+     },
+     "l": {
+      "name": "left teres major",
+      "fma": "FMA32552",
+      "files": [
+       "FJ1507M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "infraspinatus",
+   "kind": "head",
+   "group": "rotator_cuff",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right infraspinatus muscle",
+      "fma": "FMA32547",
+      "files": [
+       "FJ1500"
+      ]
+     },
+     "l": {
+      "name": "left infraspinatus muscle",
+      "fma": "FMA32548",
+      "files": [
+       "FJ1500M"
+      ]
+     }
+    },
+    {
+     "deep": "teres_minor",
+     "r": {
+      "name": "right teres minor",
+      "fma": "FMA32553",
+      "files": [
+       "FJ1508"
+      ]
+     },
+     "l": {
+      "name": "left teres minor",
+      "fma": "FMA32554",
+      "files": [
+       "FJ1508M"
+      ]
+     }
+    },
+    {
+     "deep": "supraspinatus",
+     "r": {
+      "name": "right supraspinatus",
+      "fma": "FMA32544",
+      "files": [
+       "FJ1506"
+      ]
+     },
+     "l": {
+      "name": "left supraspinatus",
+      "fma": "FMA32545",
+      "files": [
+       "FJ1506M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "serratus_anterior",
+   "kind": "head",
+   "group": "serratus",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "overrides": [
+      "external_oblique"
+     ],
+     "r": {
+      "name": "right serratus anterior",
+      "fma": "FMA13398",
+      "files": [
+       "FJ1459"
+      ]
+     },
+     "l": {
+      "name": "left serratus anterior",
+      "fma": "FMA13399",
+      "files": [
+       "FJ1459M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rectus_abdominis",
+   "kind": "head",
+   "group": "abs",
+   "views": [
+    "F"
+   ],
+   "source": "hand-polygon",
+   "parts": []
+  },
+  {
+   "id": "external_oblique",
+   "kind": "head",
+   "group": "obliques",
+   "views": [
+    "F",
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "maxThicknessMm": 4,
+     "r": {
+      "name": "right external oblique",
+      "fma": "FMA13336",
+      "files": [
+       "FJ1452"
+      ]
+     },
+     "l": {
+      "name": "left external oblique",
+      "fma": "FMA13337",
+      "files": [
+       "FJ1452M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "erector_spinae",
+   "kind": "head",
+   "group": "lower_back",
+   "views": [
+    "B"
+   ],
+   "clip": {
+    "B": {
+     "below": [
+      [
+       0,
+       1165
+      ],
+      [
+       70,
+       1085
+      ]
+     ]
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right iliocostalis lumborum",
+      "fma": "FMA22740",
+      "files": [
+       "FJ1527"
+      ]
+     },
+     "l": {
+      "name": "left iliocostalis lumborum",
+      "fma": "FMA22741",
+      "files": [
+       "FJ1527M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right iliocostalis thoracis",
+      "fma": "FMA22742",
+      "files": [
+       "FJ1528"
+      ]
+     },
+     "l": {
+      "name": "left iliocostalis thoracis",
+      "fma": "FMA22743",
+      "files": [
+       "FJ1528M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right longissimus thoracis",
+      "fma": "FMA22751",
+      "files": [
+       "FJ1535"
+      ]
+     },
+     "l": {
+      "name": "left longissimus thoracis",
+      "fma": "FMA22753",
+      "files": [
+       "FJ1535M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right spinalis thoracis",
+      "fma": "FMA22779",
+      "files": [
+       "FJ1544"
+      ]
+     },
+     "l": {
+      "name": "left spinalis thoracis",
+      "fma": "FMA22780",
+      "files": [
+       "FJ1544M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "gluteus_maximus",
+   "kind": "head",
+   "group": "glute_max",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right gluteus maximus",
+      "fma": "FMA22328",
+      "files": [
+       "FJ1418"
+      ]
+     },
+     "l": {
+      "name": "left gluteus maximus",
+      "fma": "FMA22329",
+      "files": [
+       "FJ1418M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "gluteus_medius",
+   "kind": "head",
+   "group": "glute_med",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right gluteus medius",
+      "fma": "FMA22330",
+      "files": [
+       "FJ1419"
+      ]
+     },
+     "l": {
+      "name": "left gluteus medius",
+      "fma": "FMA22331",
+      "files": [
+       "FJ1419M"
+      ]
+     }
+    },
+    {
+     "deep": "gluteus_minimus",
+     "r": {
+      "name": "right gluteus minimus",
+      "fma": "FMA22332",
+      "files": [
+       "FJ1420"
+      ]
+     },
+     "l": {
+      "name": "left gluteus minimus",
+      "fma": "FMA22333",
+      "files": [
+       "FJ1420M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tfl",
+   "kind": "head",
+   "group": "glute_med",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right tensor fasciae latae",
+      "fma": "FMA22425",
+      "files": [
+       "FJ1438"
+      ]
+     },
+     "l": {
+      "name": "left tensor fasciae latae",
+      "fma": "FMA22426",
+      "files": [
+       "FJ1438M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "iliopsoas",
+   "kind": "head",
+   "group": "hip_flexors",
+   "views": [
+    "F"
+   ],
+   "clip": {
+    "F": {
+     "below": [
+      [
+       25,
+       812
+      ],
+      [
+       125,
+       915
+      ]
+     ]
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right psoas major",
+      "fma": "FMA22342",
+      "files": [
+       "FJ1431"
+      ]
+     },
+     "l": {
+      "name": "left psoas major",
+      "fma": "FMA22343",
+      "files": [
+       "FJ1431M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right iliacus",
+      "fma": "FMA22322",
+      "files": [
+       "FJ1422"
+      ]
+     },
+     "l": {
+      "name": "left iliacus",
+      "fma": "FMA22323",
+      "files": [
+       "FJ1422M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "rectus_femoris",
+   "kind": "head",
+   "group": "quads",
+   "views": [
+    "F"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 398
+    },
+    "B": {
+     "zMin": 398
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right rectus femoris",
+      "fma": "FMA38928",
+      "files": [
+       "FJ1433"
+      ]
+     },
+     "l": {
+      "name": "left rectus femoris",
+      "fma": "FMA38929",
+      "files": [
+       "FJ1433M"
+      ]
+     }
+    },
+    {
+     "deep": "vastus_intermedius",
+     "r": {
+      "name": "right vastus intermedius",
+      "fma": "FMA38934",
+      "files": [
+       "FJ1441"
+      ]
+     },
+     "l": {
+      "name": "left vastus intermedius",
+      "fma": "FMA38935",
+      "files": [
+       "FJ1441M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "vastus_lateralis",
+   "kind": "head",
+   "group": "quads",
+   "views": [
+    "F",
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right vastus lateralis",
+      "fma": "FMA38930",
+      "files": [
+       "FJ1442"
+      ]
+     },
+     "l": {
+      "name": "left vastus lateralis",
+      "fma": "FMA38931",
+      "files": [
+       "FJ1442M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "vastus_medialis",
+   "kind": "head",
+   "group": "quads",
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right vastus medialis",
+      "fma": "FMA38932",
+      "files": [
+       "FJ1443"
+      ]
+     },
+     "l": {
+      "name": "left vastus medialis",
+      "fma": "FMA38933",
+      "files": [
+       "FJ1443M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "adductor_longus",
+   "kind": "head",
+   "group": "adductors",
+   "views": [
+    "F",
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right adductor longus",
+      "fma": "FMA22456",
+      "files": [
+       "FJ1402"
+      ]
+     },
+     "l": {
+      "name": "left adductor longus",
+      "fma": "FMA22457",
+      "files": [
+       "FJ1402M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right adductor brevis",
+      "fma": "FMA22452",
+      "files": [
+       "FJ1401"
+      ]
+     },
+     "l": {
+      "name": "left adductor brevis",
+      "fma": "FMA22454",
+      "files": [
+       "FJ1401M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right pectineus",
+      "fma": "FMA22450",
+      "files": [
+       "FJ1427"
+      ]
+     },
+     "l": {
+      "name": "left pectineus",
+      "fma": "FMA22451",
+      "files": [
+       "FJ1427M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right gracilis",
+      "fma": "FMA43883",
+      "files": [
+       "FJ1421"
+      ]
+     },
+     "l": {
+      "name": "left gracilis",
+      "fma": "FMA43884",
+      "files": [
+       "FJ1421M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "adductor_magnus",
+   "kind": "head",
+   "group": "adductors",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right adductor magnus",
+      "fma": "FMA22459",
+      "files": [
+       "FJ1403"
+      ]
+     },
+     "l": {
+      "name": "left adductor magnus",
+      "fma": "FMA22460",
+      "files": [
+       "FJ1403M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right adductor minimus",
+      "fma": "FMA43886",
+      "files": [
+       "FJ1404"
+      ]
+     },
+     "l": {
+      "name": "left adductor minimus",
+      "fma": "FMA43887",
+      "files": [
+       "FJ1404M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "biceps_femoris_long",
+   "kind": "head",
+   "group": "hamstrings",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "long head of right biceps femoris",
+      "fma": "FMA45888",
+      "files": [
+       "FJ1395"
+      ]
+     },
+     "l": {
+      "name": "long head of left biceps femoris",
+      "fma": "FMA45889",
+      "files": [
+       "FJ1395M"
+      ]
+     }
+    },
+    {
+     "deep": "biceps_femoris_short",
+     "r": {
+      "name": "short head of right biceps femoris",
+      "fma": "FMA45891",
+      "files": [
+       "FJ1444"
+      ]
+     },
+     "l": {
+      "name": "short head of left biceps femoris",
+      "fma": "FMA45892",
+      "files": [
+       "FJ1444M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "semitendinosus",
+   "kind": "head",
+   "group": "hamstrings",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right semitendinosus",
+      "fma": "FMA22358",
+      "files": [
+       "FJ1436"
+      ]
+     },
+     "l": {
+      "name": "left semitendinosus",
+      "fma": "FMA22359",
+      "files": [
+       "FJ1436M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "semimembranosus",
+   "kind": "head",
+   "group": "hamstrings",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right semimembranosus",
+      "fma": "FMA22448",
+      "files": [
+       "FJ1435"
+      ]
+     },
+     "l": {
+      "name": "left semimembranosus",
+      "fma": "FMA22449",
+      "files": [
+       "FJ1435M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "gastroc_medial",
+   "kind": "head",
+   "group": "calves",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "medial head of right gastrocnemius",
+      "fma": "FMA45957",
+      "files": [
+       "FJ1397"
+      ]
+     },
+     "l": {
+      "name": "medial head of left gastrocnemius",
+      "fma": "FMA45958",
+      "files": [
+       "FJ1397M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "gastroc_lateral",
+   "kind": "head",
+   "group": "calves",
+   "views": [
+    "B"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "lateral head of right gastrocnemius",
+      "fma": "FMA45960",
+      "files": [
+       "FJ1394"
+      ]
+     },
+     "l": {
+      "name": "lateral head of left gastrocnemius",
+      "fma": "FMA45961",
+      "files": [
+       "FJ1394M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "soleus",
+   "kind": "head",
+   "group": "calves",
+   "views": [
+    "F",
+    "B"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 75
+    },
+    "B": {
+     "zMin": 75
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right soleus",
+      "fma": "FMA22558",
+      "files": [
+       "FJ1437"
+      ]
+     },
+     "l": {
+      "name": "left soleus",
+      "fma": "FMA22559",
+      "files": [
+       "FJ1437M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "tibialis_anterior",
+   "kind": "head",
+   "group": "tibialis",
+   "views": [
+    "F"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 75
+    },
+    "B": {
+     "zMin": 75
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right tibialis anterior",
+      "fma": "FMA22544",
+      "files": [
+       "FJ1439"
+      ]
+     },
+     "l": {
+      "name": "left tibialis anterior",
+      "fma": "FMA22545",
+      "files": [
+       "FJ1439M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sternocleidomastoid",
+   "kind": "untracked",
+   "group": null,
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right sternocleidomastoid",
+      "fma": "FMA13408",
+      "files": [
+       "FJ1595"
+      ]
+     },
+     "l": {
+      "name": "left sternocleidomastoid",
+      "fma": "FMA13409",
+      "files": [
+       "FJ1573"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sartorius",
+   "kind": "untracked",
+   "group": null,
+   "views": [
+    "F"
+   ],
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right sartorius",
+      "fma": "FMA22354",
+      "files": [
+       "FJ1434"
+      ]
+     },
+     "l": {
+      "name": "left sartorius",
+      "fma": "FMA22355",
+      "files": [
+       "FJ1434M"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "fibularis",
+   "kind": "untracked",
+   "group": null,
+   "views": [
+    "F",
+    "B"
+   ],
+   "clip": {
+    "F": {
+     "zMin": 75
+    },
+    "B": {
+     "zMin": 75
+    }
+   },
+   "source": "bodyparts3d",
+   "parts": [
+    {
+     "r": {
+      "name": "right fibularis longus",
+      "fma": "FMA22552",
+      "files": [
+       "FJ1410"
+      ]
+     },
+     "l": {
+      "name": "left fibularis longus",
+      "fma": "FMA22553",
+      "files": [
+       "FJ1410M"
+      ]
+     }
+    },
+    {
+     "r": {
+      "name": "right fibularis brevis",
+      "fma": "FMA22554",
+      "files": [
+       "FJ1409"
+      ]
+     },
+     "l": {
+      "name": "left fibularis brevis",
+      "fma": "FMA22555",
+      "files": [
+       "FJ1409M"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "occluders": {
+  "concepts": [
+   "bone organ",
+   "cartilage organ",
+   "muscle organ",
+   "head of muscle organ",
+   "zone of muscle organ"
+  ],
+  "exclude": [
+   "right platysma",
+   "left platysma",
+   "right serratus posterior inferior",
+   "left serratus posterior inferior",
+   "right serratus posterior superior",
+   "left serratus posterior superior"
+  ],
+  "files": [
+   "FJ1294",
+   "FJ1295",
+   "FJ1304",
+   "FJ1306",
+   "FJ1308",
+   "FJ1322",
+   "FJ1323",
+   "FJ1345",
+   "FJ1346",
+   "FJ1355",
+   "FJ1357",
+   "FJ1359",
+   "FJ1373",
+   "FJ1374",
+   "FJ1383",
+   "FJ1383M",
+   "FJ1384",
+   "FJ1384M",
+   "FJ1385",
+   "FJ1385M",
+   "FJ1386",
+   "FJ1386M",
+   "FJ1387",
+   "FJ1387M",
+   "FJ1388",
+   "FJ1388M",
+   "FJ1389",
+   "FJ1389M",
+   "FJ1390",
+   "FJ1390M",
+   "FJ1391",
+   "FJ1391M",
+   "FJ1393",
+   "FJ1393M",
+   "FJ1396",
+   "FJ1396M",
+   "FJ1398",
+   "FJ1398M",
+   "FJ1399",
+   "FJ1399M",
+   "FJ1400",
+   "FJ1400M",
+   "FJ1406",
+   "FJ1406M",
+   "FJ1407",
+   "FJ1407M",
+   "FJ1408",
+   "FJ1408M",
+   "FJ1411",
+   "FJ1411M",
+   "FJ1412",
+   "FJ1412M",
+   "FJ1413",
+   "FJ1413M",
+   "FJ1414",
+   "FJ1414M",
+   "FJ1415",
+   "FJ1415M",
+   "FJ1416",
+   "FJ1416M",
+   "FJ1417",
+   "FJ1417M",
+   "FJ1425",
+   "FJ1425M",
+   "FJ1426",
+   "FJ1426M",
+   "FJ1428",
+   "FJ1428M",
+   "FJ1429",
+   "FJ1429M",
+   "FJ1430",
+   "FJ1430M",
+   "FJ1432",
+   "FJ1432M",
+   "FJ1440",
+   "FJ1440M",
+   "FJ1445",
+   "FJ1445M",
+   "FJ1449M",
+   "FJ1450",
+   "FJ1450M",
+   "FJ1451",
+   "FJ1451M",
+   "FJ1453M",
+   "FJ1454",
+   "FJ1454M",
+   "FJ1455",
+   "FJ1455M",
+   "FJ1456",
+   "FJ1456M",
+   "FJ1457M",
+   "FJ1458M",
+   "FJ1460",
+   "FJ1460M",
+   "FJ1461",
+   "FJ1461M",
+   "FJ1466",
+   "FJ1466M",
+   "FJ1469",
+   "FJ1469M",
+   "FJ1470",
+   "FJ1470M",
+   "FJ1480",
+   "FJ1480M",
+   "FJ1481",
+   "FJ1481M",
+   "FJ1482",
+   "FJ1482M",
+   "FJ1483",
+   "FJ1483M",
+   "FJ1485",
+   "FJ1485M",
+   "FJ1488",
+   "FJ1488M",
+   "FJ1493",
+   "FJ1493M",
+   "FJ1495",
+   "FJ1495M",
+   "FJ1497",
+   "FJ1497M",
+   "FJ1498",
+   "FJ1498M",
+   "FJ1501",
+   "FJ1501M",
+   "FJ1503",
+   "FJ1503M",
+   "FJ1504",
+   "FJ1504M",
+   "FJ1505",
+   "FJ1505M",
+   "FJ1514",
+   "FJ1514M",
+   "FJ1515",
+   "FJ1515M",
+   "FJ1522",
+   "FJ1522M",
+   "FJ1524",
+   "FJ1524M",
+   "FJ1525",
+   "FJ1525M",
+   "FJ1526",
+   "FJ1526M",
+   "FJ1532",
+   "FJ1532M",
+   "FJ1533",
+   "FJ1533M",
+   "FJ1534",
+   "FJ1534M",
+   "FJ1538",
+   "FJ1538M",
+   "FJ1539",
+   "FJ1539M",
+   "FJ1540",
+   "FJ1540M",
+   "FJ1543",
+   "FJ1543M",
+   "FJ1545",
+   "FJ1545M",
+   "FJ1546",
+   "FJ1546M",
+   "FJ1547",
+   "FJ1547M",
+   "FJ1548",
+   "FJ1548M",
+   "FJ1551",
+   "FJ1551M",
+   "FJ1555",
+   "FJ1556",
+   "FJ1557",
+   "FJ1559",
+   "FJ1560",
+   "FJ1561",
+   "FJ1562",
+   "FJ1563",
+   "FJ1564",
+   "FJ1565",
+   "FJ1566",
+   "FJ1567",
+   "FJ1568",
+   "FJ1569",
+   "FJ1570",
+   "FJ1571",
+   "FJ1572",
+   "FJ1574",
+   "FJ1575",
+   "FJ1576",
+   "FJ1577",
+   "FJ1578",
+   "FJ1579",
+   "FJ1580",
+   "FJ1582",
+   "FJ1583",
+   "FJ1584",
+   "FJ1585",
+   "FJ1586",
+   "FJ1588",
+   "FJ1589",
+   "FJ1590",
+   "FJ1591",
+   "FJ1592",
+   "FJ1593",
+   "FJ1594",
+   "FJ1596",
+   "FJ1597",
+   "FJ1598",
+   "FJ1599",
+   "FJ1600",
+   "FJ1601",
+   "FJ2440",
+   "FJ2542",
+   "FJ2543",
+   "FJ2544",
+   "FJ2545",
+   "FJ2546",
+   "FJ2547",
+   "FJ2548",
+   "FJ2549",
+   "FJ2550",
+   "FJ2551",
+   "FJ2554",
+   "FJ2555",
+   "FJ2556",
+   "FJ2557",
+   "FJ2558",
+   "FJ2738",
+   "FJ2739",
+   "FJ2740",
+   "FJ2741",
+   "FJ2742",
+   "FJ2743",
+   "FJ2745",
+   "FJ2746",
+   "FJ2747",
+   "FJ2748",
+   "FJ2750",
+   "FJ2751",
+   "FJ2752",
+   "FJ2753",
+   "FJ2754",
+   "FJ2755",
+   "FJ2757",
+   "FJ2758",
+   "FJ2759",
+   "FJ2760",
+   "FJ2762",
+   "FJ2769",
+   "FJ2772",
+   "FJ2773",
+   "FJ2774",
+   "FJ2775",
+   "FJ2776",
+   "FJ2778",
+   "FJ2780",
+   "FJ2781",
+   "FJ2782",
+   "FJ2783",
+   "FJ2784",
+   "FJ2785",
+   "FJ2788",
+   "FJ2791",
+   "FJ2792",
+   "FJ2793",
+   "FJ2795",
+   "FJ2796",
+   "FJ2798",
+   "FJ2799",
+   "FJ2800",
+   "FJ2801",
+   "FJ2802",
+   "FJ2803",
+   "FJ2806",
+   "FJ2808",
+   "FJ2809",
+   "FJ3131",
+   "FJ3152",
+   "FJ3154",
+   "FJ3155",
+   "FJ3156",
+   "FJ3157",
+   "FJ3158",
+   "FJ3159",
+   "FJ3160",
+   "FJ3161",
+   "FJ3162",
+   "FJ3163",
+   "FJ3164",
+   "FJ3165",
+   "FJ3166",
+   "FJ3167",
+   "FJ3168",
+   "FJ3169",
+   "FJ3170",
+   "FJ3171",
+   "FJ3172",
+   "FJ3173",
+   "FJ3174",
+   "FJ3175",
+   "FJ3176",
+   "FJ3177",
+   "FJ3179",
+   "FJ3180",
+   "FJ3181",
+   "FJ3182",
+   "FJ3183",
+   "FJ3184",
+   "FJ3185",
+   "FJ3186",
+   "FJ3187",
+   "FJ3188",
+   "FJ3189",
+   "FJ3190",
+   "FJ3191",
+   "FJ3192",
+   "FJ3193",
+   "FJ3194",
+   "FJ3195",
+   "FJ3196",
+   "FJ3197",
+   "FJ3198",
+   "FJ3199",
+   "FJ3200",
+   "FJ3201",
+   "FJ3202",
+   "FJ3203",
+   "FJ3204",
+   "FJ3205",
+   "FJ3206",
+   "FJ3207",
+   "FJ3208",
+   "FJ3209",
+   "FJ3210",
+   "FJ3211",
+   "FJ3212",
+   "FJ3213",
+   "FJ3214",
+   "FJ3215",
+   "FJ3216",
+   "FJ3217",
+   "FJ3218",
+   "FJ3219",
+   "FJ3220",
+   "FJ3221",
+   "FJ3222",
+   "FJ3223",
+   "FJ3224",
+   "FJ3225",
+   "FJ3226",
+   "FJ3227",
+   "FJ3228",
+   "FJ3229",
+   "FJ3230",
+   "FJ3231",
+   "FJ3232",
+   "FJ3233",
+   "FJ3234",
+   "FJ3235",
+   "FJ3236",
+   "FJ3237",
+   "FJ3240",
+   "FJ3241",
+   "FJ3243",
+   "FJ3244",
+   "FJ3246",
+   "FJ3247",
+   "FJ3249",
+   "FJ3250",
+   "FJ3252",
+   "FJ3253",
+   "FJ3256",
+   "FJ3257",
+   "FJ3258",
+   "FJ3259",
+   "FJ3260",
+   "FJ3261",
+   "FJ3262",
+   "FJ3263",
+   "FJ3264",
+   "FJ3265",
+   "FJ3266",
+   "FJ3267",
+   "FJ3268",
+   "FJ3269",
+   "FJ3270",
+   "FJ3271",
+   "FJ3272",
+   "FJ3273",
+   "FJ3274",
+   "FJ3275",
+   "FJ3276",
+   "FJ3277",
+   "FJ3278",
+   "FJ3279",
+   "FJ3280",
+   "FJ3281",
+   "FJ3282",
+   "FJ3283",
+   "FJ3284",
+   "FJ3285",
+   "FJ3286",
+   "FJ3287",
+   "FJ3288",
+   "FJ3289",
+   "FJ3291",
+   "FJ3292",
+   "FJ3293",
+   "FJ3294",
+   "FJ3295",
+   "FJ3296",
+   "FJ3297",
+   "FJ3298",
+   "FJ3299",
+   "FJ3300",
+   "FJ3301",
+   "FJ3302",
+   "FJ3303",
+   "FJ3304",
+   "FJ3305",
+   "FJ3306",
+   "FJ3307",
+   "FJ3308",
+   "FJ3309",
+   "FJ3310",
+   "FJ3311",
+   "FJ3312",
+   "FJ3313",
+   "FJ3314",
+   "FJ3315",
+   "FJ3316",
+   "FJ3317",
+   "FJ3318",
+   "FJ3319",
+   "FJ3320",
+   "FJ3321",
+   "FJ3322",
+   "FJ3323",
+   "FJ3324",
+   "FJ3325",
+   "FJ3326",
+   "FJ3327",
+   "FJ3328",
+   "FJ3329",
+   "FJ3330",
+   "FJ3331",
+   "FJ3332",
+   "FJ3334",
+   "FJ3336",
+   "FJ3338",
+   "FJ3340",
+   "FJ3342",
+   "FJ3344",
+   "FJ3346",
+   "FJ3347",
+   "FJ3348",
+   "FJ3349",
+   "FJ3350",
+   "FJ3351",
+   "FJ3352",
+   "FJ3353",
+   "FJ3354",
+   "FJ3355",
+   "FJ3356",
+   "FJ3357",
+   "FJ3358",
+   "FJ3359",
+   "FJ3360",
+   "FJ3361",
+   "FJ3362",
+   "FJ3364",
+   "FJ3365",
+   "FJ3366",
+   "FJ3367",
+   "FJ3368",
+   "FJ3369",
+   "FJ3370",
+   "FJ3371",
+   "FJ3372",
+   "FJ3373",
+   "FJ3374",
+   "FJ3375",
+   "FJ3376",
+   "FJ3377",
+   "FJ3378",
+   "FJ3379",
+   "FJ3380",
+   "FJ3381",
+   "FJ3382",
+   "FJ3383",
+   "FJ3384",
+   "FJ3385",
+   "FJ3386",
+   "FJ3387",
+   "FJ3388",
+   "FJ3389",
+   "FJ3390",
+   "FJ3391",
+   "FJ3392",
+   "FJ3393",
+   "FJ3394",
+   "FJ3395"
+  ]
+ }
+}

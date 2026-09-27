@@ -1,0 +1,63 @@
+{
+  "id": 602,
+  "slug": "seated-calf-raise",
+  "name": "Seated Calf Raise",
+  "aliases": [
+    "seated calf machine",
+    "soleus raise",
+    "bent-knee calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "seated_calf"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "heads": {
+    "gastroc_medial": 0.25,
+    "gastroc_lateral": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    601,
+    604,
+    605
+  ],
+  "media": {
+    "status": "card",
+    "template": "calf-raise",
+    "params": {
+      "implement": "machine",
+      "machine": "seated_calf",
+      "posture": "seated",
+      "kneeAngle": 90
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit with the pad snug over your lower thighs, just above the knees",
+    "Place the balls of your feet on the platform edge",
+    "Let your heels drop fully before each rep",
+    "Press up through your big toe and hold the top briefly"
+  ],
+  "basis": [
+    "kinoshita-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

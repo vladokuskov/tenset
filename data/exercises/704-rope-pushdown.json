@@ -1,0 +1,69 @@
+{
+  "id": 704,
+  "slug": "rope-pushdown",
+  "name": "Rope Pushdown",
+  "aliases": [
+    "rope triceps pushdown",
+    "tricep rope pushdown",
+    "rope pressdown",
+    "cable pushdown"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    717,
+    706,
+    715
+  ],
+  "media": {
+    "status": "card",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "rope",
+      "cableHeight": "high",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the pulley high and hold the rope with thumbs up",
+    "Tuck your elbows against your sides",
+    "Spread the rope ends apart at the bottom",
+    "Let your forearms rise just past parallel without moving your elbows"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "id": 510,
+  "slug": "single-leg-romanian-deadlift",
+  "name": "Single-Leg Romanian Deadlift",
+  "aliases": [
+    "SLRDL",
+    "single leg RDL",
+    "one-leg RDL",
+    "SL RDL"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    509,
+    505,
+    513
+  ],
+  "media": {
+    "status": "card",
+    "template": "hinge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "opposite_hand",
+      "stance": "single_leg",
+      "kneeAngle": 20
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the dumbbell in the hand opposite your standing leg",
+    "Hinge forward as your free leg reaches straight back",
+    "Keep your hips square to the floor",
+    "Keep a soft bend in the standing knee",
+    "Drive your standing heel down to come back up"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "id": 509,
+  "slug": "dumbbell-romanian-deadlift",
+  "name": "Dumbbell Romanian Deadlift",
+  "aliases": [
+    "DB RDL",
+    "dumbbell RDL",
+    "DB romanian deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back",
+    "lats"
+  ],
+  "alternatives": [
+    501,
+    513,
+    505
+  ],
+  "media": {
+    "status": "card",
+    "template": "hinge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "front_of_thighs",
+      "stance": "hip",
+      "kneeAngle": 20
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the dumbbells in front of your thighs with a soft knee bend",
+    "Hinge by pushing your hips back, keeping the weights close to your legs",
+    "Keep your spine long from head to hips",
+    "Stand up by driving your hips forward"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

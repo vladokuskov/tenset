@@ -1,0 +1,239 @@
+{
+  "rectus_abdominis": {
+    "view": "F",
+    "note": "Not in BodyParts3D. Filled where no drawn muscle covers the skin (the external oblique aponeurosis counts as uncovered). [lateral mm from midline, z mm], mirrored per side; the medial edge leaves the linea alba.",
+    "polygon": [
+      [
+        6,
+        1190
+      ],
+      [
+        30,
+        1205
+      ],
+      [
+        60,
+        1215
+      ],
+      [
+        82,
+        1205
+      ],
+      [
+        86,
+        1140
+      ],
+      [
+        84,
+        1060
+      ],
+      [
+        78,
+        990
+      ],
+      [
+        66,
+        920
+      ],
+      [
+        48,
+        860
+      ],
+      [
+        30,
+        818
+      ],
+      [
+        14,
+        806
+      ],
+      [
+        3,
+        808
+      ],
+      [
+        3,
+        900
+      ],
+      [
+        4,
+        1000
+      ],
+      [
+        5,
+        1100
+      ]
+    ],
+    "gaps": [
+      {
+        "line": [
+          [
+            0,
+            1115
+          ],
+          [
+            95,
+            1121
+          ]
+        ],
+        "widthMm": 5.5
+      },
+      {
+        "line": [
+          [
+            0,
+            1050
+          ],
+          [
+            95,
+            1055
+          ]
+        ],
+        "widthMm": 5.5
+      },
+      {
+        "line": [
+          [
+            0,
+            986
+          ],
+          [
+            95,
+            990
+          ]
+        ],
+        "widthMm": 5.5
+      }
+    ]
+  },
+  "latissimus_dorsi": {
+    "view": "B",
+    "note": "Not in BodyParts3D. Filled where no drawn muscle covers the skin; it also covers the posterior external oblique slips (the lat lies over them), leaving the oblique only on the flank. Trapezius, teres major and erectors keep priority. [lateral mm, z mm], mirrored per side.",
+    "polygon": [
+      [
+        0,
+        1190
+      ],
+      [
+        90,
+        1212
+      ],
+      [
+        150,
+        1262
+      ],
+      [
+        175,
+        1262
+      ],
+      [
+        165,
+        1190
+      ],
+      [
+        150,
+        1130
+      ],
+      [
+        130,
+        1070
+      ],
+      [
+        105,
+        1010
+      ],
+      [
+        88,
+        975
+      ],
+      [
+        75,
+        968
+      ],
+      [
+        60,
+        1010
+      ],
+      [
+        35,
+        1060
+      ],
+      [
+        12,
+        1100
+      ],
+      [
+        0,
+        1115
+      ]
+    ],
+    "override": [
+      "external_oblique"
+    ]
+  },
+  "adductor_longus": {
+    "view": "B",
+    "note": "Back view only (the front uses the BodyParts3D meshes). From behind the gracilis is seen edge-on and hides behind the hamstrings, so the medial thigh gets an 8 mm strip from the gluteal fold to the knee: uncovered skin plus the medial edge of the semimembranosus. [lateral mm, z mm], mirrored per side; the medial edge leaves a crease where the thighs touch.",
+    "override": [
+      "semimembranosus"
+    ],
+    "polygon": [
+      [
+        2.5,
+        738
+      ],
+      [
+        14,
+        742
+      ],
+      [
+        18,
+        746
+      ],
+      [
+        16,
+        650
+      ],
+      [
+        16,
+        600
+      ],
+      [
+        18,
+        580
+      ],
+      [
+        22,
+        546
+      ],
+      [
+        25.5,
+        512
+      ],
+      [
+        26.3,
+        478
+      ],
+      [
+        24.6,
+        443
+      ],
+      [
+        26.3,
+        409
+      ],
+      [
+        28,
+        392
+      ],
+      [
+        28,
+        385
+      ],
+      [
+        2.5,
+        385
+      ]
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "id": 103,
+  "slug": "incline-barbell-press",
+  "name": "Incline Barbell Press",
+  "aliases": [
+    "incline bench press",
+    "incline BB press",
+    "incline bench"
+  ],
+  "family": "chest",
+  "equipment": [
+    "barbell",
+    "adjustable_bench",
+    "rack"
+  ],
+  "pattern": "incline_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "4-6"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    102,
+    109,
+    115
+  ],
+  "media": {
+    "status": "card",
+    "template": "incline-press",
+    "params": {
+      "implement": "barbell",
+      "benchAngle": 30,
+      "grip": "pronated",
+      "gripWidth": 1.4
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bench to 30 to 45 degrees",
+    "Grip a little wider than shoulder width and pin your shoulder blades",
+    "Lower the bar to your upper chest, just below the collarbones",
+    "Keep your hips on the bench as you drive up"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "albarello-2022",
+    "chaves-2020"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

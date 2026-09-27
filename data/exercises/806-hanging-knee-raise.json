@@ -1,0 +1,66 @@
+{
+  "id": 806,
+  "slug": "hanging-knee-raise",
+  "name": "Hanging Knee Raise",
+  "aliases": [
+    "HKR",
+    "hanging knee tuck",
+    "knee raise"
+  ],
+  "family": "core",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "hip_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "abs": "primary",
+    "hip_flexors": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [
+    "forearms",
+    "lats"
+  ],
+  "alternatives": [
+    802,
+    807,
+    801
+  ],
+  "media": {
+    "status": "card",
+    "template": "leg-raise",
+    "params": {
+      "posture": "hanging",
+      "kneeAngle": 90,
+      "topHipAngle": 110
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Hang with straight arms and a steady body",
+    "Drive your knees up toward your chest",
+    "Tilt your pelvis up at the top",
+    "Lower slowly so you stop the swing"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

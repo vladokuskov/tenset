@@ -1,0 +1,70 @@
+{
+  "id": 301,
+  "slug": "pull-up",
+  "name": "Pull-Up",
+  "aliases": [
+    "pullup",
+    "wide-grip pull-up",
+    "overhand pull-up"
+  ],
+  "family": "back",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    302,
+    303,
+    309
+  ],
+  "media": {
+    "status": "card",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "bodyweight",
+      "grip": "pronated",
+      "gripWidth": 1.5
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip the bar just wider than your shoulders, palms facing away",
+    "Start from a full hang",
+    "Pull your elbows down toward your ribs",
+    "Bring your chin over the bar without swinging"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

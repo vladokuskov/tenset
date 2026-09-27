@@ -1,0 +1,76 @@
+{
+  "id": "ppl-6x",
+  "name": "Push/Pull/Legs 6x",
+  "level": 3,
+  "daysPerWeek": 6,
+  "description": "Push, pull and legs, each twice a week over six days. The A and B days use different exercises for the same muscles. Most muscles land in the target range, which suits lifters who already train consistently and have time for six sessions a week.",
+  "defaultDays": [0, 1, 2, 3, 4, 5],
+  "sessions": [
+    {
+      "label": "Push A",
+      "slots": [
+        { "pattern": "horizontal_push", "group": "chest", "sets": 4, "options": [101, 108, 107, 113] },
+        { "pattern": "vertical_push", "group": "front_delt", "sets": 3, "options": [201, 208, 202] },
+        { "pattern": "incline_push", "group": "chest", "sets": 3, "options": [102, 109, 115] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 4, "options": [203, 204] },
+        { "pattern": "shoulder_horizontal_adduction", "group": "chest", "sets": 2, "options": [105, 111, 112, 114] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 3, "options": [704, 715, 717] }
+      ]
+    },
+    {
+      "label": "Pull A",
+      "slots": [
+        { "pattern": "vertical_pull", "group": "lats", "sets": 4, "options": [301, 302, 303, 307] },
+        { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [304, 305, 306] },
+        { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [311, 303, 309] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 3, "options": [206, 213, 210] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [701, 710, 711] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [703, 719] }
+      ]
+    },
+    {
+      "label": "Legs A",
+      "slots": [
+        { "pattern": "squat", "group": "quads", "sets": 4, "options": [401, 407, 402, 405, 408] },
+        { "pattern": "hinge", "group": "glute_max", "sets": 3, "options": [501, 509, 511] },
+        { "pattern": "knee_extension", "group": "quads", "sets": 3, "options": [404, 412, 409] },
+        { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [503, 504, 512] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [601, 605, 604] },
+        { "pattern": "spinal_flexion", "group": "abs", "sets": 3, "options": [801, 805] }
+      ]
+    },
+    {
+      "label": "Push B",
+      "slots": [
+        { "pattern": "incline_push", "group": "chest", "sets": 3, "options": [103, 109, 102, 115] },
+        { "pattern": "vertical_push", "group": "front_delt", "sets": 3, "options": [208, 202, 201] },
+        { "pattern": "dip", "group": "chest", "sets": 3, "options": [104, 108, 107, 113] },
+        { "pattern": "shoulder_horizontal_adduction", "group": "chest", "sets": 3, "options": [110, 105, 112, 114] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 4, "options": [204, 214, 203] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 3, "options": [705, 716] }
+      ]
+    },
+    {
+      "label": "Pull B",
+      "slots": [
+        { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [303, 302, 301, 307] },
+        { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [306, 312] },
+        { "pattern": "horizontal_pull", "group": "lats", "sets": 3, "options": [315, 305, 309] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 3, "options": [205, 213, 210] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [702, 712, 711] },
+        { "pattern": "scapular_elevation", "group": "upper_traps", "sets": 2, "options": [314, 308] }
+      ]
+    },
+    {
+      "label": "Legs B",
+      "slots": [
+        { "pattern": "lunge", "group": "quads", "sets": 3, "options": [403, 409, 410, 408] },
+        { "pattern": "squat", "group": "quads", "sets": 3, "options": [402, 407, 405] },
+        { "pattern": "hip_extension", "group": "glute_max", "sets": 3, "options": [502, 511] },
+        { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [504, 503, 512] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [602, 601, 604] },
+        { "pattern": "hip_flexion", "group": "abs", "sets": 3, "options": [802, 806, 807] }
+      ]
+    }
+  ]
+}

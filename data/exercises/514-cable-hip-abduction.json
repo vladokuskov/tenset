@@ -1,0 +1,60 @@
+{
+  "id": 514,
+  "slug": "cable-hip-abduction",
+  "name": "Cable Hip Abduction",
+  "aliases": [
+    "standing cable hip abduction",
+    "cable leg abduction",
+    "cable side leg raise"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "hip_abduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "glute_med": "primary",
+    "glute_max": "secondary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    506
+  ],
+  "media": {
+    "status": "card",
+    "template": "hip-abduction",
+    "params": {
+      "implement": "cable",
+      "direction": "abduction",
+      "posture": "standing",
+      "hipAngle": 0,
+      "attachment": "ankle_strap",
+      "cableHeight": "low"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand side-on to a low pulley with the strap on your far ankle",
+    "Hold the frame and balance on your near leg",
+    "Lift the strapped leg out to the side without leaning your torso",
+    "Keep your toes pointing forward and lower slowly"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

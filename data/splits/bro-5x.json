@@ -1,0 +1,64 @@
+{
+  "id": "bro-5x",
+  "name": "Bro Split 5x",
+  "level": 2,
+  "daysPerWeek": 5,
+  "description": "One body part per day over five days: chest, back, legs, shoulders and arms. Each muscle gets one long session a week, and shoulders and arms also work on the pressing and pulling days. Most upper-body muscles reach the target range; legs sit in the moderate to target range.",
+  "defaultDays": [0, 1, 2, 3, 4],
+  "sessions": [
+    {
+      "label": "Chest",
+      "slots": [
+        { "pattern": "horizontal_push", "group": "chest", "sets": 4, "options": [101, 108, 107, 113] },
+        { "pattern": "incline_push", "group": "chest", "sets": 4, "options": [102, 109, 103, 115] },
+        { "pattern": "dip", "group": "chest", "sets": 3, "options": [104, 108, 106] },
+        { "pattern": "shoulder_horizontal_adduction", "group": "chest", "sets": 3, "options": [105, 110, 112, 114] },
+        { "pattern": "spinal_flexion", "group": "abs", "sets": 3, "options": [801, 805] }
+      ]
+    },
+    {
+      "label": "Back",
+      "slots": [
+        { "pattern": "vertical_pull", "group": "lats", "sets": 4, "options": [301, 302, 303, 307] },
+        { "pattern": "horizontal_pull", "group": "upper_back", "sets": 4, "options": [304, 305, 306] },
+        { "pattern": "horizontal_pull", "group": "lats", "sets": 3, "options": [305, 315, 309] },
+        { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [311, 303] },
+        { "pattern": "scapular_elevation", "group": "upper_traps", "sets": 3, "options": [314, 308] }
+      ]
+    },
+    {
+      "label": "Legs",
+      "slots": [
+        { "pattern": "squat", "group": "quads", "sets": 4, "options": [401, 407, 402, 405, 408] },
+        { "pattern": "hinge", "group": "glute_max", "sets": 4, "options": [501, 509, 511] },
+        { "pattern": "squat", "group": "quads", "sets": 3, "options": [402, 407, 403] },
+        { "pattern": "knee_flexion", "group": "hamstrings", "sets": 4, "options": [503, 504, 512] },
+        { "pattern": "knee_extension", "group": "quads", "sets": 3, "options": [404, 412, 409] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604] }
+      ]
+    },
+    {
+      "label": "Shoulders",
+      "slots": [
+        { "pattern": "vertical_push", "group": "front_delt", "sets": 4, "options": [201, 208, 202] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 4, "options": [203, 204] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 4, "options": [204, 214] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 3, "options": [205, 213, 210] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "upper_back", "sets": 3, "options": [206, 207] },
+        { "pattern": "hip_flexion", "group": "abs", "sets": 3, "options": [802, 806, 807] }
+      ]
+    },
+    {
+      "label": "Arms",
+      "slots": [
+        { "pattern": "horizontal_push", "group": "triceps", "sets": 3, "options": [707, 718] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [701, 710, 711] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 3, "options": [705, 716] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [702, 712] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 3, "options": [704, 715, 717] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [703, 719] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604] }
+      ]
+    }
+  ]
+}

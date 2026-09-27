@@ -1,0 +1,67 @@
+{
+  "id": 705,
+  "slug": "overhead-cable-triceps-extension",
+  "name": "Overhead Cable Triceps Extension",
+  "aliases": [
+    "overhead rope extension",
+    "cable overhead extension",
+    "overhead tricep extension",
+    "cable french press"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    716,
+    706,
+    704
+  ],
+  "media": {
+    "status": "card",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "rope",
+      "cableHeight": "high",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 30,
+      "stance": "split",
+      "shoulderFlexion": 170
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Face away from the stack in a staggered stance",
+    "Point your elbows forward and keep them close to your head",
+    "Let the rope pull your hands deep behind your head",
+    "Straighten your arms fully while your upper arms stay put"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

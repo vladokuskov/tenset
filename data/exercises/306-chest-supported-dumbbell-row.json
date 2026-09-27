@@ -1,0 +1,76 @@
+{
+  "id": 306,
+  "slug": "chest-supported-dumbbell-row",
+  "name": "Chest-Supported Dumbbell Row",
+  "aliases": [
+    "incline DB row",
+    "chest-supported row",
+    "prone incline row"
+  ],
+  "family": "back",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "upper_back": "primary",
+    "lats": "secondary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    304,
+    305,
+    313
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "lying_prone",
+      "support": "chest_pad",
+      "torsoAngle": 60,
+      "benchAngle": 30,
+      "grip": "pronated",
+      "elbowFlare": 65
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie face down on a bench set to about 30 degrees",
+    "Let the dumbbells hang with your palms facing your feet",
+    "Row with your elbows flared wide, about 65 degrees out from your torso",
+    "Drive your elbows up until they are level with your back",
+    "Squeeze your shoulder blades together, then lower slowly"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

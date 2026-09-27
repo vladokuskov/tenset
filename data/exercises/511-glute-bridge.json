@@ -1,0 +1,64 @@
+{
+  "id": 511,
+  "slug": "glute-bridge",
+  "name": "Glute Bridge",
+  "aliases": [
+    "hip bridge",
+    "bridge",
+    "floor bridge"
+  ],
+  "family": "hinge",
+  "equipment": [],
+  "pattern": "hip_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary"
+  },
+  "heads": {
+    "biceps_femoris_short": 0.25
+  },
+  "stabilizers": [
+    "quads",
+    "abs"
+  ],
+  "alternatives": [
+    502,
+    513,
+    505
+  ],
+  "media": {
+    "status": "card",
+    "template": "hip-thrust",
+    "params": {
+      "implement": "bodyweight",
+      "support": "floor",
+      "stance": "hip",
+      "kneeAngle": 90
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on your back with your heels close to your hips",
+    "Tilt your pelvis back slightly before you lift",
+    "Drive through your heels until your knees, hips and shoulders line up",
+    "Pause and squeeze your glutes at the top"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

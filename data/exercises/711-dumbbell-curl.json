@@ -1,0 +1,66 @@
+{
+  "id": 711,
+  "slug": "dumbbell-curl",
+  "name": "Dumbbell Curl",
+  "aliases": [
+    "db curl",
+    "dumbbell bicep curl",
+    "alternating curl",
+    "supinated curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    701,
+    713,
+    702
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "standing"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Start with straight arms and palms facing forward",
+    "Turn your pinkies up slightly as you curl",
+    "Keep your elbows fixed at your sides",
+    "Lower slowly to a full stretch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

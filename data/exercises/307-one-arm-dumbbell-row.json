@@ -1,0 +1,73 @@
+{
+  "id": 307,
+  "slug": "one-arm-dumbbell-row",
+  "name": "One-Arm Dumbbell Row",
+  "aliases": [
+    "single-arm DB row",
+    "DB row",
+    "one-arm row"
+  ],
+  "family": "back",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    315,
+    304,
+    305
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "dumbbell",
+      "support": "bench",
+      "torsoAngle": 80,
+      "grip": "neutral"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Brace one hand and knee on the bench",
+    "Keep your back flat and roughly parallel to the floor",
+    "Pull the dumbbell toward your hip",
+    "Lower until your arm is straight and your shoulder stretches forward"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

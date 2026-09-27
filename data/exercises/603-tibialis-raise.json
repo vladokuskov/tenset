@@ -1,0 +1,56 @@
+{
+  "id": 603,
+  "slug": "tibialis-raise",
+  "name": "Tibialis Raise",
+  "aliases": [
+    "tib raise",
+    "tibialis anterior raise",
+    "toe raise",
+    "wall tib raise",
+    "reverse calf raise"
+  ],
+  "family": "calves",
+  "equipment": [],
+  "pattern": "dorsiflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 2,
+    "reps": "15-25"
+  },
+  "groups": {
+    "tibialis": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [],
+  "media": {
+    "status": "card",
+    "template": "calf-raise",
+    "params": {
+      "implement": "bodyweight",
+      "direction": "dorsiflexion",
+      "kneeAngle": 0,
+      "support": "wall",
+      "platform": "floor"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Lean your back against a wall with your heels out in front of you",
+    "Keep your legs straight and your heels planted",
+    "Pull your toes up toward your shins as high as you can",
+    "Lower slowly without letting your feet slap the floor"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

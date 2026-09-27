@@ -1,0 +1,72 @@
+{
+  "id": 311,
+  "slug": "close-grip-pulldown",
+  "name": "Close-Grip Pulldown",
+  "aliases": [
+    "V-bar pulldown",
+    "close-grip lat pulldown",
+    "neutral-grip pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "lat_pulldown"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    303,
+    310,
+    302
+  ],
+  "media": {
+    "status": "card",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "cable",
+      "posture": "seated",
+      "grip": "neutral",
+      "gripWidth": 0.8,
+      "attachment": "v_bar"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Attach a close neutral handle and lock your thighs under the pad",
+    "Pull the handle to your upper chest",
+    "Keep your elbows close to your sides",
+    "Let your arms straighten fully on the way up"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

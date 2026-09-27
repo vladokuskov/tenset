@@ -1,0 +1,69 @@
+{
+  "id": 214,
+  "slug": "lean-away-lateral-raise",
+  "name": "Lean-Away Dumbbell Lateral Raise",
+  "aliases": [
+    "lean-away lateral raise",
+    "leaning lateral raise",
+    "one-arm leaning lateral raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "rear_delt": "secondary",
+    "rotator_cuff": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    203,
+    204
+  ],
+  "media": {
+    "status": "card",
+    "template": "lateral-raise",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "standing",
+      "leanAngle": 20,
+      "support": "upright"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold a sturdy upright with your free hand, feet close to its base",
+    "Lean away until your supporting arm is straight",
+    "Raise the dumbbell out to the side to shoulder height",
+    "Keep the lean fixed and lower slowly"
+  ],
+  "basis": [
+    "campos-2020",
+    "larsen-2025-lateral",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

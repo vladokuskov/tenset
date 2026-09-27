@@ -1,0 +1,70 @@
+{
+  "id": 717,
+  "slug": "dumbbell-kickback",
+  "name": "Dumbbell Kickback",
+  "aliases": [
+    "triceps kickback",
+    "tricep kickback",
+    "db kickback"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "rear_delt",
+    "lats",
+    "forearms"
+  ],
+  "alternatives": [
+    704,
+    715,
+    716
+  ],
+  "media": {
+    "status": "card",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 80,
+      "shoulderFlexion": 0,
+      "support": "bench"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Brace one hand and knee on the bench with a flat back",
+    "Hold your upper arm in line with your torso the whole set",
+    "Straighten your elbow fully at the top",
+    "Lower only to about a right angle at the elbow"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

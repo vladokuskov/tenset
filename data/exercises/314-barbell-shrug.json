@@ -1,0 +1,58 @@
+{
+  "id": 314,
+  "slug": "barbell-shrug",
+  "name": "Barbell Shrug",
+  "aliases": [
+    "BB shrug",
+    "shrugs",
+    "trap shrug"
+  ],
+  "family": "back",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "scapular_elevation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "upper_traps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    308
+  ],
+  "media": {
+    "status": "card",
+    "template": "shrug",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "gripWidth": 1
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the bar at arm's length, hands just outside your thighs",
+    "Shrug straight up toward your ears",
+    "Pause at the top, then lower fully",
+    "Keep your arms relaxed and straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

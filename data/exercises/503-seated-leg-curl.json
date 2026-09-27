@@ -1,0 +1,58 @@
+{
+  "id": 503,
+  "slug": "seated-leg-curl",
+  "name": "Seated Leg Curl",
+  "aliases": [
+    "seated hamstring curl",
+    "leg curl",
+    "hamstring curl machine"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "leg_curl_seated"
+  ],
+  "pattern": "knee_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "hamstrings": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    504,
+    512,
+    509
+  ],
+  "media": {
+    "status": "card",
+    "template": "leg-curl",
+    "params": {
+      "implement": "machine",
+      "machine": "leg_curl_seated",
+      "hipAngle": 90
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Line your knees up with the machine pivot",
+    "Lock the thigh pad down firmly over your knees",
+    "Curl the pad down and under as far as it goes",
+    "Control it back up to a full stretch"
+  ],
+  "basis": [
+    "maeo-2021"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

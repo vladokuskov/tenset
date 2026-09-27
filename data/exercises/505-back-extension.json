@@ -1,0 +1,72 @@
+{
+  "id": 505,
+  "slug": "back-extension",
+  "name": "45-Degree Back Extension",
+  "aliases": [
+    "back extension",
+    "hyperextension",
+    "45 degree hyperextension",
+    "roman chair",
+    "back raise"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "back_extension"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "lower_back": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    513,
+    509,
+    511
+  ],
+  "media": {
+    "status": "card",
+    "template": "back-extension",
+    "params": {
+      "implement": "bodyweight",
+      "benchAngle": 45,
+      "armPosition": "crossed",
+      "spine": "neutral"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the pad just below your hip crease so you can hinge freely",
+    "Hinge down with a long back until your hamstrings stretch",
+    "Squeeze your glutes to bring your body back in line with your legs",
+    "Stop at a straight line instead of arching past it",
+    "Hold a plate at your chest once bodyweight gets easy"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

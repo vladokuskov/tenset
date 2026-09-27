@@ -1,0 +1,69 @@
+{
+  "id": 114,
+  "slug": "incline-push-up",
+  "name": "Hands-Elevated Push-Up",
+  "aliases": [
+    "incline push-up",
+    "elevated push-up",
+    "box push-up"
+  ],
+  "family": "chest",
+  "equipment": [
+    "step"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-20"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 1,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    113,
+    108,
+    107
+  ],
+  "media": {
+    "status": "card",
+    "template": "push-up",
+    "params": {
+      "elevation": "hands",
+      "plus": false,
+      "gripWidth": 1
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Place your hands on a sturdy box or step",
+    "Keep your body in a straight line from head to heels",
+    "Lower your chest to the edge of the box",
+    "Use a higher surface to make it easier"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": 714,
+  "slug": "ez-bar-reverse-curl",
+  "name": "EZ-Bar Reverse Curl",
+  "aliases": [
+    "reverse curl",
+    "overhand curl",
+    "pronated curl",
+    "ez reverse curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.5,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.5
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    703,
+    719,
+    710
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "ez_bar",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "posture": "standing"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Grip the angled parts of the bar with palms down",
+    "Keep your wrists straight in line with your forearms",
+    "Pin your elbows by your sides",
+    "Use less weight than on your regular curl"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

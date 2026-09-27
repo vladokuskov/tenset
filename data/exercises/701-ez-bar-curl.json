@@ -1,0 +1,67 @@
+{
+  "id": 701,
+  "slug": "ez-bar-curl",
+  "name": "EZ-Bar Curl",
+  "aliases": [
+    "ez curl",
+    "ezbar curl",
+    "ez bar bicep curl",
+    "cambered bar curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    710,
+    711,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "ez_bar",
+      "grip": "supinated",
+      "gripWidth": 1,
+      "posture": "standing"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Grip the angled parts of the bar about shoulder width apart",
+    "Pin your elbows at your sides",
+    "Keep your torso still with no hip swing",
+    "Lower over two to three seconds to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

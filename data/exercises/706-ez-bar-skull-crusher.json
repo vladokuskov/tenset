@@ -1,0 +1,66 @@
+{
+  "id": 706,
+  "slug": "ez-bar-skull-crusher",
+  "name": "EZ-Bar Skull Crusher",
+  "aliases": [
+    "skull crusher",
+    "skullcrusher",
+    "lying triceps extension",
+    "ez skull crusher"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar",
+    "flat_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    716,
+    705,
+    707
+  ],
+  "media": {
+    "status": "card",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "ez_bar",
+      "grip": "pronated",
+      "gripWidth": 0.8,
+      "posture": "lying_supine",
+      "benchAngle": 0,
+      "shoulderFlexion": 110
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie flat and hold the bar above your shoulders on straight arms",
+    "Tilt your upper arms slightly back toward your head",
+    "Bend only at the elbows to lower the bar behind your forehead",
+    "Keep your elbows from drifting wide"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

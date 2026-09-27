@@ -1,0 +1,72 @@
+{
+  "id": 109,
+  "slug": "smith-incline-press",
+  "name": "Smith Machine Incline Press",
+  "aliases": [
+    "smith incline bench",
+    "incline smith press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "smith",
+    "adjustable_bench"
+  ],
+  "pattern": "incline_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    102,
+    103,
+    115
+  ],
+  "media": {
+    "status": "card",
+    "template": "incline-press",
+    "params": {
+      "implement": "smith",
+      "benchAngle": 30,
+      "grip": "pronated",
+      "gripWidth": 1.4
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bench to about 30 degrees",
+    "Slide the bench so the bar lands on your upper chest",
+    "Pin your shoulder blades before unhooking the bar",
+    "Keep your elbows slightly tucked as you lower"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "albarello-2022",
+    "chaves-2020"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": 605,
+  "slug": "leg-press-calf-raise",
+  "name": "Leg Press Calf Raise",
+  "aliases": [
+    "calf press",
+    "leg press calf press",
+    "toe press"
+  ],
+  "family": "calves",
+  "equipment": [
+    "leg_press"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    601,
+    604,
+    602
+  ],
+  "media": {
+    "status": "card",
+    "template": "calf-raise",
+    "params": {
+      "implement": "machine",
+      "machine": "leg_press",
+      "posture": "seated",
+      "kneeAngle": 0
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Place only the balls of your feet on the bottom edge of the platform",
+    "Keep your knees nearly straight and the safety stops set",
+    "Let the sled push your toes back into a deep stretch",
+    "Press through your big toes to full extension"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

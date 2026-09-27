@@ -1,0 +1,56 @@
+{
+  "id": 308,
+  "slug": "dumbbell-shrug",
+  "name": "Dumbbell Shrug",
+  "aliases": [
+    "DB shrug",
+    "shrugs",
+    "trap shrug"
+  ],
+  "family": "back",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "scapular_elevation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "upper_traps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    314
+  ],
+  "media": {
+    "status": "card",
+    "template": "shrug",
+    "params": {
+      "implement": "dumbbell"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the dumbbells at your sides with straight arms",
+    "Shrug your shoulders straight up toward your ears",
+    "Pause at the top",
+    "Lower all the way without rolling your shoulders"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

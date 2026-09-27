@@ -1,0 +1,72 @@
+{
+  "id": 210,
+  "slug": "bent-over-rear-delt-fly",
+  "name": "Bent-Over Rear Delt Fly",
+  "aliases": [
+    "rear delt fly",
+    "reverse fly",
+    "bent-over reverse fly",
+    "rear lateral raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "secondary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.5,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [
+    "lower_back"
+  ],
+  "alternatives": [
+    205,
+    213,
+    206
+  ],
+  "media": {
+    "status": "card",
+    "template": "rear-raise",
+    "params": {
+      "implement": "dumbbell",
+      "torsoAngle": 75,
+      "grip": "neutral"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Hinge at the hips until your torso is nearly parallel to the floor",
+    "Let the dumbbells hang under your shoulders",
+    "Raise your arms out wide, leading with the backs of your hands",
+    "Keep your neck neutral and your back flat"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

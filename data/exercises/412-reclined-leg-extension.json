@@ -1,0 +1,61 @@
+{
+  "id": 412,
+  "slug": "reclined-leg-extension",
+  "name": "Reclined Leg Extension",
+  "aliases": [
+    "reclined knee extension",
+    "lean-back leg extension"
+  ],
+  "family": "squat",
+  "equipment": [
+    "leg_extension"
+  ],
+  "pattern": "knee_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 1
+  },
+  "stabilizers": [],
+  "alternatives": [
+    404,
+    402,
+    403
+  ],
+  "media": {
+    "status": "card",
+    "template": "leg-extension",
+    "params": {
+      "implement": "machine",
+      "machine": "leg_extension",
+      "hipAngle": 40
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Recline the backrest as far as the machine allows",
+    "Set your knees in line with the pivot and the pad just above your ankles",
+    "Keep your hips down on the seat as you lean back",
+    "Straighten your knees fully, then lower slowly"
+  ],
+  "basis": [
+    "larsen-2025-legext",
+    "zabaleta-korta-2021"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": 702,
+  "slug": "incline-dumbbell-curl",
+  "name": "Incline Dumbbell Curl",
+  "aliases": [
+    "incline curl",
+    "incline db curl",
+    "incline bicep curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    711,
+    713,
+    701
+  ],
+  "media": {
+    "status": "card",
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "seated",
+      "benchAngle": 45
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bench to about 45 degrees and sit all the way back",
+    "Let your arms hang straight down behind your torso",
+    "Keep your upper arms still as you curl",
+    "Lower until your elbows are fully straight"
+  ],
+  "basis": [
+    "anatomy-general",
+    "varovic-2025"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": 405,
+  "slug": "goblet-squat",
+  "name": "Goblet Squat",
+  "aliases": [
+    "DB goblet squat",
+    "dumbbell goblet squat",
+    "goblet"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "upper_back",
+    "lower_back"
+  ],
+  "alternatives": [
+    401,
+    402,
+    408
+  ],
+  "media": {
+    "status": "card",
+    "template": "squat",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "goblet",
+      "stance": "shoulder",
+      "depth": "full"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the dumbbell upright against your chest, elbows tucked",
+    "Sit straight down between your knees",
+    "Stay tall so the weight never pulls you forward",
+    "Keep your heels down the whole rep"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

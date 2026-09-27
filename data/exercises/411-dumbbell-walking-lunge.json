@@ -1,0 +1,68 @@
+{
+  "id": 411,
+  "slug": "dumbbell-walking-lunge",
+  "name": "Dumbbell Walking Lunge",
+  "aliases": [
+    "walking lunge",
+    "DB walking lunge",
+    "lunges"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    409,
+    403,
+    408
+  ],
+  "media": {
+    "status": "card",
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "forward",
+      "travel": true
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Take a step long enough that both knees reach about 90 degrees",
+    "Keep your front heel down as you drop",
+    "Push through the front foot to bring the back leg through",
+    "Stay tall and look ahead"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

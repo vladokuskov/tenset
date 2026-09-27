@@ -1,0 +1,75 @@
+{
+  "id": 401,
+  "slug": "barbell-back-squat",
+  "name": "Barbell Back Squat",
+  "aliases": [
+    "back squat",
+    "BB squat",
+    "high bar squat",
+    "low bar squat",
+    "squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "barbell",
+    "rack"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "lower_back",
+    "abs"
+  ],
+  "alternatives": [
+    402,
+    407,
+    405,
+    406
+  ],
+  "media": {
+    "status": "card",
+    "template": "squat",
+    "params": {
+      "implement": "barbell",
+      "hold": "back_high",
+      "stance": "shoulder",
+      "depth": "full"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bar across your upper back, not on your neck",
+    "Brace hard before each rep and keep your chest up",
+    "Push your knees out in line with your toes",
+    "Sit down between your heels as deep as you can stay braced",
+    "Drive the floor away through your whole foot"
+  ],
+  "basis": [
+    "kubo-2019",
+    "plotkin-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

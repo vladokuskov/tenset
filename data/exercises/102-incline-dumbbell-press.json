@@ -1,0 +1,72 @@
+{
+  "id": 102,
+  "slug": "incline-dumbbell-press",
+  "name": "Incline Dumbbell Press",
+  "aliases": [
+    "incline DB press",
+    "incline dumbbell bench press",
+    "incline DB bench"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "incline_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    103,
+    109,
+    115
+  ],
+  "media": {
+    "status": "card",
+    "template": "incline-press",
+    "params": {
+      "implement": "dumbbell",
+      "benchAngle": 30,
+      "grip": "pronated"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bench to about 30 degrees",
+    "Keep your shoulder blades tucked into the bench",
+    "Lower the dumbbells to the sides of your upper chest",
+    "Press up and slightly inward without clanking the weights"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "albarello-2022",
+    "chaves-2020"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

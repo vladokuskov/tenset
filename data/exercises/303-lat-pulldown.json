@@ -1,0 +1,72 @@
+{
+  "id": 303,
+  "slug": "lat-pulldown",
+  "name": "Lat Pulldown",
+  "aliases": [
+    "pulldown",
+    "lat pull-down",
+    "wide-grip pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "lat_pulldown"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    301,
+    302,
+    311
+  ],
+  "media": {
+    "status": "card",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "cable",
+      "posture": "seated",
+      "grip": "pronated",
+      "gripWidth": 1.8,
+      "attachment": "long_bar"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Lock your thighs under the pad",
+    "Grip the bar wider than shoulder width",
+    "Pull the bar to your upper chest, leaning back slightly",
+    "Let the bar rise until your arms are straight"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

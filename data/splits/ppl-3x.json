@@ -1,0 +1,43 @@
+{
+  "id": "ppl-3x",
+  "name": "Push/Pull/Legs 3x",
+  "level": 1,
+  "daysPerWeek": 3,
+  "description": "Push, pull and legs once each over three days, so every muscle gets one focused session a week. By arithmetic, one session per muscle puts most groups in the moderate range. Running the rotation twice a week, as in the six-day version, roughly doubles it.",
+  "defaultDays": [0, 2, 4],
+  "sessions": [
+    {
+      "label": "Push",
+      "slots": [
+        { "pattern": "horizontal_push", "group": "chest", "sets": 3, "options": [101, 108, 107, 113] },
+        { "pattern": "vertical_push", "group": "front_delt", "sets": 3, "options": [208, 201, 202] },
+        { "pattern": "incline_push", "group": "chest", "sets": 3, "options": [102, 109, 115] },
+        { "pattern": "shoulder_horizontal_adduction", "group": "chest", "sets": 2, "options": [105, 110, 112, 114] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 4, "options": [203, 204] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 3, "options": [704, 715, 717] }
+      ]
+    },
+    {
+      "label": "Pull",
+      "slots": [
+        { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [303, 302, 301, 307] },
+        { "pattern": "horizontal_pull", "group": "lats", "sets": 3, "options": [305, 304, 309] },
+        { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [306, 312] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 3, "options": [206, 213, 210] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 3, "options": [701, 710, 711] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [703, 719] }
+      ]
+    },
+    {
+      "label": "Legs",
+      "slots": [
+        { "pattern": "squat", "group": "quads", "sets": 4, "options": [401, 407, 402, 405, 408] },
+        { "pattern": "hinge", "group": "glute_max", "sets": 3, "options": [501, 509, 511] },
+        { "pattern": "squat", "group": "quads", "sets": 3, "options": [402, 407, 403] },
+        { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [503, 504, 510, 512] },
+        { "pattern": "plantarflexion", "group": "calves", "sets": 4, "options": [601, 605, 604] },
+        { "pattern": "spinal_flexion", "group": "abs", "sets": 3, "options": [801, 805] }
+      ]
+    }
+  ]
+}

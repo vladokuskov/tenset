@@ -1,0 +1,70 @@
+{
+  "id": 207,
+  "slug": "prone-y-raise",
+  "name": "Prone Y-Raise",
+  "aliases": [
+    "Y raise",
+    "incline Y raise",
+    "prone Y",
+    "lower trap raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "scapular_upward_rotation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "upper_back": "primary",
+    "side_delt": "secondary",
+    "rear_delt": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "trap_middle": 0.75,
+    "rhomboids": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    206,
+    306
+  ],
+  "media": {
+    "status": "card",
+    "template": "front-raise",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "lying_prone",
+      "benchAngle": 45,
+      "plane": 45,
+      "topElevation": 160
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie face down on a bench set to about 45 degrees",
+    "Hold light dumbbells with your thumbs pointing up",
+    "Raise your arms overhead in a Y shape",
+    "Draw your shoulder blades down and back as you lift"
+  ],
+  "basis": [
+    "ekstrom-2003",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

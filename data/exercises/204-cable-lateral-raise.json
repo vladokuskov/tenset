@@ -1,0 +1,68 @@
+{
+  "id": 204,
+  "slug": "cable-lateral-raise",
+  "name": "Cable Lateral Raise",
+  "aliases": [
+    "lateral raise",
+    "cable side raise",
+    "single-arm cable lateral raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "rear_delt": "secondary",
+    "rotator_cuff": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    203,
+    214
+  ],
+  "media": {
+    "status": "card",
+    "template": "lateral-raise",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "cableHeight": "low"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulley low and stand side-on to the cable",
+    "Hold the handle in your far hand with the cable across your body",
+    "Raise your arm out to the side to shoulder height",
+    "Resist the pull on the way down"
+  ],
+  "basis": [
+    "campos-2020",
+    "coratella-2020",
+    "larsen-2025-lateral"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

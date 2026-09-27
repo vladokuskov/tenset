@@ -1,0 +1,65 @@
+{
+  "id": 604,
+  "slug": "single-leg-dumbbell-calf-raise",
+  "name": "Single-Leg Dumbbell Calf Raise",
+  "aliases": [
+    "single leg calf raise",
+    "one-leg calf raise",
+    "DB calf raise",
+    "step calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "dumbbell",
+    "step"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    606,
+    601,
+    605,
+    602
+  ],
+  "media": {
+    "status": "card",
+    "template": "calf-raise",
+    "params": {
+      "implement": "dumbbell",
+      "kneeAngle": 0,
+      "stance": "single_leg",
+      "support": "wall"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand on one foot at the step edge with the dumbbell on the same side",
+    "Steady yourself with your free hand on a wall",
+    "Drop your heel below the step for a full stretch",
+    "Rise onto the ball of your foot and squeeze at the top"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "id": 508,
+  "slug": "conventional-deadlift",
+  "name": "Conventional Deadlift",
+  "aliases": [
+    "deadlift",
+    "DL",
+    "barbell deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-8",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "primary",
+    "adductors": "secondary",
+    "quads": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5,
+    "rectus_femoris": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "lats",
+    "upper_back",
+    "upper_traps"
+  ],
+  "alternatives": [
+    501,
+    509,
+    513
+  ],
+  "media": {
+    "status": "card",
+    "template": "hinge",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "stance": "hip",
+      "start": "floor"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand with the bar over your midfoot and grip just outside your legs",
+    "Pull the slack out and brace with a flat back before the bar moves",
+    "Squeeze your armpits to keep the bar against your legs",
+    "Push the floor away, then drive your hips through",
+    "Hinge first on the way down, then bend your knees once the bar passes them"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "id": 305,
+  "slug": "seated-cable-row",
+  "name": "Seated Cable Row",
+  "aliases": [
+    "cable row",
+    "seated row",
+    "low row"
+  ],
+  "family": "back",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "forearms"
+  ],
+  "alternatives": [
+    304,
+    306,
+    313
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "cable",
+      "posture": "seated",
+      "support": "none",
+      "torsoAngle": 0,
+      "grip": "neutral",
+      "gripWidth": 0.8,
+      "attachment": "v_bar"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit tall with a slight bend in your knees",
+    "Pull the handle to your belly button",
+    "Squeeze your shoulder blades together at the end",
+    "Let your shoulders reach forward on the return without rounding your back"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

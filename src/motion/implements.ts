@@ -1,0 +1,184 @@
+import { add, qrot, type Quat, type V3 } from './math.ts'
+import type { ImplementPose } from './skeleton.ts'
+
+// Pure geometry descriptors for props (not meshes). Local frames: bars and handles run along X; the pose
+// transform places the local origin in the world. Sizes in metres, masses in kg.
+
+export type ImplementKind = 'barbell' | 'dumbbell' | 'ez_bar' | 'cable_handle' | 'bench' | 'pullup_bar'
+
+export type Part =
+  | { shape: 'cylinder'; a: V3; b: V3; r: number }
+  | { shape: 'box'; center: V3; size: V3; rot?: Quat }
+
+/** a grip or contact point; `axis` is the handle direction the hand's pinky-to-index line aligns with */
+export type Site = { pos: V3; axis?: V3; normal?: V3 }
+
+export type ImplementSpec = {
+  id: string
+  kind: ImplementKind
+  mass: number
+  com: V3
+  parts: Part[]
+  sites: Record<string, Site>
+}
+
+const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
+
+export const PLATE_20_RADIUS = 0.225
+
+/** Olympic bar, 2.2 m, 20 kg; grips at +-gripWidth/2 (left hand on +X) */
+export function barbell(o: { id?: string; gripWidth: number; plateKg?: number }): ImplementSpec {
+  const plate = o.plateKg ?? 40
+  const parts: Part[] = [cyl([-0.655, 0, 0], [0.655, 0, 0], 0.014)]
+  for (const s of [1, -1]) {
+    parts.push(cyl([0.655 * s, 0, 0], [1.1 * s, 0, 0], 0.025))
+    parts.push(cyl([0.64 * s, 0, 0], [0.655 * s, 0, 0], 0.04))
+    let x = 0.665
+    for (let kg = plate; kg > 0; ) {
+      const p = kg >= 20 ? 20 : kg >= 10 ? 10 : 5
+      const r = p === 20 ? PLATE_20_RADIUS : p === 10 ? 0.16 : 0.115
+      const w = p === 20 ? 0.05 : 0.035
+      parts.push(cyl([x * s, 0, 0], [(x + w) * s, 0, 0], r))
+      x += w + 0.003
+      kg -= p
+    }
+  }
+  const g = o.gripWidth / 2
+  return {
+    id: o.id ?? 'bar',
+    kind: 'barbell',
+    mass: 20 + 2 * plate,
+    com: [0, 0, 0],
+    parts,
+    sites: { l: { pos: [g, 0, 0], axis: [1, 0, 0] }, r: { pos: [-g, 0, 0], axis: [1, 0, 0] } },
+  }
+}
+
+export function dumbbell(o: { id: string; mass?: number }): ImplementSpec {
+  const mass = o.mass ?? 12
+  const r = 0.055 + mass * 0.0018
+  const w = 0.03 + mass * 0.0028
+  return {
+    id: o.id,
+    kind: 'dumbbell',
+    mass,
+    com: [0, 0, 0],
+    parts: [cyl([-0.065, 0, 0], [0.065, 0, 0], 0.016), cyl([0.065, 0, 0], [0.065 + w, 0, 0], r), cyl([-0.065, 0, 0], [-0.065 - w, 0, 0], r)],
+    sites: { c: { pos: [0, 0, 0], axis: [1, 0, 0] } },
+  }
+}
+
+/** EZ bar: outer (l/r) and inner (l_in/r_in) angled grips; the bends lie in the bar's XZ plane */
+export function ezBar(o: { id?: string; plateKg?: number }): ImplementSpec {
+  const plate = o.plateKg ?? 10
+  const pts: V3[] = [[-0.6, 0, 0], [-0.35, 0, 0], [-0.25, 0, 0.03], [-0.15, 0, 0], [0.15, 0, 0], [0.25, 0, 0.03], [0.35, 0, 0], [0.6, 0, 0]]
+  const parts: Part[] = []
+  for (let i = 0; i + 1 < pts.length; i++) parts.push(cyl(pts[i], pts[i + 1], i === 0 || i === pts.length - 2 ? 0.025 : 0.014))
+  for (const s of [1, -1]) parts.push(cyl([0.42 * s, 0, 0], [(0.42 + 0.035) * s, 0, 0], 0.16))
+  const tilt = (s: number): V3 => [0.958, 0, -0.287 * s]
+  return {
+    id: o.id ?? 'bar',
+    kind: 'ez_bar',
+    mass: 10 + 2 * plate,
+    com: [0, 0, 0],
+    parts,
+    sites: {
+      l: { pos: [0.3, 0, 0.015], axis: tilt(1) },
+      r: { pos: [-0.3, 0, 0.015], axis: tilt(-1) },
+      l_in: { pos: [0.2, 0, 0.015], axis: tilt(-1) },
+      r_in: { pos: [-0.2, 0, 0.015], axis: tilt(1) },
+    },
+  }
+}
+
+export type Attachment = 'rope' | 'straight_bar' | 'ez_bar' | 'v_bar' | 'single_handle' | 'long_bar' | 'ankle_strap'
+
+/** cable attachment; local origin at the carabiner, handles hang towards -Y */
+export function cableHandle(o: { id?: string; attachment: Attachment }): ImplementSpec {
+  const id = o.id ?? 'handle'
+  const base = { id, kind: 'cable_handle' as const, mass: 0.5, com: [0, -0.05, 0] as V3 }
+  switch (o.attachment) {
+    case 'rope':
+      return {
+        ...base,
+        parts: [cyl([0, 0, 0], [0.12, -0.28, 0], 0.012), cyl([0, 0, 0], [-0.12, -0.28, 0], 0.012)],
+        sites: { l: { pos: [0.11, -0.22, 0], axis: [0, 1, 0] }, r: { pos: [-0.11, -0.22, 0], axis: [0, 1, 0] } },
+      }
+    case 'v_bar':
+      return {
+        ...base,
+        parts: [cyl([0, 0, 0], [0, -0.1, 0], 0.012), cyl([0.07, -0.1, -0.06], [0.07, -0.1, 0.06], 0.015), cyl([-0.07, -0.1, -0.06], [-0.07, -0.1, 0.06], 0.015)],
+        sites: { l: { pos: [0.07, -0.1, 0], axis: [0, 0, 1] }, r: { pos: [-0.07, -0.1, 0], axis: [0, 0, 1] } },
+      }
+    case 'straight_bar':
+    case 'ez_bar':
+    case 'long_bar': {
+      const w = o.attachment === 'long_bar' ? 0.6 : 0.25
+      return {
+        ...base,
+        parts: [cyl([0, 0, 0], [0, -0.05, 0], 0.01), cyl([-w, -0.05, 0], [w, -0.05, 0], 0.014)],
+        sites: { l: { pos: [w * 0.8, -0.05, 0], axis: [1, 0, 0] }, r: { pos: [-w * 0.8, -0.05, 0], axis: [1, 0, 0] } },
+      }
+    }
+    case 'ankle_strap':
+      return { ...base, parts: [cyl([0, 0, 0], [0, -0.06, 0], 0.03)], sites: { c: { pos: [0, -0.06, 0] } } }
+    case 'single_handle':
+      return {
+        ...base,
+        parts: [cyl([0, 0, 0], [0.05, -0.08, 0], 0.006), cyl([0, 0, 0], [-0.05, -0.08, 0], 0.006), cyl([-0.06, -0.09, 0], [0.06, -0.09, 0], 0.016)],
+        sites: { c: { pos: [0, -0.09, 0], axis: [1, 0, 0] } },
+      }
+  }
+}
+
+/** Bench with a seat and a back pad hinged at the local origin (on the seat surface); back angle 0 = flat, 90 = upright. +Z is the seat end. */
+export function bench(o: { id?: string; backAngle?: number; seatHeight?: number }): ImplementSpec {
+  const h = o.seatHeight ?? 0.43
+  const a = ((o.backAngle ?? 0) * Math.PI) / 180
+  const back: V3 = [0, Math.sin(a), -Math.cos(a)]
+  const backRot: Quat = [Math.sin(a / 2), 0, 0, Math.cos(a / 2)]
+  return {
+    id: o.id ?? 'bench',
+    kind: 'bench',
+    mass: 0,
+    com: [0, 0, 0],
+    parts: [
+      { shape: 'box', center: [0, -0.03, 0.22], size: [0.28, 0.06, 0.44] },
+      { shape: 'box', center: add(scale3(back, 0.42), qrot(backRot, [0, -0.03, 0])), size: [0.28, 0.06, 0.84], rot: backRot },
+      cyl([0, -0.06, 0.4], [0, -h, 0.4], 0.025),
+      cyl([0, -0.06, -0.5], [0, -h, -0.5], 0.025),
+      cyl([0, -h + 0.02, -0.6], [0, -h + 0.02, 0.5], 0.03),
+    ],
+    sites: { seat: { pos: [0, 0, 0.2], normal: [0, 1, 0] }, back: { pos: scale3(back, 0.4), normal: qrot(backRot, [0, 1, 0]) } },
+  }
+}
+
+const scale3 = (v: V3, s: number): V3 => [v[0] * s, v[1] * s, v[2] * s]
+
+/** pull-up bar; local origin at the bar centre, uprights down to the floor */
+export function pullupBar(o: { id?: string; height: number; gripWidth: number }): ImplementSpec {
+  const g = o.gripWidth / 2
+  return {
+    id: o.id ?? 'pullup',
+    kind: 'pullup_bar',
+    mass: 0,
+    com: [0, 0, 0],
+    parts: [cyl([-0.65, 0, 0], [0.65, 0, 0], 0.016), cyl([0.65, 0, 0], [0.65, -o.height, 0], 0.03), cyl([-0.65, 0, 0], [-0.65, -o.height, 0], 0.03)],
+    sites: { l: { pos: [g, 0, 0], axis: [1, 0, 0] }, r: { pos: [-g, 0, 0], axis: [1, 0, 0] } },
+  }
+}
+
+/** a site of a posed implement in world space */
+export function siteWorld(spec: ImplementSpec, pose: ImplementPose, name: string): Site {
+  const s = spec.sites[name]
+  if (!s) throw new Error(`${spec.id} has no site ${name}`)
+  return {
+    pos: add(pose.pos, qrot(pose.rot, s.pos)),
+    axis: s.axis ? qrot(pose.rot, s.axis) : undefined,
+    normal: s.normal ? qrot(pose.rot, s.normal) : undefined,
+  }
+}
+
+export function comWorld(spec: ImplementSpec, pose: ImplementPose): V3 {
+  return add(pose.pos, qrot(pose.rot, spec.com))
+}

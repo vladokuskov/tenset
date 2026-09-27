@@ -1,0 +1,69 @@
+{
+  "id": 115,
+  "slug": "feet-elevated-push-up",
+  "name": "Feet-Elevated Push-Up",
+  "aliases": [
+    "decline push-up",
+    "feet-up push-up"
+  ],
+  "family": "chest",
+  "equipment": [
+    "step"
+  ],
+  "pattern": "incline_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    102,
+    103,
+    113
+  ],
+  "media": {
+    "status": "card",
+    "template": "push-up",
+    "params": {
+      "elevation": "feet",
+      "plus": false,
+      "gripWidth": 1
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest your feet on a box and set your hands on the floor",
+    "Brace your core so your hips do not sag",
+    "Lower until your chest nearly touches the floor",
+    "Press up with your elbows at about 45 degrees"
+  ],
+  "basis": [
+    "anatomy-general",
+    "rodriguez-ridao-2020"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

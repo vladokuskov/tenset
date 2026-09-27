@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "equipment": [
+    { "id": "barbell", "name": "Barbell" },
+    { "id": "dumbbell", "name": "Dumbbells" },
+    { "id": "ez_bar", "name": "EZ bar" },
+    { "id": "flat_bench", "name": "Flat bench" },
+    { "id": "adjustable_bench", "name": "Adjustable bench" },
+    { "id": "rack", "name": "Squat rack" },
+    { "id": "pullup_bar", "name": "Pull-up bar" },
+    { "id": "dip_station", "name": "Dip station" },
+    { "id": "cable", "name": "Cable stack" },
+    { "id": "smith", "name": "Smith machine" },
+    { "id": "leg_press", "name": "Leg press" },
+    { "id": "leg_extension", "name": "Leg extension machine" },
+    { "id": "leg_curl_seated", "name": "Seated leg curl" },
+    { "id": "leg_curl_lying", "name": "Lying leg curl" },
+    { "id": "lat_pulldown", "name": "Lat pulldown" },
+    { "id": "chest_press_machine", "name": "Chest press machine" },
+    { "id": "shoulder_press_machine", "name": "Shoulder press machine" },
+    { "id": "pec_deck", "name": "Pec deck / rear delt machine" },
+    { "id": "hip_abduction", "name": "Hip abduction machine" },
+    { "id": "hip_adduction", "name": "Hip adduction machine" },
+    { "id": "back_extension", "name": "45-degree back extension bench" },
+    { "id": "assisted_pullup", "name": "Assisted pull-up machine" },
+    { "id": "calf_machine", "name": "Standing calf machine" },
+    { "id": "seated_calf", "name": "Seated calf machine" },
+    { "id": "plate", "name": "Weight plate" },
+    { "id": "step", "name": "Box or step" }
+  ],
+  "presets": [
+    { "id": "full_gym", "name": "Full gym", "equipment": "*" },
+    { "id": "dumbbells_bench", "name": "Dumbbells + bench", "equipment": ["dumbbell", "flat_bench", "adjustable_bench", "step", "plate"] },
+    { "id": "bodyweight", "name": "Bodyweight + pull-up bar", "equipment": ["pullup_bar", "step"] }
+  ]
+}

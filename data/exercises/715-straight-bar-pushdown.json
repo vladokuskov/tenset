@@ -1,0 +1,70 @@
+{
+  "id": 715,
+  "slug": "straight-bar-pushdown",
+  "name": "Straight-Bar Pushdown",
+  "aliases": [
+    "bar pushdown",
+    "triceps pushdown",
+    "tricep pushdown",
+    "cable pressdown"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    704,
+    717,
+    706
+  ],
+  "media": {
+    "status": "card",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "straight_bar",
+      "cableHeight": "high",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip the bar palms down about shoulder width",
+    "Lean forward slightly with your elbows at your sides",
+    "Push down until your arms lock out",
+    "Let the bar rise to chest height without moving your elbows"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

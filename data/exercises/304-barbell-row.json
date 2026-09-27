@@ -1,0 +1,76 @@
+{
+  "id": 304,
+  "slug": "barbell-row",
+  "name": "Barbell Row",
+  "aliases": [
+    "bent-over row",
+    "BB row",
+    "bent row",
+    "Pendlay row"
+  ],
+  "family": "back",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "4-6"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "hamstrings",
+    "forearms"
+  ],
+  "alternatives": [
+    305,
+    306,
+    313
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "barbell",
+      "support": "none",
+      "torsoAngle": 45,
+      "grip": "pronated",
+      "gripWidth": 1.3
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Hinge forward until your torso is about 45 degrees to the floor",
+    "Grip the bar just outside your knees",
+    "Row the bar to your lower ribs",
+    "Keep your back flat and your hips still"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

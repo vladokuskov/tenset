@@ -1,0 +1,70 @@
+{
+  "id": 310,
+  "slug": "neutral-grip-pull-up",
+  "name": "Neutral-Grip Pull-Up",
+  "aliases": [
+    "hammer-grip pull-up",
+    "parallel-grip pull-up",
+    "neutral pullup"
+  ],
+  "family": "back",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    301,
+    309,
+    311
+  ],
+  "media": {
+    "status": "card",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "bodyweight",
+      "grip": "neutral",
+      "gripWidth": 1.1
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Grab the parallel handles, palms facing each other",
+    "Start from a full hang",
+    "Drive your elbows down and pull your chest toward the handles",
+    "Keep your legs still"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

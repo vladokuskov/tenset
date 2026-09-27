@@ -1,0 +1,60 @@
+{
+  "id": 606,
+  "slug": "single-leg-calf-raise",
+  "name": "Single-Leg Calf Raise",
+  "aliases": [
+    "bodyweight calf raise",
+    "one-leg calf raise",
+    "step calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "step"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    604,
+    601,
+    602
+  ],
+  "media": {
+    "status": "card",
+    "template": "calf-raise",
+    "params": {
+      "implement": "bodyweight",
+      "kneeAngle": 0,
+      "stance": "single_leg",
+      "support": "wall"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand on one foot at the step edge, heel hanging off",
+    "Keep a light hand on a wall for balance only",
+    "Drop your heel below the step for a full stretch",
+    "Rise as high as you can and pause at the top"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": 512,
+  "slug": "nordic-hamstring-curl",
+  "name": "Nordic Hamstring Curl",
+  "aliases": [
+    "nordic curl",
+    "nordics",
+    "NHC",
+    "russian leg curl"
+  ],
+  "family": "hinge",
+  "equipment": [],
+  "pattern": "knee_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "4-8"
+  },
+  "groups": {
+    "hamstrings": "primary"
+  },
+  "heads": {
+    "semitendinosus": 1,
+    "biceps_femoris_short": 0.75,
+    "biceps_femoris_long": 0.5,
+    "semimembranosus": 0.5
+  },
+  "stabilizers": [
+    "glute_max",
+    "abs"
+  ],
+  "alternatives": [
+    503,
+    504,
+    509
+  ],
+  "media": {
+    "status": "card",
+    "template": "leg-curl",
+    "params": {
+      "implement": "bodyweight",
+      "posture": "kneeling",
+      "hipAngle": 0
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Anchor your heels under a pad or have a partner hold them",
+    "Kneel on something soft with your body straight from knees to head",
+    "Lower yourself as slowly as you can without bending at the hips",
+    "Catch yourself with your hands and push back up to the start"
+  ],
+  "basis": [
+    "bourne-2017"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

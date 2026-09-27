@@ -1,0 +1,73 @@
+{
+  "id": 315,
+  "slug": "single-arm-cable-row",
+  "name": "Single-Arm Cable Row",
+  "aliases": [
+    "one-arm cable row",
+    "single-arm row"
+  ],
+  "family": "back",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "obliques"
+  ],
+  "alternatives": [
+    307,
+    305,
+    304
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "cable",
+      "torsoAngle": 10,
+      "grip": "neutral",
+      "attachment": "single_handle",
+      "cableHeight": "mid",
+      "stance": "split"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the pulley at chest height and take a split stance facing it",
+    "Hold the handle in one hand with your arm straight",
+    "Row the handle toward your hip",
+    "Let your shoulder reach forward on the return"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

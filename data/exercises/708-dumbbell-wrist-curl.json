@@ -1,0 +1,65 @@
+{
+  "id": 708,
+  "slug": "dumbbell-wrist-curl",
+  "name": "Dumbbell Wrist Curl",
+  "aliases": [
+    "wrist curl",
+    "db wrist curl",
+    "forearm curl",
+    "palms up wrist curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "wrist_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_flexors": 1,
+    "brachioradialis": 0,
+    "wrist_extensors": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    709,
+    703
+  ],
+  "media": {
+    "status": "card",
+    "template": "wrist-curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "kneeling",
+      "support": "bench"
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest your forearms on the bench with palms up",
+    "Let your wrists hang just past the edge",
+    "Let the handles roll down into your fingers at the bottom",
+    "Curl your wrists up without lifting your forearms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

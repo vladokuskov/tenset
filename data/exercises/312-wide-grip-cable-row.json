@@ -1,0 +1,76 @@
+{
+  "id": 312,
+  "slug": "wide-grip-cable-row",
+  "name": "Wide-Grip Cable Row",
+  "aliases": [
+    "wide cable row",
+    "wide-grip seated row",
+    "upper back cable row"
+  ],
+  "family": "back",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "upper_back": "primary",
+    "rear_delt": "primary",
+    "lats": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "lower_back"
+  ],
+  "alternatives": [
+    304,
+    306,
+    305
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "cable",
+      "posture": "seated",
+      "support": "none",
+      "torsoAngle": 0,
+      "grip": "pronated",
+      "gripWidth": 1.8,
+      "attachment": "long_bar",
+      "elbowFlare": 75
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip a long bar wide with your palms down",
+    "Sit tall and pull the bar to your lower chest",
+    "Flare your elbows out to the sides",
+    "Squeeze your upper back before letting the bar return"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

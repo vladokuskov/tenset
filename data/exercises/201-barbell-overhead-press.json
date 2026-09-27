@@ -1,0 +1,74 @@
+{
+  "id": 201,
+  "slug": "barbell-overhead-press",
+  "name": "Barbell Overhead Press",
+  "aliases": [
+    "OHP",
+    "military press",
+    "standing press",
+    "overhead press"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "barbell",
+    "rack"
+  ],
+  "pattern": "vertical_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "3-6"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary",
+    "triceps": "secondary",
+    "upper_traps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "abs",
+    "lower_back"
+  ],
+  "alternatives": [
+    202,
+    208,
+    212
+  ],
+  "media": {
+    "status": "card",
+    "template": "vertical-press",
+    "params": {
+      "implement": "barbell",
+      "posture": "standing",
+      "grip": "pronated",
+      "gripWidth": 1.1
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Start with the bar on your front shoulders, grip just outside shoulder width",
+    "Squeeze your glutes and brace your core",
+    "Press straight up, tipping your head back to clear the bar",
+    "Bring your head forward once the bar passes your forehead",
+    "Lock out with the bar over your midfoot"
+  ],
+  "basis": [
+    "campos-2020",
+    "anatomy-general"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

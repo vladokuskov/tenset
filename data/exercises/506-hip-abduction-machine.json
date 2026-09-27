@@ -1,0 +1,58 @@
+{
+  "id": 506,
+  "slug": "hip-abduction-machine",
+  "name": "Hip Abduction Machine",
+  "aliases": [
+    "abductor machine",
+    "seated hip abduction",
+    "outer thigh machine"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "hip_abduction"
+  ],
+  "pattern": "hip_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "glute_med": "primary",
+    "glute_max": "secondary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    514
+  ],
+  "media": {
+    "status": "card",
+    "template": "hip-abduction",
+    "params": {
+      "implement": "machine",
+      "machine": "hip_abduction",
+      "direction": "abduction",
+      "hipAngle": 90
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit tall with your back against the pad",
+    "Set the pads on the outside of your knees",
+    "Push your knees apart as wide as the machine allows",
+    "Control the return without letting the stack touch down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

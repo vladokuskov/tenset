@@ -1,0 +1,64 @@
+{
+  "id": 112,
+  "slug": "dumbbell-fly",
+  "name": "Dumbbell Fly",
+  "aliases": [
+    "DB fly",
+    "flat fly",
+    "dumbbell flye",
+    "chest fly"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    110,
+    105,
+    111
+  ],
+  "media": {
+    "status": "card",
+    "template": "fly",
+    "params": {
+      "implement": "dumbbell",
+      "benchAngle": 0
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Start with the dumbbells over your chest, palms facing each other",
+    "Keep a fixed bend in your elbows",
+    "Open your arms wide until you feel a stretch, not pain",
+    "Hug the weights back up over your chest"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

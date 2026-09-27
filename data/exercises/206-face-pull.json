@@ -1,0 +1,73 @@
+{
+  "id": 206,
+  "slug": "face-pull",
+  "name": "Face Pull",
+  "aliases": [
+    "rope face pull",
+    "cable face pull"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "primary",
+    "rotator_cuff": "primary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "trap_lower": 1,
+    "rhomboids": 0.75,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.5,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    205,
+    210,
+    213
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "torsoAngle": 0,
+      "grip": "neutral",
+      "attachment": "rope",
+      "cableHeight": "mid",
+      "elbowFlare": 90,
+      "finish": "external_rotation"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the rope between upper chest and eye height",
+    "Pull the rope toward your face, splitting the ends apart",
+    "Finish with elbows high and hands beside your ears",
+    "Pause briefly, then return with control"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

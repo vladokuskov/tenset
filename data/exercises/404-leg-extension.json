@@ -1,0 +1,63 @@
+{
+  "id": 404,
+  "slug": "leg-extension",
+  "name": "Leg Extension",
+  "aliases": [
+    "knee extension",
+    "quad extension",
+    "machine leg extension"
+  ],
+  "family": "squat",
+  "equipment": [
+    "leg_extension"
+  ],
+  "pattern": "knee_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.75
+  },
+  "stabilizers": [],
+  "alternatives": [
+    412,
+    402,
+    403,
+    405
+  ],
+  "media": {
+    "status": "card",
+    "template": "leg-extension",
+    "params": {
+      "implement": "machine",
+      "machine": "leg_extension",
+      "hipAngle": 90
+    },
+    "mapView": "F"
+  },
+  "cues": [
+    "Line your knees up with the machine pivot",
+    "Set the shin pad low, just above your ankles",
+    "Hold the handles and keep your hips down on the seat",
+    "Squeeze to full lockout, then lower under control"
+  ],
+  "basis": [
+    "larsen-2025-legext",
+    "zabaleta-korta-2021"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

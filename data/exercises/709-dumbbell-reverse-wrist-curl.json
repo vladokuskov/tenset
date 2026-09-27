@@ -1,0 +1,65 @@
+{
+  "id": 709,
+  "slug": "dumbbell-reverse-wrist-curl",
+  "name": "Dumbbell Reverse Wrist Curl",
+  "aliases": [
+    "reverse wrist curl",
+    "wrist extension",
+    "db wrist extension",
+    "palms down wrist curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "wrist_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_extensors": 1,
+    "brachioradialis": 0,
+    "wrist_flexors": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    714,
+    708
+  ],
+  "media": {
+    "status": "card",
+    "template": "wrist-curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "pronated",
+      "posture": "kneeling",
+      "support": "bench"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Rest your forearms on the bench with palms down",
+    "Let your hands hang past the edge",
+    "Lift the backs of your hands toward the ceiling",
+    "Go light and move slowly"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

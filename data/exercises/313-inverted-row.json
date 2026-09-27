@@ -1,0 +1,75 @@
+{
+  "id": 313,
+  "slug": "inverted-row",
+  "name": "Inverted Row",
+  "aliases": [
+    "bodyweight row",
+    "Australian pull-up",
+    "body row"
+  ],
+  "family": "back",
+  "equipment": [
+    "barbell",
+    "rack"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    304,
+    305,
+    306
+  ],
+  "media": {
+    "status": "card",
+    "template": "row",
+    "params": {
+      "implement": "barbell",
+      "posture": "lying_supine",
+      "support": "none",
+      "grip": "pronated",
+      "gripWidth": 1.3,
+      "barHeight": "mid"
+    },
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bar in the rack at about waist height",
+    "Hang under it with your body straight and heels on the floor",
+    "Pull your chest to the bar",
+    "Bend your knees to make it easier"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}
