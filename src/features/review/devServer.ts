@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, statSync, writeFileSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import path from 'node:path'
 import type { Plugin } from 'vite'
@@ -18,6 +18,20 @@ class HttpError extends Error {
 }
 
 const BODY_LIMIT = 16 * 1024
+
+/** bake-loops.ts sheets from RENDER v3 on are 4 x 2 frames of 480 px; older ones are 240 px strips */
+const LOOP_SHEET_MIN_HEIGHT = 480
+
+function pngHeight(file: string): number {
+  const fd = openSync(file, 'r')
+  try {
+    const b = Buffer.alloc(24)
+    readSync(fd, b, 0, 24, 0)
+    return b.toString('latin1', 12, 16) === 'IHDR' ? b.readUInt32BE(20) : 0
+  } finally {
+    closeSync(fd)
+  }
+}
 
 function send(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status
@@ -66,7 +80,13 @@ export function reviewPlugin(): Plugin {
     records: () => path.join(root, 'data/exercises'),
     baked: () => path.join(root, 'src/features/figure/motion/baked'),
     manifest: () => path.join(root, 'public/media/manifest.json'),
-    sheet: (id: number) => path.join(root, `qa/out/animated/figure-${id}.png`),
+    /** the encoded loop's frames at 480 px (bake-loops.ts), else the live figure sheet (still.ts --motion) */
+    sheet: (id: number) => {
+      const file = recordFile(id)
+      const loop = file && path.join(root, 'qa/out/loops', file.replace(/\.json$/, '.png'))
+      if (loop && existsSync(loop) && pngHeight(loop) >= LOOP_SHEET_MIN_HEIGHT) return loop
+      return path.join(root, `qa/out/animated/figure-${id}.png`)
+    },
   }
 
   function bakedIds(): number[] {

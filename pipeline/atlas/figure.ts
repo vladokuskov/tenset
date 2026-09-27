@@ -56,7 +56,8 @@ export async function loadFigure(): Promise<FigureMesh> {
   const { poses } = (await load('poses.ts')) as { poses: Record<string, Pose> }
   const { Correctives } = await load('correctives.ts')
   await MeshoptDecoder.ready
-  const buf = fs.readFileSync(path.join(ROOT, 'public/models/body.glb'))
+  // ATLAS_BODY: another GLB (e.g. the committed one) for before/after checks
+  const buf = fs.readFileSync(path.resolve(ROOT, process.env.ATLAS_BODY ?? 'public/models/body.glb'))
   const loader = new GLTFLoader()
   loader.setMeshoptDecoder(MeshoptDecoder)
   const gltf = await loader.parseAsync(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer, '')

@@ -3,10 +3,11 @@ import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, use
 import type { Exercise } from '../../domain/schema'
 import { MotionClock } from '../figure/motion/clock'
 import type { MotionExercise, MotionScene, ViewPreset } from '../figure/motion/compose'
-import { hasMotion, loadMotionFile, type MotionFile } from '../figure/motion/library'
+import { loadMotionFile, type MotionFile } from '../figure/motion/library'
 import { IconButton, SegmentedControl } from '../../ui'
 import { cx } from '../../ui/cx'
 import { ExerciseCardMedia } from './ExerciseCardMedia'
+import { showsMotion } from './media'
 import { useRoles } from './useRoles'
 
 const MotionStage = lazy(() => import('../figure/motion/MotionStage'))
@@ -43,9 +44,9 @@ function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-/** Detail media: the live figure when the exercise has a baked loop, otherwise the M1 card. */
+/** Detail media: the live figure when the exercise has a baked loop it may show (see showsMotion), otherwise the M1 card. */
 export function ExerciseMedia({ exercise }: { exercise: Exercise }) {
-  return hasMotion(exercise.id) ? <ExerciseMotion exercise={exercise} /> : <ExerciseCardMedia exercise={exercise} size="lg" />
+  return showsMotion(exercise) ? <ExerciseMotion exercise={exercise} /> : <ExerciseCardMedia exercise={exercise} size="lg" />
 }
 
 /**

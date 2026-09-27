@@ -1,8 +1,9 @@
 // Landmark alignment of the MakeHuman body (anatomical pose) to BodyParts3D with a thin-plate spline.
-// Landmarks: matched joint centres (shoulders, elbows, wrists, hips, knees, ankles, sternoclavicular joints, C7,
-// atlas), the skull vertex, the lowest point of each foot, and surface points found the same way on both skins:
-// rays cast from points on each limb and trunk axis (between matched joints) in fixed anatomical directions.
-// The surface points fix limb girth and axial rotation, which joint centres alone leave free.
+// Landmarks: matched joint centres (shoulders, elbows, wrists, middle-finger MCPs, hips, knees, ankles,
+// sternoclavicular joints, C7, atlas), the skull vertex, the middle fingertips, the lowest point of each foot, and
+// surface points found the same way on both skins: rays cast from points on each limb and trunk axis (between matched
+// joints) in fixed anatomical directions. The surface points fix limb girth and axial rotation, which joint centres
+// alone leave free.
 import { bp3dLandmarks, bpMesh, conceptFiles, type Vec } from './bp3d.ts'
 import { Bvh } from './bvh.ts'
 import type { FigureMesh } from './figure.ts'
@@ -11,9 +12,11 @@ import { fitTps } from './tps.ts'
 // figure axes (X left, Y up, Z forward, metres) -> BodyParts3D (x left, y posterior, z up, mm)
 export const toBp = (p: ArrayLike<number>, i = 0): Vec => [p[i] * 1000, -p[i + 2] * 1000, p[i + 1] * 1000]
 
-const JOINTS = ['upperarm01', 'lowerarm01', 'wrist', 'upperleg01', 'lowerleg01', 'foot', 'clavicle']
-/** thin-plate smoothing (mm): lets conflicting surface points settle instead of folding the warp */
+const JOINTS = ['upperarm01', 'lowerarm01', 'wrist', 'finger3-1', 'upperleg01', 'lowerleg01', 'foot', 'clavicle']
+/** thin-plate relaxation (mm, see fitTps) */
 const LAMBDA = 8
+/** a surface point this close to an earlier landmark on the figure is dropped (near-singular fit, see fitTps) */
+const MIN_GAP = 1.5 * LAMBDA
 
 const sub = (a: Vec, b: Vec): Vec => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 const addS = (a: Vec, b: Vec, s: number): Vec => [a[0] + b[0] * s, a[1] + b[1] * s, a[2] + b[2] * s]
@@ -25,7 +28,8 @@ const norm = (a: Vec): Vec => {
 /** `d` made perpendicular to the unit axis `u` */
 const perp = (d: Vec, u: Vec) => norm(addS(d, u, -dot(d, u)))
 
-type Probe = { name: string; a: string; b: string; f: number; dirs: [string, Vec][] }
+/** `vertical`: directions cast as given, not made perpendicular to the axis (on a hanging arm, `up` would turn into `lat`) */
+type Probe = { name: string; a: string; b: string; f: number; dirs: [string, Vec][]; vertical?: string[] }
 
 function probes(): Probe[] {
   const out: Probe[] = []
@@ -38,9 +42,10 @@ function probes(): Probe[] {
     }
     limb('upperarm', 'upperarm01', 'lowerarm01', [0.35, 0.6, 0.85])
     limb('forearm', 'lowerarm01', 'wrist', [0, 0.3, 0.6, 0.9])
+    limb('hand', 'wrist', 'finger3-1', [0.5])
     limb('thigh', 'upperleg01', 'lowerleg01', [0.3, 0.55, 0.8])
     limb('shank', 'lowerleg01', 'foot', [0, 0.25, 0.5, 0.75, 1])
-    out.push({ name: `shoulder_${S}`, a: `upperarm01_${S}`, b: `lowerarm01_${S}`, f: 0, dirs: [['ant', ant], ['post', post], ['lat', lat], ['up', up]] })
+    out.push({ name: `shoulder_${S}`, a: `upperarm01_${S}`, b: `lowerarm01_${S}`, f: 0, dirs: [['ant', ant], ['post', post], ['lat', lat], ['up', up]], vertical: ['up'] })
     out.push({ name: `hip_${S}`, a: `upperleg01_${S}`, b: `lowerleg01_${S}`, f: 0, dirs: [['ant', ant], ['post', post], ['lat', lat]] })
   }
   const diag = (x: number, y: number): Vec => norm([x, y, 0])
@@ -89,6 +94,18 @@ export function alignFigure(fig: FigureMesh) {
   let top = 0
   for (let i = 0; i < nv; i++) if (posed.positions[i * 3 + 1] > posed.positions[top * 3 + 1]) top = i
   add('vertex', toBp(posed.positions, top * 3), bp.vertex)
+  // middle fingertip: the finger3-3 vertex furthest along the finger
+  for (const S of ['L', 'R']) {
+    const a = posed.joints[`finger3-1_${S}`], b = posed.joints[`finger3-3_${S}`]
+    const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]
+    let tip = -1, best = -Infinity
+    for (let i = 0; i < nv; i++) {
+      if (fig.bone[i] !== `finger3-3_${S}`) continue
+      const t = (posed.positions[i * 3] - a[0]) * d[0] + (posed.positions[i * 3 + 1] - a[1]) * d[1] + (posed.positions[i * 3 + 2] - a[2]) * d[2]
+      if (t > best) { best = t; tip = i }
+    }
+    add(`fingertip_${S}`, toBp(posed.positions, tip * 3), bp[`fingertip_${S}`])
+  }
   const skin = bpMesh(conceptFiles('skin')[0])
   const P = skin.positions
   for (const [S, sign] of [['L', 1], ['R', -1]] as const) {
@@ -114,7 +131,8 @@ export function alignFigure(fig: FigureMesh) {
     }
     const m = side(mhJ), b = side(bpJ)
     for (const [dn, d] of p.dirs) {
-      const dm = perp(d, m.u), db = perp(d, b.u)
+      const vert = p.vertical?.includes(dn)
+      const dm = vert ? d : perp(d, m.u), db = vert ? d : perp(d, b.u)
       const tm = firstHit(mhBvh, m.o, dm, 250), tb = firstHit(bpBvh, b.o, db, 250)
       const name = `${p.name}.${dn}`
       // a ray that leaves through a neighbouring part on one body only is not a match
@@ -122,7 +140,13 @@ export function alignFigure(fig: FigureMesh) {
         skipped.push(name)
         continue
       }
-      add(name, addS(m.o, dm, tm), addS(b.o, db, tb))
+      const q = addS(m.o, dm, tm)
+      const near = src.findIndex((s) => Math.hypot(s[0] - q[0], s[1] - q[1], s[2] - q[2]) < MIN_GAP)
+      if (near >= 0) {
+        skipped.push(`${name} (near ${names[near]})`)
+        continue
+      }
+      add(name, q, addS(b.o, db, tb))
     }
   }
 

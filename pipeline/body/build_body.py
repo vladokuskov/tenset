@@ -56,6 +56,13 @@ TARGETS = [
     )
 ]
 
+# bundled CC0 measurement targets (both arms), loaded before the rig so the joints follow. The macros alone put the
+# elbow high (27.4 cm upper arm, 28.0 cm forearm at 1.83 m): now 32.1 / 26.2 cm. README "Proportions", measure.ts.
+PROPORTIONS = [
+    ("arms/measure-upperarm-length-incr.target.gz", 0.68),
+    ("arms/measure-lowerarm-length-decr.target.gz", 0.40),
+]
+
 # calm, open lids: the eyes stay as modelled
 EXPRESSION = []
 
@@ -96,6 +103,7 @@ def parse_args():
     p.add_argument("--report")
     p.add_argument("--blend")
     p.add_argument("--no-correctives", action="store_true")
+    p.add_argument("--proportions", help='JSON {"target path": weight}, replaces PROPORTIONS (tuning)')
     return p.parse_args(argv)
 
 
@@ -342,7 +350,8 @@ def main():
     macro.update(MACROS)
     human = HumanService.create_human(macro_detail_dict=macro)
     tdir = LocationService.get_mpfb_data("targets")
-    for rel, weight in TARGETS + EXPRESSION:
+    proportions = list(json.loads(args.proportions).items()) if args.proportions else PROPORTIONS
+    for rel, weight in TARGETS + proportions + EXPRESSION:
         TargetService.load_target(human, os.path.join(tdir, rel), weight=weight)
     rig = HumanService.add_builtin_rig(human, RIG)
     rig.name = "rig"
@@ -445,7 +454,7 @@ def main():
         mpfb=MPFB_VERSION,
         rig=RIG,
         macros=MACROS,
-        targets=TARGETS + EXPRESSION + FACE,
+        targets=TARGETS + proportions + EXPRESSION + FACE,
         blender=bpy.app.version_string,
         meshes={o.name: dict(vertices=len(o.data.vertices), triangles=sum(len(p.vertices) - 2 for p in o.data.polygons))
                 for o in (body, shorts, hair, eyes)},

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
+import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist } from '../math.ts'
+import { dist, qrot } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
@@ -80,6 +81,39 @@ describe('squat template', () => {
       for (const s of ['l', 'r'] as const) expect(dist(sitePos(skel, f, `fingers_${s}`), siteWorld(b.implements[0], bar, s).pos)).toBeLessThan(0.005)
     }
     expect(run({ hold: 'back_high' }).limits).toBeUndefined()
+  })
+
+  it('front rack: elbows up near horizontal, the bar resting on the delts and clear of the throat', () => {
+    const b = run({ implement: 'barbell', hold: 'front_rack', depth: 'full', gripWidth: 1.5 })
+    expect(frameQ(b, 0)[skel.dof['shoulder_l.elev']]).toBeGreaterThan(75)
+    for (let i = 0; i < b.frames; i += 7) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i)))
+      const [shaft] = placeParts(b.implements[0], frameImplements(b, i)[0])
+      const clear = (re: RegExp) => Math.min(...caps.filter((c) => re.test(c.region)).map((c) => capsuleSolidClearance(c, shaft)))
+      expect(clear(/^(neck|head)$/)).toBeGreaterThan(0.01)
+      expect(clear(/^(upperarm|girdle)_/)).toBeLessThan(0)
+    }
+  })
+
+  it('goblet: the dumbbell stands vertical against the chest, both palms under the top head, elbows down', () => {
+    const b = run({ implement: 'dumbbell', hold: 'goblet', depth: 'full' })
+    const k = b.implements.findIndex((s) => s.id === 'db')
+    const db = b.implements[k]
+    for (let i = 0; i < b.frames; i += 7) {
+      const pose = frameImplements(b, i)[k]
+      expect(qrot(pose.rot, [1, 0, 0])[1]).toBeCloseTo(1, 6)
+      const f = fk(skel, frameQ(b, i))
+      const chest = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
+      const heads = placeParts(db, pose).slice(1)
+      expect(Math.min(...heads.flatMap((h) => chest.map((c) => capsuleSolidClearance(c, h))))).toBeLessThan(0.002)
+      for (const s of ['l', 'r'] as const) {
+        const cup = siteWorld(db, pose, `cup_${s}`).pos
+        expect(dist(sitePos(skel, f, `grip_${s}`), cup)).toBeLessThan(0.005)
+        expect(cup[1] - pose.pos[1]).toBeGreaterThan(0)
+        expect(cup[1] - pose.pos[1]).toBeLessThan(0.065)
+        expect(segPos(skel, f, `forearm_${s}`)[1]).toBeLessThan(sitePos(skel, f, `grip_${s}`)[1] - 0.15)
+      }
+    }
   })
 
   it('unloaded squat keeps the centre of mass toward the heel for a more upright trunk', () => {

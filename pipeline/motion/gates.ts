@@ -2,9 +2,10 @@
 import { frameImplements, frameQ, staleReason, type Baked, type CompactMotion } from '../../src/motion/bake.ts'
 import { bodyCapsules, boundClearance, capsuleClearance, capsuleSolidClearance, placeParts, segmentDistance, type Capsule } from '../../src/motion/collide.ts'
 import { centerOfPressure, fk, sitePos, type FK } from '../../src/motion/fk.ts'
-import { cableForce, comWorld, siteWorld } from '../../src/motion/implements.ts'
-import { dist, qconj, qlog, qmul, type V3 } from '../../src/motion/math.ts'
-import { pairedDofs, zeroQ, type Skeleton } from '../../src/motion/skeleton.ts'
+import { cableForce, comWorld, siteWorld, type Part } from '../../src/motion/implements.ts'
+import { add, dist, qconj, qlog, qmul, qrot, scale, type V3 } from '../../src/motion/math.ts'
+import { pairedDofs, zeroQ, type ImplementPose, type Skeleton } from '../../src/motion/skeleton.ts'
+import { machineColliders } from '../../src/features/figure/props/collision.ts'
 
 export type Gate = {
   name: string
@@ -298,6 +299,18 @@ function bodyTol(ra: string, rb: string): number | null {
 
 type BodyPair = { i: number; j: number; label: string; tol: number; allowance: number }
 
+/** a capsule around a placed part (a box along its longest side), a tight lower bound for culling long frame tubes */
+function enclosing(part: Part, pose: ImplementPose): Pick<Capsule, 'a' | 'b' | 'r'> {
+  const w = (v: V3) => add(pose.pos, qrot(pose.rot, v))
+  if (part.shape === 'cylinder') return { a: w(part.a), b: w(part.b), r: part.r }
+  const k = part.size.indexOf(Math.max(...part.size))
+  const axis: V3 = [0, 0, 0]
+  axis[k] = part.size[k] / 2
+  const u = qrot(part.rot ?? [0, 0, 0, 1], axis)
+  const r = Math.hypot(...part.size.filter((_, j) => j !== k)) / 2
+  return { a: w(add(part.center, scale(u, -1))), b: w(add(part.center, u)), r }
+}
+
 const pairCache = new WeakMap<Skeleton, BodyPair[]>()
 
 /** body capsule pairs to check, with the overlap they already have standing relaxed (zero pose) as an allowance */
@@ -326,7 +339,8 @@ export function bodyPairs(skel: Skeleton): BodyPair[] {
 
 export type Clearance = {
   pair: string
-  kind: 'body' | 'prop'
+  /** prop: the template's implements and cables; machine: the drawn machines and benches around them */
+  kind: 'body' | 'prop' | 'machine'
   /** smallest clearance over the loop, mm (negative = penetration) */
   min: number
   frame: number
@@ -337,12 +351,16 @@ export type Clearance = {
   excess: number
 }
 
-/** closest approach per body-region pair and per body region vs implement part (or cable), over every frame */
+/**
+ * closest approach per body-region pair, per body region vs implement part (or cable) and per body region vs drawn
+ * machine part (props/collision.ts: frames, rails, stacks, plates, pads where the composer draws them), over every frame
+ */
 export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
   F ??= frames(b, skel)
   const pairs = bodyPairs(skel)
+  const machines = machineColliders(b)
   const rows = new Map<string, Clearance>()
-  const note = (pair: string, kind: 'body' | 'prop', mm: number, frame: number, tol: number, allowance: number) => {
+  const note = (pair: string, kind: Clearance['kind'], mm: number, frame: number, tol: number, allowance: number) => {
     const excess = Math.max(0, -mm - allowance - tol)
     const r = rows.get(pair)
     // keep the frame with the worst excess, then the smallest clearance
@@ -357,6 +375,8 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
     grips.get(c.target.implement)!.add(`hand_${side}`)
   }
   const REACH = 0.25
+  // drawn machines hold hundreds of parts; only near ones make useful rows
+  const MACHINE_REACH = 0.1
   for (let i = 0; i < b.frames; i++) {
     const caps = bodyCapsules(skel, F.f[i])
     for (const p of pairs) note(p.label, 'body', round(capsuleClearance(caps[p.i], caps[p.j]) * 1000), i, p.tol, p.allowance)
@@ -375,6 +395,20 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
         }
       }
     })
+    const poses = new Map<string, ImplementPose>(F.impl[i].map((p) => [p.id, p]))
+    for (const m of machines) {
+      const { pose, colliders } = m.at(poses)
+      const held = new Set(m.holds.flatMap((id) => [...(grips.get(id) ?? [])]))
+      for (const s of placeParts({ id: m.key, kind: 'bench', mass: 0, com: [0, 0, 0], parts: colliders, sites: {} }, pose)) {
+        const label = `${m.key}:${colliders[s.index].kind}#${s.index}`
+        const hull = enclosing(s.part, pose)
+        for (const c of caps) {
+          if (held.has(c.region) && s.part.shape === 'cylinder' && s.part.r <= HANDLE_R) continue
+          if (capsuleClearance(c, hull) > MACHINE_REACH) continue
+          note(`${c.region} / ${label}`, 'machine', round(capsuleSolidClearance(c, s) * 1000), i, s.part.pad ? PROP_TOL.pad : PROP_TOL.rigid, 0)
+        }
+      }
+    }
     for (const cable of b.cables ?? []) {
       const k = b.implements.findIndex((x) => x.id === cable.implement)
       const { at } = cableForce(cable, F.impl[i][k])
@@ -393,14 +427,14 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
 
 function penetrationGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
   const rows = clearances(b, skel, F)
-  const gate = (kind: 'body' | 'prop', name: string): Gate => {
+  const gate = (kind: Clearance['kind'], name: string): Gate => {
     const mine = rows.filter((r) => r.kind === kind)
     const w = mine[0]
     const value = w ? round(w.excess) : 0
     const detail = w ? `${w.pair} clearance ${w.min} mm${w.allowance ? ` (relaxed ${round(-w.allowance)})` : ''}, tol ${w.tol}` : undefined
     return { name, unit: 'mm past tol', limit: 0, value, frame: w?.frame, detail, pass: value <= 0 }
   }
-  return [gate('body', 'penetration body-body'), gate('prop', 'penetration body-prop')]
+  return [gate('body', 'penetration body-body'), gate('prop', 'penetration body-prop'), gate('machine', 'penetration body-machine')]
 }
 
 // ---------- skeleton freshness ----------

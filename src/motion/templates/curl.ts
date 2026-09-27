@@ -197,7 +197,7 @@ function dbArm(skel: Skeleton, q: Float64Array, side: 'l' | 'r', c: number, cl: 
 function ropeSpec(): ImplementSpec {
   const base = cableHandle({ id: 'handle', attachment: 'rope' })
   // the lifter pulls the rope ends apart: hands a little narrower than the shoulders
-  const x = 0.24, y = 0.3
+  const x = 0.28, y = 0.3
   return {
     ...base,
     parts: [cyl([0, 0, 0], [x, -y, 0], 0.012), cyl([0, 0, 0], [-x, -y, 0], 0.012)],
@@ -209,8 +209,9 @@ function barSetup(p: P, skel: Skeleton): NonNullable<Ctx['bar']> {
   const g = (p.gripWidth * skel.data.shoulderWidth) / 2
   if (p.implement === 'barbell') return { spec: barbell({ gripWidth: 2 * g, plateKg: 5 }), sites: ['l', 'r'], cable: false, grip: p.grip }
   if (p.implement === 'ez_bar') {
+    // curl grip: the inner bends set at the grip width
+    if (p.grip !== 'pronated') return { spec: ezBar({ plateKg: 5, inner: g }), sites: ['l_in', 'r_in'], cable: false, grip: p.grip }
     const base = ezBar({ plateKg: 5 })
-    if (p.grip !== 'pronated') return { spec: base, sites: ['l_in', 'r_in'], cable: false, grip: p.grip }
     // reverse grip: hands on the inner end of the outer bends, which angle the palms for pronation
     const x = 0.265
     const z = 0.03 * (1 - (x - 0.25) / 0.1)

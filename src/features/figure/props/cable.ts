@@ -1,8 +1,8 @@
 import { Quaternion, Vector3 } from 'three'
 import { cableHandle, type Attachment, type ImplementSpec, type Part } from '../../../motion/implements.ts'
-import { finish, Kit, poseMatrix, vec, type PropBuild, type Vec } from './kit'
-import { cableExit, cableRun, foot, hangingRotation, holeRow, horizontalTowards, pulley, WHEEL_R, weightStack } from './parts'
-import { gripSocket, type CableSocket, type GripSocket } from './sockets'
+import { finish, Kit, poseMatrix, vec, type PropBuild, type Vec } from './kit.ts'
+import { cableExit, cableRun, foot, hangingRotation, holeRow, horizontalTowards, pulley, WHEEL_R, weightStack } from './parts.ts'
+import { gripSocket, type CableSocket, type GripSocket } from './sockets.ts'
 
 // Cable attachments (drawn from src/motion/implements.ts cableHandle descriptors: origin at the carabiner, handles
 // hang towards -Y) and a single-column cable stack with an adjustable pulley that draws the cable to its attachment.

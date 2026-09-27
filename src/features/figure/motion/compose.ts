@@ -10,6 +10,7 @@ import { computeGripAt, solveGrip, type GripName, type GripSolution, type HandSi
 import type { FigureHighlight } from '../highlight'
 import { buildBarbell, buildEzBar } from '../props/barbell'
 import { buildCableStack, type AttachmentKind } from '../props/cable'
+import { pieceColliders } from '../props/collision.ts'
 import { Kit, type Piece } from '../props/kit'
 import { buildLegPress, legPressDefaults } from '../props/legpress'
 import { buildLatPulldown } from '../props/pulldown'
@@ -73,19 +74,29 @@ export type MotionScene = {
 
 // ---------- camera ----------
 
-/** exercise-illustration camera per template: curls front 3/4, raises front, pulls back 3/4, squats side 3/4, leg press rear 3/4 */
+/** exercise-illustration camera per template: curls front 3/4, raises front, pulls back 3/4, squats rear 3/4 (glutes and quads), leg press behind the shoulder */
+/** standing squats: behind the right hip, far enough round that the quads read beside the glutes */
+const SQUAT_AZ = -128
+
 export function heroCamera(template: string, params: Record<string, unknown>, mapView: 'F' | 'B'): CameraPreset {
   switch (template) {
     case 'curl':
-      return { az: -35, elev: 0.3 }
+      // cable: the stack stands in front of the lifter, so from -35 its upright hides the left hand; -60 sees past it
+      return params.implement === 'cable' ? { az: -60, elev: 0.3 } : { az: -35, elev: 0.3 }
     case 'lateral-raise':
       return { az: -14, elev: 0.18 }
     case 'vertical-pull':
-      // seated: turned further to the side so the stack tower behind the lifter stays clear of the back
-      return params.posture === 'seated' ? { az: -118, elev: 0.22 } : { az: -145, elev: 0.16 }
+      // seated: turned further to the side so the stack tower behind the lifter stays clear of the back; neutral
+      // handles run front to back, so they read from further round
+      if (params.posture === 'seated') return { az: -118, elev: 0.22 }
+      return params.grip === 'neutral' ? { az: -125, elev: 0.2 } : { az: -145, elev: 0.16 }
     case 'squat':
       // leg press from behind the lifter's shoulder: from the side the near plates hide the feet on the sled
-      return params.machine === 'leg_press' ? { az: -112, elev: 0.3 } : { az: -58, elev: 0.26 }
+      if (params.machine === 'leg_press') return { az: -112, elev: 0.3 }
+      // Smith: further behind, so the view runs between the rear uprights instead of through them
+      if (params.implement === 'smith') return { az: -163, elev: 0.22 }
+      // goblet: nearer the side, or the torso hides the dumbbell and the cupped hands
+      return params.hold === 'goblet' ? { az: -115, elev: 0.22 } : { az: SQUAT_AZ, elev: 0.22 }
   }
   return mapView === 'B' ? { az: -145, elev: 0.2 } : { az: -35, elev: 0.3 }
 }
@@ -125,9 +136,11 @@ function handleRadius(spec: ImplementSpec, site: string): number {
   return r
 }
 
-function wrapStyle(params: Record<string, unknown>, spec: ImplementSpec, fingertips: boolean): GripName {
+function wrapStyle(params: Record<string, unknown>, spec: ImplementSpec, fingertips: boolean, site: string): GripName {
   // front rack: the bar lies across the fingers, thumb tucked under it
   if (fingertips) return 'hook'
+  // goblet: palms cupped under the top head
+  if (site.startsWith('cup_')) return 'goblet'
   if (spec.kind === 'cable_handle' && params.attachment === 'rope') return 'rope'
   if (spec.kind === 'cable_handle' && (params.attachment ?? 'single_handle') === 'single_handle') return 'd-handle'
   if (spec.kind === 'bench') return 'neutral'
@@ -136,6 +149,9 @@ function wrapStyle(params: Record<string, unknown>, spec: ImplementSpec, fingert
 }
 
 const FRAME_SAMPLES = 16
+
+/** hand shapes that rest against an implement instead of closing round a handle */
+const POSED_GRIPS = new Set<GripName>(['goblet'])
 
 type Hold = { k: number; point: Vector3; axis: Vector3; diameter: number; style: GripName }
 
@@ -147,7 +163,7 @@ function holdFor(b: Baked, params: Record<string, unknown>, s: 'l' | 'r'): Hold 
   const k = b.implements.findIndex((i) => i.id === implement)
   const spec = b.implements[k]
   const site = spec.sites[grip]
-  return { k, point: V(site.pos), axis: V(site.axis ?? [1, 0, 0]), diameter: 2 * handleRadius(spec, grip), style: wrapStyle(params, spec, contact.site.startsWith('fingers_')) }
+  return { k, point: V(site.pos), axis: V(site.axis ?? [1, 0, 0]), diameter: 2 * handleRadius(spec, grip), style: wrapStyle(params, spec, contact.site.startsWith('fingers_'), grip) }
 }
 
 /**
@@ -160,8 +176,8 @@ export function motionGrips(b: Baked, skel: Skeleton, params: Record<string, unk
   for (const side of ['L', 'R'] as const) {
     const s = side === 'L' ? 'l' : 'r'
     const hold = holdFor(b, params, s)
-    if (!hold) {
-      out.push({ side, solution: solveGrip('relaxed') })
+    if (!hold || POSED_GRIPS.has(hold.style)) {
+      out.push({ side, solution: solveGrip(hold?.style ?? 'relaxed') })
       continue
     }
     const center = new Vector3(), axis = new Vector3()
@@ -403,10 +419,14 @@ function partPoints(part: Part, m: Matrix4, out: number[]) {
   }
 }
 
+const D = Math.SQRT1_2
+/** directions sampling a capsule's silhouette from any camera azimuth */
+const CAPSULE_DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [D, 0, D], [D, 0, -D], [-D, 0, D], [-D, 0, -D]]
+
 /** body capsules over the loop (their extreme points), framed implement parts, and the floor under the feet */
 export function framePoints(b: Baked, skel: Skeleton, samples = FRAME_SAMPLES): number[] {
   const out: number[] = []
-  const dirs = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+  const dirs = CAPSULE_DIRS
   for (let n = 0; n < samples; n++) {
     const i = Math.floor((n * b.frames) / samples)
     const f = fk(skel, b.q.subarray(i * b.nDof, (i + 1) * b.nDof))
@@ -435,6 +455,30 @@ export function framePoints(b: Baked, skel: Skeleton, samples = FRAME_SAMPLES): 
   return out
 }
 
+/** machine parts that sit on the floor (feet, base rails, floor plates) stay in the picture; so do loaded plates */
+const FLOOR_PART = 0.25
+/** props framed whole: the pull-up station and the assisted machine read only with their base and top */
+const WHOLE = new Set(['pullup', 'assisted-pullup'])
+
+function propPoints(props: PropSpec[], poseAt: (u: number) => Poses): number[] {
+  const out: number[] = []
+  const id = new Matrix4()
+  const add = (pieces: Piece[], whole: boolean) => {
+    for (const c of pieceColliders(pieces)) {
+      const pts: number[] = []
+      partPoints(c, id, pts)
+      let top = -Infinity
+      for (let i = 1; i < pts.length; i += 3) top = Math.max(top, pts[i])
+      if (whole || c.kind === 'plate' || top < FLOOR_PART) out.push(...pts)
+    }
+  }
+  for (const p of props) {
+    if (p.type === 'rigid' && !p.attach) add(p.pieces, WHOLE.has(p.key))
+    else if (p.type === 'dynamic') for (const u of [0, 0.25, 0.5, 0.75]) add(p.build(poseAt(u)), WHOLE.has(p.key))
+  }
+  return out
+}
+
 function floorExtent(points: number[], props: PropSpec[]) {
   let r = 1
   for (let i = 0; i < points.length; i += 3) if (points[i + 1] < 0.8) r = Math.max(r, Math.abs(points[i]), Math.abs(points[i + 2]))
@@ -450,7 +494,8 @@ export function composeMotion(ex: MotionExercise, motion: CompactMotion | Baked,
   const params = b.params
   const sample = sampler(b)
   const props = motionProps(b, params)
-  const frame = framePoints(b, skel)
+  const posesAt = (u: number): Poses => new Map(sample(u * b.duration).implements.map((p) => [p.id, p]))
+  const frame = [...framePoints(b, skel), ...propPoints(props, posesAt)]
   return {
     baked: b,
     template: b.template,

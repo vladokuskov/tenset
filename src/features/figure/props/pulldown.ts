@@ -1,9 +1,9 @@
 import { Vector3 } from 'three'
 import type { ImplementSpec } from '../../../motion/implements.ts'
-import { hangAttachment, type AttachmentKind, type HandlePose } from './cable'
-import { finish, Kit, vec, type PropBuild } from './kit'
-import { cableRun, foot, pulley, WHEEL_R, weightStack } from './parts'
-import type { CableSocket, GripSocket, SurfaceSocket } from './sockets'
+import { hangAttachment, type AttachmentKind, type HandlePose } from './cable.ts'
+import { finish, Kit, vec, type PropBuild } from './kit.ts'
+import { cableRun, foot, pulley, WHEEL_R, weightStack } from './parts.ts'
+import type { CableSocket, GripSocket, SurfaceSocket } from './sockets.ts'
 
 // Lat pulldown laid out as the vertical-pull template's station: seat at the origin, thigh rollers in front, the
 // stack tower behind the lifter and a boom carrying the high pulley forward over the head. Frame: X across, Y up,

@@ -1,11 +1,20 @@
 import { Cable, Cog, Dumbbell, PersonStanding, type LucideIcon } from 'lucide-react'
 import type { CustomExercise, Exercise, Role } from '../../domain/schema'
 import { getGroup, visibleHeads } from '../../domain/taxonomy'
+import { hasMotion } from '../figure/motion/library'
 
 export type CardExercise = Exercise | CustomExercise
 
 export function isCatalogExercise(e: CardExercise): e is Exercise {
   return typeof e.id === 'number'
+}
+
+/**
+ * Whether the live figure, poster or loop may show instead of the M1 card: production only for owner-approved
+ * loops (media.status "loop"), dev for every baked motion.
+ */
+export function showsMotion(e: CardExercise, dev: boolean = import.meta.env.DEV): boolean {
+  return isCatalogExercise(e) && hasMotion(e.id) && (dev || e.media.status === 'loop')
 }
 
 const FREE_WEIGHTS = new Set(['barbell', 'dumbbell', 'ez_bar', 'plate'])

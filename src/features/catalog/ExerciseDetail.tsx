@@ -14,8 +14,8 @@ import { addToDays } from './addToPlan'
 import { alternativesFor } from './alternatives'
 import { CountsSheet } from './CountsSheet'
 import { shortCite } from './detail'
-import { hasMotion } from '../figure/motion/library'
 import { ExerciseMedia } from './ExerciseMotion'
+import { showsMotion } from './media'
 import { ExerciseRow } from './ExerciseRow'
 import { MuscleSection } from './MuscleSection'
 import { LEVEL_LABEL, PATTERN_LABEL } from './patterns'
@@ -105,7 +105,7 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
       />
       <PageBody>
         <ExerciseMedia exercise={exercise} />
-        {exercise.media.status === 'card' && !hasMotion(exercise.id) && (
+        {!showsMotion(exercise) && (
           <p className="mt-2 text-center text-sm text-ink-3">Demo coming. Until then the map shows the muscles worked.</p>
         )}
 

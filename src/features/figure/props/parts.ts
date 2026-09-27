@@ -1,5 +1,5 @@
 import { Matrix4, Quaternion, Vector3 } from 'three'
-import { vec, type Kit, type Vec } from './kit'
+import { vec, type Kit, type Vec } from './kit.ts'
 
 // Machine building blocks shared by the stack machines and racks.
 

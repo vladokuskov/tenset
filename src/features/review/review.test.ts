@@ -31,7 +31,7 @@ describe('record edits', () => {
   })
 
   it('approval writes qa.motion, qa.note and media.status and nothing else', () => {
-    const t = text(curl)
+    const t = writeFields(text(curl), { motion: 'pending', mediaStatus: 'card' })
     const out = writeFields(t, decide(readFields(t), 'approved', '  Wrists look right  '))
     const before = JSON.parse(t)
     const after = JSON.parse(out)

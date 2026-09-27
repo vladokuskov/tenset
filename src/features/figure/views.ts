@@ -94,6 +94,53 @@ export function frameFit(camera: PerspectiveCamera, points: ArrayLike<number>, a
   camera.updateProjectionMatrix()
 }
 
+/**
+ * Perspective framing with an exact margin: every point projects at least `margin` of the frame's width and height
+ * inside its edges (0.06 = 6 % clear on each side), accounting for each point's depth.
+ */
+export function frameFitMargin(camera: PerspectiveCamera, points: ArrayLike<number>, az: number, margin = 0.06, elevation = 0.08) {
+  const n = points.length / 3
+  const dir = new Vector3(Math.sin(az), elevation, Math.cos(az)).normalize()
+  const right = new Vector3(Math.cos(az), 0, -Math.sin(az))
+  const up = new Vector3().crossVectors(dir, right).normalize()
+  const center = new Vector3()
+  const lo = new Vector3(Infinity, Infinity, Infinity), hi = new Vector3(-Infinity, -Infinity, -Infinity)
+  const p = new Vector3()
+  for (let i = 0; i < n; i++) {
+    p.set(points[i * 3], points[i * 3 + 1], points[i * 3 + 2])
+    lo.min(p)
+    hi.max(p)
+  }
+  center.copy(lo).add(hi).multiplyScalar(0.5)
+  const k = 1 - 2 * margin
+  const tanV = Math.tan((camera.fov * Math.PI) / 360) * k
+  const tanH = tanV * camera.aspect
+  let dist = 0
+  for (let iter = 0; iter < 6; iter++) {
+    // distance so every point lands inside the shrunk frame, then re-centre on the projected extents
+    let need = 0
+    for (let i = 0; i < n; i++) {
+      p.set(points[i * 3], points[i * 3 + 1], points[i * 3 + 2]).sub(center)
+      const x = p.dot(right), y = p.dot(up), z = p.dot(dir)
+      need = Math.max(need, z + Math.abs(x) / tanH, z + Math.abs(y) / tanV)
+    }
+    dist = need
+    let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity
+    for (let i = 0; i < n; i++) {
+      p.set(points[i * 3], points[i * 3 + 1], points[i * 3 + 2]).sub(center)
+      const z = dist - p.dot(dir)
+      const u = p.dot(right) / z, v = p.dot(up) / z
+      u0 = Math.min(u0, u); u1 = Math.max(u1, u); v0 = Math.min(v0, v); v1 = Math.max(v1, v)
+    }
+    center.addScaledVector(right, ((u0 + u1) / 2) * dist).addScaledVector(up, ((v0 + v1) / 2) * dist)
+  }
+  camera.position.copy(center).addScaledVector(dir, dist)
+  camera.near = Math.max(0.05, dist * 0.3)
+  camera.far = dist * 3 + 10
+  camera.lookAt(center)
+  camera.updateProjectionMatrix()
+}
+
 /** Orthographic framing (QA atlas views): R3F keeps a pixel-sized frustum, so the box is fitted through zoom. */
 export function frameBoxOrtho(camera: OrthographicCamera, box: Box3, az: number, width: number, height: number, margin = 1.04, elevation = 0) {
   const center = box.getCenter(new Vector3())

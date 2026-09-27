@@ -1,6 +1,7 @@
 // Bakes each motion exercise's H.264 loop and WebP poster from /dev/motion in Chromium on Metal.
 // Frames come from renderAt(i / N) (N = loop seconds x 30), are drawn at 2x on the media background and scaled to
-// 480 px by ffmpeg (libx264, yuv420p, one keyframe at the loop start, +faststart, no audio). The poster is the
+// 480 px by ffmpeg (libx264, yuv420p, one keyframe at the loop start, +faststart, no audio; the frames either side of
+// the restart get more bits, see seamZones). The poster is the
 // middle of the concentric without the pulse, on the same background (RENDER.posterAlpha keeps alpha). Files get
 // content-hash names (see media.ts) and public/media/manifest.json maps exercise id -> { poster, loop, hash,
 // frames, duration }. Fresh entries are skipped unless --force; a full run prunes entries and files that no baked
@@ -26,18 +27,11 @@ import {
   readManifest,
   sortManifest,
   type Manifest,
+  type SeamSettings,
   type MediaEntry,
   type MediaJob,
 } from './media.ts'
 import { launchMetal } from './still.ts'
-
-const { values } = parseArgs({
-  options: {
-    only: { type: 'string' },
-    force: { type: 'boolean', default: false },
-    qa: { type: 'string', default: 'qa/out/loops' },
-  },
-})
 
 const log = (s: string) => console.log(s)
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
@@ -104,15 +98,26 @@ async function grab({ u, pulse, bg, size, type, quality }: { u: number; pulse: b
   return btoa(s)
 }
 
-function ffmpegArgs(job: MediaJob, out: string) {
-  const n = job.frames
+/**
+ * x264 zones giving the first and last seam.frames frames seam.boost times the bits (in CRF mode a bitrate factor lowers
+ * the quantizer by about 6 log2(boost)): the restart then joins two equally sharp frames instead of the loop's softest
+ * frame and its keyframe, which otherwise pops the skin texture once per loop.
+ */
+export function seamZones(n: number, seam: SeamSettings) {
+  const k = Math.max(1, Math.min(seam.frames, Math.floor(n / 2)))
+  return `0,${k - 1},b=${seam.boost}/${n - k},${n - 1},b=${seam.boost}`
+}
+
+export function ffmpegArgs(frames: number, out: string, seam: SeamSettings | null = RENDER.seam) {
+  const n = frames
+  const x264 = ['open-gop=0', ...(seam ? [`zones=${seamZones(n, seam)}`] : [])].join(':')
   return [
     '-hide_banner', '-loglevel', 'error', '-y',
     '-f', 'image2pipe', '-framerate', String(RENDER.fps), '-c:v', 'png', '-i', '-',
     '-vf', `scale=${RENDER.size}:${RENDER.size}:flags=lanczos+accurate_rnd+full_chroma_int:out_color_matrix=bt709:out_range=tv,format=yuv420p`,
     '-c:v', 'libx264', '-preset', 'veryslow', '-tune', 'animation', '-crf', String(RENDER.crf),
     '-profile:v', 'high', '-level:v', '3.1',
-    '-g', String(n), '-keyint_min', String(n), '-sc_threshold', '0', '-x264-params', 'open-gop=0',
+    '-g', String(n), '-keyint_min', String(n), '-sc_threshold', '0', '-x264-params', x264,
     '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-color_range', 'tv',
     '-r', String(RENDER.fps), '-frames:v', String(n), '-an', '-map_metadata', '-1', '-movflags', '+faststart',
     out,
@@ -171,7 +176,7 @@ async function bakeOne(page: Page, base: string, job: MediaJob, qaDir: string): 
 
   const loopName = mediaName(job, 'mp4')
   const loopFile = path.join(LOOPS, loopName)
-  const ff = spawn('ffmpeg', ffmpegArgs(job, loopFile), { stdio: ['pipe', 'inherit', 'pipe'] })
+  const ff = spawn('ffmpeg', ffmpegArgs(job.frames, loopFile), { stdio: ['pipe', 'inherit', 'pipe'] })
   let err = ''
   ff.stderr.on('data', (d) => (err += d))
   const exited = once(ff, 'exit')
@@ -191,9 +196,9 @@ async function bakeOne(page: Page, base: string, job: MediaJob, qaDir: string): 
   verifyPoster(poster)
   writeFileSync(path.join(POSTERS, posterName), poster)
 
-  // QA: 8 evenly spaced frames of the encoded loop in one strip
+  // QA: 8 evenly spaced frames of the encoded loop in a 4 x 2 sheet
   const step = Math.max(1, Math.floor(job.frames / 8))
-  spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', loopFile, '-vf', `select='not(mod(n\\,${step}))',scale=240:-1,tile=8x1`, '-frames:v', '1', '-update', '1', path.join(qaDir, `${job.slug}.png`)])
+  spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', loopFile, '-vf', `select='not(mod(n\\,${step}))',scale=${RENDER.sheetFrame}:-1:flags=lanczos,tile=4x2:padding=4:color=white`, '-frames:v', '1', '-update', '1', path.join(qaDir, `${job.slug}.png`)])
 
   return {
     poster: `media/posters/${posterName}`,
@@ -218,6 +223,13 @@ async function posterSheet(page: Page, manifest: Manifest, out: string) {
 }
 
 async function main() {
+  const { values } = parseArgs({
+    options: {
+      only: { type: 'string' },
+      force: { type: 'boolean', default: false },
+      qa: { type: 'string', default: 'qa/out/loops' },
+    },
+  })
   const only = values.only?.split(',').map(Number)
   const all = mediaJobs()
   const jobs = all.filter((j) => !only || only.includes(j.id))
@@ -317,4 +329,4 @@ async function main() {
   log(`total  ${kb(loops).padStart(9)}  ${kb(posters).padStart(9)}  (${kb(loops + posters)} for ${jobs.length} exercises)`)
 }
 
-await main()
+if (import.meta.url === `file://${process.argv[1]}`) await main()

@@ -1,5 +1,5 @@
 import { ExternalLink, Film, Images } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import type { Exercise } from '../../domain/schema'
 import { ExerciseMedia } from '../catalog/ExerciseMotion'
 import type { ReviewItem } from './types'
@@ -69,26 +69,48 @@ export function LivePanel({ exercise }: { exercise: Exercise }) {
 }
 
 export function SheetPanel({ item }: { item: ReviewItem }) {
+  const zoom = useRef<HTMLDialogElement>(null)
+  const alt = `Contact sheet for exercise ${item.id}: eight phases of the loop`
   return (
     <Frame
       title="Contact sheet"
       action={
         item.sheet && (
           <a href={item.sheet} target="_blank" rel="noreferrer" className="hit inline-flex items-center gap-1 text-sm font-medium text-accent">
-            Full size
+            Open in a tab
             <ExternalLink size={14} strokeWidth={1.75} aria-hidden />
           </a>
         )
       }
     >
       {item.sheet ? (
-        <a href={item.sheet} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl bg-white">
-          <img key={item.sheet} src={item.sheet} alt={`Contact sheet for exercise ${item.id}: eight phases of the loop`} className="block aspect-[96/65] w-full object-contain" />
-        </a>
+        <>
+          <button
+            type="button"
+            onClick={() => zoom.current?.showModal()}
+            aria-label="Zoom the contact sheet to full size"
+            className="block w-full cursor-zoom-in overflow-hidden rounded-xl bg-white"
+          >
+            <img key={item.sheet} src={item.sheet} alt={alt} className="mx-auto block h-auto max-w-full" />
+          </button>
+          {/* full size, scroll to pan; a tap or Escape closes it, and the review shortcuts stay off while it is open */}
+          <dialog
+            ref={zoom}
+            aria-label="Contact sheet at full size"
+            onClick={() => zoom.current?.close()}
+            onKeyDown={(e) => e.key !== 'Escape' && e.stopPropagation()}
+            className="m-0 h-dvh max-h-none w-dvw max-w-none cursor-zoom-out overflow-auto bg-white p-0 backdrop:bg-black/60"
+          >
+            <img src={item.sheet} alt={alt} className="block h-auto w-auto max-w-none" />
+            <button type="button" className="glass fixed right-3 top-3 flex h-11 items-center rounded-full px-4 text-sm font-medium text-ink shadow-thumb">
+              Close
+            </button>
+          </dialog>
+        </>
       ) : (
         <Missing icon={Images}>
           <span>
-            No figure sheet at qa/out/animated/figure-{item.id}.png.
+            No contact sheet yet. Baking the loop writes qa/out/loops/{item.file.replace(/\.json$/, '.png')}.
           </span>
         </Missing>
       )}

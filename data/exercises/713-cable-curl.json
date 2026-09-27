@@ -42,7 +42,7 @@
     "params": {
       "implement": "cable",
       "grip": "supinated",
-      "gripWidth": 1,
+      "gripWidth": 1.1,
       "posture": "standing",
       "attachment": "straight_bar",
       "cableHeight": "low"

@@ -3,7 +3,7 @@ import { bake, compactSize, decode, encode, frameQ, type Baked } from '../../src
 import { createSkeleton, type SkeletonData } from '../../src/motion/skeleton.ts'
 import { dumbbellPoses } from '../../src/motion/templates/arms.ts'
 import { getTemplate, parseParams } from '../../src/motion/templates/index.ts'
-import { clearances, runGates, skeletonGate } from './gates.ts'
+import { clearances, PROP_TOL, runGates, skeletonGate } from './gates.ts'
 import { loadMotionExercises, loadSkeleton, skeletonSourceIssue } from './load.ts'
 
 const skel = loadSkeleton()
@@ -120,6 +120,42 @@ describe('penetration gate', () => {
     expect(penetration(broken).map((g) => g.name)).toContain('penetration body-body')
     const waist = clearances(broken, skel).filter((r) => /upperarm/.test(r.pair) && /trunk/.test(r.pair) && r.excess > 0)
     expect(waist.length).toBeGreaterThan(0)
+  })
+
+  it('checks the drawn machines: a smith frame drawn 8 cm off the bar line puts a carriage through the hand', { timeout: 20_000 }, () => {
+    const b = bakeRecord(407)
+    const gate = (x: Baked) => runGates(x, skel).find((g) => g.name === 'penetration body-machine')!
+    expect(gate(b).pass).toBe(true)
+    // the bar (a template implement) slides along its own axis, the drawn machine follows it off the lifter's line
+    const k = b.implements.findIndex((s) => s.id === 'bar')
+    const ip = b.ip.slice()
+    for (let i = 0; i < b.frames; i++) ip[(i * b.implements.length + k) * 7] += 0.08
+    const moved = { ...b, ip }
+    expect(penetration(moved).map((g) => g.name)).toEqual(['penetration body-machine'])
+    expect(gate(moved).detail).toMatch(/^hand_[lr] \/ smith:/)
+  })
+
+  it('checks the drawn machines: a cable stack standing where the working hand raises catches it', { timeout: 20_000 }, () => {
+    const b = bakeRecord(204)
+    const stack = b.implements.find((s) => s.id === 'stack')!
+    const toward = -Math.sign(stack.parts[0].shape === 'cylinder' ? stack.parts[0].a[0] : 1) * 0.25
+    const shift = (v: [number, number, number]): [number, number, number] => [v[0] + toward, v[1], v[2]]
+    const parts = stack.parts.map((p) => (p.shape === 'cylinder' ? { ...p, a: shift(p.a), b: shift(p.b) } : p))
+    const moved = { ...b, cables: b.cables!.map((c) => ({ ...c, pulley: shift(c.pulley) })), implements: b.implements.map((s) => (s.id === 'stack' ? { ...s, parts } : s)) }
+    expect(penetration(b)).toEqual([])
+    const bad = penetration(moved).find((g) => g.name === 'penetration body-machine')
+    expect(bad?.detail).toMatch(/ \/ cable-stack:(frame|stack|rail)#/)
+  })
+
+  it('checks drawn pads with the pad tolerance and frames, rails and stacks as rigid', { timeout: 20_000 }, () => {
+    const rows = clearances(bakeRecord(303), skel).filter((r) => r.kind === 'machine')
+    expect(rows.length).toBeGreaterThan(30)
+    for (const r of rows) expect(r.tol, r.pair).toBe(r.pair.includes(':pad#') ? PROP_TOL.pad : PROP_TOL.rigid)
+    // the thighs press into the rollers deeper than a rigid part allows, within the padding
+    const roller = rows.filter((r) => /^thigh_[lr] \/ lat-pulldown:pad#/.test(r.pair))
+    expect(roller.length).toBeGreaterThan(0)
+    expect(Math.min(...roller.map((r) => r.min))).toBeLessThan(-PROP_TOL.rigid)
+    expect(roller.every((r) => r.excess === 0)).toBe(true)
   })
 
   it('fails baked motion when the skeleton changes, and skeleton.json when the body model changes', () => {

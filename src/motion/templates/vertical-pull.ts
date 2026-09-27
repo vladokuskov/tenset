@@ -115,14 +115,7 @@ const MIRRORED = ['scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'sho
 // ---------- hanging ----------
 
 function barSpec(p: P, skel: Skeleton): ImplementSpec {
-  const spec = pullupBar({ height: BAR_HEIGHT, gripWidth: p.gripWidth * skel.data.shoulderWidth })
-  if (p.grip !== 'neutral') return spec
-  const g = (p.gripWidth * skel.data.shoulderWidth) / 2
-  return {
-    ...spec,
-    parts: [...spec.parts, cyl([g, -0.02, -0.08], [g, -0.02, 0.08], 0.016), cyl([-g, -0.02, -0.08], [-g, -0.02, 0.08], 0.016)],
-    sites: { l: { pos: [g, -0.02, 0], axis: [0, 0, 1] }, r: { pos: [-g, -0.02, 0], axis: [0, 0, 1] } },
-  }
+  return pullupBar({ height: BAR_HEIGHT, gripWidth: p.gripWidth * skel.data.shoulderWidth, neutral: p.grip === 'neutral' })
 }
 
 function hangBody(skel: Skeleton, q: Float64Array, c: number, p: P, kneeling: boolean) {
@@ -153,11 +146,13 @@ function hangPose(skel: Skeleton, c: number, y: number, p: P, v: Pick<Hang, 'bar
   hangBody(skel, q, c, p, v.kneeling)
   q[skel.dof['pelvis.ty']] = y
   const up = leadUprot(c)
+  // the body hangs with its centre of mass under the grips (neutral handles run forward of the bar)
+  const under = (siteWorld(v.bar, v.barPose, 'l').pos[2] + siteWorld(v.bar, v.barPose, 'r').pos[2]) / 2
   const r = root1d((z) => {
     q[skel.dof['pelvis.tz']] = z
     arms(skel, q, p, v.bar, v.barPose, false, c, up)
-    return centerOfMass(skel, fk(skel, q))[2] - v.barPose.pos[2]
-  }, -0.5, 0.5, { tol: 1e-7 })
+    return centerOfMass(skel, fk(skel, q))[2] - under
+  }, -0.5, 0.7, { tol: 1e-7 })
   q[skel.dof['pelvis.tz']] = r.x
   arms(skel, q, p, v.bar, v.barPose, false, c, up)
   return q
@@ -258,7 +253,7 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const femur = skel.segments[skel.seg.femur_l]
   const mid = skel.data.sites.midfoot_l.local
   const half = femur.offset[0] + 0.05
-  const feetZ = SEAT_HIP[2] + femur.length + 0.03 + mid[2]
+  const feetZ = SEAT_HIP[2] + femur.length + 0.08 + mid[2]
   const feet = [plantFoot(skel, 'l', [half, 0, feetZ], 10), plantFoot(skel, 'r', [-half, 0, feetZ], 10)]
   const base = { feet, vbar }
   const q0 = zeroQ(skel)
@@ -280,7 +275,7 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const q1 = zeroQ(skel)
   seatedBody(skel, q1, 1, base)
   const f1 = fk(skel, q1)
-  const bottom = vbar ? add(sitePos(skel, f1, 'sternum'), VBAR_FINISH) : add(sitePos(skel, f1, 'front_rack'), [0, -0.02, 0.07])
+  const bottom = vbar ? add(sitePos(skel, f1, 'sternum'), VBAR_FINISH) : add(sitePos(skel, f1, 'front_rack'), [0, -0.02, 0.08])
   // thigh pad just above the knees, seat under the pelvis, column and top arm to the pulley (static, drawn only)
   const knee = localToWorld(skel, f0, 'femur_l', [0, -femur.length + 0.1, 0])
   const caps0 = bodyCapsules(skel, f0)

@@ -1,5 +1,5 @@
 import { attachHand, handFrame, implementFromHand, root1d, solveLegs } from '../constraints.ts'
-import { centerOfMass, centerOfPressure, fk, segPos } from '../fk.ts'
+import { centerOfMass, centerOfPressure, fk, segPos, sitePos } from '../fk.ts'
 import { cableForce, cableHandle, comWorld, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { add, cross, DEG, dist, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
@@ -29,6 +29,8 @@ const CABLE_START = { plane: 95, elev: 18 }
 /** share of the lean taken by the legs at the ankles and by the pelvis (a level-ish pelvis keeps both knees soft); the spine side-bends for the rest */
 const LEG_LEAN = 0.6
 const PELVIS_LEAN = 0.15
+/** lean-away: supporting elbow bend where the upright is placed, deg */
+const POST_ELBOW = 15
 
 type Side = 'l' | 'r'
 
@@ -145,6 +147,14 @@ function leanBody(skel: Skeleton, q: Float64Array, stance: StanceSetup, lean: nu
   solveLegs(skel, q, stance.feet)
 }
 
+/** shoulder to grip distance with the elbow bent `elbow` deg */
+function reach(skel: Skeleton, side: Side, elbow: number) {
+  const q = zeroQ(skel)
+  q[skel.dof[`elbow_${side}.flex`]] = elbow
+  const f = fk(skel, q)
+  return dist(sitePos(skel, f, `grip_${side}`), segPos(skel, f, `humerus_${side}`))
+}
+
 function leanContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const work: Side = p.side === 'left' ? 'l' : 'r'
   const free = other(work)
@@ -157,7 +167,7 @@ function leanContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const f = fk(skel, q)
   const gh = segPos(skel, f, `humerus_${free}`)
   const out: V3 = [work === 'r' ? 1 : -1, 0, 0]
-  const grip = add(gh, scale(norm(add(out, [0, -0.1, 0.1])), 0.672))
+  const grip = add(gh, scale(norm(add(out, [0, -0.1, 0.1])), reach(skel, free, POST_ELBOW)))
   const post: ImplementSpec = {
     id: 'post',
     kind: 'bench',

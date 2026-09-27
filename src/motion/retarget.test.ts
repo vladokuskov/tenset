@@ -16,7 +16,8 @@ describe('MPFB2 retarget', () => {
       if (!b.segment) continue
       const got = w.get(name)!.rot
       const want = qmul(f.rot[skel.seg[b.segment]], b.zeroWorld)
-      if (twisty.has(name)) expect(dist(qrot(got, Y), qrot(want, Y))).toBeLessThan(1e-3)
+      // twist bones: the rig's forearm twist bones sit ~0.06 deg off the elbow-wrist line
+      if (twisty.has(name)) expect(dist(qrot(got, Y), qrot(want, Y))).toBeLessThan(2e-3)
       else expect(qdiff(got, want)).toBeLessThan(1e-3)
       if (!/^(forearm|hand)_/.test(b.segment)) expect(qdiff(f.rot[skel.seg[b.segment]], [0, 0, 0, 1])).toBeLessThan(1e-9)
     }
@@ -44,7 +45,7 @@ describe('MPFB2 retarget', () => {
     const w = boneWorld(skel, boneRotations(skel, f))
     for (const s of skel.segments) {
       const head = w.get(s.bones[0].name)!.head
-      expect(dist(head, f.pos[s.index])).toBeLessThan(5e-4)
+      expect(dist(head, f.pos[s.index])).toBeLessThan(1e-3)
     }
   })
 

@@ -1,7 +1,7 @@
 import { Matrix4, Quaternion, Vector3 } from 'three'
-import { finish, Kit, vec, type PropBuild } from './kit'
-import { foot } from './parts'
-import type { GripSocket, SurfaceSocket } from './sockets'
+import { finish, Kit, vec, type PropBuild } from './kit.ts'
+import { foot } from './parts.ts'
+import type { GripSocket, SurfaceSocket } from './sockets.ts'
 
 // 45-degree leg press. Frame as the squat template's leg press: X across, Y up, the lifter faces +Z; the sled rides up
 // the rails along d = (0, sin a, cos a) from the hip point. Seat, back pad and side handles default to where the

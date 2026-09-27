@@ -8,7 +8,7 @@
 // inline poses use | as separator: --shot 'x={"base":"relaxed","joints":{...}}|front'
 // live motion contact sheets (/dev/motion, one row of phases per exercise): <out>/figure-<id>.png
 // node pipeline/render/still.ts --out qa/out/animated --motion all [--phases 8] [--view hero|front|side|back] [--live]
-//   [--mfocus wrist_R:0.3] (close-up on a bone)
+//   [--mfocus wrist_R:0.3] (close-up on a bone) [--yaw 20] (degrees added to the camera azimuth)
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { chromium, type Browser, type Page } from '@playwright/test'
@@ -339,7 +339,7 @@ async function probeHandles() {
   return out
 }
 
-export type MotionSheet = { id: number; phases: number; view?: string; live?: boolean; viewport: [number, number]; focus?: string; size?: number }
+export type MotionSheet = { id: number; phases: number; view?: string; live?: boolean; viewport: [number, number]; focus?: string; size?: number; yaw?: number }
 
 /** ids of the exercises with a shipped baked loop */
 export function motionIds(): number[] {
@@ -353,6 +353,7 @@ async function renderMotion(page: Page, base: string, m: MotionSheet, dir: strin
   if (m.live) q.set('live', '1')
   if (m.focus) q.set('focus', m.focus)
   if (m.size) q.set('size', String(m.size))
+  if (m.yaw) q.set('yaw', String(m.yaw))
   const [w, h] = m.viewport
   if (page.viewportSize()?.width !== w || page.viewportSize()?.height !== h) await page.setViewportSize({ width: w, height: h })
   await page.goto(`${base}/dev/motion?${q}`)
@@ -370,7 +371,7 @@ async function renderMotion(page: Page, base: string, m: MotionSheet, dir: strin
 }
 
 async function gridSheet(page: Page, files: string[], captions: string[], title: string, cols: number, out: string) {
-  const cell = 240
+  const cell = 480
   const imgs = files
     .map((f, i) => `<figure><img src="data:image/png;base64,${readFileSync(f).toString('base64')}"><figcaption>${captions[i]}</figcaption></figure>`)
     .join('')
@@ -417,6 +418,7 @@ function parseArgs(argv: string[]) {
   let live = false
   let mfocus: string | undefined
   let msize: number | undefined
+  let yaw: number | undefined
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--preset') preset = argv[++i]
@@ -440,6 +442,7 @@ function parseArgs(argv: string[]) {
     } else if (a === '--phases') phases = Number(argv[++i])
     else if (a === '--view') view = argv[++i]
     else if (a === '--live') live = true
+    else if (a === '--yaw') yaw = Number(argv[++i])
     else if (a === '--mfocus') {
       const [bone, sz] = argv[++i].split(':')
       mfocus = bone
@@ -471,7 +474,7 @@ function parseArgs(argv: string[]) {
     if (perf) s.perf = true
     if (pulse !== undefined) s.pulse = pulse
   }
-  const motions: MotionSheet[] = motion.map((id) => ({ id, phases, view, live, viewport: viewport ?? [390, 480], focus: mfocus, size: msize }))
+  const motions: MotionSheet[] = motion.map((id) => ({ id, phases, view, live, viewport: viewport ?? [390, 480], focus: mfocus, size: msize, yaw }))
   return { shots, out, sheet, preset, only, compose, motions }
 }
 
@@ -512,7 +515,7 @@ async function main() {
       const tmp = path.join(outDir, '.frames')
       mkdirSync(tmp, { recursive: true })
       const { files, captions } = await renderMotion(page, url, m, tmp)
-      const tag = [m.view, m.focus].filter(Boolean).join('-')
+      const tag = [m.view, m.focus, m.yaw && `yaw${m.yaw}`].filter(Boolean).join('-')
       const file = path.join(outDir, `figure-${m.id}${tag ? `-${tag}` : ''}.png`)
       await gridSheet(sheetPage, files, captions, `${m.id}${tag ? ` ${tag}` : ''}`, Math.min(4, m.phases), file)
       console.log(`${path.relative(ROOT, file)} (${Date.now() - t} ms)`)

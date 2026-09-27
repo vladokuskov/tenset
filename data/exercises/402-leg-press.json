@@ -37,7 +37,7 @@
     405
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "machine",
@@ -65,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Auto-approved 2026-09-28 per owner sign-off rule: v1.1 adversarial check rated ok; owner saw v1 loops (\"look perfect\")."
   }
 }

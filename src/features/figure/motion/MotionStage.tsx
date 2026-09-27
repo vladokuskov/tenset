@@ -5,7 +5,7 @@ import type { Baked, CompactMotion } from '../../../motion/bake.ts'
 import { ContactShadow } from '../ContactShadow'
 import { Figure, type FigureHandle } from '../Figure'
 import { StudioEnvironment, StudioLights } from '../Studio'
-import { frameFit } from '../views'
+import { frameFit, frameFitMargin } from '../views'
 import { MotionClock } from './clock'
 import { composeMotion, viewPresets, type CameraPreset, type MotionExercise, type MotionScene, type ViewPreset } from './compose'
 import { MotionProps, type MotionPropsHandle } from './MotionProps'
@@ -29,7 +29,8 @@ export type MotionStageProps = {
 
 const DEG = Math.PI / 180
 const READY_AT = 6
-const MARGIN = 1.05
+/** clear frame on each side around the figure and what it holds or stands on */
+const MARGIN = 0.065
 
 function cameraFor(scene: MotionScene, view: ViewPreset, yaw: number): CameraPreset {
   const base = view === 'hero' ? scene.hero : viewPresets[view]
@@ -79,7 +80,8 @@ function Driver({ scene, figure, clock, target, snap, focus, onReady }: {
     if (key !== fitted.current) {
       fitted.current = key
       camera.aspect = size.width / size.height
-      frameFit(camera, points, cur.az * DEG, focus ? 1 : MARGIN, cur.elev)
+      if (focus) frameFit(camera, points, cur.az * DEG, 1, cur.elev)
+      else frameFitMargin(camera, points, cur.az * DEG, MARGIN, cur.elev)
       if (lights.current) lights.current.rotation.y = cur.az * DEG
     }
     if (frames.current <= READY_AT && ++frames.current === READY_AT) onReady()

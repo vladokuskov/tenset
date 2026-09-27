@@ -23,7 +23,11 @@ function solve(A: number[][], B: number[][]) {
 
 export type Tps = { map(p: Vec): Vec; residuals: number[] }
 
-/** Warp taking `src[i]` to `dst[i]`; `lambda` > 0 trades exact interpolation for smoothness (units of r). */
+/**
+ * Warp taking `src[i]` to `dst[i]`, relaxed by `lambda` (units of r). U = r is minus the 3D biharmonic Green's
+ * function, so a positive `lambda` slightly exaggerates each landmark's pull instead of smoothing it (the atlas is
+ * calibrated with that), and a pair of landmarks about `lambda` apart makes the system singular.
+ */
 export function fitTps(src: Vec[], dst: Vec[], lambda = 0): Tps {
   const n = src.length
   const A: number[][] = []

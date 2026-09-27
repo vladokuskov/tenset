@@ -51,6 +51,10 @@ function points(name: string): Vec[] {
 
 const mid = (a: Vec, b: Vec): Vec => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]
 const extreme = (pts: Vec[], score: (p: Vec) => number) => pts.reduce((best, p) => (score(p) > score(best) ? p : best))
+const norm3 = (v: Vec): Vec => {
+  const l = Math.hypot(v[0], v[1], v[2]) || 1
+  return [v[0] / l, v[1] / l, v[2] / l]
+}
 const centroid = (pts: Vec[]): Vec => {
   const c: Vec = [0, 0, 0]
   for (const p of pts) for (let k = 0; k < 3; k++) c[k] += p[k] / pts.length
@@ -125,6 +129,15 @@ export function bp3dLandmarks() {
     out[`wrist_${S}`] = mid(radialStyloid, ulnarStyloid)
     out[`radial_${S}`] = radialStyloid
     out[`ulnar_${S}`] = ulnarStyloid
+    // middle finger: MCP joint (head of the third metacarpal) and the fingertip on the skin
+    const mc3 = points(`${sideName(s)} third metacarpal bone`)
+    const mcBot = Math.min(...mc3.map((p) => p[2]))
+    const mcp = fitSphere(mc3.filter((p) => p[2] < mcBot + 12)).center
+    out[`finger3-1_${S}`] = mcp
+    const tip = extreme(points(`distal phalanx of ${sideName(s)} middle finger`), (p) => -p[2])
+    const ax = norm3([tip[0] - mcp[0], tip[1] - mcp[1], tip[2] - mcp[2]])
+    const along = (p: Vec) => (p[0] - mcp[0]) * ax[0] + (p[1] - mcp[1]) * ax[1] + (p[2] - mcp[2]) * ax[2]
+    out[`fingertip_${S}`] = extreme(points('skin').filter((p) => Math.hypot(p[0] - tip[0], p[1] - tip[1], p[2] - tip[2]) < 15), along)
     const femur = points(`${sideName(s)} femur`)
     const fTop = Math.max(...femur.map((p) => p[2]))
     const top = femur.filter((p) => p[2] > fTop - 60)

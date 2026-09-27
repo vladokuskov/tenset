@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 import { barbell as barbellSpec, ezBar as ezBarSpec, type ImplementSpec, type Part } from '../../../motion/implements.ts'
-import { finish, Kit, type PropBuild } from './kit'
-import { gripSocket, type GripSocket } from './sockets'
+import { finish, Kit, type PropBuild } from './kit.ts'
+import { gripSocket, type GripSocket } from './sockets.ts'
 
 // Free bars drawn from the motion implement descriptors (src/motion/implements.ts), so lengths, radii, plate
 // positions and grip sites are the ones the solver uses. Frame: bar along X (left hand on +X), centre at the origin.

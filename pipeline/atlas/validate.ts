@@ -1,7 +1,7 @@
 // Atlas validation against the 2D body map: the aligned body (anatomical pose, landmark TPS into BodyParts3D
 // millimetres) is rasterized orthographically in the 2D map's frame with the baked region texture, then compared
 // head by head with the region paths of public/anatomy/{front,back}.svg (same taxonomy ids and sides).
-// node pipeline/atlas/validate.ts  ->  qa/out/polish/atlas-overlay-{front,back}.png, atlas-validate.json
+// node pipeline/atlas/validate.ts [--out qa/out/polish]  ->  <out>/atlas-overlay-{front,back}.png, atlas-validate.json
 import fs from 'node:fs'
 import path from 'node:path'
 import { PNG } from 'pngjs'
@@ -12,7 +12,8 @@ import { ATLAS_CACHE } from './paths.ts'
 import { frame, H, MARGIN, svgLabels, type View } from './map2d.ts'
 import { writePng } from './webp.ts'
 
-const QA = path.join(ROOT, 'qa/out/polish')
+const argv = process.argv.slice(2)
+const QA = path.resolve(ROOT, argv.includes('--out') ? argv[argv.indexOf('--out') + 1] : 'qa/out/polish')
 /** a head counts as misplaced when its centroid is further than this from the 2D map's (mm) */
 const MISPLACED_MM = 35
 /** 3D pixels further than this from the 2D region count as bleeding (mm) */

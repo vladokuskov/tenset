@@ -1,9 +1,9 @@
-import { attachHand, handFrame, implementFromHand, legKinematics, midpoint, root1d, writeLeg, type FootTarget } from '../constraints.ts'
+import { attachHand, handFrame, implementFromHand, legKinematics, root1d, writeLeg, type FootTarget } from '../constraints.ts'
 import { dls } from '../ik.ts'
-import { bodyCapsules, capsuleClearance, restAgainst } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, restAgainst } from '../collide.ts'
 import { centerOfMass, fk, localToWorld } from '../fk.ts'
 import { barbell, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
-import { add, cross, DEG, lerp, neg, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, scale, sub, type Quat, type V3 } from '../math.ts'
+import { add, cross, DEG, dot, lerp, neg, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import type { ParamsOf } from './schemas.ts'
@@ -36,29 +36,41 @@ const TOP_ANKLE = 5
 /** trunk (pelvis) lean at the bottom when no bar sets it, deg */
 const TILT: Record<string, number> = { goblet: 20, none: 22 }
 const DB_KG = 24
-/** goblet dumbbell centre below the cupping hands: half the handle */
-const GOBLET_DROP = 0.065
+/**
+ * Goblet: the dumbbell stands vertical against the chest, its centre `up` above the sternum and sunk `sink` into it;
+ * both palms cup the underside of the top head either side of the handle (dumbbell frame: X up the handle, Y forward,
+ * Z to the lifter's left), palms up and in, fingers up round the rim, elbows down.
+ */
+const GOBLET = { up: 0.05, sink: 0.004, cup: [0.033, 0.03, 0.06] as V3, fingers: [1, 0.8, -0.3] as V3, palm: [1, 0, -0.5] as V3 }
+const GOBLET_ROT = implementFromHand([0, 1, 0], [0, 0, 1])
 /** Smith: midfoot ahead of the rail line, m */
 const SMITH_FEET: Record<P['footPosition'], number> = { low: 0, mid: 0.06, high: 0.12, forward: 0.16 }
 /** front rack grip: the schema default (2.1) is a back-squat width; clean grips sit just outside the shoulders */
 const RACK_GRIP = 1.3
 /** front rack wrist extension range (motion decision 2026-09-27: real lifters pass the 70 deg default) */
 const RACK_WRIST: [number, number] = [-90, 75]
-/** bar resting depth on the front delts (capsule clearance, m) and how far it moves forward per metre of lift */
 /**
- * Front rack on this rig (humerus 27 cm, forearm 28 cm, elbow flexion capped at 150): the bar sits 8 cm above the
- * standing front-rack site (the delts bunch up with the arms raised), the fingertips take it at a 60 deg slant with the
- * wrists extended 85 deg and the elbows forward at ~35 deg elevation. A square full-hand rack with the elbows level is
- * out of reach (the fingers cannot get back to the bar), and higher elbows press the upper arms into the chest.
+ * Front rack: elbows up and forward (upper arm near horizontal), the bar on the shelf the raised front delts make,
+ * clear of the throat, and across the fingers with the wrists extended. The bar goes where the fingers hold it; the
+ * arm is solved for the shelf, the throat, the elbow height and the grip width together.
  */
-const RACK_LIFT = 0.08
+const RACK = {
+  /** upper-arm elevation the solve pulls towards, deg */
+  elev: 82,
+  /** bar sinking into the delts (capsule clearance, m) */
+  sink: 0.008,
+  /** clearance from the bar to the neck and head, m */
+  throat: 0.02,
+  /** scapulae protracted and elevated: the shoulders come forward and up under the bar */
+  clavicle: { prot: 14, elev: 10 },
+}
 /** plane, elevation, rotation, elbow, pronation, wrist flexion, deviation */
-const RACK_SEED = [107, 36, 15, 142, 56, -85, 4]
+const RACK_SEEDS = [[75, 80, -20, 145, 40, -80, 0], [85, 85, 0, 148, 60, -85, 5], [70, 75, -40, 140, 20, -75, -5]]
 /** body regions a bar rests on, where it may sink into the soft tissue a little */
 const BAR_REST: Record<NonNullable<Stand['barSite']>, string[]> = {
   back_high: ['trunk', 'girdle_l', 'girdle_r', 'neck', 'upperarm_l', 'upperarm_r'],
   back_low: ['trunk', 'girdle_l', 'girdle_r', 'upperarm_l', 'upperarm_r'],
-  front_rack: ['trunk', 'girdle_l', 'girdle_r', 'upperarm_l', 'upperarm_r', 'neck'],
+  front_rack: ['trunk', 'girdle_l', 'girdle_r', 'upperarm_l', 'upperarm_r'],
 }
 /** unloaded squat: centre of mass target behind the midfoot, m (towards the heel, trunk more upright) */
 const UNLOADED_COM = -0.03
@@ -70,8 +82,10 @@ const PRESS_DF: Record<P['footPosition'], number> = { low: 37, mid: 33, high: 24
 /** stop the sled before the thighs reach the ribs (posterior pelvic tilt is not modelled; the gate caught 128) */
 const PRESS_HIP_MAX = 112
 /** back pad recline from vertical, deg */
-const PRESS_RECLINE = 50
+const PRESS_RECLINE = 53
 const PRESS_HIP: V3 = [0, 0.62, 0]
+/** the drawn leg press's seat pan (props/legpress.ts): surface centre `along` the pan from the hip point and `drop` below it */
+const PRESS_SEAT = { along: 0.114, drop: 0.0545, tilt: 25 }
 
 type Stand = {
   kind: 'stand'
@@ -96,6 +110,8 @@ type Press = {
   sledRot: Quat
   feet: { side: 'l' | 'r'; rot: Quat; local: V3 }[]
   s: [number, number]
+  /** body offset from the hip point (seated on the drawn seat pan) */
+  shift: V3
 }
 
 type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Press }
@@ -155,7 +171,13 @@ function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
       })
     }
   } else if (p.implement === 'dumbbell') {
-    impls.push(dumbbell({ id: 'db', mass: DB_KG }))
+    const db = dumbbell({ id: 'db', mass: DB_KG })
+    const [x, y, z] = GOBLET.cup
+    const [ax, ay, az] = gobletHand().axis
+    db.sites.cup_l = { pos: [x, y, z], axis: [ax, ay, az] }
+    db.sites.cup_r = { pos: [x, y, -z], axis: [ax, ay, -az] }
+    impls.push(db)
+    contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: 'db', grip: 'cup_l' } }, { site: 'grip_r', kind: 'grip', target: { implement: 'db', grip: 'cup_r' } })
     v.holdKey = 'goblet'
     v.goblet = true
   }
@@ -180,8 +202,8 @@ function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     balance: smith ? undefined : v.bar ? { point: { implement: v.bar.id }, over: 'midfoot', tol: 0.025 } : { point: 'com', over: 'midfoot', tol: 0.025, target: v.goblet ? 0 : UNLOADED_COM },
   }
   if (v.bar) setup.rests = [{ implement: v.bar.id, regions: BAR_REST[v.barSite!], tol: 20 }]
-  // the cupped hands wrap the top head's rim and the lower head may touch the belly
-  if (v.goblet) setup.rests = [{ implement: 'db', regions: ['trunk', 'hand_l', 'hand_r'], tol: 40 }]
+  // the dumbbell rests on the chest and the cupped palms press on the top head
+  if (v.goblet) setup.rests = [{ implement: 'db', regions: ['trunk', 'hand_l', 'hand_r'], tol: 15 }]
   if (v.barSite === 'front_rack') setup.limits = { 'wrist_l.flex': RACK_WRIST, 'wrist_r.flex': RACK_WRIST }
   return { tempo, setup, v }
 }
@@ -213,33 +235,9 @@ function solveBarArms(skel: Skeleton, v: Stand): [number, number][] {
   stand(skel, q, v.stance, { knee: TOP_KNEE, df: TOP_ANKLE, tilt: 3 })
   const thorax = fk(skel, q).rot[skel.seg.thorax2]
   const T = (x: number, y: number, z: number) => qrot(thorax, [x, y, z])
-  if (v.barSite === 'front_rack') v.barLocal = add(skel.data.sites.front_rack.local, [0, RACK_LIFT, 0])
-  const g = siteWorld(v.bar!, { id: v.bar!.id, pos: barPos(skel, q, v), rot: qid() }, 'l')
-  if (v.barSite === 'front_rack') {
-    // fingertips on the bar, wrist extended, elbows forward: a small damped least-squares solve from a hand-checked
-    // seed (the free hand-roll search wanders between roots here)
-    setDofs(skel, q, { 'clavicle_l.prot': 10, 'clavicle_l.elev': 8, 'grip_l.close': 0.6 })
-    const names = ['shoulder_l.plane', 'shoulder_l.elev', 'shoulder_l.rot', 'elbow_l.flex', 'forearm_l.pro', 'wrist_l.flex', 'wrist_l.dev'].map((n) => skel.dof[n])
-    const lo = [80, 25, -60, 110, -90, RACK_WRIST[0], -35], hi = [130, 70, 60, 150, 85, RACK_WRIST[1], 20]
-    const site = skel.data.sites.fingers_l
-    for (let pass = 0; pass < 2; pass++) {
-      const res = (x: number[]) => {
-        names.forEach((d, i) => (q[d] = x[i]))
-        const f = fk(skel, q)
-        const tip = localToWorld(skel, f, 'hand_l', site.local)
-        const across = qrot(f.rot[skel.seg.hand_l], site.axis!)
-        const slant = Math.acos(Math.min(1, Math.abs(across[0]))) / DEG
-        // keep the upper arm off the chest (the gate allows 12 mm of soft contact)
-        const caps = bodyCapsules(skel, f)
-        const arm = caps.filter((c) => c.region === 'upperarm_l'), chest = caps.filter((c) => c.region === 'trunk')
-        const press = Math.max(0, ...arm.flatMap((a) => chest.map((c) => -capsuleClearance(a, c) - 0.006)))
-        return [...sub(tip, g.pos).map((e) => e * 100), (x[5] + 85) * 0.02, Math.max(0, slant - 60) * 0.05, (x[1] - 40) * 0.005, press * 100]
-      }
-      const r = dls(res, RACK_SEED, { iters: 80, lo, hi })
-      res(r.x)
-      setScapula(skel, q, 'l')
-    }
-  } else {
+  if (v.barSite === 'front_rack') solveRack(skel, q, v)
+  else {
+    const g = siteWorld(v.bar!, { id: v.bar!.id, pos: barPos(skel, q, v), rot: qid() }, 'l')
     // high bar: elbows down and back; low bar: elbows back and up
     const pole = v.barSite === 'back_low' ? T(0.5, -0.3, -1) : T(0.4, -0.7, -0.6)
     attachHand(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: T(0, 0.3, 1) }, { pole, wristBias: v.barSite === 'back_low' ? 20 : 10, planeHint: -90 })
@@ -250,6 +248,57 @@ function solveBarArms(skel: Skeleton, v: Stand): [number, number][] {
   })
 }
 
+/** front rack arm (left; mirrored by the caller) and the bar position in the thorax frame it puts the bar at */
+function solveRack(skel: Skeleton, q: Float64Array, v: Stand) {
+  setDofs(skel, q, { 'clavicle_l.prot': RACK.clavicle.prot, 'clavicle_l.elev': RACK.clavicle.elev, 'grip_l.close': 0.6 })
+  const names = ['shoulder_l.plane', 'shoulder_l.elev', 'shoulder_l.rot', 'elbow_l.flex', 'forearm_l.pro', 'wrist_l.flex', 'wrist_l.dev'].map((n) => skel.dof[n])
+  const lo = [30, 45, -100, 115, -90, RACK_WRIST[0], -35], hi = [125, 105, 70, 150, 85, RACK_WRIST[1], 20]
+  const site = skel.data.sites.fingers_l
+  const g = v.bar!.sites.l.pos[0]
+  const r = (v.bar!.parts[0] as Extract<Part, { shape: 'cylinder' }>).r
+  const measure = (x: number[]) => {
+    names.forEach((d, i) => (q[d] = x[i]))
+    setScapula(skel, q, 'l')
+    const f = fk(skel, q)
+    const t = skel.seg.thorax2
+    const tip = qrot(qconj(f.rot[t]), sub(localToWorld(skel, f, 'hand_l', site.local), f.pos[t]))
+    const bar = { a: localToWorld(skel, f, 'thorax2', [-0.35, tip[1], tip[2]]), b: localToWorld(skel, f, 'thorax2', [0.35, tip[1], tip[2]]), r }
+    const caps = bodyCapsules(skel, f)
+    const clear = (regions: string[]) => Math.min(...caps.filter((c) => regions.includes(c.region)).map((c) => capsuleClearance(c, bar)))
+    const arm = caps.filter((c) => c.region === 'upperarm_l'), chest = caps.filter((c) => c.region === 'trunk')
+    const press = Math.max(0, ...arm.flatMap((a) => chest.map((c) => -capsuleClearance(a, c) - 0.006)))
+    const head = caps.filter((c) => c.region === 'neck' || c.region === 'head')
+    const hand = caps.filter((c) => c.region === 'hand_l' || c.region === 'forearm_l')
+    const handHead = Math.min(...hand.flatMap((a) => head.map((c) => capsuleClearance(a, c))))
+    const across = qrot(f.rot[skel.seg.hand_l], site.axis!)
+    const slant = Math.acos(Math.min(1, Math.abs(dot(across, qrot(f.rot[t], [1, 0, 0]))))) / DEG
+    const palmUp = dot(qrot(f.rot[skel.seg.hand_l], site.normal!), qrot(f.rot[t], [0, 1, 0]))
+    return { tip, shelf: clear(['upperarm_l', 'girdle_l']), throat: clear(['neck', 'head']), chest: clear(['trunk']), press, handHead, slant, palmUp }
+  }
+  const res = (x: number[]) => {
+    const m = measure(x)
+    return [
+      (m.tip[0] - g) * 300,
+      (m.shelf + RACK.sink) * 100,
+      Math.max(0, RACK.throat - m.throat) * 200,
+      Math.max(0, -m.chest - 0.012) * 100,
+      (x[1] - RACK.elev) * 0.1,
+      (x[5] + 80) * 0.01,
+      Math.max(0, m.slant - 35) * 0.05,
+      Math.max(0, 0.4 - m.palmUp) * 5,
+      m.press * 100,
+      Math.max(0, 0.005 - m.handHead) * 100,
+    ]
+  }
+  let best: { x: number[]; err: number } | null = null
+  for (const seed of RACK_SEEDS) {
+    const r0 = dls(res, seed, { iters: 120, lo, hi })
+    if (!best || r0.err < best.err) best = r0
+  }
+  const m = measure(best!.x)
+  v.barLocal = [0, m.tip[1], m.tip[2]]
+}
+
 function bodyweightArms(skel: Skeleton, q: Float64Array, p: P, s: number) {
   if (p.armPosition === 'forward') setDofs(skel, q, { 'shoulder_*.plane': 90, 'shoulder_*.elev': 60 + 30 * s, 'elbow_*.flex': 5, 'forearm_*.pro': 40, 'grip_*.close': 0.2 })
   else if (p.armPosition === 'crossed') setDofs(skel, q, { 'shoulder_*.plane': 110, 'shoulder_*.elev': 80, 'elbow_*.flex': 140, 'shoulder_*.rot': 60 })
@@ -257,17 +306,47 @@ function bodyweightArms(skel: Skeleton, q: Float64Array, p: P, s: number) {
   scapulae(skel, q)
 }
 
-function gobletArms(skel: Skeleton, q: Float64Array) {
-  setDofs(skel, q, {
-    'shoulder_*.plane': 65, 'shoulder_*.elev': 42, 'shoulder_*.rot': 20, 'elbow_*.flex': 118, 'forearm_*.pro': -45,
-    'wrist_*.flex': -20, 'clavicle_*.prot': 6, 'clavicle_*.elev': 2,
-  })
-  scapulae(skel, q)
+/** left cupped hand in the dumbbell frame: palm up and in, fingers up and forward; pinky-to-index line and palm */
+function gobletHand(): { axis: V3; palm: V3 } {
+  const f = norm(GOBLET.fingers)
+  const p0 = norm(GOBLET.palm)
+  const palm = norm(sub(p0, scale(f, dot(p0, f))))
+  return { axis: cross(palm, f), palm }
 }
 
-/** goblet: the palms cup the underside of the top head, so the dumbbell hangs below the hands, handle vertical */
-function gobletPos(skel: Skeleton, f: ReturnType<typeof fk>): V3 {
-  return add(midpoint(handFrame(skel, f, 'l').pos, handFrame(skel, f, 'r').pos), [0, -GOBLET_DROP, 0])
+let gobletLast: { skel: Skeleton; key: string; pose: ImplementPose } | null = null
+
+/** goblet dumbbell: vertical, resting against the chest in front of the sternum */
+function gobletPose(skel: Skeleton, f: ReturnType<typeof fk>, spec: ImplementSpec): ImplementPose {
+  const t = skel.seg.thorax2
+  const key = `${f.pos[t].join()}|${f.rot[t].join()}`
+  if (gobletLast?.skel === skel && gobletLast.key === key) return gobletLast.pose
+  const base = add(localToWorld(skel, f, 'thorax2', skel.data.sites.sternum.local), [0, GOBLET.up, 0])
+  const fwd = qrot(f.rot[t], [0, 0, 1])
+  const dir = norm([fwd[0], 0, fwd[2]])
+  const chest = bodyCapsules(skel, f).filter((c) => c.region === 'trunk' && c.segment.startsWith('thorax'))
+  const at = (d: number): ImplementPose => ({ id: 'db', pos: add(base, scale(dir, d)), rot: GOBLET_ROT })
+  // the heads meet the chest before the handle does; clearance grows almost linearly with the distance, so secant steps
+  const heads = { ...spec, parts: spec.parts.slice(1) }
+  const gap = (d: number) => Math.min(...placeParts(heads, at(d)).flatMap((sd) => chest.map((c) => capsuleSolidClearance(c, sd)))) + GOBLET.sink
+  let d0 = 0.1, d1 = 0.2, g0 = gap(d0), g1 = gap(d1)
+  for (let k = 0; k < 12 && Math.abs(g1) > 1e-6 && g1 !== g0; k++) {
+    const d2 = Math.min(0.4, Math.max(0, d1 - (g1 * (d1 - d0)) / (g1 - g0)))
+    ;[d0, g0, d1, g1] = [d1, g1, d2, gap(d2)]
+  }
+  const pose = at(d1)
+  gobletLast = { skel, key, pose }
+  return pose
+}
+
+/** both palms onto the top head (left solved, right mirrored) */
+function gobletArms(skel: Skeleton, q: Float64Array, spec: ImplementSpec) {
+  setDofs(skel, q, { 'clavicle_*.prot': 6, 'clavicle_*.elev': 2, 'grip_*.close': 1 })
+  const pose = gobletPose(skel, fk(skel, q), spec)
+  const g = siteWorld(spec, pose, 'cup_l')
+  const palm = qrot(pose.rot, gobletHand().palm)
+  attachHand(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm }, { pole: [-0.1, -1, 0.5], planeHint: 60, wristBias: 40 })
+  for (const k of ARM_DOFS) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
 }
 
 function scapulae(skel: Skeleton, q: Float64Array) {
@@ -298,10 +377,11 @@ function sampleStand(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Stand): Pose 
     stand(skel, q, v.stance, { knee, df, tilt: r.x })
   } else {
     // no bar: trunk lean keyed, ankles bring the system COM over the midfoot
-    const upper = v.goblet ? (qq: Float64Array) => gobletArms(skel, qq) : (qq: Float64Array) => bodyweightArms(skel, qq, p, s)
+    const db = ctx.setup.implements.find((i) => i.id === 'db')!
+    const upper = v.goblet ? (qq: Float64Array) => gobletArms(skel, qq, db) : (qq: Float64Array) => bodyweightArms(skel, qq, p, s)
     const measure = (qq: Float64Array) => {
       const f = fk(skel, qq)
-      const loads = v.goblet ? [{ mass: DB_KG, pos: gobletPos(skel, f) }] : []
+      const loads = v.goblet ? [{ mass: DB_KG, pos: gobletPose(skel, f, db).pos }] : []
       return centerOfMass(skel, f, loads)[2]
     }
     const target = v.goblet ? 0 : UNLOADED_COM
@@ -314,21 +394,41 @@ function sampleStand(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Stand): Pose 
     implements_.push(bp)
     if (v.railZ !== undefined) implements_.push({ id: 'smith', pos: [0, 0, 0], rot: qid() })
   } else if (v.goblet) {
-    const f = fk(skel, q)
-    implements_.push({ id: 'db', pos: gobletPos(skel, f), rot: implementFromHand([0, 1, 0], [0, 0, 1]) })
+    implements_.push(gobletPose(skel, fk(skel, q), ctx.setup.implements.find((i) => i.id === 'db')!))
   }
   return { q, implements: implements_, contacts: ctx.setup.contacts }
 }
 
 // ---------- leg press ----------
 
-function pressPelvis(skel: Skeleton, q: Float64Array) {
+function pressPelvis(skel: Skeleton, q: Float64Array, shift: V3) {
   // arms rest on the side handles; the handles are placed where these angles put the hands
   setDofs(skel, q, {
     'lumbar.flex': 4, 'thorax.flex': 6, 'neck.flex': 22, 'head.flex': 10, 'clavicle_*.prot': -5, 'grip_*.close': 1,
     'shoulder_*.plane': 35, 'shoulder_*.elev': 22, 'elbow_*.flex': 55, 'forearm_*.pro': 10,
   })
-  setPelvis(skel, q, PRESS_HIP, -(PRESS_RECLINE + 10))
+  setPelvis(skel, q, add(PRESS_HIP, shift), -(PRESS_RECLINE + 10))
+}
+
+const SEAT_ROT = qmul(qaxis([1, 0, 0], -PRESS_SEAT.tilt * DEG), qfromBasis([1, 0, 0], [0, 1, 0]))
+const SEAT_PAD = 0.06
+
+/** seat pan under the pelvis, resting against the measured body (the glutes sink ~1 cm into the padding) */
+function pressSeat(skel: Skeleton, f: ReturnType<typeof fk>) {
+  const guess = add(localToWorld(skel, f, 'pelvis', [0, -0.12, 0.12]), [0, -0.03, 0])
+  const trunkCaps = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
+  return restAgainst(trunkCaps, { shape: 'box', center: guess, size: [0.42, SEAT_PAD, 0.42], rot: SEAT_ROT, pad: true }, neg(qrot(SEAT_ROT, [0, 1, 0])))
+}
+
+/** body offset from the hip point that seats the lifter on the drawn machine's seat pan */
+function pressShift(skel: Skeleton): V3 {
+  const q = zeroQ(skel)
+  pressPelvis(skel, q, [0, 0, 0])
+  const seat = pressSeat(skel, fk(skel, q))
+  const n = qrot(SEAT_ROT, [0, 1, 0])
+  const t = PRESS_SEAT.tilt * DEG
+  const drawn = add(PRESS_HIP, add(scale([0, Math.sin(t), Math.cos(t)], PRESS_SEAT.along), scale(n, -PRESS_SEAT.drop)))
+  return scale(n, dot(sub(drawn, add(seat.center, scale(n, SEAT_PAD / 2))), n))
 }
 
 function pressFeet(skel: Skeleton, v: Pick<Press, 'd' | 'sledRot' | 'feet'>, s: number): FootTarget[] {
@@ -356,8 +456,9 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   // sled frame: X across, Y = plate normal towards the lifter, Z up the plate
   const sledRot = qfromBasis([1, 0, 0], neg(d))
   const half = stanceWidth(skel, p.stance) / 2
+  const shift = pressShift(skel)
   const q = zeroQ(skel)
-  pressPelvis(skel, q)
+  pressPelvis(skel, q, shift)
   const placed = (e: number) => ({
     d,
     sledRot,
@@ -377,7 +478,6 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const s: [number, number] = [sFor(e, bottom), sFor(e, PRESS_TOP_KNEE)]
   const v0 = placed(e)
   const f0 = fk(skel, q)
-  const W = (local: V3) => localToWorld(skel, f0, 'pelvis', local)
   const hand = (side: 'l' | 'r') => handFrame(skel, f0, side)
   const handle = (side: 'l' | 'r') => {
     const h = hand(side)
@@ -396,12 +496,10 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const behind = norm(cross(back, [1, 0, 0]))
   const padRot = qfromBasis([1, 0, 0], neg(behind))
   const padGuess = add(scale(add(f0.pos[skel.seg.pelvis], f0.pos[skel.seg.neck1]), 0.5), scale(behind, 0.14))
-  const seatRot = qmul(qaxis([1, 0, 0], -25 * DEG), qfromBasis([1, 0, 0], [0, 1, 0]))
-  const seatGuess = add(W([0, -0.12, 0.12]), [0, -0.03, 0])
   // pads rest against the measured body: the back and glutes sink ~1 cm into the padding
   const trunkCaps = bodyCapsules(skel, f0).filter((c) => c.region === 'trunk')
   const padBox = restAgainst(trunkCaps, { shape: 'box', center: padGuess, size: [0.4, 0.06, 0.75], rot: padRot, pad: true }, behind)
-  const seatBox = restAgainst(trunkCaps, { shape: 'box', center: seatGuess, size: [0.42, 0.06, 0.42], rot: seatRot, pad: true }, neg(qrot(seatRot, [0, 1, 0])))
+  const seatBox = pressSeat(skel, f0)
   const seatMid = seatBox.center
   const railFrom = add(PRESS_HIP, add(scale(d, s[0] + 0.05), scale(up, -0.3)))
   const railTo = add(PRESS_HIP, add(scale(d, s[1] + 0.6), scale(up, -0.3)))
@@ -439,14 +537,14 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     ...gripContacts('handles'),
   ]
   const setup: Setup = { implements: [sled, frame, handles], contacts, tempo, symmetric: true }
-  return { tempo, setup, v: { kind: 'press', d, sledRot, feet: v0.feet, s } }
+  return { tempo, setup, v: { kind: 'press', d, sledRot, feet: v0.feet, s, shift } }
 }
 
 function samplePress(u: number, skel: Skeleton, ctx: Ctx, v: Press): Pose {
   const c = phaseAt(u, ctx.tempo).c
   const sled = lerp(v.s[0], v.s[1], c)
   const q = zeroQ(skel)
-  pressPelvis(skel, q)
+  pressPelvis(skel, q, v.shift)
   pressLegs(skel, q, pressFeet(skel, v, sled))
   const hp: ImplementPose = { id: 'handles', pos: [0, 0, 0], rot: qid() }
   return {

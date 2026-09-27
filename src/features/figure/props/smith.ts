@@ -1,8 +1,8 @@
 import { Matrix4, Vector3 } from 'three'
-import { buildBarbell, type BarSockets } from './barbell'
-import { finish, Kit, type PropBuild } from './kit'
-import { foot } from './parts'
-import type { GripSocket } from './sockets'
+import { buildBarbell, type BarSockets } from './barbell.ts'
+import { finish, Kit, type PropBuild } from './kit.ts'
+import { foot } from './parts.ts'
+import type { GripSocket } from './sockets.ts'
 
 // Smith machine: the bar (an Olympic bar descriptor, as the squat template uses) is fixed to two carriages that ride
 // vertical rails just behind it; a hook on each carriage catches pegs on the uprights. Frame: X across, Y up, the

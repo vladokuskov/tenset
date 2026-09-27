@@ -1,10 +1,29 @@
+import { readdirSync, readFileSync } from 'node:fs'
 import { expect, test } from './fixtures'
+
+type Rec = { id: number; slug: string; name: string; media: { status: string } }
+const baked = new Set(readdirSync(new URL('../src/features/figure/motion/baked/', import.meta.url)).map((f) => Number(f.split('-')[0])))
+const animated = readdirSync(new URL('../data/exercises/', import.meta.url))
+  .map((f) => JSON.parse(readFileSync(new URL(`../data/exercises/${f}`, import.meta.url), 'utf8')) as Rec)
+  .filter((r) => baked.has(r.id))
+const approved = animated.find((r) => r.media.status === 'loop')
+const unapproved = animated.find((r) => r.media.status !== 'loop')
+
+// The build is production: a baked loop the owner has not approved (media.status "card") shows the M1 card.
+test('an unapproved animation shows the card, not the live figure', async ({ page }) => {
+  test.skip(!unapproved, 'every animated exercise is approved')
+  await page.goto(`/exercise/${unapproved!.slug}`)
+  await expect(page.getByText('Demo coming.')).toBeVisible()
+  await expect(page.locator('.touch-pan-y')).toHaveCount(0)
+  await expect(page.locator('canvas')).toHaveCount(0)
+})
 
 // The detail figure must never trap the page on touch: a vertical swipe that starts on it scrolls, a horizontal one
 // turns the figure. Chromium-only CDP touch events, so this runs in the touch project.
 test('a vertical swipe on the live figure scrolls the detail page', async ({ page }) => {
   test.skip(!test.info().project.use.hasTouch, 'touch only')
-  await page.goto('/exercise/barbell-back-squat')
+  test.skip(!approved, 'no approved animation yet (media.status "loop")')
+  await page.goto(`/exercise/${approved!.slug}`)
   const layer = page.locator('.touch-pan-y')
   await expect(layer).toHaveCount(1, { timeout: 15_000 })
   const actions = await layer.evaluate((el) => {

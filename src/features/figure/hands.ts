@@ -6,9 +6,9 @@ import { mirrorSpec, type JointSpec, type Rig, type Vec3 } from './rig.ts'
 // (+X palmar, +Y towards the fingers, +Z towards the thumb). The right hand is the mirror image.
 
 export type HandSide = 'L' | 'R'
-export type GripName = 'relaxed' | 'open' | 'pronated' | 'supinated' | 'neutral' | 'hook' | 'rope' | 'd-handle'
+export type GripName = 'relaxed' | 'open' | 'pronated' | 'supinated' | 'neutral' | 'hook' | 'rope' | 'd-handle' | 'goblet'
 
-export const gripNames: GripName[] = ['relaxed', 'open', 'pronated', 'supinated', 'neutral', 'hook', 'rope', 'd-handle']
+export const gripNames: GripName[] = ['relaxed', 'open', 'pronated', 'supinated', 'neutral', 'hook', 'rope', 'd-handle', 'goblet']
 
 /** handle diameter in metres when none is given */
 export const defaultDiameter: Record<GripName, number> = {
@@ -20,6 +20,7 @@ export const defaultDiameter: Record<GripName, number> = {
   hook: 0.029,
   rope: 0.03,
   'd-handle': 0.03,
+  goblet: 0.033,
 }
 
 type Q4 = [number, number, number, number]
@@ -230,6 +231,17 @@ const POSED: Partial<Record<GripName, Pose0>> = {
       return c.a.clone().lerp(c.b, 0.2).addScaledVector(RADIAL, c.rs + 0.013).addScaledVector(PALM_N, 0.008)
     },
   },
+  // goblet cup: palm up under a dumbbell head, fingers together and slightly curled, thumb along the index
+  goblet: {
+    mcp: [6, 8, 10, 12],
+    pip: [12, 14, 16, 18],
+    dip: [5, 6, 7, 8],
+    spread: 0.25,
+    thumb: (fr) => {
+      const c = capsule(fr, 'finger2-1')
+      return c.a.clone().lerp(c.b, 0.35).addScaledVector(RADIAL, c.rs + 0.012).addScaledVector(PALM_N, -0.002)
+    },
+  },
   // flat, fingers straight and together, thumb out in the palm plane
   open: {
     mcp: [-16, -19, -21, -19],
@@ -431,6 +443,7 @@ const BAKED: Partial<Record<GripName, readonly number[]>> = {
   neutral: [101.911, 63.586, 39.077, -52.501, 0, 0, 17.433, 0, 0, 64.442, -4.488, 16.69, 22.653, -2.089, 10.4, 16.433, -1.231, 8.509, 56.466, -6.079, 11.296, 39.62, -3.054, 8.465, 20.413, -0.897, 4.98, 51.15, -7.835, 10.393, 32.991, -1.349, 4.555, 18.804, -0.393, 2.373, 35.831, -4.1, 5.352, 20.251, 0.34, -1.906, 10.989, 0.11, -1.14, 0.040148, 0.086486, -0.017074, -0.102402, 0.007577, 0.994714],
   hook: [15.959, 22.638, 29.864, 41.056, 0, 0, 27.221, 0, 0, 46.263, 0.458, 9.326, 32.102, -4.17, 14.423, 7.548, -0.26, 3.94, 43.546, -3.728, 9.317, 36.047, -2.544, 7.807, 9.081, -0.179, 2.252, 44.67, -7.04, 10.505, 43.933, -2.344, 5.808, 26.995, -0.803, 3.343, 33.157, -4.244, 6.395, 31.621, 0.818, -2.888, 21.983, 0.435, -2.24, 0.032962, 0.093895, -0.015888, -0.042021, 0.242344, 0.96928],
   rope: [62.281, 49.34, 83.5, 21.932, 0, 0, 26.722, 0, 0, 55.97, -0.072, 12.148, 28.48, -3.291, 12.914, 21.689, -2.142, 11.146, 54.658, -5.724, 11.051, 42.685, -3.524, 9.004, 23.582, -1.194, 5.715, 56.05, -10.021, 11.246, 33.986, -1.43, 4.676, 19.782, -0.435, 2.492, 49.102, -6.856, 5.125, 26.356, 0.573, -2.445, 8.838, 0.071, -0.919, 0.037275, 0.086537, -0.013337, -0.033105, 0.275026, 0.960867],
+  goblet: [11.231, 28.298, -28.548, 0.212, 0, 0, 1.871, 0, 0, 7.103, 0.441, -1.472, 10.852, -0.481, 5.062, 4.429, -0.09, 2.315, 7.787, -0.124, 1.824, 13.635, -0.373, 3.119, 5.822, -0.074, 1.447, 9.481, -0.626, 3.923, 15.828, -0.317, 2.28, 6.943, -0.054, 0.89, 12.169, -0.553, 3.218, 17.915, 0.267, -1.694, 7.956, 0.058, -0.828, 0.020668, 0.105096, -0.019221, -0.015163, 0.339343, 0.94054],
   'd-handle': [65.895, 49.274, 86.969, 23.019, 0, 0, 31.443, 0, 0, 55.607, 1.388, 10.953, 31.227, -3.948, 14.062, 22.3, -2.264, 11.448, 51.383, -5.101, 10.58, 46.392, -4.131, 9.622, 25.125, -1.353, 6.067, 49.734, -9.587, 11.867, 38.016, -1.776, 5.153, 22.729, -0.572, 2.845, 38.33, -6.651, 8.277, 27.196, 0.609, -2.517, 16.281, 0.24, -1.677, 0.036042, 0.089769, -0.01554, -0.059689, 0.176136, 0.982554],
 }
 

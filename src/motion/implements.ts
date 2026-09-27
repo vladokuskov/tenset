@@ -69,10 +69,13 @@ export function dumbbell(o: { id: string; mass?: number }): ImplementSpec {
   }
 }
 
-/** EZ bar: outer (l/r) and inner (l_in/r_in) angled grips; the bends lie in the bar's XZ plane */
-export function ezBar(o: { id?: string; plateKg?: number }): ImplementSpec {
+/** EZ bar: outer (l/r) and inner (l_in/r_in) angled grips; the bends lie in the bar's XZ plane. `inner`: half the
+ * inner grip width (centre of the inner bend), 0.2 m by default */
+export function ezBar(o: { id?: string; plateKg?: number; inner?: number }): ImplementSpec {
   const plate = o.plateKg ?? 10
-  const pts: V3[] = [[-0.6, 0, 0], [-0.35, 0, 0], [-0.25, 0, 0.03], [-0.15, 0, 0], [0.15, 0, 0], [0.25, 0, 0.03], [0.35, 0, 0], [0.6, 0, 0]]
+  const g = o.inner ?? 0.2
+  const e = g + 0.15
+  const pts: V3[] = [[-0.6, 0, 0], [-e, 0, 0], [-g - 0.05, 0, 0.03], [-g + 0.05, 0, 0], [g - 0.05, 0, 0], [g + 0.05, 0, 0.03], [e, 0, 0], [0.6, 0, 0]]
   const parts: Part[] = []
   for (let i = 0; i + 1 < pts.length; i++) parts.push(cyl(pts[i], pts[i + 1], i === 0 || i === pts.length - 2 ? 0.025 : 0.014))
   for (const s of [1, -1]) parts.push(cyl([0.42 * s, 0, 0], [(0.42 + 0.035) * s, 0, 0], 0.16))
@@ -84,10 +87,10 @@ export function ezBar(o: { id?: string; plateKg?: number }): ImplementSpec {
     com: [0, 0, 0],
     parts,
     sites: {
-      l: { pos: [0.3, 0, 0.015], axis: tilt(1) },
-      r: { pos: [-0.3, 0, 0.015], axis: tilt(-1) },
-      l_in: { pos: [0.2, 0, 0.015], axis: tilt(-1) },
-      r_in: { pos: [-0.2, 0, 0.015], axis: tilt(1) },
+      l: { pos: [g + 0.1, 0, 0.015], axis: tilt(1) },
+      r: { pos: [-g - 0.1, 0, 0.015], axis: tilt(-1) },
+      l_in: { pos: [g, 0, 0.015], axis: tilt(-1) },
+      r_in: { pos: [-g, 0, 0.015], axis: tilt(1) },
     },
   }
 }
@@ -164,17 +167,30 @@ export function bench(o: { id?: string; backAngle?: number; seatHeight?: number;
 
 const scale3 = (v: V3, s: number): V3 => [v[0] * s, v[1] * s, v[2] * s]
 
-/** pull-up bar; local origin at the bar centre, uprights down to the floor */
-export function pullupBar(o: { id?: string; height: number; gripWidth: number }): ImplementSpec {
+/**
+ * neutral-grip handles on a pull-up bar: welded to the bar at the grip width and running back (-Z), level with it, so
+ * the lifter hangs behind the bar and pulls the chest towards it with the head clear
+ */
+export const NEUTRAL_HANDLE = { from: -0.07, to: -0.29, r: 0.016, stub: 0.021 }
+
+/** pull-up bar; local origin at the bar centre, uprights down to the floor. `neutral`: parallel handles at the grips */
+export function pullupBar(o: { id?: string; height: number; gripWidth: number; neutral?: boolean }): ImplementSpec {
   const g = o.gripWidth / 2
-  return {
+  const parts = [cyl([-0.65, 0, 0], [0.65, 0, 0], 0.016), cyl([0.65, 0, 0], [0.65, -o.height, 0], 0.03), cyl([-0.65, 0, 0], [-0.65, -o.height, 0], 0.03)]
+  const spec: ImplementSpec = {
     id: o.id ?? 'pullup',
     kind: 'pullup_bar',
     mass: 0,
     com: [0, 0, 0],
-    parts: [cyl([-0.65, 0, 0], [0.65, 0, 0], 0.016), cyl([0.65, 0, 0], [0.65, -o.height, 0], 0.03), cyl([-0.65, 0, 0], [-0.65, -o.height, 0], 0.03)],
+    parts,
     sites: { l: { pos: [g, 0, 0], axis: [1, 0, 0] }, r: { pos: [-g, 0, 0], axis: [1, 0, 0] } },
   }
+  if (!o.neutral) return spec
+  const { from, to, r, stub } = NEUTRAL_HANDLE
+  for (const x of [g, -g]) parts.push(cyl([x, 0, from], [x, 0, to], r), cyl([x, 0, 0], [x, 0, from], stub))
+  const mid = (from + to) / 2
+  spec.sites = { l: { pos: [g, 0, mid], axis: [0, 0, 1] }, r: { pos: [-g, 0, mid], axis: [0, 0, 1] } }
+  return spec
 }
 
 /** a site of a posed implement in world space */

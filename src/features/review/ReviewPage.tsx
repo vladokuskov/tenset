@@ -307,10 +307,8 @@ function Item({ item, exercise, filterDone, status }: { item: ReviewItem; exerci
       <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         <LoopPanel item={item} />
         <LivePanel exercise={exercise} />
-        <div className="md:col-span-2 2xl:col-span-1">
-          <div className="mx-auto max-w-3xl">
-            <SheetPanel item={item} />
-          </div>
+        <div className="md:col-span-2 2xl:col-span-3">
+          <SheetPanel item={item} />
         </div>
       </div>
 

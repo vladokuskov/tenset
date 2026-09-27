@@ -9,8 +9,11 @@ import type { CompactMotion } from '../../src/motion/bake.ts'
 import { skeletonHash, type SkeletonData } from '../../src/motion/skeleton.ts'
 import { DATA, PUBLIC, ROOT } from '../lib/paths.ts'
 
+/** the first and last `frames` frames of a loop get `boost` times the bits (bake-loops.ts seamZones) */
+export type SeamSettings = { frames: number; boost: number }
+
 export const RENDER = {
-  version: 2,
+  version: 4,
   view: 'hero',
   /** output pixels (square) */
   size: 480,
@@ -19,9 +22,13 @@ export const RENDER = {
   fps: 30,
   background: '#ffffff',
   crf: 24,
+  /** the half top pause at each end of the loop (0.25 s): the whole still stretch around the restart */
+  seam: { frames: 8, boost: 4 } as SeamSettings,
   posterQuality: 0.8,
   /** posters on the background like the loops; alpha about doubles their size (11-26 KB instead of 5-13 KB) */
   posterAlpha: false,
+  /** QA contact sheet: 8 frames of the encoded loop, this wide each, in a 4 x 2 grid */
+  sheetFrame: 480,
 } as const
 
 export const BAKED_MOTION = path.join(ROOT, 'src/features/figure/motion/baked')

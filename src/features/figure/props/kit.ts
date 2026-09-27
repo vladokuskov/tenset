@@ -1,6 +1,6 @@
 import { Box3, BufferGeometry, CylinderGeometry, Float32BufferAttribute, LatheGeometry, Matrix4, Quaternion, SphereGeometry, TorusGeometry, Vector2, Vector3 } from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
-import type { MatKey } from './materials'
+import type { MatKey } from './materials.ts'
 
 // Parametric prop geometry as data: a prop is a list of pieces (shared geometry key, material key, matrix), so
 // identical parts draw as one instanced mesh and the builders stay pure (testable in Node).

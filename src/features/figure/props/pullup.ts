@@ -1,8 +1,8 @@
 import { Vector3 } from 'three'
-import { pullupBar, type ImplementSpec, type Part } from '../../../motion/implements.ts'
-import { finish, Kit, vec, type PropBuild } from './kit'
-import { cableRun, foot, pulley, WHEEL_R, weightStack } from './parts'
-import { gripSocket, type GripSocket, type SurfaceSocket } from './sockets'
+import { NEUTRAL_HANDLE, pullupBar, type ImplementSpec, type Part } from '../../../motion/implements.ts'
+import { finish, Kit, vec, type PropBuild } from './kit.ts'
+import { cableRun, foot, pulley, WHEEL_R, weightStack } from './parts.ts'
+import { gripSocket, type GripSocket, type SurfaceSocket } from './sockets.ts'
 
 // Pull-up station and assisted pull-up machine around the motion's pull-up bar descriptor (1.3 m bar, grips from
 // the template's grip width). Frame: X across, Y up, the lifter faces +Z and hangs under the bar at x = 0, z = 0.
@@ -29,32 +29,25 @@ const P = 0.075
 
 export function pullupSpec(p: PullupParams = {}): ImplementSpec {
   const o = { ...pullupDefaults, ...p }
-  if (p.spec) return p.spec
-  const spec = pullupBar({ height: o.height, gripWidth: o.gripWidth })
-  if (!o.neutral) return spec
-  const g = o.gripWidth / 2
-  const cyl = (a: V3, b: V3, r: number): Cyl => ({ shape: 'cylinder', a, b, r })
-  return {
-    ...spec,
-    parts: [...spec.parts, cyl([g, -0.02, -0.08], [g, -0.02, 0.08], 0.016), cyl([-g, -0.02, -0.08], [-g, -0.02, 0.08], 0.016)],
-    sites: { l: { pos: [g, -0.02, 0], axis: [0, 0, 1] }, r: { pos: [-g, -0.02, 0], axis: [0, 0, 1] } },
-  }
+  return p.spec ?? pullupBar({ height: o.height, gripWidth: o.gripWidth, neutral: o.neutral })
 }
 
 /** knurled bar and any parallel handles, in the station frame (bar centre at `at`) */
-function drawBar(kit: Kit, spec: ImplementSpec, at: Vector3) {
+export function drawBar(kit: Kit, spec: ImplementSpec, at: Vector3) {
   const parts = spec.parts.filter((c): c is Cyl => c.shape === 'cylinder')
   const bar = parts[0]
   const half = Math.abs(bar.b[0])
   kit.knurl(at.clone().setX(-half), at.clone().setX(half), bar.r)
   for (const h of parts.slice(1)) {
-    // parallel handles run along Z; the descriptor's uprights are drawn by the frame
+    // parallel handles run forward along Z from a welded stub; the descriptor's uprights are drawn by the frame
     if (Math.abs(h.a[2] - h.b[2]) < 0.01) continue
     const a = vec(h.a).add(at), b = vec(h.b).add(at)
+    if (h.r > NEUTRAL_HANDLE.r) {
+      kit.rod(a, b, h.r, 'steelDark', 24)
+      continue
+    }
     kit.knurl(a, b, h.r)
-    kit.rod(a, a.clone().add(new Vector3(0, 0, -0.008)), h.r + 0.003, 'steel', 20)
-    kit.rod(b, b.clone().add(new Vector3(0, 0, 0.008)), h.r + 0.003, 'steel', 20)
-    kit.box(at.clone().setX(h.a[0]).add(new Vector3(0, (h.a[1] + 0.004) / 2, 0)), [0.034, Math.abs(h.a[1]) + 0.03, 0.036], 'steelDark', undefined, 0.006)
+    kit.rod(b, b.clone().add(new Vector3(0, 0, 0.01)), h.r + 0.004, 'steelDark', 24)
   }
   return half
 }

@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs'
-import { Box3, Vector3 } from 'three'
+import { Box3, PerspectiveCamera, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { decode } from '../../../motion/bake.ts'
 import { siteWorld } from '../../../motion/implements.ts'
@@ -10,6 +10,7 @@ import { piecesBox } from '../props/kit'
 import { buildLegPress } from '../props/legpress'
 import { benchSockets } from '../props/sockets'
 import { buildSmith } from '../props/smith'
+import { frameFitMargin } from '../views'
 import { composeMotion, type MotionExercise, type MotionScene, type Poses } from './compose'
 import { hasMotion, motionIds, type MotionFile } from './library'
 
@@ -56,8 +57,10 @@ describe('scene composer', () => {
     for (const id of motionIds) {
       const s = scene(id)
       const az = s.hero.az
-      if (s.template === 'curl') expect(az, `${id}`).toBeGreaterThanOrEqual(-45)
-      if (s.template === 'curl') expect(az, `${id}`).toBeLessThanOrEqual(-25)
+      // cable curls turn further round so the stack upright in front of the lifter stays off the hands
+      const cable = s.template === 'curl' && s.baked.params.implement === 'cable'
+      if (s.template === 'curl') expect(az, `${id}`).toBeGreaterThanOrEqual(cable ? -65 : -45)
+      if (s.template === 'curl') expect(az, `${id}`).toBeLessThanOrEqual(cable ? -55 : -25)
       if (s.template === 'lateral-raise') expect(Math.abs(az), `${id}`).toBeLessThan(20)
       if (s.template === 'vertical-pull') expect(Math.abs(az), `${id}`).toBeGreaterThan(110)
       if (s.template === 'squat') expect(az, `${id}`).toBeLessThanOrEqual(-50)
@@ -164,6 +167,43 @@ describe('scene composer', () => {
       const b = decode(JSON.parse(readFileSync(new URL(files.find((f) => f.startsWith(`${id}-`))!, BAKED), 'utf8')).motion, skel)
       expect(box.max.y, `${id}`).toBeGreaterThan(b.template === 'squat' && id === 402 ? 1 : 1.7)
       expect(s.floor, `${id}`).toBeGreaterThan(Math.max(Math.abs(box.min.z), Math.abs(box.max.z)) - 0.5)
+    }
+  })
+
+  it('frames equipment bases and loaded plates: the pull-up station, the lean-away post, the leg press plates', () => {
+    const box = (s: MotionScene) => {
+      const b = new Box3()
+      for (let i = 0; i < s.frame.length; i += 3) b.expandByPoint(new Vector3(s.frame[i], s.frame[i + 1], s.frame[i + 2]))
+      return b
+    }
+    for (const id of [301, 309, 310]) {
+      const b = box(scene(id))
+      expect(b.min.y, `${id}`).toBeLessThanOrEqual(0.001)
+      expect(Math.min(-b.min.z, b.max.z), `${id}`).toBeGreaterThan(0.55)
+      expect(Math.min(-b.min.x, b.max.x), `${id}`).toBeGreaterThan(0.7)
+    }
+    const post = scene(214).baked.implements.find((i) => i.id === 'post')!.parts[0]
+    if (post.shape !== 'cylinder') throw new Error('post is not a cylinder')
+    expect(box(scene(214)).containsPoint(new Vector3(post.a[0] + Math.sign(post.a[0]) * 0.14, 0, post.a[2] + 0.14))).toBe(true)
+    const press = box(scene(402))
+    expect(Math.min(-press.min.x, press.max.x)).toBeGreaterThan(0.7)
+    expect(press.min.y).toBeLessThanOrEqual(0.001)
+  })
+
+  it('keeps the framed points 6 % clear of every edge from the hero camera', () => {
+    for (const id of [203, 310, 401, 402, 405, 702]) {
+      const s = scene(id)
+      const cam = new PerspectiveCamera(24, 390 / 480)
+      frameFitMargin(cam, s.frame, (s.hero.az * Math.PI) / 180, 0.065, s.hero.elev)
+      cam.updateMatrixWorld()
+      let edge = 0
+      const p = new Vector3()
+      for (let i = 0; i < s.frame.length; i += 3) {
+        p.set(s.frame[i], s.frame[i + 1], s.frame[i + 2]).project(cam)
+        edge = Math.max(edge, Math.abs(p.x), Math.abs(p.y))
+      }
+      expect(edge, `${id}`).toBeLessThanOrEqual(1 - 2 * 0.06)
+      expect(edge, `${id}`).toBeGreaterThan(0.8)
     }
   })
 

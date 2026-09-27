@@ -1,8 +1,9 @@
 // Atlas QA renders on Metal: highlight sheets for the look-v2 exercise poses, relief close-ups and flat region colours.
-// node pipeline/atlas/qa.ts [--out qa/out/polish] [--tag before] [--only relief] [--compare before] [--atlas flat|off]
+// node pipeline/atlas/qa.ts [--out qa/out/polish] [--tag before] [--only relief] [--compare before] [--atlas flat|off] [--assets dir]
 //   writes <out>/atlas-shots[-tag]/<shot>.png and one sheet per group, <out>/atlas-<group>[-tag].png;
-//   --compare <tag> adds that earlier run as a second row ("before" above, this run below)
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+//   --compare <tag> adds that earlier run as a second row ("before" above, this run below);
+//   --assets serves body.glb and the atlas files from dir instead of public/models (e.g. the committed ones)
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { ROOT } from '../lib/paths.ts'
@@ -117,6 +118,14 @@ async function main() {
       const u = new URL(r.url())
       if (u.origin !== origin && u.protocol !== 'data:' && u.protocol !== 'blob:') foreign.add(r.url())
     })
+    const assets = arg('--assets')
+    if (assets) {
+      const dir = path.resolve(ROOT, assets)
+      for (const f of readdirSync(dir).filter((x) => x === 'body.glb' || /^atlas.*\.(json|webp)$/.test(x))) {
+        const body = readFileSync(path.join(dir, f))
+        await ctx.route(`**/models/${f}`, (r) => r.fulfill({ body, contentType: f.endsWith('.glb') ? 'model/gltf-binary' : f.endsWith('.json') ? 'application/json' : 'image/webp' }))
+      }
+    }
     const page = await ctx.newPage()
     page.on('pageerror', (e) => console.error('pageerror:', e.message))
     for (const [, shots] of chosen) {

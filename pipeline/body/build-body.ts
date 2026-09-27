@@ -1,10 +1,12 @@
 // Builds public/models/body.glb (stylized head): MPFB2 (pinned) in headless Blender, then gltf-transform.
-// node pipeline/body/build-body.ts [--skip-blender]
+// node pipeline/body/build-body.ts [--skip-blender] [--out file.glb --work dir] [--proportions '{"target": weight}']
+// --out/--work build a variant elsewhere (the shipped GLB and cache stay); --proportions overrides PROPORTIONS weights.
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
+import { parseArgs } from 'node:util'
 import { type Document, NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { compactPrimitive, dedup, meshopt, prune, quantize, reorder, weld } from '@gltf-transform/functions'
@@ -12,11 +14,15 @@ import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer
 import { CACHE, PUBLIC, ROOT } from '../lib/paths.ts'
 import { MPFB2 } from './mpfb2-pin.ts'
 
+const { values: args } = parseArgs({
+  options: { 'skip-blender': { type: 'boolean' }, out: { type: 'string' }, work: { type: 'string' }, proportions: { type: 'string' } },
+})
 const BLENDER = process.env.BLENDER ?? 'blender'
-const WORK = path.join(CACHE, 'body')
+const WORK = path.resolve(args.work ?? path.join(CACHE, 'body'))
 const RAW = path.join(WORK, 'body.raw.glb')
 const REPORT = path.join(WORK, 'report.json')
-const OUT = path.join(PUBLIC, 'models/body.glb')
+const OUT = path.resolve(args.out ?? path.join(PUBLIC, 'models/body.glb'))
+const SHIPPED = !args.out
 const LEGACY = ['body-a.glb', 'body-b.glb'].map((f) => path.join(PUBLIC, 'models', f))
 const BUDGET = 700 * 1024
 
@@ -54,6 +60,7 @@ function blender() {
   const log = sh(BLENDER, [
     '-b', '--factory-startup', '-P', path.join(ROOT, 'pipeline/body/build_body.py'),
     '--', '--out', RAW, '--report', REPORT, '--blend', path.join(WORK, 'body.blend'),
+    ...(args.proportions ? ['--proportions', args.proportions] : []),
   ])
   const ok = log.split('\n').find((l) => l.startsWith('BUILD_BODY_OK'))
   if (!ok) throw new Error(`Blender build failed:\n${log.slice(-4000)}`)
@@ -181,7 +188,7 @@ async function simplifyBody(doc: Document, ratio: number, error: number) {
 
 async function main() {
   mkdirSync(WORK, { recursive: true })
-  if (!process.argv.includes('--skip-blender')) {
+  if (!args['skip-blender']) {
     await ensureMpfb()
     blender()
   }
@@ -199,8 +206,8 @@ async function main() {
   meshNode(doc, 'body').setExtras({ correctives: report.correctives })
   adoptMorphNormals(doc)
   trim(doc)
-  // error is relative to the figure's extent: 0.0005 is under a millimetre
-  const simplified = await simplifyBody(doc, 0.3, 0.0005)
+  // error is relative to the figure's extent: 0.00051 is under a millimetre
+  const simplified = await simplifyBody(doc, 0.3, 0.00051)
   // one quantization volume for every mesh, so all skins share inverse binds and Rig.dequant (meshopt re-runs quantize).
   // Blender splits vertices whose per-corner morph normals differ in the last float bits; weld after quantizing.
   const q = { quantizationVolume: 'scene', quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 14, quantizeColor: 8, quantizeWeight: 8 } as const
@@ -221,7 +228,7 @@ async function main() {
   }))
   console.log(JSON.stringify({ out: path.relative(ROOT, OUT), bytes, kb: +(bytes / 1024).toFixed(1), meshes, simplified, bones: report.bones.length }, null, 1))
   if (bytes > BUDGET) throw new Error(`body.glb is ${bytes} bytes, over the ${BUDGET} budget`)
-  for (const f of LEGACY) if (existsSync(f)) rmSync(f)
+  if (SHIPPED) for (const f of LEGACY) if (existsSync(f)) rmSync(f)
 }
 
 await main()
