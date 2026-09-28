@@ -9,10 +9,13 @@
 // live motion contact sheets (/dev/motion, one row of phases per exercise): <out>/figure-<id>.png
 // node pipeline/render/still.ts --out qa/out/animated --motion all [--phases 8] [--view hero|front|side|back] [--live]
 //   [--mfocus wrist_R:0.3] (close-up on a bone) [--yaw 20] (degrees added to the camera azimuth)
+// --motion takes ids and families (--motion 101,107 or --motion F1); --live bakes from the current templates in the
+// browser, so it works before the compact motion is baked. Cells are 480 px wide.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { chromium, type Browser, type Page } from '@playwright/test'
 import { createServer, type ViteDevServer } from 'vite'
+import { familyExercises } from '../../src/motion/families.ts'
 import { ROOT } from '../lib/paths.ts'
 
 export type Shot = {
@@ -438,7 +441,7 @@ function parseArgs(argv: string[]) {
     else if (a === '--compose') compose.push(argv[++i])
     else if (a === '--motion') {
       const v = argv[++i]
-      motion = v === 'all' ? motionIds() : v.split(',').map(Number)
+      motion = v === 'all' ? motionIds() : v.split(',').flatMap((x) => (/^\d+$/.test(x) ? [Number(x)] : familyExercises(x)))
     } else if (a === '--phases') phases = Number(argv[++i])
     else if (a === '--view') view = argv[++i]
     else if (a === '--live') live = true

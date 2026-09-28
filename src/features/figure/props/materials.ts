@@ -47,7 +47,9 @@ export function createPropMaterials() {
   const hole = new MeshPhysicalMaterial({ color: '#5d6168', roughness: 0.9 })
   const stack = new MeshPhysicalMaterial({ color: '#8f9399', roughness: 0.34, metalness: 0.45, clearcoat: 0.3, clearcoatRoughness: 0.3 })
   const pulley = new MeshPhysicalMaterial({ color: '#2b2c30', roughness: 0.5, metalness: 0.1 })
-  return { frame, frameDark, pad, rubber, handle, plate, plateFace, grip, steel, steelDark, cable, rope, hole, stack, pulley }
+  // exercise mat: dark gray foam, a step lighter than the pads
+  const mat = new MeshPhysicalMaterial({ color: '#3c3e43', roughness: 0.92, sheen: 0.25, sheenColor: '#6e7380', sheenRoughness: 0.6 })
+  return { frame, frameDark, pad, rubber, handle, plate, plateFace, grip, steel, steelDark, cable, rope, hole, stack, pulley, mat }
 }
 
 export type PropMaterials = ReturnType<typeof createPropMaterials>

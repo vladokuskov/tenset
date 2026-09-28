@@ -1,9 +1,10 @@
 // Numeric QA gates over every baked frame. Pure functions so tests can inject faults.
 import { frameImplements, frameQ, staleReason, type Baked, type CompactMotion } from '../../src/motion/bake.ts'
-import { bodyCapsules, boundClearance, capsuleClearance, capsuleSolidClearance, placeParts, segmentDistance, type Capsule } from '../../src/motion/collide.ts'
+import { bodyCapsules, boundClearance, capsuleClearance, capsuleSolidClearance, enclosingCapsule, placeParts, segmentDistance, solidClearance, type Capsule, type Solid } from '../../src/motion/collide.ts'
 import { centerOfPressure, fk, sitePos, type FK } from '../../src/motion/fk.ts'
 import { cableForce, comWorld, siteWorld, type Part } from '../../src/motion/implements.ts'
-import { add, dist, qconj, qlog, qmul, qrot, scale, type V3 } from '../../src/motion/math.ts'
+import { MOVING_KINDS } from '../../src/motion/implements/index.ts'
+import { add, dist, qconj, qlog, qmul, qrot, scale, sub, type V3 } from '../../src/motion/math.ts'
 import { pairedDofs, zeroQ, type ImplementPose, type Skeleton } from '../../src/motion/skeleton.ts'
 import { machineColliders } from '../../src/features/figure/props/collision.ts'
 
@@ -261,6 +262,8 @@ export const PROP_TOL = {
   pad: 15,
   /** the cable line against the body */
   cable: 10,
+  /** any body region below the floor (y = 0): planted feet sit on it, lying bodies press on it */
+  floor: 5,
 }
 
 /** cylinders up to this radius on an implement a hand grips are handles or uprights it wraps (heads, plates, sleeves are not) */
@@ -337,10 +340,17 @@ export function bodyPairs(skel: Skeleton): BodyPair[] {
   return out
 }
 
+/** held implements this close (enclosing capsules, m) to another piece of equipment get an exact clearance */
+const EQUIPMENT_REACH = 0.05
+
 export type Clearance = {
   pair: string
-  /** prop: the template's implements and cables; machine: the drawn machines and benches around them */
-  kind: 'body' | 'prop' | 'machine'
+  /**
+   * prop: the template's implements and cables; machine: the drawn machines and benches around them; equipment: a
+   * held implement against the drawn machines, benches and fixtures and the other held implements; floor: the body
+   * against the floor plane
+   */
+  kind: 'body' | 'prop' | 'machine' | 'equipment' | 'floor'
   /** smallest clearance over the loop, mm (negative = penetration) */
   min: number
   frame: number
@@ -349,6 +359,37 @@ export type Clearance = {
   allowance: number
   /** penetration beyond allowance + tolerance, mm (0 = within) */
   excess: number
+}
+
+/**
+ * Parts of a drawn machine that ride rigidly with an implement it holds (the Smith carriages clamping the bar): the
+ * implement is mounted in them, so the equipment check skips those pairs. Keyed `<machine>|<implement>`; parts that
+ * stay put (uprights, rails, frames) are still checked.
+ */
+function mountParts(b: Baked, F: Frames, machines: ReturnType<typeof machineColliders>): Map<string, Set<number>> {
+  const out = new Map<string, Set<number>>()
+  for (const m of machines) for (const id of m.holds) {
+    const k = b.implements.findIndex((s) => s.id === id)
+    if (k < 0) continue
+    let far = 0, moved = 0
+    for (let i = 0; i < b.frames; i++) {
+      const d = dist(F.impl[i][k].pos, F.impl[0][k].pos)
+      if (d > moved) [far, moved] = [i, d]
+    }
+    if (moved < 0.01) continue
+    const centers = (i: number) => {
+      const { pose, colliders } = m.at(new Map(F.impl[i].map((p) => [p.id, p])))
+      const at = F.impl[i][k]
+      return placeParts({ id: m.key, kind: 'bench', mass: 0, com: [0, 0, 0], parts: colliders, sites: {} }, pose).map((sd) => ({ world: sd.center, local: qrot(qconj(at.rot), sub(sd.center, at.pos)) }))
+    }
+    const [c0, c1] = [centers(0), centers(far)]
+    const set = new Set<number>()
+    c0.forEach((c, j) => {
+      if (j < c1.length && dist(c.local, c1[j].local) < 1e-3 && dist(c.world, c1[j].world) > 1e-3) set.add(j)
+    })
+    out.set(`${m.key}|${id}`, set)
+  }
+  return out
 }
 
 /**
@@ -374,12 +415,19 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
     if (!grips.has(c.target.implement)) grips.set(c.target.implement, new Set())
     grips.get(c.target.implement)!.add(`hand_${side}`)
   }
+  const riders = mountParts(b, F, machines)
   const REACH = 0.25
   // drawn machines hold hundreds of parts; only near ones make useful rows
   const MACHINE_REACH = 0.1
+  const bodyTolOf = (p: BodyPair) => b.tolerances?.body?.[p.label] ?? p.tol
+  const floorTol = b.tolerances?.floor ?? PROP_TOL.floor
   for (let i = 0; i < b.frames; i++) {
     const caps = bodyCapsules(skel, F.f[i])
-    for (const p of pairs) note(p.label, 'body', round(capsuleClearance(caps[p.i], caps[p.j]) * 1000), i, p.tol, p.allowance)
+    for (const p of pairs) note(p.label, 'body', round(capsuleClearance(caps[p.i], caps[p.j]) * 1000), i, bodyTolOf(p), p.allowance)
+    for (const c of caps) {
+      const mm = (Math.min(c.a[1], c.b[1]) - c.r) * 1000
+      if (mm < REACH * 1000) note(`${c.region} / floor`, 'floor', round(mm), i, floorTol, 0)
+    }
     b.implements.forEach((spec, k) => {
       const solids = placeParts(spec, F.impl[i][k])
       const held = grips.get(spec.id)
@@ -409,6 +457,29 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
         }
       }
     }
+    // equipment against equipment: each held implement's parts against the drawn machines, the fixtures drawn from
+    // their own parts and the other held implements
+    const others: { label: string; solid: Solid; owner: string; moving: boolean }[] = []
+    for (const m of machines) {
+      const { pose, colliders } = m.at(poses)
+      for (const sd of placeParts({ id: m.key, kind: 'bench', mass: 0, com: [0, 0, 0], parts: colliders, sites: {} }, pose)) {
+        others.push({ label: `${m.key}:${colliders[sd.index].kind}#${sd.index}`, solid: sd, owner: m.key, moving: false })
+      }
+    }
+    b.implements.forEach((spec, k) => {
+      const moving = MOVING_KINDS.has(spec.kind)
+      const drawn = moving || (spec.id === 'bench' && !machines.some((m) => m.key === 'bench')) || spec.id === 'post'
+      if (drawn) for (const sd of placeParts(spec, F.impl[i][k])) others.push({ label: `${spec.id}#${sd.index}`, solid: sd, owner: spec.id, moving })
+    })
+    for (const x of others) {
+      if (!x.moving) continue
+      const hull = enclosingCapsule(x.solid)
+      for (const y of others) {
+        if (y.owner === x.owner || (y.moving && y.owner < x.owner) || riders.get(`${y.owner}|${x.owner}`)?.has(y.solid.index)) continue
+        if (capsuleClearance(hull, enclosingCapsule(y.solid)) > EQUIPMENT_REACH) continue
+        note(`${x.label} / ${y.label}`, 'equipment', round(solidClearance(x.solid, y.solid) * 1000), i, PROP_TOL.rigid, 0)
+      }
+    }
     for (const cable of b.cables ?? []) {
       const k = b.implements.findIndex((x) => x.id === cable.implement)
       const { at } = cableForce(cable, F.impl[i][k])
@@ -434,7 +505,13 @@ function penetrationGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
     const detail = w ? `${w.pair} clearance ${w.min} mm${w.allowance ? ` (relaxed ${round(-w.allowance)})` : ''}, tol ${w.tol}` : undefined
     return { name, unit: 'mm past tol', limit: 0, value, frame: w?.frame, detail, pass: value <= 0 }
   }
-  return [gate('body', 'penetration body-body'), gate('prop', 'penetration body-prop'), gate('machine', 'penetration body-machine')]
+  return [
+    gate('body', 'penetration body-body'),
+    gate('prop', 'penetration body-prop'),
+    gate('machine', 'penetration body-machine'),
+    gate('equipment', 'penetration equipment-equipment'),
+    gate('floor', 'penetration body-floor'),
+  ]
 }
 
 // ---------- skeleton freshness ----------

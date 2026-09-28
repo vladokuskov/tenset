@@ -46,7 +46,7 @@
     "params": {
       "elevation": "hands",
       "plus": false,
-      "gripWidth": 1
+      "gripWidth": 1.5
     },
     "mapView": "F"
   },

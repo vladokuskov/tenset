@@ -1,58 +1,53 @@
 import type { Skeleton } from '../skeleton.ts'
+import { backExtension } from './back-extension.ts'
+import { calfRaise } from './calf-raise.ts'
+import { crunch } from './crunch.ts'
 import { curl } from './curl.ts'
+import { dip } from './dip.ts'
+import { externalRotation } from './external-rotation.ts'
+import { fly } from './fly.ts'
+import { frontRaise } from './front-raise.ts'
+import { hinge } from './hinge.ts'
+import { hipAbduction } from './hip-abduction.ts'
+import { hipThrust } from './hip-thrust.ts'
+import { hold } from './hold.ts'
+import { horizontalPress } from './horizontal-press.ts'
+import { inclinePress } from './incline-press.ts'
 import { lateralRaise } from './lateral-raise.ts'
+import { legCurl } from './leg-curl.ts'
+import { legExtension } from './leg-extension.ts'
+import { legRaise } from './leg-raise.ts'
+import { lunge } from './lunge.ts'
+import { pushUp } from './push-up.ts'
+import { rearRaise } from './rear-raise.ts'
+import { rotation } from './rotation.ts'
+import { row } from './row.ts'
 import { SCHEMAS, TEMPLATE_IDS, type TemplateId } from './schemas.ts'
+import { shrug } from './shrug.ts'
 import { squat } from './squat.ts'
-import type { AnyTemplate, Driver, Template } from './types.ts'
+import { tricepsExtension } from './triceps-extension.ts'
+import type { AnyTemplate } from './types.ts'
+import { verticalPress } from './vertical-press.ts'
 import { verticalPull } from './vertical-pull.ts'
+import { wristCurl } from './wrist-curl.ts'
 
 export { SCHEMAS, TEMPLATE_IDS, type ParamsOf, type TemplateId } from './schemas.ts'
-export type { AnyTemplate, BalanceSpec, Cable, Driver, Rest, Setup, Template } from './types.ts'
+export type { AnyTemplate, BalanceSpec, Cable, Driver, Rest, Setup, Template, Tolerances } from './types.ts'
 
-const DRIVERS: Record<TemplateId, Driver> = {
-  'horizontal-press': 'implement',
-  'incline-press': 'implement',
-  'vertical-press': 'implement',
-  dip: 'root',
-  'push-up': 'root',
-  fly: 'joint',
-  'lateral-raise': 'joint',
-  'front-raise': 'joint',
-  'rear-raise': 'joint',
-  'external-rotation': 'joint',
-  row: 'implement',
-  'vertical-pull': 'root',
-  shrug: 'joint',
-  squat: 'implement',
-  lunge: 'root',
-  'leg-extension': 'joint',
-  hinge: 'implement',
-  'hip-thrust': 'root',
-  'leg-curl': 'joint',
-  'back-extension': 'root',
-  'hip-abduction': 'joint',
-  'calf-raise': 'root',
-  curl: 'joint',
-  'triceps-extension': 'joint',
-  'wrist-curl': 'joint',
-  crunch: 'joint',
-  'leg-raise': 'joint',
-  hold: 'root',
-  rotation: 'joint',
+// One module per template id (docs/FAMILIES.md): a family agent edits only its own template files, and the
+// implemented flag lives in the module.
+const MODULES = [
+  horizontalPress, inclinePress, verticalPress, dip, pushUp, fly, lateralRaise, frontRaise, rearRaise, externalRotation, row,
+  verticalPull, shrug, squat, lunge, legExtension, hinge, hipThrust, legCurl, backExtension, hipAbduction, calfRaise, curl,
+  tricepsExtension, wristCurl, crunch, legRaise, hold, rotation,
+] as unknown as AnyTemplate[]
+
+const byId = new Map(MODULES.map((t) => [t.id, t]))
+if (byId.size !== MODULES.length || TEMPLATE_IDS.some((id) => !byId.has(id))) {
+  throw new Error(`motion templates: every template id needs exactly one module (missing ${TEMPLATE_IDS.filter((id) => !byId.has(id)).join(', ') || 'none'})`)
 }
 
-function pending(id: TemplateId): AnyTemplate {
-  const fail = () => {
-    throw new Error(`motion template ${id}: sample() not implemented yet`)
-  }
-  return { id, driver: DRIVERS[id], params: SCHEMAS[id] as never, implemented: false, setup: fail, sample: fail }
-}
-
-const IMPLEMENTED = [squat, lateralRaise, verticalPull, curl] as Template<never>[]
-
-export const TEMPLATES: Record<TemplateId, AnyTemplate> = Object.fromEntries(
-  TEMPLATE_IDS.map((id) => [id, (IMPLEMENTED.find((t) => t.id === id) as AnyTemplate | undefined) ?? pending(id)]),
-) as Record<TemplateId, AnyTemplate>
+export const TEMPLATES: Record<TemplateId, AnyTemplate> = Object.fromEntries(TEMPLATE_IDS.map((id) => [id, byId.get(id)!])) as Record<TemplateId, AnyTemplate>
 
 export function isTemplateId(id: unknown): id is TemplateId {
   return typeof id === 'string' && id in SCHEMAS

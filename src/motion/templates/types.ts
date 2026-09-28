@@ -22,8 +22,18 @@ export type BalanceSpec = {
   target?: number
 }
 
-/** an intended resting contact (bar on the upper back or the front delts): penetration tolerance for these regions */
+/**
+ * an intended resting contact (bar on the upper back or the front delts): penetration tolerance for these regions,
+ * mm. A negative tolerance is a clearance the implement must keep from them (curl bars stay 10 mm off the thighs).
+ */
 export type Rest = { implement: string; regions: string[]; tol: number }
+
+/**
+ * per-template QA tolerance overrides, mm: `body` by body pair label as the penetration gate prints it
+ * ('forearm / head', 'thigh / trunk (lumbar3)'), `floor` for every region against the floor. Each one is a lead
+ * decision (docs/FAMILIES.md).
+ */
+export type Tolerances = { body?: Record<string, number>; floor?: number }
 
 export type Setup = {
   implements: ImplementSpec[]
@@ -36,6 +46,7 @@ export type Setup = {
   rests?: Rest[]
   /** per-exercise joint limits that replace the skeleton's, deg (front rack wrist extension) */
   limits?: Record<string, [number, number]>
+  tolerances?: Tolerances
 }
 
 export type Template<P = Record<string, unknown>> = {

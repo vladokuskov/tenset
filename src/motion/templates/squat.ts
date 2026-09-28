@@ -5,7 +5,7 @@ import { centerOfMass, fk, localToWorld } from '../fk.ts'
 import { barbell, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { add, cross, DEG, dot, lerp, neg, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
-import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
+import { DEFAULT_TEMPO, loopDuration, phaseAt, type Tempo } from '../timing.ts'
 import type { ParamsOf } from './schemas.ts'
 import { SCHEMAS } from './schemas.ts'
 import { hipsFor, makeStance, plantedContacts, setPelvis, stanceWidth, stand, standBalanced, type StanceSetup } from './standing.ts'
@@ -43,6 +43,11 @@ const DB_KG = 24
  */
 const GOBLET = { up: 0.05, sink: 0.004, cup: [0.033, 0.03, 0.06] as V3, fingers: [1, 0.8, -0.3] as V3, palm: [1, 0, -0.5] as V3 }
 const GOBLET_ROT = implementFromHand([0, 1, 0], [0, 0, 1])
+/**
+ * Goblet depth: the squat bottoms out where the arms come down onto the thighs, just inside the knees (a light
+ * touch, capsule clearance in m, inside the 12 mm arm-thigh soft-tissue tolerance), never deeper than the depth table
+ */
+const GOBLET_ARMS_ON_THIGHS = -0.006
 /** Smith: midfoot ahead of the rail line, m */
 const SMITH_FEET: Record<P['footPosition'], number> = { low: 0, mid: 0.06, high: 0.12, forward: 0.16 }
 /** front rack grip: the schema default (2.1) is a back-squat width; clean grips sit just outside the shoulders */
@@ -102,6 +107,8 @@ type Stand = {
   /** arm DOFs for a bar fixed on the torso: solved once, constant through the rep */
   arms?: [number, number][]
   goblet?: boolean
+  /** knee flexion at the bottom when the depth table does not set it (goblet: where the arms meet the thighs) */
+  bottomKnee?: number
 }
 
 type Press = {
@@ -205,7 +212,25 @@ function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   // the dumbbell rests on the chest and the cupped palms press on the top head
   if (v.goblet) setup.rests = [{ implement: 'db', regions: ['trunk', 'hand_l', 'hand_r'], tol: 15 }]
   if (v.barSite === 'front_rack') setup.limits = { 'wrist_l.flex': RACK_WRIST, 'wrist_r.flex': RACK_WRIST }
-  return { tempo, setup, v }
+  const ctx: Ctx = { tempo, setup, v }
+  if (v.goblet) v.bottomKnee = gobletBottom(p, skel, ctx, v)
+  return ctx
+}
+
+/** knee flexion at which the arms meet the thighs at the bottom of a goblet squat, capped by the depth table */
+function gobletBottom(p: P, skel: Skeleton, ctx: Ctx, v: Stand) {
+  const [ecc, pb, , pt] = ctx.tempo
+  const u = (pt / 2 + ecc + pb / 2) / loopDuration(ctx.tempo)
+  const gap = (knee: number) => {
+    v.bottomKnee = knee
+    const caps = bodyCapsules(skel, fk(skel, sampleStand(u, p, skel, ctx, v).q))
+    const arms = caps.filter((c) => /^(upperarm|forearm)_/.test(c.region))
+    const thighs = caps.filter((c) => c.region.startsWith('thigh_'))
+    return Math.min(...arms.flatMap((a) => thighs.map((t) => capsuleClearance(a, t)))) - GOBLET_ARMS_ON_THIGHS
+  }
+  const max = KNEE[p.depth]
+  if (gap(max) >= 0) return max
+  return root1d(gap, Math.min(max, KNEE.parallel), max, { tol: 1e-3, scan: 3 }).x
 }
 
 function trunk(skel: Skeleton, q: Float64Array, s: number) {
@@ -358,7 +383,7 @@ function sampleStand(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Stand): Pose 
   const s = 1 - phaseAt(u, ctx.tempo).c
   // knees and ankles trail the hips slightly
   const sk = 1 - phaseAt(u, ctx.tempo, 0.012).c
-  const knee = lerp(TOP_KNEE, KNEE[p.depth], sk)
+  const knee = lerp(TOP_KNEE, v.bottomKnee ?? KNEE[p.depth], sk)
   const df = lerp(v.topDf, ANKLE[v.holdKey][p.depth], sk)
   const q = zeroQ(skel)
   trunk(skel, q, s)

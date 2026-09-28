@@ -33,8 +33,13 @@ const SPIDER_DRIFT = 2
  * dumbbell clear of the thigh; this only covers the rest of the plate radius.
  */
 const DB_ABD = 4
-/** bars and cable attachments at the bottom: rest on the front of the thighs (capsule clearance, m) */
-const BAR_ON_THIGHS = 0.002
+/**
+ * bars and cable attachments at the bottom: hang just in front of the thighs (capsule clearance, m). The loop keeps at
+ * least THIGH_CLEAR mm (v1.1 decision); the bottom target sits higher because the sway and the final elbow angle move
+ * the bar up to 7 mm closer
+ */
+const BAR_OFF_THIGHS = 0.018
+const THIGH_CLEAR = 10
 const FOREARMS_OFF_BELLY = -0.004
 /** bars and cable attachments: elbows pointed out from the side, deg, so they sit beside the ribs, not on them */
 const BAR_ABD = 20
@@ -347,15 +352,15 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   )
   const setup: Setup = { implements: implements_, contacts, tempo, symmetric: true, balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL } }
   if (bar.cable) setup.cables = [{ pulley: bar.pulley!, implement: bar.spec.id, point: [0, 0, 0], kg: CABLE_KG }]
-  // the bar may rest on the front of the thighs at the bottom
-  setup.rests = [{ implement: bar.spec.id, regions: ['thigh_l', 'thigh_r'], tol: 5 }]
+  // the bar stays clear of the front of the thighs (a negative rest tolerance is a clearance floor)
+  setup.rests = [{ implement: bar.spec.id, regions: ['thigh_l', 'thigh_r'], tol: -THIGH_CLEAR }]
   const ctx: Ctx = { tempo, setup, body, stance, bar }
   const elbowAt = (bottom: number) => {
     const q = standingBase(skel)
     barFrame(skel, q, p, ctx, 0, 0, bottom)
     return q[skel.dof['elbow_l.flex']]
   }
-  // lean the upper arms forward just enough that the bar and the hands rest on the thighs at the bottom and the
+  // lean the upper arms forward just enough that the bar and the hands clear the thighs at the bottom and the
   // forearms (angled in by a narrow grip) clear the belly
   const onThighs = (lean: number) => {
     const q = standingBase(skel)
@@ -368,7 +373,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     const solids = placeParts(bar.spec, pose)
     const thighGap = Math.min(...thighs.flatMap((t) => [...solids.map((sd) => capsuleSolidClearance(t, sd)), ...hands.map((h) => capsuleClearance(h, t))]))
     const bellyGap = Math.min(...forearms.flatMap((fa) => trunkCaps.map((t) => capsuleClearance(fa, t))))
-    return Math.min(thighGap - BAR_ON_THIGHS, bellyGap - FOREARMS_OFF_BELLY)
+    return Math.min(thighGap - BAR_OFF_THIGHS, bellyGap - FOREARMS_OFF_BELLY)
   }
   ctx.barBottom = root1d((b) => elbowAt(b) - ELBOW[0], 0, 45, { tol: 1e-4 }).x
   for (let pass = 0; pass < 3; pass++) {

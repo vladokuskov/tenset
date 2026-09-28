@@ -43,7 +43,8 @@
       "implement": "machine",
       "machine": "shoulder_press_machine",
       "posture": "seated",
-      "grip": "pronated"
+      "grip": "pronated",
+      "gripWidth": 1.8
     },
     "mapView": "F"
   },

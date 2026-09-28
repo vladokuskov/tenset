@@ -9,11 +9,14 @@ import type { CompactMotion } from '../../src/motion/bake.ts'
 import { skeletonHash, type SkeletonData } from '../../src/motion/skeleton.ts'
 import { DATA, PUBLIC, ROOT } from '../lib/paths.ts'
 
-/** the first and last `frames` frames of a loop get `boost` times the bits (bake-loops.ts seamZones) */
-export type SeamSettings = { frames: number; boost: number }
+/**
+ * the restart (bake-loops.ts seamZones, encodeLoop): the keyframe gets `keyBoost` times the bits, the last frame the
+ * fixed quantizer `lastQ`, and with `match` the still frames before the restart are encoded towards the decoded keyframe
+ */
+export type SeamSettings = { keyBoost: number; lastQ: number; match: boolean }
 
 export const RENDER = {
-  version: 4,
+  version: 5,
   view: 'hero',
   /** output pixels (square) */
   size: 480,
@@ -22,8 +25,9 @@ export const RENDER = {
   fps: 30,
   background: '#ffffff',
   crf: 24,
-  /** the half top pause at each end of the loop (0.25 s): the whole still stretch around the restart */
-  seam: { frames: 8, boost: 4 } as SeamSettings,
+  /** seam trials (pipeline/render/seam.ts): the restart jump about halves against a 4x boost of the 8 frames either
+   * side, and the loops come out ~21% larger than without seam treatment instead of ~29% (budget 22%) */
+  seam: { keyBoost: 2, lastQ: 8, match: true } as SeamSettings,
   posterQuality: 0.8,
   /** posters on the background like the loops; alpha about doubles their size (11-26 KB instead of 5-13 KB) */
   posterAlpha: false,
@@ -147,8 +151,9 @@ export function isFresh(job: MediaJob, e: MediaEntry | undefined): e is MediaEnt
   return !!e && e.hash === job.hash && e.frames === job.frames && existsSync(path.join(PUBLIC, e.poster)) && existsSync(path.join(PUBLIC, e.loop))
 }
 
-/** every reason the baked media no longer matches the repo; empty when fresh */
-export function checkMedia(jobs = mediaJobs(), manifest = readManifest()): string[] {
+/** every reason the baked media no longer matches the repo; empty when fresh. `scoped`: only these jobs, without the
+ * manifest-wide checks (orphan entries and files) */
+export function checkMedia(jobs = mediaJobs(), manifest = readManifest(), scoped = false): string[] {
   const issues: string[] = []
   const hint = 'run node pipeline/render/bake-loops.ts'
   for (const job of jobs) {
@@ -167,6 +172,7 @@ export function checkMedia(jobs = mediaJobs(), manifest = readManifest()): strin
       else if (!existsSync(path.join(PUBLIC, rel))) issues.push(`${job.slug}: ${kind} file public/${rel} is missing`)
     }
   }
+  if (scoped) return issues
   const ids = new Set(jobs.map((j) => String(j.id)))
   for (const id of Object.keys(manifest)) if (!ids.has(id)) issues.push(`manifest entry ${id} has no baked motion (${hint} to prune)`)
   const used = new Set(Object.values(manifest).flatMap((e) => [e.poster, e.loop]))

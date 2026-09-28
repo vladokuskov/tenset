@@ -1,0 +1,17 @@
+import type { SceneSpec } from './types.ts'
+
+export const hipAbduction: SceneSpec = {
+  camera: (params) => {
+    const abduction = params.direction !== 'adduction'
+    if (params.implement === 'machine') {
+      // seated: the back pad hides the glutes from behind; a near-front three-quarter shows both knees travel with the
+      // pads outside them and the outer hip (abduction), or looks down between the knees at the inner thighs (adduction)
+      return abduction ? { az: -28, elev: 0.32 } : { az: -24, elev: 0.36 }
+    }
+    // standing cable, right leg working: abduction from behind the working side so the glute med reads and the stack
+    // stands clear on the far side; adduction from the front-left, the working inner thigh faces the camera
+    const s = params.side === 'left' ? -1 : 1
+    return abduction ? { az: -150 * s, elev: 0.18 } : { az: 26 * s, elev: 0.22 }
+  },
+  grip: (ctx) => (ctx.spec.kind === 'hip_machine' || ctx.spec.kind === 'grab_handle' ? 'neutral' : undefined),
+}

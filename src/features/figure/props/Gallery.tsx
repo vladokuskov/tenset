@@ -1,10 +1,12 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react'
-import { Box3, NeutralToneMapping, Vector3, type PerspectiveCamera } from 'three'
+import { Box3, Matrix4, NeutralToneMapping, Quaternion, Vector3, type PerspectiveCamera } from 'three'
 import { ContactShadow } from '../ContactShadow'
 import { Figure } from '../Figure'
 import { StudioEnvironment, StudioLights } from '../Studio'
 import { azimuth, elevations, frameFit, isViewName, type ViewName } from '../views'
+import { Bench } from './Bench'
+import { benchColliders } from './collision'
 import { galleryNames, galleryScene, type MarkerKind } from './scenes'
 import { piecesBox, piecesCorners } from './kit'
 import { PropModel } from './PropModel'
@@ -51,6 +53,18 @@ export default function PropsGallery({ name, view: viewArg, hl }: { name: string
     if (!scene) return null
     const box = piecesBox(scene.pieces)
     const pts = piecesCorners(scene.pieces)
+    for (const b of scene.benches ?? []) {
+      const m = new Matrix4().makeRotationY(b.rotY ?? 0).setPosition(...b.at)
+      for (const c of benchColliders(b.params)) {
+        if (c.shape !== 'box') continue
+        for (let k = 0; k < 8; k++) {
+          const p = new Vector3(((k & 1 ? 1 : -1) * c.size[0]) / 2, ((k & 2 ? 1 : -1) * c.size[1]) / 2, ((k & 4 ? 1 : -1) * c.size[2]) / 2)
+          p.applyQuaternion(new Quaternion(...(c.rot ?? [0, 0, 0, 1]))).add(new Vector3(...c.center)).applyMatrix4(m)
+          box.expandByPoint(p)
+          pts.push(p.x, p.y, p.z)
+        }
+      }
+    }
     if (scene.figure) {
       const fb = FIGURE_BOX.clone().translate(new Vector3(...scene.figure.at))
       box.union(fb)
@@ -88,6 +102,11 @@ export default function PropsGallery({ name, view: viewArg, hl }: { name: string
         <StudioLights azimuth={azimuth(view)} />
         <group position={layout.shift}>
           <PropModel pieces={scene.pieces} />
+          {scene.benches?.map((b, i) => (
+            <group key={i} position={b.at} rotation-y={b.rotY ?? 0}>
+              <Bench {...b.params} />
+            </group>
+          ))}
           {scene.figure && (
             <Suspense fallback={null}>
               <group position={scene.figure.at} rotation-y={scene.figure.rotY ?? 0}>

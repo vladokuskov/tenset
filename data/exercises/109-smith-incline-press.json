@@ -47,7 +47,8 @@
       "implement": "smith",
       "benchAngle": 30,
       "grip": "pronated",
-      "gripWidth": 1.4
+      "gripWidth": 1.4,
+      "elbowFlare": 45
     },
     "mapView": "F"
   },

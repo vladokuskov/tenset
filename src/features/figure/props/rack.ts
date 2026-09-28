@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
-import { finish, Kit, type PropBuild } from './kit'
-import { foot, holeRow } from './parts'
+import { finish, Kit, type PropBuild } from './kit.ts'
+import { foot, holeRow } from './parts.ts'
 
 // Half rack: front and rear uprights, J-hooks and spotter arms on the front uprights, the lifter works in front
 // (+Z). Frame: X across, Y up, origin on the floor between the front uprights.

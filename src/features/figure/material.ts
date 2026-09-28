@@ -43,6 +43,8 @@ export type MaterialOptions = {
   edge?: number
   primary?: string
   secondary?: string
+  /** shorts only: how far the shorts over highlighted glutes take the highlight colour (0..1) */
+  shortsTint?: number
 }
 
 /** atlas textures for the skin (atlas.ts, relief and fibre are the packed surface and slope textures) and the baked
@@ -83,6 +85,7 @@ export const skinDefaults: Required<MaterialOptions> = {
   edge: 0.2,
   primary: highlightColors.primary,
   secondary: highlightColors.secondary,
+  shortsTint: 0.62,
 }
 
 export const figureMaterialDefaults: Record<FigureMaterialName, Required<MaterialOptions>> = {
@@ -194,6 +197,42 @@ const ATLAS_FLAT = `
     gl_FragColor = vec4( texelFetch( uLut, ivec2( atlasId, 0 ), 0 ).rgb, 1.0 );
   #endif`
 
+// Shorts over highlighted glutes: the shorts carry the body UV under each vertex (shorts.ts) and read the mask's alpha
+// (highlighted regions the shorts tint over, mask.ts) there, thresholded like the skin, with the same concentric
+// pulse. Triangles across a body UV seam (bodyUv.z > 0) use the mask sampled at their vertices instead.
+const SHORTS_VERT_PARS = `
+attribute vec3 bodyUv;
+uniform sampler2D uMask;
+varying vec3 vBodyUv;
+varying vec4 vFigHl;`
+const SHORTS_VERT = `
+  vBodyUv = bodyUv;
+  vFigHl = textureLod( uMask, bodyUv.xy, 0.0 );`
+const SHORTS_PARS = `
+uniform sampler2D uMask;
+uniform vec3 uPrimary;
+uniform vec3 uSecondary;
+uniform float uPulse;
+uniform float uEdge;
+uniform float uHighlight;
+uniform float uShortsTint;
+varying vec3 vBodyUv;
+varying vec4 vFigHl;`
+const SHORTS_COLOR = `
+  {
+    vec4 figM = vBodyUv.z > 0.001 ? vFigHl : texture2D( uMask, vBodyUv.xy );
+    // a softer edge than the skin's: the shell floats up to 4 cm off the body, so the projected contour is rougher
+    float figAA = max( 1.5 * uEdge, fwidth( figM.a ) );
+    float figA = smoothstep( 0.5 - figAA, 0.5 + figAA, figM.a ) * step( 0.5, uHighlight );
+    vec3 figC = mix( uSecondary, uPrimary, smoothstep( 0.4, 0.6, figM.r / max( figM.r + figM.g, 1e-3 ) ) );
+    // dyed fabric: darker than the skin highlight, so the shorts still read as shorts
+    diffuseColor.rgb = mix( diffuseColor.rgb, figC * 0.7, figA * uShortsTint );
+    if ( uPulse >= 0.0 ) {
+      float ring = exp( - pow( ( figM.b - mix( 0.95, 0.35, uPulse ) ) / 0.06, 2.0 ) ) * ( 1.0 - uPulse );
+      diffuseColor.rgb = mix( diffuseColor.rgb, min( diffuseColor.rgb * 1.4 + 0.06, vec3( 1.0 ) ), ring * figA );
+    }
+  }`
+
 // bump from the height gradient in UV space, via the surface gradient (Mikkelsen 2010); height in metres
 const ATLAS_NORMAL = `
   {
@@ -228,6 +267,7 @@ export function setPulsePhase(u: FigureUniforms, phase: number | null) {
 export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOptions = {}, dqsBones: number[] = [1], vertexMix = true, atlas?: FigureAtlasInput) {
   const o = { ...figureMaterialDefaults[name], ...opts }
   const useAtlas = name === 'skin' && !!atlas
+  const shortsHl = name === 'shorts' && !!atlas && !atlas.flat
   const uniforms = {
     uRegions: { value: atlas?.regions ?? null },
     uRelief: { value: atlas?.relief ?? null },
@@ -248,6 +288,7 @@ export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOpt
     uSecondary: { value: new Color(o.secondary) },
     /** concentric pulse phase 0..1 inside highlighted muscles; negative = off */
     uPulse: { value: -1 },
+    uShortsTint: { value: o.shortsTint },
     uAO: { value: o.ao },
     uRim: { value: o.rim },
     uRimColor: { value: new Color(o.rimColor) },
@@ -280,6 +321,7 @@ export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOpt
     ...(name === 'eyes' || useAtlas ? { USE_UV: '' } : {}),
     ...(sheen ? { FIG_SHEEN: '' } : {}),
     ...(flat ? { FIG_ATLAS_FLAT: '' } : {}),
+    ...(shortsHl ? { FIG_SHORTS_HL: '' } : {}),
   }
   if (name === 'hair' || name === 'shorts') {
     // shells sit a few millimetres above the skin
@@ -292,12 +334,17 @@ export function createFigureMaterial(name: FigureMaterialName, opts: MaterialOpt
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms)
     shader.vertexShader = patchDqs(shader.vertexShader, dqsBones.length, vertexMix)
+    if (shortsHl) {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', `#include <common>${SHORTS_VERT_PARS}`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>${SHORTS_VERT}`)
+    }
     if (name === 'hair') {
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vRestPos;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRestPos = position;')
     }
-    const pars = name === 'hair' ? HAIR_PARS : useAtlas ? ATLAS_PARS : ''
+    const pars = name === 'hair' ? HAIR_PARS : useAtlas ? ATLAS_PARS : shortsHl ? SHORTS_PARS : ''
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
@@ -326,7 +373,7 @@ ${pars}`,
       .replace('#include <lights_physical_pars_fragment>', wrapped)
       .replace(
         '#include <color_fragment>',
-        name === 'eyes' ? EYE : name === 'hair' ? HAIR_GRAIN : `diffuseColor.rgb = mix( diffuseColor.rgb, uHairColor, vColor.g * uHairTint );${useAtlas ? ATLAS_COLOR : ''}`,
+        name === 'eyes' ? EYE : name === 'hair' ? HAIR_GRAIN : `diffuseColor.rgb = mix( diffuseColor.rgb, uHairColor, vColor.g * uHairTint );${useAtlas ? ATLAS_COLOR : ''}${shortsHl ? SHORTS_COLOR : ''}`,
       )
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>${useAtlas ? ATLAS_NORMAL : ''}`)
       .replace('#include <dithering_fragment>', `#include <dithering_fragment>${useAtlas ? ATLAS_FLAT : ''}`)
@@ -353,6 +400,6 @@ ${pars}`,
         totalEmissiveRadiance += uRimColor * rimF * uRim * mix( 1.0, vColor.r, 0.8 );`,
       )
   }
-  mat.customProgramCacheKey = () => `figure-v10-${name}-${dqsBones.length}-${vertexMix ? 'v' : 'b'}-${useAtlas ? 'a' : ''}${flat ? 'f' : ''}${sheen ? 's' : ''}`
+  mat.customProgramCacheKey = () => `figure-v10-${name}-${dqsBones.length}-${vertexMix ? 'v' : 'b'}-${useAtlas ? 'a' : ''}${flat ? 'f' : ''}${sheen ? 's' : ''}${shortsHl ? 'h' : ''}`
   return { material: mat, uniforms }
 }

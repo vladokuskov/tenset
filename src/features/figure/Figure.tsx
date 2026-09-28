@@ -12,6 +12,7 @@ import { HighlightMask } from './mask'
 import { createFigureMaterial, setHighlightEnabled, setPulsePhase, type FigureMaterialName, type FigureUniforms, type MaterialOptions } from './material'
 import { poses, type PoseName } from './poses'
 import { Rig, type Pose } from './rig'
+import { attachBodyUv } from './shorts'
 
 const MATERIALS: FigureMaterialName[] = ['skin', 'hair', 'shorts', 'eyes']
 
@@ -74,7 +75,11 @@ export function Figure({
     lut.dispose()
     mask.dispose()
   }, [lut, mask])
-  const scene = useMemo(() => cloneSkinned(gltf.scene), [gltf.scene])
+  const scene = useMemo(() => {
+    const s = cloneSkinned(gltf.scene)
+    attachBodyUv(s)
+    return s
+  }, [gltf.scene])
   const rig = useMemo(() => new Rig(scene), [scene])
   const correctives = useMemo(() => Correctives.fromScene(rig, scene, useCorrectives), [rig, scene, useCorrectives])
   const built = useMemo(() => {
@@ -83,6 +88,7 @@ export function Figure({
     const inv = rig.dequant.clone().invert()
     const out = {} as Record<FigureMaterialName, Material>
     let skinUniforms: FigureUniforms | null = null
+    let shortsUniforms: FigureUniforms | null = null
     const atlasInput = useAtlas || atlasFlat
       ? { regions: atlas.regions, relief: atlas.relief, fibre: atlas.fibre, lut, mask: mask.texture, reliefRange: atlas.reliefRange, fibreAmp: atlas.fibreAmp, flat: atlasFlat }
       : undefined
@@ -92,10 +98,11 @@ export function Figure({
       m.uniforms.uDequantInv.value.copy(inv)
       out[name] = m.material
       if (name === 'skin') skinUniforms = m.uniforms
+      if (name === 'shorts') shortsUniforms = m.uniforms
     }
-    return { mats: out, skinUniforms: skinUniforms! }
+    return { mats: out, skinUniforms: skinUniforms!, shortsUniforms: shortsUniforms! }
   }, [skin, materials, rig, atlas, lut, mask, useAtlas, atlasFlat])
-  const { mats, skinUniforms } = built
+  const { mats, skinUniforms, shortsUniforms } = built
 
   useLayoutEffect(() => {
     scene.traverse((o) => {
@@ -130,10 +137,14 @@ export function Figure({
         const any = fillHighlightLut(lut, atlas.meta, resolveHighlight(h ?? undefined))
         if (any) mask.bake(gl)
         setHighlightEnabled(skinUniforms, any)
+        setHighlightEnabled(shortsUniforms, any)
       },
-      setPulse: (phase) => setPulsePhase(skinUniforms, phase),
+      setPulse: (phase) => {
+        setPulsePhase(skinUniforms, phase)
+        setPulsePhase(shortsUniforms, phase)
+      },
     }),
-    [rig, scene, correctives, atlasFlat, lut, atlas, mask, gl, skinUniforms],
+    [rig, scene, correctives, atlasFlat, lut, atlas, mask, gl, skinUniforms, shortsUniforms],
   )
   useImperativeHandle(ref, () => handle, [handle])
 

@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
-import { barbell, cableHandle, ezBar, pullupBar, type Attachment, type ImplementSpec } from '../../../motion/implements.ts'
+import { barbell, cableHandle, ezBar, NEUTRAL_HANDLE, pullupBar, type Attachment, type ImplementSpec } from '../../../motion/implements.ts'
 import { buildBarbell, buildEzBar } from './barbell'
 import { ATTACHMENT_EYE, buildAttachment, buildCableStack, PULLEY_HEIGHTS } from './cable'
 import { geometry, type PropBuild } from './kit'
@@ -107,7 +107,7 @@ describe('racks and stations', () => {
     expectSane(st)
     const n = buildPullupStation({ neutral: true, gripWidth: 0.5 })
     expectSites(n.sockets.grips, pullupBar({ height: 2.4, gripWidth: 0.5, neutral: true }), new Vector3(0, 2.4, 0))
-    expect(n.sockets.grips.l.position.z).toBeCloseTo(-0.18, 9)
+    expect(n.sockets.grips.l.position.z).toBeCloseTo((NEUTRAL_HANDLE.from + NEUTRAL_HANDLE.to) / 2, 9)
     expect(n.sockets.grips.l.axis.toArray()).toEqual([0, 0, 1])
     const a = buildAssistedPullup({ pad: [0, 1.0, 0.03] })
     expectSites(a.sockets.grips, pullupBar({ height: 2.4, gripWidth: 0.68 }), new Vector3(0, 2.4, 0))

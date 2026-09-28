@@ -5,7 +5,9 @@ import type { Quat, V3 } from '../../../motion/math.ts'
 import type { ImplementPose } from '../../../motion/skeleton.ts'
 import { buildBarbell } from './barbell.ts'
 import { buildCableStack } from './cable.ts'
+import { extensionLayouts } from './extensions.ts'
 import { Kit, type Piece } from './kit.ts'
+import type { Collider, ColliderKind, MachineLayout, Poses } from './layout.ts'
 import { buildLegPress, legPressDefaults } from './legpress.ts'
 import { buildLatPulldown } from './pulldown.ts'
 import { buildAssistedPullup, buildPullupStation, drawBar } from './pullup.ts'
@@ -17,12 +19,7 @@ import { BENCH, benchDefaults, benchSockets, type BenchParams } from './sockets.
 // laid out as the scene composer (motion/compose.ts motionProps) lays the machines out. Held implements (bars,
 // attachments, the pull-up bar) are left out: the gate already checks them as the template's implements.
 
-export type ColliderKind = 'frame' | 'rail' | 'stack' | 'plate' | 'pad'
-
-/** a collision primitive in a machine's frame; `pad` parts are padded supports (seats, pads, foot plates) */
-export type Collider = Part & { kind: ColliderKind }
-
-export type Poses = ReadonlyMap<string, ImplementPose>
+export type { Collider, ColliderKind, MachineLayout, Poses } from './layout.ts'
 
 export type MachineColliders = {
   /** the composer's prop key */
@@ -30,17 +27,6 @@ export type MachineColliders = {
   /** implements of this machine the hands hold: a holding hand may close round its handles */
   holds: string[]
   at: (poses: Poses) => { pose: ImplementPose; colliders: Collider[] }
-}
-
-/** the machine as drawn (all pieces, in its frame) and the matrix placing it, as the composer builds it each frame */
-export type MachineLayout = {
-  key: string
-  holds: string[]
-  /** the same pieces at every frame */
-  fixed: boolean
-  build: (poses: Poses) => { placement: Matrix4; pieces: Piece[] }
-  /** the pieces that collide: without held implements and attachments */
-  solid: (poses: Poses) => { placement: Matrix4; pieces: Piece[] }
 }
 
 type Cyl = Extract<Part, { shape: 'cylinder' }>
@@ -66,6 +52,7 @@ const KIND: Partial<Record<Piece['mat'], ColliderKind>> = {
   grip: 'rail',
   handle: 'rail',
   rope: 'rail',
+  mat: 'pad',
 }
 
 const Y = new Vector3(0, 1, 0)
@@ -127,6 +114,7 @@ export function pieceColliders(pieces: Piece[]): Collider[] {
 }
 
 // ---------- layout (mirrors compose.ts motionProps; collision.test.ts checks they agree piece for piece) ----------
+// Extension layouts (family props, scene modules) are drawn by the composer from these same objects.
 
 function liftRange(b: Baked, id: string, from: Vector3) {
   const k = b.implements.findIndex((i) => i.id === id)
@@ -284,15 +272,21 @@ export function machineLayouts(b: Baked): MachineLayout[] {
     })
   }
 
+  out.push(...extensionLayouts(b))
   return out
 }
 
-/** adjustable bench under a template's seated bench: seat top and back pad surface on the template's (compose.ts benchLayout) */
+/** how far the back pad's surface line meets the seat behind the hinge, for a pad this thick at angle a (0 when flat) */
+function hingeShift(a: number, thick: number) {
+  return Math.abs(a) < 1e-9 ? 0 : (thick * (Math.cos(a) - 1)) / Math.sin(a)
+}
+
+/** adjustable bench under a template's seated bench: seat top and back pad surface on the template's (flat at 0 deg) */
 export function benchLayout(spec: ImplementSpec, pose: { pos: readonly number[] }): { params: BenchParams; position: V3 } {
   const pad = spec.parts.find((p) => p.shape === 'box' && p.rot) as Box
   const a = 2 * Math.atan2(pad.rot![0], pad.rot![3])
   const h = pose.pos[1]
-  const z = pose.pos[2] + BENCH.seat.len / 2 + (BENCH.back.thick * (Math.cos(a) - 1)) / Math.sin(a)
+  const z = pose.pos[2] + BENCH.seat.len / 2 + hingeShift(a, BENCH.back.thick)
   return { params: { back: (a * 180) / Math.PI, height: h }, position: [pose.pos[0], 0, z] }
 }
 
@@ -351,7 +345,7 @@ export function machineColliders(b: Baked): MachineColliders[] {
     const at = (poses: Poses) => {
       if (cached) return cached
       const { placement, pieces } = l.solid(poses)
-      const r = { pose: { ...poseOf(placement), id: l.key }, colliders: pieceColliders(pieces) }
+      const r = { pose: { ...poseOf(placement), id: l.key }, colliders: l.colliders ? l.colliders(poses) : pieceColliders(pieces) }
       if (l.fixed) cached = r
       return r
     }

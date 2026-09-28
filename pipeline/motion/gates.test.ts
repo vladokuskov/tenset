@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { bake, compactSize, decode, encode, frameQ, type Baked } from '../../src/motion/bake.ts'
+import { bake, compactSize, decode, encode, frameImplements, frameQ, type Baked } from '../../src/motion/bake.ts'
+import { placeParts } from '../../src/motion/collide.ts'
+import type { Part } from '../../src/motion/implements.ts'
 import { createSkeleton, type SkeletonData } from '../../src/motion/skeleton.ts'
 import { dumbbellPoses } from '../../src/motion/templates/arms.ts'
 import { getTemplate, parseParams } from '../../src/motion/templates/index.ts'
@@ -71,9 +73,9 @@ describe('penetration gate', () => {
   }
   const penetration = (b: Baked) => runGates(b, skel).filter((g) => g.name.startsWith('penetration') && !g.pass)
 
-  it('reads the 24 exercise records whose motion template is implemented', () => {
+  it('reads the exercise records whose motion template is implemented (the first 24 and any family work)', () => {
     const ids = loadMotionExercises().map((r) => r.id).sort((a, b) => a - b)
-    expect(ids).toEqual([203, 204, 214, 301, 302, 303, 309, 310, 311, 401, 402, 405, 406, 407, 408, 701, 702, 703, 710, 711, 712, 713, 714, 719])
+    expect(ids).toEqual(expect.arrayContaining([203, 204, 214, 301, 302, 303, 309, 310, 311, 401, 402, 405, 406, 407, 408, 701, 702, 703, 710, 711, 712, 713, 714, 719]))
   })
 
   it('reports the closest approach per pair and passes the shipped dumbbell and barbell curls', () => {
@@ -147,6 +149,39 @@ describe('penetration gate', () => {
     expect(bad?.detail).toMatch(/ \/ cable-stack:(frame|stack|rail)#/)
   })
 
+  it('checks equipment against equipment: plates against the smith frame, dumbbell against dumbbell and bench', { timeout: 30_000 }, () => {
+    const gate = (x: Baked) => runGates(x, skel).find((g) => g.name === 'penetration equipment-equipment')!
+    const smith = bakeRecord(407)
+    expect(gate(smith).pass).toBe(true)
+    expect(clearances(smith, skel).some((r) => r.kind === 'equipment' && /^bar#\d+ \/ smith:/.test(r.pair))).toBe(true)
+    // plates 3 cm thicker on each face reach the frame the loaded bar clears by about 25 mm
+    const thick = (p: Part): Part => {
+      if (p.shape !== 'cylinder' || p.r < 0.1) return p
+      const d = Math.sign(p.b[0] - p.a[0]) * 0.03
+      return { ...p, a: [p.a[0] - d, p.a[1], p.a[2]], b: [p.b[0] + d, p.b[1], p.b[2]] }
+    }
+    const big = { ...smith, implements: smith.implements.map((s) => (s.id === 'bar' ? { ...s, parts: s.parts.map(thick) } : s)) }
+    expect(gate(big).pass).toBe(false)
+    expect(gate(big).detail).toMatch(/^bar#\d+ \/ smith:/)
+
+    // both dumbbells of a curl drawn 12 cm closer together
+    const curl = bakeRecord(711)
+    expect(gate(curl).pass).toBe(true)
+    const r = curl.implements.findIndex((s) => s.id === 'db_r')
+    const ip = curl.ip.slice()
+    for (let i = 0; i < curl.frames; i++) ip[(i * curl.implements.length + r) * 7] += 0.12
+    expect(gate({ ...curl, ip }).detail).toMatch(/^db_[lr]#\d+ \/ db_[lr]#\d+/)
+
+    // spider curl: the left dumbbell pushed into the bench pad
+    const spider = bakeRecord(712)
+    expect(gate(spider).pass).toBe(true)
+    const n = spider.implements.length
+    const [bench, l] = ['bench', 'db_l'].map((id) => spider.implements.findIndex((s) => s.id === id))
+    const sip = spider.ip.slice()
+    for (let i = 0; i < spider.frames; i++) sip.set(placeParts(spider.implements[bench], frameImplements(spider, i)[bench])[0].center, (i * n + l) * 7)
+    expect(gate({ ...spider, ip: sip }).detail).toMatch(/^db_l#\d+ \/ bench#\d+/)
+  })
+
   it('checks drawn pads with the pad tolerance and frames, rails and stacks as rigid', { timeout: 20_000 }, () => {
     const rows = clearances(bakeRecord(303), skel).filter((r) => r.kind === 'machine')
     expect(rows.length).toBeGreaterThan(30)
@@ -156,6 +191,34 @@ describe('penetration gate', () => {
     expect(roller.length).toBeGreaterThan(0)
     expect(Math.min(...roller.map((r) => r.min))).toBeLessThan(-PROP_TOL.rigid)
     expect(roller.every((r) => r.excess === 0)).toBe(true)
+  })
+
+  it('checks the body against the floor, and takes per-template tolerance overrides', { timeout: 20_000 }, () => {
+    const floor = (x: Baked) => runGates(x, skel).find((g) => g.name === 'penetration body-floor')!
+    const b = bakeRecord(401)
+    expect(floor(b).pass).toBe(true)
+    // the whole lifter sunk 12 mm into the floor for part of the rep
+    const q = b.q.slice()
+    for (let i = 30; i < 60; i++) q[i * b.nDof + skel.dof['pelvis.ty']] -= 0.012
+    const sunk = { ...b, q }
+    expect(floor(sunk).pass).toBe(false)
+    expect(floor(sunk).detail).toMatch(/^foot_[lr] \/ floor clearance -1[12]/)
+    expect(floor({ ...sunk, tolerances: { floor: 15 } }).pass).toBe(true)
+
+    // a body pair tolerance raised for this template only
+    const curl = bakeRecord(710)
+    const cq = curl.q.slice()
+    for (let i = 0; i < curl.frames; i++) {
+      for (const s of ['l', 'r']) {
+        cq[i * curl.nDof + skel.dof[`shoulder_${s}.plane`]] = 180
+        cq[i * curl.nDof + skel.dof[`shoulder_${s}.elev`]] = 12
+      }
+    }
+    const broken = { ...curl, q: cq }
+    const body = (x: Baked) => runGates(x, skel).find((g) => g.name === 'penetration body-body')!
+    const labels = [...new Set(clearances(broken, skel).filter((r) => r.kind === 'body' && r.excess > 0).map((r) => r.pair))]
+    expect(body(broken).pass).toBe(false)
+    expect(body({ ...broken, tolerances: { body: Object.fromEntries(labels.map((l) => [l, 200])) } }).pass).toBe(true)
   })
 
   it('fails baked motion when the skeleton changes, and skeleton.json when the body model changes', () => {

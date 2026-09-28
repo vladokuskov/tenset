@@ -2,7 +2,8 @@ import { LinearFilter, LinearMipmapLinearFilter, Mesh, OrthographicCamera, Plane
 
 // Highlight mask in the body UV layout, baked on the GPU whenever the highlight changes:
 // r = primary, g = secondary (Gaussian over the region states, so the skin shader can threshold a smooth contour),
-// b = any highlight blurred wide, an inset distance used by the concentric pulse.
+// b = any highlight blurred wide, an inset distance used by the concentric pulse, a = highlighted regions the shorts
+// tint over (LUT blue, atlas.ts fillHighlightLut), blurred like r and g.
 // Region states are looked up once per 2 x 2 region texels, then blurred separably (edge at 1024 px, wide at 256 px):
 // about 29M texture reads per change instead of 340M for the old 9 x 9 x 2 gather.
 // Region indices come from the alpha of the packed atlas surface (atlas.ts), padded past the UV islands, so the blur
@@ -19,13 +20,15 @@ void main() {
   ivec2 p = ivec2(gl_FragCoord.xy) * 2;
   vec2 acc = vec2(0.0);
   float any = 0.0;
+  float tint = 0.0;
   for (int i = 0; i < 4; i++) {
     ivec2 q = min(p + ivec2(i & 1, i >> 1), size - 1);
-    vec2 s = texelFetch(uLut, ivec2(int(texelFetch(uRegions, q, 0).a * 255.0 + 0.5), 0), 0).rg;
-    acc += s;
+    vec3 s = texelFetch(uLut, ivec2(int(texelFetch(uRegions, q, 0).a * 255.0 + 0.5), 0), 0).rgb;
+    acc += s.rg;
     any += max(s.r, s.g);
+    tint += max(s.r, s.g) * s.b;
   }
-  gl_FragColor = vec4(acc * 0.25, any * 0.25, 1.0);
+  gl_FragColor = vec4(acc * 0.25, any * 0.25, tint * 0.25);
 }`
 
 // one Gaussian pass; uLod picks the source mip (the wide blur reads the 256 px level of the state texture)
@@ -56,14 +59,15 @@ uniform vec2 uDir;
 uniform float uSigma;
 varying vec2 vUv;
 void main() {
-  vec2 acc = vec2(0.0);
+  vec3 acc = vec3(0.0);
   float ws = 0.0;
   for (int i = -4; i <= 4; i++) {
     float w = exp(-float(i * i) / (2.0 * uSigma * uSigma));
-    acc += texture2D(uSrc, vUv + uDir * float(i)).rg * w;
+    acc += texture2D(uSrc, vUv + uDir * float(i)).rga * w;
     ws += w;
   }
-  gl_FragColor = vec4(acc / ws, texture2D(uWide, vUv).b, 1.0);
+  acc /= ws;
+  gl_FragColor = vec4(acc.xy, texture2D(uWide, vUv).b, acc.z);
 }`
 
 export type MaskOptions = {

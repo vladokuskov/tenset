@@ -181,7 +181,10 @@ function hex(c: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
 
-/** Region states for the mask bake; returns whether anything is highlighted. */
+/** groups whose highlight also tints the shorts over them (glutes hide under the shorts) */
+export const SHORTS_TINT_GROUPS = new Set(['glute_max', 'glute_med'])
+
+/** Region states for the mask bake (b marks highlighted regions the shorts tint over); returns whether anything is highlighted. */
 export function fillHighlightLut(lut: DataTexture, meta: AtlasMeta, h: ResolvedHighlight) {
   const data = lut.image.data as Uint8Array
   data.fill(0)
@@ -191,7 +194,7 @@ export function fillHighlightLut(lut: DataTexture, meta: AtlasMeta, h: ResolvedH
     const p = h.primary.has(r.head)
     const s = !p && h.secondary.has(r.head)
     if (!p && !s) continue
-    data.set([p ? 255 : 0, s ? 255 : 0, 0, 255], r.index * 4)
+    data.set([p ? 255 : 0, s ? 255 : 0, r.group && SHORTS_TINT_GROUPS.has(r.group) ? 255 : 0, 255], r.index * 4)
     any = true
   }
   lut.needsUpdate = true

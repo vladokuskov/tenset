@@ -1,7 +1,7 @@
 import type { ImplementSpec } from './implements.ts'
 import { qdot, qnorm, type Quat, type V3 } from './math.ts'
 import { skeletonHash, type Contact, type ImplementPose, type Pose, type Skeleton } from './skeleton.ts'
-import type { AnyTemplate, BalanceSpec, Cable, Rest } from './templates/types.ts'
+import type { AnyTemplate, BalanceSpec, Cable, Rest, Tolerances } from './templates/types.ts'
 import { frameCount, loopDuration, type Tempo } from './timing.ts'
 
 // Baked loop: every DOF plus implement transforms (position + quaternion) at a fixed rate; frame i sits at loop
@@ -27,6 +27,7 @@ export type Baked = {
   cables?: Cable[]
   rests?: Rest[]
   limits?: Record<string, [number, number]>
+  tolerances?: Tolerances
 }
 
 export function bake(t: AnyTemplate, params: Record<string, unknown>, skel: Skeleton, fps = 30): Baked {
@@ -66,6 +67,7 @@ export function bake(t: AnyTemplate, params: Record<string, unknown>, skel: Skel
     cables: setup.cables,
     rests: setup.rests,
     limits: setup.limits,
+    ...(setup.tolerances ? { tolerances: setup.tolerances } : {}),
   }
 }
 
@@ -143,6 +145,7 @@ export type CompactMotion = {
   cables?: Cable[]
   rests?: Rest[]
   limits?: Record<string, [number, number]>
+  tolerances?: Tolerances
 }
 
 function channelStep(skel: Skeleton, ch: number): number {
@@ -214,6 +217,7 @@ export function encode(b: Baked, skel: Skeleton): CompactMotion {
     ...(b.cables ? { cables: roundDeep(b.cables) } : {}),
     ...(b.rests ? { rests: b.rests } : {}),
     ...(b.limits ? { limits: b.limits } : {}),
+    ...(b.tolerances ? { tolerances: b.tolerances } : {}),
   }
 }
 
@@ -277,6 +281,7 @@ export function decode(c: CompactMotion, skel: Skeleton, o: { allowStale?: boole
     cables: c.cables,
     rests: c.rests,
     limits: c.limits,
+    ...(c.tolerances ? { tolerances: c.tolerances } : {}),
   }
 }
 

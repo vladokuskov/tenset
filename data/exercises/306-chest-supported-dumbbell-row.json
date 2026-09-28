@@ -48,8 +48,8 @@
       "implement": "dumbbell",
       "posture": "lying_prone",
       "support": "chest_pad",
-      "torsoAngle": 60,
-      "benchAngle": 30,
+      "torsoAngle": 45,
+      "benchAngle": 45,
       "grip": "pronated",
       "elbowFlare": 65
     },

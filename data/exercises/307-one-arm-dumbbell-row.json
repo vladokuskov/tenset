@@ -48,7 +48,7 @@
     "params": {
       "implement": "dumbbell",
       "support": "bench",
-      "torsoAngle": 80,
+      "torsoAngle": 76,
       "grip": "neutral"
     },
     "mapView": "B"

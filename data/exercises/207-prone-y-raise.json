@@ -45,6 +45,7 @@
       "implement": "dumbbell",
       "posture": "lying_prone",
       "benchAngle": 45,
+      "grip": "neutral",
       "plane": 45,
       "topElevation": 160
     },

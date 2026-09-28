@@ -39,7 +39,7 @@ describe('motion manifest', () => {
   it('lists every baked loop', () => {
     expect(motionIds).toEqual(files.map((f) => Number(f.split('-')[0])))
     expect(hasMotion(711)).toBe(true)
-    expect(hasMotion(101)).toBe(false)
+    expect(hasMotion(999)).toBe(false)
     expect(hasMotion('c1')).toBe(false)
   })
 })
@@ -63,7 +63,10 @@ describe('scene composer', () => {
       if (s.template === 'curl') expect(az, `${id}`).toBeLessThanOrEqual(cable ? -55 : -25)
       if (s.template === 'lateral-raise') expect(Math.abs(az), `${id}`).toBeLessThan(20)
       if (s.template === 'vertical-pull') expect(Math.abs(az), `${id}`).toBeGreaterThan(110)
-      if (s.template === 'squat') expect(az, `${id}`).toBeLessThanOrEqual(-50)
+      // squats from behind (glutes and quads), except the front squat: front three-quarter so the rack reads
+      if (s.template === 'squat' && s.baked.params.hold !== 'front_rack') expect(az, `${id}`).toBeLessThanOrEqual(-50)
+      if (s.template === 'squat' && s.baked.params.hold === 'front_rack') expect(az, `${id}`).toBeGreaterThanOrEqual(-50)
+      if (s.template === 'squat' && s.baked.params.hold === 'front_rack') expect(az, `${id}`).toBeLessThanOrEqual(-25)
     }
   })
 

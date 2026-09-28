@@ -3,34 +3,31 @@ import { decode, sampler, type Baked, type CompactMotion } from '../../../motion
 import { bodyCapsules } from '../../../motion/collide.ts'
 import { fk } from '../../../motion/fk.ts'
 import type { ImplementSpec, Part } from '../../../motion/implements.ts'
+import { MOVING_KINDS } from '../../../motion/implements/index.ts'
 import { boneRotations, boneWorld } from '../../../motion/retarget.ts'
 import type { ImplementPose, Pose, Skeleton } from '../../../motion/skeleton.ts'
 import { phaseAt } from '../../../motion/timing.ts'
-import { computeGripAt, solveGrip, type GripName, type GripSolution, type HandSide } from '../hands'
+import { computeGripAt, isWrapGrip, solveGrip, type GripName, type GripSolution, type HandSide } from '../hands'
 import type { FigureHighlight } from '../highlight'
 import { buildBarbell, buildEzBar } from '../props/barbell'
 import { buildCableStack, type AttachmentKind } from '../props/cable'
-import { pieceColliders } from '../props/collision.ts'
+import { benchLayout, pieceColliders } from '../props/collision.ts'
+import { extensionLayouts } from '../props/extensions.ts'
 import { Kit, type Piece } from '../props/kit'
 import { buildLegPress, legPressDefaults } from '../props/legpress'
 import { buildLatPulldown } from '../props/pulldown'
 import { buildAssistedPullup, buildPullupStation } from '../props/pullup'
 import { buildSmith } from '../props/smith'
-import { BENCH, DUMBBELL_COLLAR, type BenchParams, type DumbbellParams } from '../props/sockets'
+import { DUMBBELL_COLLAR, type BenchParams, type DumbbellParams } from '../props/sockets'
 import { fixtureParts } from './fixtures'
+import { sceneFor, type CameraPreset, type MotionExercise } from './scenes/index.ts'
 
 // Scene composer: exercise record + baked loop -> highlight, hero camera, finger grips, props laid out on the
 // template's implements, and the points the camera frames. Pure (three math only), so it runs in tests.
+// Per-template specifics (camera, grips, highlight, extra equipment) live in scenes/<template>.ts, family props in
+// props/families/<family>.ts (docs/FAMILIES.md).
 
-export type MotionExercise = {
-  id: number
-  laterality: 'bilateral' | 'unilateral' | 'alternating'
-  groups: Readonly<Record<string, 'primary' | 'secondary'>>
-  media: { mapView: 'F' | 'B' }
-}
-
-/** camera azimuth (deg, 0 = in front, negative = towards the figure's right) and elevation (vertical component) */
-export type CameraPreset = { az: number; elev: number }
+export type { CameraPreset, MotionExercise } from './scenes/index.ts'
 
 export type ViewPreset = 'front' | 'side' | 'back' | 'hero'
 
@@ -43,10 +40,10 @@ export const viewPresets: Record<Exclude<ViewPreset, 'hero'>, CameraPreset> = {
 export type Poses = ReadonlyMap<string, ImplementPose>
 
 export type PropSpec =
-  /** fixed pieces, world space or (attach) in an implement's frame */
-  | { type: 'rigid'; key: string; pieces: Piece[]; attach?: string }
+  /** fixed pieces, world space or (attach) in an implement's frame; `whole`: framed base to top */
+  | { type: 'rigid'; key: string; pieces: Piece[]; attach?: string; whole?: boolean }
   /** rebuilt every frame from the implement poses (machines with moving parts, cables) */
-  | { type: 'dynamic'; key: string; build: (poses: Poses) => Piece[] }
+  | { type: 'dynamic'; key: string; build: (poses: Poses) => Piece[]; whole?: boolean }
   | { type: 'dumbbell'; key: string; attach: string; params: DumbbellParams }
   | { type: 'bench'; key: string; params: BenchParams; position: [number, number, number] }
 
@@ -74,40 +71,21 @@ export type MotionScene = {
 
 // ---------- camera ----------
 
-/** exercise-illustration camera per template: curls front 3/4, raises front, pulls back 3/4, squats rear 3/4 (glutes and quads), leg press behind the shoulder */
-/** standing squats: behind the right hip, far enough round that the quads read beside the glutes */
-const SQUAT_AZ = -128
-
+/** exercise-illustration camera per template (scenes/<template>.ts): curls front 3/4, raises front, pulls back 3/4,
+ * squats rear 3/4 (glutes and quads), leg press behind the shoulder; pending templates by mapView */
 export function heroCamera(template: string, params: Record<string, unknown>, mapView: 'F' | 'B'): CameraPreset {
-  switch (template) {
-    case 'curl':
-      // cable: the stack stands in front of the lifter, so from -35 its upright hides the left hand; -60 sees past it
-      return params.implement === 'cable' ? { az: -60, elev: 0.3 } : { az: -35, elev: 0.3 }
-    case 'lateral-raise':
-      return { az: -14, elev: 0.18 }
-    case 'vertical-pull':
-      // seated: turned further to the side so the stack tower behind the lifter stays clear of the back; neutral
-      // handles run front to back, so they read from further round
-      if (params.posture === 'seated') return { az: -118, elev: 0.22 }
-      return params.grip === 'neutral' ? { az: -125, elev: 0.2 } : { az: -145, elev: 0.16 }
-    case 'squat':
-      // leg press from behind the lifter's shoulder: from the side the near plates hide the feet on the sled
-      if (params.machine === 'leg_press') return { az: -112, elev: 0.3 }
-      // Smith: further behind, so the view runs between the rear uprights instead of through them
-      if (params.implement === 'smith') return { az: -163, elev: 0.22 }
-      // goblet: nearer the side, or the torso hides the dumbbell and the cupped hands
-      return params.hold === 'goblet' ? { az: -115, elev: 0.22 } : { az: SQUAT_AZ, elev: 0.22 }
-  }
-  return mapView === 'B' ? { az: -145, elev: 0.2 } : { az: -35, elev: 0.3 }
+  return sceneFor(template).camera(params, mapView)
 }
 
 // ---------- highlight and pulse ----------
 
-export function motionHighlight(ex: MotionExercise, params: Record<string, unknown>): FigureHighlight {
+export function motionHighlight(ex: MotionExercise, params: Record<string, unknown>, template?: string): FigureHighlight {
   const primary = Object.keys(ex.groups).filter((g) => ex.groups[g] === 'primary')
   const secondary = Object.keys(ex.groups).filter((g) => ex.groups[g] === 'secondary')
   const side = ex.laterality === 'unilateral' ? (params.side === 'left' ? 'l' : 'r') : undefined
-  return { primary, secondary, ...(side ? { side } : {}) }
+  const base: FigureHighlight = { primary, secondary, ...(side ? { side } : {}) }
+  const adjust = template ? sceneFor(template).highlight : undefined
+  return adjust ? adjust(base, ex, params) : base
 }
 
 function midConcentric(b: Baked) {
@@ -150,9 +128,6 @@ function wrapStyle(params: Record<string, unknown>, spec: ImplementSpec, fingert
 
 const FRAME_SAMPLES = 16
 
-/** hand shapes that rest against an implement instead of closing round a handle */
-const POSED_GRIPS = new Set<GripName>(['goblet'])
-
 type Hold = { k: number; point: Vector3; axis: Vector3; diameter: number; style: GripName }
 
 /** what a hand closes on: the handle of its grip contact */
@@ -163,7 +138,9 @@ function holdFor(b: Baked, params: Record<string, unknown>, s: 'l' | 'r'): Hold 
   const k = b.implements.findIndex((i) => i.id === implement)
   const spec = b.implements[k]
   const site = spec.sites[grip]
-  return { k, point: V(site.pos), axis: V(site.axis ?? [1, 0, 0]), diameter: 2 * handleRadius(spec, grip), style: wrapStyle(params, spec, contact.site.startsWith('fingers_'), grip) }
+  const fingertips = contact.site.startsWith('fingers_')
+  const style = sceneFor(b.template).grip?.({ params, spec, site: grip, side: s, fingertips }) ?? wrapStyle(params, spec, fingertips, grip)
+  return { k, point: V(site.pos), axis: V(site.axis ?? [1, 0, 0]), diameter: 2 * handleRadius(spec, grip), style }
 }
 
 /**
@@ -176,7 +153,8 @@ export function motionGrips(b: Baked, skel: Skeleton, params: Record<string, unk
   for (const side of ['L', 'R'] as const) {
     const s = side === 'L' ? 'l' : 'r'
     const hold = holdFor(b, params, s)
-    if (!hold || POSED_GRIPS.has(hold.style)) {
+    // posed shapes (a cupped palm) rest against the implement instead of closing round a handle
+    if (!hold || !isWrapGrip(hold.style)) {
       out.push({ side, solution: solveGrip(hold?.style ?? 'relaxed') })
       continue
     }
@@ -241,15 +219,6 @@ function dumbbellParams(spec: ImplementSpec): DumbbellParams {
     headRadius: head.r,
     headWidth: Math.abs(head.b[0] - head.a[0]),
   }
-}
-
-/** adjustable bench under the template's bench: seat top and back pad surface on the template's */
-function benchLayout(spec: ImplementSpec, pose: ImplementPose): { params: BenchParams; position: [number, number, number] } {
-  const pad = spec.parts.find((p) => p.shape === 'box' && p.rot) as Extract<Part, { shape: 'box' }>
-  const a = 2 * Math.atan2(pad.rot![0], pad.rot![3])
-  const h = pose.pos[1]
-  const z = pose.pos[2] + BENCH.seat.len / 2 + (BENCH.back.thick * (Math.cos(a) - 1)) / Math.sin(a)
-  return { params: { back: (a * 180) / Math.PI, height: h }, position: [pose.pos[0], 0, z] }
 }
 
 function pulleyOf(station: ImplementSpec): Vector3 {
@@ -389,16 +358,31 @@ export function motionProps(b: Baked, params: Record<string, unknown>): PropSpec
   const post = specs.get('post')
   if (post) out.push({ type: 'rigid', key: 'post', pieces: fixtureParts(post.parts, m4([0, 0, 0])) })
 
+  // family props and the scene module's equipment (props/extensions.ts), the same layouts the QA gate collides with
+  for (const l of extensionLayouts(b)) {
+    const whole = l.whole ? { whole: true } : {}
+    if (l.fixed) {
+      const { placement, pieces } = l.build(first)
+      out.push({ type: 'rigid', key: l.key, pieces: merged(pieces, placement), ...whole })
+    } else {
+      const build = (poses: Poses) => {
+        const r = l.build(poses)
+        return merged(r.pieces, r.placement)
+      }
+      out.push({ type: 'dynamic', key: l.key, build, ...whole })
+    }
+  }
+  const keys = out.map((p) => p.key)
+  const dup = keys.find((k, i) => keys.indexOf(k) !== i)
+  if (dup) throw new Error(`${b.template}: two props share the key ${dup}`)
   return out
 }
 
 // ---------- framing ----------
 
-const HELD = new Set(['barbell', 'ez_bar', 'dumbbell', 'cable_handle'])
-
 /** implement parts the camera keeps in view: held implements, support pads, the pull-up bar, benches */
 function framedParts(spec: ImplementSpec): Part[] {
-  if (HELD.has(spec.kind) || spec.id === 'bench' || spec.id === 'sled') return spec.parts
+  if (MOVING_KINDS.has(spec.kind) || spec.id === 'bench' || spec.id === 'sled') return spec.parts
   if (spec.kind === 'pullup_bar') return spec.parts.filter((p) => p.shape === 'cylinder' && Math.abs(p.a[1] - p.b[1]) < 0.05)
   return spec.parts.filter((p) => p.pad)
 }
@@ -473,8 +457,8 @@ function propPoints(props: PropSpec[], poseAt: (u: number) => Poses): number[] {
     }
   }
   for (const p of props) {
-    if (p.type === 'rigid' && !p.attach) add(p.pieces, WHOLE.has(p.key))
-    else if (p.type === 'dynamic') for (const u of [0, 0.25, 0.5, 0.75]) add(p.build(poseAt(u)), WHOLE.has(p.key))
+    if (p.type === 'rigid' && !p.attach) add(p.pieces, WHOLE.has(p.key) || !!p.whole)
+    else if (p.type === 'dynamic') for (const u of [0, 0.25, 0.5, 0.75]) add(p.build(poseAt(u)), WHOLE.has(p.key) || !!p.whole)
   }
   return out
 }
@@ -506,7 +490,7 @@ export function composeMotion(ex: MotionExercise, motion: CompactMotion | Baked,
       return p.name === 'con' ? p.progress : null
     },
     midRep: midConcentric(b),
-    highlight: motionHighlight(ex, params),
+    highlight: motionHighlight(ex, params, b.template),
     hero: heroCamera(b.template, params, ex.media.mapView),
     grips: motionGrips(b, skel, params),
     props,

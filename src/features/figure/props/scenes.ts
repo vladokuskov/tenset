@@ -7,8 +7,9 @@ import { buildLegPress } from './legpress'
 import { buildLatPulldown } from './pulldown'
 import { buildAssistedPullup, buildPullupStation, ASSIST_PAD } from './pullup'
 import { buildSquatRack } from './rack'
+import { buildFloorMat, buildPlyoBox, buildWall } from './shared'
 import { buildSmith } from './smith'
-import type { GripSocket } from './sockets'
+import type { BenchParams, GripSocket } from './sockets'
 
 // Props gallery scenes for the dev figure route (?scene=props, ?scene=props-<name>).
 
@@ -21,6 +22,8 @@ export type GalleryScene = {
   /** socket positions (drawn with hl=sockets) */
   markers: { pos: Vector3; kind: MarkerKind }[]
   view?: ViewName
+  /** adjustable benches (Bench.tsx), drawn beside the pieces */
+  benches?: { params: BenchParams; at: V3; rotY?: number }[]
 }
 
 class Layout {
@@ -174,6 +177,21 @@ const SCENES: Record<string, () => GalleryScene> = {
     L.grips(m, b.sockets.grips)
     L.mark(m, 'cable', b.sockets.cable.exit)
     return L.scene()
+  },
+  // shared supports: plyo boxes 20 / 30 / 45 cm, floor mat, wall section, flat bench
+  shared: () => {
+    const L = new Layout()
+    for (const [k, h] of [0.2, 0.3, 0.45].entries()) {
+      const b = buildPlyoBox({ height: h })
+      const m = L.place(b, [-1.3 + k * 0.75, 0, 0.7])
+      L.mark(m, 'surface', b.sockets.top.position)
+      L.grips(m, { front: b.sockets.front })
+    }
+    const mat = buildFloorMat()
+    L.mark(L.place(mat, [1.25, 0, 0.35]), 'surface', mat.sockets.top.position)
+    const wall = buildWall()
+    L.mark(L.place(wall, [-0.55, 0, -0.9]), 'surface', wall.sockets.face.position)
+    return L.scene({ benches: [{ params: { back: 0 }, at: [0.3, 0, -0.1], rotY: Math.PI / 2 }] })
   },
   lineup: () => {
     const L = new Layout()

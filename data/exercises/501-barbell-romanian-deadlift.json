@@ -50,7 +50,7 @@
     "params": {
       "implement": "barbell",
       "grip": "pronated",
-      "gripWidth": 1,
+      "gripWidth": 1.2,
       "stance": "hip",
       "kneeAngle": 20
     },

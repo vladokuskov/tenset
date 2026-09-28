@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, qrot } from '../math.ts'
@@ -114,6 +114,26 @@ describe('squat template', () => {
         expect(segPos(skel, f, `forearm_${s}`)[1]).toBeLessThan(sitePos(skel, f, `grip_${s}`)[1] - 0.15)
       }
     }
+  })
+
+  it('goblet (405): toes out 30, the squat bottoms out with the elbows inside the knees, arms resting on the thighs', () => {
+    const v = variants.find((x) => x.slug.startsWith('405-'))!
+    expect(v.params.toeOut).toBe(30)
+    const b = bake(getTemplate('squat'), parseParams('squat', v.params, v.laterality), skel)
+    const f = fk(skel, frameQ(b, at(b, 0.625)))
+    const caps = bodyCapsules(skel, f)
+    for (const s of ['l', 'r'] as const) {
+      const elbow = Math.abs(segPos(skel, f, `forearm_${s}`)[0]), knee = Math.abs(segPos(skel, f, `tibia_${s}`)[0])
+      expect(knee - elbow).toBeGreaterThan(0.015)
+      const arms = caps.filter((c) => c.region === `upperarm_${s}` || c.region === `forearm_${s}`)
+      const thighs = caps.filter((c) => c.region === `thigh_${s}`)
+      const gap = Math.min(...arms.flatMap((a) => thighs.map((t) => capsuleClearance(a, t))))
+      // a light touch inside the 12 mm arm-thigh tolerance
+      expect(gap).toBeLessThan(0)
+      expect(gap).toBeGreaterThan(-0.012)
+    }
+    // shallower than the depth table's full squat: the arms stop it
+    expect(frameQ(b, at(b, 0.625))[skel.dof['knee_l.flex']]).toBeLessThan(118)
   })
 
   it('unloaded squat keeps the centre of mass toward the heel for a more upright trunk', () => {

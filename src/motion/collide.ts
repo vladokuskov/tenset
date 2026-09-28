@@ -1,6 +1,6 @@
 import type { FK } from './fk.ts'
 import type { ImplementSpec, Part } from './implements.ts'
-import { add, clamp, dist, dot, len, qconj, qmul, qrot, scale, sub, type Quat, type V3 } from './math.ts'
+import { add, clamp, dist, dot, len, norm, qconj, qmul, qrot, scale, sub, type Quat, type V3 } from './math.ts'
 import type { ImplementPose, Skeleton } from './skeleton.ts'
 
 // Clearance geometry for the penetration gate: body capsules measured from the mesh (skeleton.json), implement
@@ -64,21 +64,90 @@ export function sdBox(p: V3, center: V3, half: V3, rot: Quat): number {
   return Math.hypot(Math.max(q[0], 0), Math.max(q[1], 0), Math.max(q[2], 0)) + Math.min(Math.max(q[0], q[1], q[2]), 0)
 }
 
+/** a part's placed geometry */
+export type PlacedGeo = { shape: 'cylinder'; a: V3; b: V3; r: number } | { shape: 'box'; center: V3; half: V3; rot: Quat }
+
 /** an implement part placed in the world, with a bounding sphere for cheap culling */
-export type Solid = { sd: (p: V3) => number; center: V3; radius: number; part: Part; index: number }
+export type Solid = { sd: (p: V3) => number; center: V3; radius: number; part: Part; index: number; geo: PlacedGeo }
 
 export function placeParts(spec: ImplementSpec, pose: ImplementPose): Solid[] {
   const w = (v: V3) => add(pose.pos, qrot(pose.rot, v))
   return spec.parts.map((part, index) => {
     if (part.shape === 'cylinder') {
       const a = w(part.a), b = w(part.b)
-      return { sd: (p: V3) => sdCylinder(p, a, b, part.r), center: scale(add(a, b), 0.5), radius: Math.hypot(dist(a, b) / 2, part.r), part, index }
+      return { sd: (p: V3) => sdCylinder(p, a, b, part.r), center: scale(add(a, b), 0.5), radius: Math.hypot(dist(a, b) / 2, part.r), part, index, geo: { shape: 'cylinder', a, b, r: part.r } }
     }
     const c = w(part.center)
     const rot = part.rot ? qmul(pose.rot, part.rot) : pose.rot
     const half = scale(part.size, 0.5)
-    return { sd: (p: V3) => sdBox(p, c, half, rot), center: c, radius: len(half), part, index }
+    return { sd: (p: V3) => sdBox(p, c, half, rot), center: c, radius: len(half), part, index, geo: { shape: 'box', center: c, half, rot } }
   })
+}
+
+/** the capsule enclosing a placed part (a box along its longest side): a lower bound on clearances, for culling */
+export function enclosingCapsule(s: Pick<Solid, 'geo'>): Pick<Capsule, 'a' | 'b' | 'r'> {
+  const g = s.geo
+  if (g.shape === 'cylinder') return { a: g.a, b: g.b, r: g.r }
+  const k = g.half.indexOf(Math.max(...g.half))
+  const axis: V3 = [0, 0, 0]
+  axis[k] = g.half[k]
+  const u = qrot(g.rot, axis)
+  return { a: sub(g.center, u), b: add(g.center, u), r: Math.hypot(...g.half.filter((_, j) => j !== k)) }
+}
+
+/** points on the surface of a placed part, at most about `step` apart */
+export function surfacePoints(s: Pick<Solid, 'geo'>, step = 0.01): V3[] {
+  const g = s.geo
+  const out: V3[] = []
+  if (g.shape === 'cylinder') {
+    const ax = sub(g.b, g.a)
+    const h = len(ax)
+    const u = h > 1e-9 ? scale(ax, 1 / h) : ([0, 1, 0] as V3)
+    const t0: V3 = Math.abs(u[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0]
+    const e1 = norm(sub(t0, scale(u, dot(t0, u))))
+    const e2: V3 = [u[1] * e1[2] - u[2] * e1[1], u[2] * e1[0] - u[0] * e1[2], u[0] * e1[1] - u[1] * e1[0]]
+    const ring = (at: V3, r: number) => {
+      const n = Math.max(8, Math.ceil((2 * Math.PI * r) / step))
+      for (let k = 0; k < n; k++) {
+        const th = (2 * Math.PI * k) / n
+        out.push(add(at, add(scale(e1, r * Math.cos(th)), scale(e2, r * Math.sin(th)))))
+      }
+    }
+    const nt = Math.max(1, Math.ceil(h / step))
+    for (let i = 0; i <= nt; i++) ring(add(g.a, scale(u, (h * i) / nt)), g.r)
+    const nr = Math.ceil(g.r / step)
+    for (const end of [g.a, g.b]) {
+      out.push(end)
+      for (let k = 1; k < nr; k++) ring(end, (g.r * k) / nr)
+    }
+    return out
+  }
+  const n = g.half.map((x) => Math.max(1, Math.ceil((2 * x) / step)))
+  for (let k = 0; k < 3; k++) {
+    const [i, j] = [(k + 1) % 3, (k + 2) % 3]
+    for (const side of [-1, 1]) {
+      for (let a = 0; a <= n[i]; a++) for (let b = 0; b <= n[j]; b++) {
+        const l: V3 = [0, 0, 0]
+        l[k] = side * g.half[k]
+        l[i] = -g.half[i] + (2 * g.half[i] * a) / n[i]
+        l[j] = -g.half[j] + (2 * g.half[j] * b) / n[j]
+        out.push(add(g.center, qrot(g.rot, l)))
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * Clearance between two convex solids: the smaller of each one's signed distance over the other's surface samples
+ * (exact at the samples, so it overstates the clearance by at most about half the sample step; containment shows up
+ * as the contained part's samples going negative). Negative = penetration depth.
+ */
+export function solidClearance(A: Pick<Solid, 'sd' | 'geo'>, B: Pick<Solid, 'sd' | 'geo'>, step = 0.01): number {
+  let best = Infinity
+  for (const p of surfacePoints(A, step)) best = Math.min(best, B.sd(p))
+  for (const p of surfacePoints(B, step)) best = Math.min(best, A.sd(p))
+  return best
 }
 
 const GOLD = (Math.sqrt(5) - 1) / 2

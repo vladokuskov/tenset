@@ -1,10 +1,12 @@
 import { add, qrot, type Quat, type V3 } from './math.ts'
+import type { ExtensionKind } from './implements/index.ts'
 import type { ImplementPose } from './skeleton.ts'
 
 // Pure geometry descriptors for props (not meshes). Local frames: bars and handles run along X; the pose
 // transform places the local origin in the world. Sizes in metres, masses in kg.
 
-export type ImplementKind = 'barbell' | 'dumbbell' | 'ez_bar' | 'cable_handle' | 'bench' | 'pullup_bar'
+/** core kinds; families add theirs in src/motion/implements/<family>.ts (KINDS) */
+export type ImplementKind = 'barbell' | 'dumbbell' | 'ez_bar' | 'cable_handle' | 'bench' | 'pullup_bar' | ExtensionKind
 
 /** `pad`: a padded support surface (bench pad, seat, knee pad, foot plate); the body may sink into it a little */
 export type Part =
@@ -169,9 +171,10 @@ const scale3 = (v: V3, s: number): V3 => [v[0] * s, v[1] * s, v[2] * s]
 
 /**
  * neutral-grip handles on a pull-up bar: welded to the bar at the grip width and running back (-Z), level with it, so
- * the lifter hangs behind the bar and pulls the chest towards it with the head clear
+ * the lifter hangs behind the bar and pulls the chest towards it with the head clear. Long and thick enough that
+ * they show past the fists at 480 px.
  */
-export const NEUTRAL_HANDLE = { from: -0.07, to: -0.29, r: 0.016, stub: 0.021 }
+export const NEUTRAL_HANDLE = { from: -0.07, to: -0.35, r: 0.018, stub: 0.023 }
 
 /** pull-up bar; local origin at the bar centre, uprights down to the floor. `neutral`: parallel handles at the grips */
 export function pullupBar(o: { id?: string; height: number; gripWidth: number; neutral?: boolean }): ImplementSpec {

@@ -1,0 +1,23 @@
+import type { SceneSpec } from './types.ts'
+
+export const calfRaise: SceneSpec = {
+  camera: (params) => {
+    // tibialis raise: from the front and side, so the lean against the wall and the toe lift read in profile
+    if (params.direction === 'dorsiflexion') return { az: -68, elev: 0.18 }
+    // leg press: low from the right side, so the heels read dropping below the plate's lower edge under the near plates
+    if (params.machine === 'leg_press') return { az: -118, elev: 0.36 }
+    // seated: behind and to the side, the heels below the foot roller clear of the pad lever and plates
+    if (params.machine === 'seated_calf') return { az: -130, elev: 0.24 }
+    // standing machine: rear three-quarter as the squats, calves and the heel travel below the roller both read
+    if (params.implement === 'machine') return { az: -128, elev: 0.16 }
+    // step: low and more from the side than the squats' rear three-quarter, so the heel reads dropping below the tread
+    // edge while the calf still faces the camera
+    const s = params.side === 'left' ? -1 : 1
+    return { az: -108 * s, elev: 0.1 }
+  },
+  grip: (ctx) => {
+    if (ctx.spec.kind === 'wall') return 'wall-touch'
+    if (ctx.spec.kind === 'calf_machine' || ctx.spec.kind === 'seated_calf') return 'neutral'
+    return undefined
+  },
+}

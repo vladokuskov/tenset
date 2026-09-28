@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, restAgainst, sdBox, sdCylinder, segmentDistance } from './collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, enclosingCapsule, placeParts, restAgainst, sdBox, sdCylinder, segmentDistance, solidClearance } from './collide.ts'
 import { centerOfMass, centerOfPressure, fk } from './fk.ts'
 import { dumbbell, type Part } from './implements.ts'
 import { qaxis, type V3 } from './math.ts'
@@ -42,6 +42,22 @@ describe('clearance geometry', () => {
     expect(capsuleSolidClearance({ a: [x, -0.05, 0], b: [x, 0.05, 0], r: 0.001 }, head)).toBeCloseTo(0.009, 6)
     // and one crossing the rim diagonally
     expect(capsuleSolidClearance({ a: [0.07, part.r + 0.02, -0.1], b: [0.07, part.r + 0.02, 0.1], r: 0.005 }, head)).toBeCloseTo(0.015, 6)
+  })
+
+  it('solid vs solid clearance: within half a sample step outside, negative when overlapping or contained', () => {
+    const at = (pos: V3) => ({ id: 'x', pos, rot: [0, 0, 0, 1] as [number, number, number, number] })
+    const bar = placeParts({ id: 'bar', kind: 'barbell', mass: 0, com: [0, 0, 0], sites: {}, parts: [{ shape: 'cylinder', a: [-0.5, 0, 0], b: [0.5, 0, 0], r: 0.02 }] }, at([0, 0, 0]))[0]
+    const post = (pos: V3) => placeParts({ id: 'post', kind: 'bench', mass: 0, com: [0, 0, 0], sites: {}, parts: [{ shape: 'box', center: [0, 0, 0], size: [0.05, 1, 0.05] }] }, at(pos))[0]
+    expect(solidClearance(bar, post([0, 0, 0.1]))).toBeGreaterThanOrEqual(0.055 - 1e-9)
+    expect(solidClearance(bar, post([0, 0, 0.1]))).toBeLessThan(0.055 + 0.005)
+    expect(solidClearance(bar, post([0, 0, 0.03]))).toBeLessThan(-0.01)
+    // a small solid wholly inside a big one
+    const plate = placeParts({ id: 'p', kind: 'barbell', mass: 0, com: [0, 0, 0], sites: {}, parts: [{ shape: 'cylinder', a: [0, 0, 0], b: [0.05, 0, 0], r: 0.2 }] }, at([0, 0, 0]))[0]
+    const bolt = placeParts({ id: 'b', kind: 'barbell', mass: 0, com: [0, 0, 0], sites: {}, parts: [{ shape: 'cylinder', a: [0.02, 0, 0], b: [0.03, 0, 0], r: 0.01 }] }, at([0, 0, 0]))[0]
+    expect(solidClearance(plate, bolt)).toBeLessThan(-0.015)
+    const hull = enclosingCapsule(post([0, 0, 0]))
+    expect(Math.abs(hull.a[1] - hull.b[1])).toBeCloseTo(1, 9)
+    expect(hull.r).toBeCloseTo(Math.hypot(0.025, 0.025), 9)
   })
 
   it('body capsules measured from the mesh: standing relaxed, arms and legs clear each other', () => {

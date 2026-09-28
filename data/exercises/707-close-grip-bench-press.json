@@ -49,7 +49,8 @@
       "implement": "barbell",
       "benchAngle": 0,
       "grip": "pronated",
-      "gripWidth": 1
+      "gripWidth": 1,
+      "elbowFlare": 25
     },
     "mapView": "B"
   },

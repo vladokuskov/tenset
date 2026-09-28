@@ -5,8 +5,9 @@ import { getTemplate, isTemplateId, parseParams, TEMPLATES } from '../../../moti
 import { testSkeleton } from '../../../motion/testing.ts'
 import type { MotionFile } from './library.ts'
 
-// Stale-media guard for the shipped loops. BAKE_MOTION=1 pnpm vitest run src/features/figure/motion/bake.test.ts
-// re-bakes every exercise whose template variant is implemented and rewrites baked/.
+// Stale-media guard for the shipped loops. Re-bake per exercise with node pipeline/motion/bake-motion.ts --only <ids>
+// (or --family F1). BAKE_MOTION=1 pnpm vitest run src/features/figure/motion/bake.test.ts re-bakes every exercise
+// whose template variant is implemented and deletes the rest of baked/, so never use it while families run in parallel.
 
 const skel = testSkeleton()
 const DATA = new URL('../../../../data/exercises/', import.meta.url)

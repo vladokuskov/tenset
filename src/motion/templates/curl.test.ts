@@ -95,6 +95,21 @@ describe('curl template', () => {
     }
   })
 
+  it('bars and cable attachments stay at least 10 mm off the thighs over the whole loop', () => {
+    for (const slug of ['701-ez-bar-curl', '710-barbell-curl', '714-ez-bar-reverse-curl', '713-cable-curl', '719-rope-hammer-curl']) {
+      const b = get(slug)
+      const k = b.implements.findIndex((s) => ['barbell', 'ez_bar', 'cable_handle'].includes(s.kind))
+      let worst = Infinity
+      for (let i = 0; i < b.frames; i++) {
+        const thighs = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region.startsWith('thigh_'))
+        for (const s of placeParts(b.implements[k], frameImplements(b, i)[k])) for (const t of thighs) worst = Math.min(worst, capsuleSolidClearance(t, s))
+      }
+      expect(worst, slug).toBeGreaterThanOrEqual(0.01)
+      expect(worst, slug).toBeLessThan(0.025)
+      expect(b.rests?.find((r) => r.implement === b.implements[k].id)?.tol, slug).toBe(-10)
+    }
+  })
+
   it('forearm rotation follows the grip', () => {
     expect(dof(get('711-dumbbell-curl'), 0.3, 'forearm_l.pro')).toBeLessThan(-70)
     expect(Math.abs(dof(get('703-hammer-curl'), 0.3, 'forearm_l.pro'))).toBeLessThan(5)

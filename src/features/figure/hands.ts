@@ -1,4 +1,5 @@
 import { Euler, Quaternion, Vector3 } from 'three'
+import { FAMILY_GRIPS, type FamilyGripName, type GripDef, type PosedDef, type ThumbRest, type WrapDef } from './grips/index.ts'
 import { mirrorSpec, type JointSpec, type Rig, type Vec3 } from './rig.ts'
 
 // Finger poses. Wrap grips close each finger joint until it touches a handle cylinder placed against the palm,
@@ -6,9 +7,12 @@ import { mirrorSpec, type JointSpec, type Rig, type Vec3 } from './rig.ts'
 // (+X palmar, +Y towards the fingers, +Z towards the thumb). The right hand is the mirror image.
 
 export type HandSide = 'L' | 'R'
-export type GripName = 'relaxed' | 'open' | 'pronated' | 'supinated' | 'neutral' | 'hook' | 'rope' | 'd-handle' | 'goblet'
+/** core shapes; families add theirs in grips/<family>.ts */
+export type GripName = 'relaxed' | 'open' | 'pronated' | 'supinated' | 'neutral' | 'hook' | 'rope' | 'd-handle' | 'goblet' | FamilyGripName
 
-export const gripNames: GripName[] = ['relaxed', 'open', 'pronated', 'supinated', 'neutral', 'hook', 'rope', 'd-handle', 'goblet']
+export const coreGripNames = ['relaxed', 'open', 'pronated', 'supinated', 'neutral', 'hook', 'rope', 'd-handle', 'goblet'] as const
+
+export const gripNames: GripName[] = [...coreGripNames, ...(Object.keys(FAMILY_GRIPS) as FamilyGripName[])]
 
 /** handle diameter in metres when none is given */
 export const defaultDiameter: Record<GripName, number> = {
@@ -21,7 +25,7 @@ export const defaultDiameter: Record<GripName, number> = {
   rope: 0.03,
   'd-handle': 0.03,
   goblet: 0.033,
-}
+} as Record<GripName, number>
 
 type Q4 = [number, number, number, number]
 // rest pose from public/models/body.glb (hands.test.ts keeps it in sync); capsules fitted to the skinned vertices:
@@ -176,16 +180,6 @@ const PALM_CLEARANCE = 0.003
 const CURL_RATE = [1, 1.25, 0.85]
 const CURL_MAX = [95, 105, 85]
 
-type WrapDef = {
-  /** handle axis tilt in the palm plane (deg): + puts the little-finger end nearer the wrist */
-  tilt: number
-  /** handle axis distance behind the middle knuckle, along the hand (m) */
-  depth: number
-  /** fingers towards the middle finger, 0..1 of their rest splay */
-  spread: number
-  thumb: 'wrap' | 'hook'
-}
-
 const WRAPS: Partial<Record<GripName, WrapDef>> = {
   // bar across the base of the fingers
   pronated: { tilt: 8, depth: 0.012, spread: 0.55, thumb: 'wrap' },
@@ -250,6 +244,28 @@ const POSED: Partial<Record<GripName, Pose0>> = {
     spread: 0.35,
     thumb: (fr) => fr['finger2-1'].p.clone().addScaledVector(RADIAL, 0.05).addScaledVector(new Vector3(0, 1, 0), -0.014).addScaledVector(PALM_N, 0.008),
   },
+}
+
+/** a family's posed shape: thumb pad beside an index finger segment */
+function posedFrom(def: PosedDef): Pose0 {
+  const thumb = (t: ThumbRest) => (fr: Record<string, Frame>) => {
+    const c = capsule(fr, t.bone)
+    return c.a.clone().lerp(c.b, t.at).addScaledVector(RADIAL, c.rs + t.radial).addScaledVector(PALM_N, t.palmar)
+  }
+  return { ...def, thumb: thumb(def.thumb) }
+}
+/** adds a hand shape to the library (family grips at load; tests) */
+export function registerGrip(name: string, def: GripDef) {
+  const g = name as GripName
+  defaultDiameter[g] = def.diameter
+  if ('wrap' in def) WRAPS[g] = def.wrap
+  else POSED[g] = posedFrom(def.posed)
+}
+for (const [name, def] of Object.entries(FAMILY_GRIPS) as [string, GripDef][]) registerGrip(name, def)
+
+/** wrap grips close round a handle; the rest are posed shapes that rest on or against it */
+export function isWrapGrip(grip: GripName): boolean {
+  return !!WRAPS[grip]
 }
 
 function thumbDeltas(x: readonly number[]): Deltas {

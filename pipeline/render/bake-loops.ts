@@ -1,20 +1,23 @@
 // Bakes each motion exercise's H.264 loop and WebP poster from /dev/motion in Chromium on Metal.
 // Frames come from renderAt(i / N) (N = loop seconds x 30), are drawn at 2x on the media background and scaled to
-// 480 px by ffmpeg (libx264, yuv420p, one keyframe at the loop start, +faststart, no audio; the frames either side of
-// the restart get more bits, see seamZones). The poster is the
+// 480 px by ffmpeg (libx264, yuv420p, one keyframe at the loop start, +faststart, no audio; the restart gets its own
+// treatment, see seamZones and encodeLoop). The poster is the
 // middle of the concentric without the pulse, on the same background (RENDER.posterAlpha keeps alpha). Files get
 // content-hash names (see media.ts) and public/media/manifest.json maps exercise id -> { poster, loop, hash,
 // frames, duration }. Fresh entries are skipped unless --force; a full run prunes entries and files that no baked
-// motion needs any more.
-// node pipeline/render/bake-loops.ts [--only 203,711] [--force] [--qa qa/out/loops]
+// motion needs any more. Manifest writes re-read and merge under a lock, so parallel runs with different --only /
+// --family selections keep each other's entries (a full run is for the lead only: it prunes).
+// node pipeline/render/bake-loops.ts [--only 203,711] [--family F1] [--force] [--qa qa/out/loops] [--seam-report]
 import { spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
-import { mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
 import type { Page } from '@playwright/test'
 import { createServer } from 'vite'
 import { PUBLIC, ROOT } from '../lib/paths.ts'
+import { selection } from '../motion/load.ts'
 import {
   LOOPS,
   MANIFEST,
@@ -34,10 +37,12 @@ import {
 import { launchMetal } from './still.ts'
 
 const log = (s: string) => console.log(s)
+/** --seam-report: [loop bytes, bytes without seam treatment] per baked loop */
+let seamReport: [number, number][] | null = null
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
 
 // HMR off: an edit elsewhere in the repo must not reload the page halfway through a loop
-async function startServer() {
+export async function startServer() {
   const server = await createServer({ root: ROOT, logLevel: 'error', server: { host: '127.0.0.1', port: 5191, strictPort: false, hmr: false }, optimizeDeps: { entries: ['index.html'] } })
   await server.listen()
   const url = server.resolvedUrls?.local[0]
@@ -45,11 +50,11 @@ async function startServer() {
   return { server, url: url.replace(/\/$/, '') }
 }
 
-type BakeWindow = { __ready?: boolean; __bakePulse?: boolean; __bakeTicks?: number; renderAt(u: number): Promise<void> }
+export type BakeWindow = { __ready?: boolean; __bakePulse?: boolean; __bakeTicks?: number; renderAt(u: number): Promise<void> }
 
 // runs in the page: the clock module is the app's own instance (Vite serves it at its source path), so wrapping
 // tick lets the bake switch the concentric pulse off for the poster without a dev-route flag
-async function hookClock() {
+export async function hookClock() {
   const w = window as unknown as BakeWindow
   const { MotionClock } = await import(/* @vite-ignore */ String('/src/features/figure/motion/clock.ts'))
   const proto = MotionClock.prototype as { tick(dt: number, d: number): void; __baked?: boolean; pulse: boolean }
@@ -63,7 +68,7 @@ async function hookClock() {
   proto.__baked = true
 }
 
-function canvasInfo() {
+export function canvasInfo() {
   const c = document.querySelector('canvas')
   if (!c) return { renderer: 'no canvas', w: 0, h: 0 }
   const gl = c.getContext('webgl2')
@@ -72,7 +77,7 @@ function canvasInfo() {
 }
 
 // runs in the page: the WebGL canvas drawn into a 2D canvas (optionally over a background and scaled), then toBlob
-async function grab({ u, pulse, bg, size, type, quality }: { u: number; pulse: boolean; bg?: string; size?: number; type: string; quality?: number }) {
+export async function grab({ u, pulse, bg, size, type, quality }: { u: number; pulse: boolean; bg?: string; size?: number; type: string; quality?: number }) {
   const w = window as unknown as BakeWindow
   w.__bakePulse = pulse
   const ticks = w.__bakeTicks ?? 0
@@ -99,29 +104,92 @@ async function grab({ u, pulse, bg, size, type, quality }: { u: number; pulse: b
 }
 
 /**
- * x264 zones giving the first and last seam.frames frames seam.boost times the bits (in CRF mode a bitrate factor lowers
- * the quantizer by about 6 log2(boost)): the restart then joins two equally sharp frames instead of the loop's softest
- * frame and its keyframe, which otherwise pops the skin texture once per loop.
+ * x264 zones for the restart: the keyframe gets seam.keyBoost times the bits (in CRF mode a bitrate factor lowers the
+ * quantizer by about 6 log2(boost)) and the last frame a fixed quantizer, seam.lastQ. Left alone, the last frame is a
+ * small P-frame of a still image, the softest frame of the loop, and the restart pops the skin texture once per loop.
  */
 export function seamZones(n: number, seam: SeamSettings) {
-  const k = Math.max(1, Math.min(seam.frames, Math.floor(n / 2)))
-  return `0,${k - 1},b=${seam.boost}/${n - k},${n - 1},b=${seam.boost}`
+  return `0,0,b=${seam.keyBoost}/${n - 1},${n - 1},q=${seam.lastQ}`
 }
 
-export function ffmpegArgs(frames: number, out: string, seam: SeamSettings | null = RENDER.seam) {
+const SCALE = `scale=${RENDER.size}:${RENDER.size}:flags=lanczos+accurate_rnd+full_chroma_int:out_color_matrix=bt709:out_range=tv,format=yuv420p`
+const COLOR = ['-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-color_range', 'tv']
+/** bytes of one yuv420p frame at the output size */
+export const YUV_FRAME = RENDER.size * RENDER.size * 1.5
+
+/** the drawn PNG frames (stdin) scaled to the output size as raw yuv420p (stdout) */
+export function scaleArgs() {
+  return ['-hide_banner', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(RENDER.fps), '-c:v', 'png', '-i', '-', '-vf', SCALE, '-f', 'rawvideo', '-pix_fmt', 'yuv420p', '-']
+}
+
+/** H.264 loop from a raw yuv420p file at the output size */
+export function ffmpegArgs(frames: number, out: string, seam: SeamSettings | null = RENDER.seam, input = '-') {
   const n = frames
   const x264 = ['open-gop=0', ...(seam ? [`zones=${seamZones(n, seam)}`] : [])].join(':')
   return [
     '-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'image2pipe', '-framerate', String(RENDER.fps), '-c:v', 'png', '-i', '-',
-    '-vf', `scale=${RENDER.size}:${RENDER.size}:flags=lanczos+accurate_rnd+full_chroma_int:out_color_matrix=bt709:out_range=tv,format=yuv420p`,
+    '-f', 'rawvideo', '-pix_fmt', 'yuv420p', '-s', `${RENDER.size}x${RENDER.size}`, '-framerate', String(RENDER.fps), ...COLOR, '-i', input,
     '-c:v', 'libx264', '-preset', 'veryslow', '-tune', 'animation', '-crf', String(RENDER.crf),
     '-profile:v', 'high', '-level:v', '3.1',
     '-g', String(n), '-keyint_min', String(n), '-sc_threshold', '0', '-x264-params', x264,
-    '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-color_range', 'tv',
+    ...COLOR,
     '-r', String(RENDER.fps), '-frames:v', String(n), '-an', '-map_metadata', '-1', '-movflags', '+faststart',
     out,
   ]
+}
+
+/** decoded frame 0 of a loop, yuv420p */
+function keyframe(file: string): Buffer {
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-frames:v', '1', '-f', 'rawvideo', '-pix_fmt', 'yuv420p', '-'], { maxBuffer: 1 << 26 })
+  if (r.status !== 0 || r.stdout.length !== YUV_FRAME) throw new Error(`${file}: could not decode the keyframe: ${r.stderr}`)
+  return r.stdout
+}
+
+function maxDiff(yuv: Buffer, i: number, j: number) {
+  let d = 0
+  for (let k = 0; k < YUV_FRAME; k++) d = Math.max(d, Math.abs(yuv[i * YUV_FRAME + k] - yuv[j * YUV_FRAME + k]))
+  return d
+}
+
+/** frames at the end of the loop that show the same still image as its first frame (the top pause), or 0 */
+export function stillTail(yuv: Buffer, n: number) {
+  if (maxDiff(yuv, 0, n - 1) > 1) return 0
+  let k = 1
+  while (k < n / 4 && maxDiff(yuv, n - 1 - k, n - 1) <= 1) k++
+  return k
+}
+
+/**
+ * Encodes the loop. With seam.match the still frames before the restart are then encoded again with the decoded
+ * keyframe as their source: they converge on exactly the image the restart shows instead of on the source with a
+ * noise pattern of their own (the keyframe comes out the same, since it is encoded before them; checked).
+ */
+export function encodeLoop(yuv: Buffer, n: number, out: string, seam: SeamSettings | null = RENDER.seam) {
+  if (yuv.length !== n * YUV_FRAME) throw new Error(`raw video is ${yuv.length} bytes, want ${n * YUV_FRAME}`)
+  const dir = mkdtempSync(path.join(tmpdir(), 'gym-loop-'))
+  try {
+    const src = path.join(dir, 'in.yuv')
+    const run = (input: Buffer) => {
+      writeFileSync(src, input)
+      const r = spawnSync('ffmpeg', ffmpegArgs(n, out, seam, src), { encoding: 'utf8' })
+      if (r.status !== 0) throw new Error(`ffmpeg exited ${r.status}: ${r.stderr}`)
+    }
+    run(yuv)
+    const tail = seam?.match ? stillTail(yuv, n) : 0
+    if (!tail) return 0
+    let key = keyframe(out)
+    for (let pass = 0; pass < 3; pass++) {
+      const input = Buffer.from(yuv)
+      for (let i = n - tail; i < n; i++) key.copy(input, i * YUV_FRAME)
+      run(input)
+      const next = keyframe(out)
+      if (next.equals(key)) return tail
+      key = next
+    }
+    throw new Error(`${out}: the keyframe changed with its matched tail`)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
 
 /** top-level MP4 box types in file order */
@@ -176,8 +244,10 @@ async function bakeOne(page: Page, base: string, job: MediaJob, qaDir: string): 
 
   const loopName = mediaName(job, 'mp4')
   const loopFile = path.join(LOOPS, loopName)
-  const ff = spawn('ffmpeg', ffmpegArgs(job.frames, loopFile), { stdio: ['pipe', 'inherit', 'pipe'] })
+  const ff = spawn('ffmpeg', scaleArgs(), { stdio: ['pipe', 'pipe', 'pipe'] })
   let err = ''
+  const chunks: Buffer[] = []
+  ff.stdout.on('data', (d: Buffer) => chunks.push(d))
   ff.stderr.on('data', (d) => (err += d))
   const exited = once(ff, 'exit')
   const t0 = Date.now()
@@ -189,6 +259,16 @@ async function bakeOne(page: Page, base: string, job: MediaJob, qaDir: string): 
   ff.stdin.end()
   const [code] = await exited
   if (code !== 0) throw new Error(`${job.slug}: ffmpeg exited ${code}: ${err}`)
+  const yuv = Buffer.concat(chunks)
+  const tail = encodeLoop(yuv, job.frames, loopFile)
+  if (seamReport) {
+    const plain = path.join(qaDir, `${job.slug}.noseam.mp4`)
+    encodeLoop(yuv, job.frames, plain, null)
+    const [a, b] = [statSync(loopFile).size, statSync(plain).size]
+    seamReport.push([a, b])
+    unlinkSync(plain)
+    log(`    seam: ${tail} matched still frames, ${kb(a)} vs ${kb(b)} without seam treatment (${(((a / b) - 1) * 100).toFixed(1)}%)`)
+  }
   verifyLoop(loopFile, job)
 
   const posterName = mediaName(job, 'webp')
@@ -222,25 +302,57 @@ async function posterSheet(page: Page, manifest: Manifest, out: string) {
   await page.screenshot({ path: out, fullPage: true })
 }
 
+/** runs fn holding the manifest lock (a directory next to it), so parallel bakes never interleave read-merge-write */
+function withManifestLock<T>(fn: () => T): T {
+  const lock = `${MANIFEST}.lock`
+  const t0 = Date.now()
+  for (;;) {
+    try {
+      mkdirSync(lock)
+      break
+    } catch {
+      if (Date.now() - t0 > 60_000) throw new Error(`${lock} held for 60 s; remove it if no bake is running`)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50)
+    }
+  }
+  try {
+    return fn()
+  } finally {
+    rmSync(lock, { recursive: true, force: true })
+  }
+}
+
 async function main() {
   const { values } = parseArgs({
     options: {
       only: { type: 'string' },
+      family: { type: 'string' },
       force: { type: 'boolean', default: false },
       qa: { type: 'string', default: 'qa/out/loops' },
+      'seam-report': { type: 'boolean', default: false },
     },
   })
-  const only = values.only?.split(',').map(Number)
+  if (values['seam-report']) seamReport = []
+  const pick = selection(values.only, values.family)
+  const only = pick ? [...pick.ids] : undefined
   const all = mediaJobs()
-  const jobs = all.filter((j) => !only || only.includes(j.id))
-  if (only && jobs.length !== only.length) throw new Error(`unknown ids: ${only.filter((id) => !all.some((j) => j.id === id)).join(', ')}`)
+  const jobs = all.filter((j) => !pick || pick.has(j.id, j.slug))
+  const unknown = [...(pick?.ids ?? [])].filter((id) => !all.some((j) => j.id === id))
+  if (unknown.length) throw new Error(`no baked motion for ${unknown.join(', ')} (node pipeline/motion/bake-motion.ts --only ${unknown.join(',')})`)
   const qaDir = path.resolve(ROOT, values.qa!)
   for (const d of [LOOPS, POSTERS, qaDir]) mkdirSync(d, { recursive: true })
   const manifest: Manifest = readManifest()
   const todo = jobs.filter((j) => values.force || !isFresh(j, manifest[j.id]))
   log(`${jobs.length} exercises, ${todo.length} to bake${todo.length < jobs.length ? ` (${jobs.length - todo.length} fresh, --force re-bakes)` : ''}`)
 
-  const save = () => writeFileSync(MANIFEST, JSON.stringify(sortManifest(manifest), null, 2) + '\n')
+  // this run's entries (and prunes) merged into the manifest on disk, which parallel runs may have changed
+  const touched = new Set<string>(), removed = new Set<string>()
+  const save = () => withManifestLock(() => {
+    const disk = readManifest()
+    for (const id of touched) disk[id] = manifest[id]
+    for (const id of removed) delete disk[id]
+    writeFileSync(MANIFEST, JSON.stringify(sortManifest(disk), null, 2) + '\n')
+  })
   const drop = (rel: string | undefined) => {
     if (!rel) return
     try {
@@ -282,6 +394,7 @@ async function main() {
         if (old && old.poster !== entry.poster) drop(old.poster)
         if (old && old.loop !== entry.loop) drop(old.loop)
         manifest[job.id] = entry
+        touched.add(String(job.id))
         save()
         const loopBytes = statSync(path.join(PUBLIC, entry.loop)).size
         const posterBytes = statSync(path.join(PUBLIC, entry.poster)).size
@@ -302,9 +415,11 @@ async function main() {
       drop(manifest[id].poster)
       drop(manifest[id].loop)
       delete manifest[id]
+      removed.add(id)
       log(`pruned entry ${id}`)
     }
-    const used = new Set(Object.values(manifest).flatMap((e) => [e.poster, e.loop]))
+    save()
+    const used = new Set(Object.values(readManifest()).flatMap((e) => [e.poster, e.loop]))
     for (const [dir, rel] of [[POSTERS, 'media/posters'], [LOOPS, 'media/loops']] as const) {
       for (const f of readdirSync(dir)) {
         if (MEDIA_FILE.test(f) && !used.has(`${rel}/${f}`)) {
@@ -313,7 +428,6 @@ async function main() {
         }
       }
     }
-    save()
   }
 
   let loops = 0, posters = 0
@@ -327,6 +441,10 @@ async function main() {
     log(`${String(job.id).padEnd(6)} ${kb(l).padStart(9)}  ${kb(p).padStart(9)}  ${e.frames}`)
   }
   log(`total  ${kb(loops).padStart(9)}  ${kb(posters).padStart(9)}  (${kb(loops + posters)} for ${jobs.length} exercises)`)
+  if (seamReport?.length) {
+    const [a, b] = seamReport.reduce(([x, y], [p, q]) => [x + p, y + q], [0, 0])
+    log(`seam treatment: ${kb(a)} vs ${kb(b)} without it for the ${seamReport.length} baked loops (${(((a / b) - 1) * 100).toFixed(1)}%)`)
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) await main()

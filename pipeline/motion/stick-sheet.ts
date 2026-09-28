@@ -1,5 +1,6 @@
 // Orthographic stick-figure contact sheet (side / front / top x 8 phases + onion overlay) rendered in Node with pngjs.
 // node pipeline/motion/stick-sheet.ts --template squat [--params '{"hold":"back_low"}'] [--out qa/out/motion/x.sheet.png]
+// node pipeline/motion/stick-sheet.ts --only 101,107 | --family F1 [--out qa/out/motion] (one <slug>.sheet.png per record)
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
@@ -12,7 +13,7 @@ import { getTemplate, parseParams } from '../../src/motion/templates/index.ts'
 import { phaseAt } from '../../src/motion/timing.ts'
 import { ROOT } from '../lib/paths.ts'
 import { createCanvas, disc, fillRect, line, ring, savePng, text, type Canvas, type RGB } from './canvas.ts'
-import { loadSkeleton } from './load.ts'
+import { loadMotionExercises, loadSkeleton, selection } from './load.ts'
 
 type View = { name: string; proj: (v: V3) => [number, number] }
 const VIEWS: View[] = [
@@ -161,14 +162,34 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { values } = parseArgs({
     options: {
       template: { type: 'string' },
+      only: { type: 'string' },
+      family: { type: 'string' },
       params: { type: 'string', default: '{}' },
       laterality: { type: 'string' },
       out: { type: 'string' },
       fps: { type: 'string', default: '30' },
     },
   })
-  if (!values.template) throw new Error('--template is required')
   const skel = loadSkeleton()
+  const pick = selection(values.only, values.family)
+  if (pick) {
+    const dir = path.resolve(ROOT, values.out ?? 'qa/out/motion')
+    mkdirSync(dir, { recursive: true })
+    let bad = 0
+    for (const r of loadMotionExercises(undefined, pick)) {
+      try {
+        const b = bake(getTemplate(r.template), parseParams(r.template, r.params, r.laterality), skel, Number(values.fps))
+        const out = path.join(dir, `${r.slug}.sheet.png`)
+        stickSheet(b, skel, `${r.slug} (${r.template})`, out)
+        console.log(`wrote ${path.relative(ROOT, out)}`)
+      } catch (e) {
+        bad++
+        console.log(`FAIL ${r.slug}: ${e instanceof Error ? e.message : String(e)}`)
+      }
+    }
+    process.exit(bad ? 1 : 0)
+  }
+  if (!values.template) throw new Error('--template, --only or --family is required')
   const params = parseParams(values.template, JSON.parse(values.params!), values.laterality)
   const b = bake(getTemplate(values.template), params, skel, Number(values.fps))
   const out = path.resolve(ROOT, values.out ?? `qa/out/motion/${values.template}.sheet.png`)
