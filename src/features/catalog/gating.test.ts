@@ -14,9 +14,10 @@ const PLAYER = 'Position in the rep'
 
 describe('baked media gating', () => {
   const baked = activeExercises.filter((e) => motionIds.includes(e.id))
-  const unapproved = baked.find((e) => e.media.status !== 'loop')!
+  // synthetic fallbacks, so the fixtures hold once every record has a motion and every motion is approved
+  const unapproved = baked.find((e) => e.media.status !== 'loop') ?? { ...baked[0], media: { ...baked[0].media, status: 'card' } }
   const approved: Exercise = { ...unapproved, media: { ...unapproved.media, status: 'loop' } }
-  const noMotion = activeExercises.find((e) => !motionIds.includes(e.id))!
+  const noMotion: Exercise = { ...activeExercises[0], id: 65000, slug: 'no-motion' }
 
   beforeEach(() => {
     // the M1 card fetches its map; keep it pending so nothing leaves the test

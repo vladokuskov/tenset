@@ -45,13 +45,14 @@ describe('motion manifest', () => {
 })
 
 describe('scene composer', () => {
+  // builds the scene cache the later tests reuse, one compose per baked exercise
   it('composes every baked exercise', () => {
     for (const id of motionIds) {
       const s = scene(id)
       expect(s.frame.length, `${id}`).toBeGreaterThan(300)
       expect(s.highlight.primary?.length, `${id}`).toBeGreaterThan(0)
     }
-  })
+  }, 60_000)
 
   it('picks the hero camera per template', () => {
     for (const id of motionIds) {
@@ -194,7 +195,7 @@ describe('scene composer', () => {
   })
 
   it('keeps the framed points 6 % clear of every edge from the hero camera', () => {
-    for (const id of [203, 310, 401, 402, 405, 702]) {
+    for (const id of motionIds) {
       const s = scene(id)
       const cam = new PerspectiveCamera(24, 390 / 480)
       frameFitMargin(cam, s.frame, (s.hero.az * Math.PI) / 180, 0.065, s.hero.elev)

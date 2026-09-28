@@ -41,6 +41,7 @@ describe('template param schemas', () => {
     expect(SCHEMAS['leg-curl'].safeParse({ implement: 'machine', machine: 'pec_deck' }).success).toBe(false)
   })
 
+  // one setup solve per template; the push-up and leg-raise solves take seconds each
   it('implements sample() for the authored templates and throws a clear error for the pending ones', () => {
     const skel = testSkeleton()
     const done = TEMPLATE_IDS.filter((id) => TEMPLATES[id].implemented)
@@ -52,5 +53,5 @@ describe('template param schemas', () => {
     for (const id of TEMPLATE_IDS.filter((x) => !TEMPLATES[x].implemented)) {
       expect(() => getTemplate(id).sample(0, parseParams(id, {}), skel), id).toThrow(/not implemented/)
     }
-  })
+  }, 120_000)
 })
