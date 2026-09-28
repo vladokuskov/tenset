@@ -53,7 +53,7 @@ Every registry already imports every module statically: `src/motion/templates/in
 |---|---|---|
 | Motion | `templates/<t>.ts`: replace `pendingTemplate(...)` with a `Template` (see `squat.ts`, `curl.ts`), set `implemented: true` in the module | `TEMPLATES`, QA, bake, live preview |
 | Joint-limit exception | `setup.limits` in the template (`{ 'wrist_l.flex': [-90, 75] }`, as the front-rack squat does). Pass the same wrist/forearm entries to `attachHand(..., { limits })` when the IK must respect them | the joint-limit gate and the hand solver. Never edit `skeleton.ts` |
-| Intended resting contact | `setup.rests` (`{ implement, regions, tol }`), negative tol = required clearance | the body-prop gate |
+| Intended resting contact | `setup.rests` (`{ implement, regions, tol }`), negative tol = required clearance | the body-prop and body-machine gates (a drawn support keyed by the implement id). On a padded part a rest can only raise the pad tolerance |
 | QA tolerance exception | `setup.tolerances = { body: { 'forearm / head': 8 }, floor: 8 }`, keyed by the pair label the gate prints | the penetration gates. Each one is a lead decision |
 | Balance | `setup.balance` (com or implement over midfoot or sites) | the balance gate |
 | Camera, grips, highlight | `scenes/<t>.ts` `SceneSpec`: `camera(params, mapView)`, `grip(ctx)`, `highlight(base, ex, params)` | `compose.ts` |

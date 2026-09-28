@@ -118,7 +118,7 @@ export function nordicStation(o: { id?: string; kneePad: V3; roller: V3 }): Impl
 
 /**
  * thick mat on the floor, top at NORDIC.catch.thick; local origin on the floor under its centre. Not a `pad` part: the
- * hands resting on it get their own tolerance (Setup.rests), which the gate applies to non-pad parts only.
+ * hands resting on it get their own tolerance (Setup.rests).
  */
 export function catchPad(o: { id?: string } = {}): ImplementSpec {
   const { width, depth, thick } = NORDIC.catch
@@ -136,8 +136,7 @@ export const SPLIT_BENCH = { length: 1.1, width: 0.28, thick: 0.06, post: 0.05, 
 
 /**
  * Flat bench for the split squat's rear foot, drawn by this family (figure/props/families/legs-knee/bench.ts). The
- * pad is not a `pad` part: the foot resting on it gets its own tolerance (Setup.rests), which the gate applies to
- * non-pad parts only. Origin on the floor under the top edge of the pad's near end, the pad running back (-Z).
+ * pad is not a `pad` part: the foot resting on it gets its own tolerance (Setup.rests). Origin on the floor under the top edge of the pad's near end, the pad running back (-Z).
  */
 export function splitBench(o: { id?: string; height: number }): ImplementSpec {
   const { length: L, width, thick, post, inset, footHalf } = SPLIT_BENCH

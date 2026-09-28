@@ -392,6 +392,13 @@ function mountParts(b: Baked, F: Frames, machines: ReturnType<typeof machineColl
   return out
 }
 
+/** an intended rest sets the tolerance of its regions on rigid parts, and may only raise it on padded ones */
+function restTol(rest: { regions: string[]; tol: number } | undefined, region: string, pad?: boolean) {
+  const base = pad ? PROP_TOL.pad : PROP_TOL.rigid
+  if (!rest?.regions.includes(region)) return base
+  return pad ? Math.max(base, rest.tol) : rest.tol
+}
+
 /**
  * closest approach per body-region pair, per body region vs implement part (or cable) and per body region vs drawn
  * machine part (props/collision.ts: frames, rails, stacks, plates, pads where the composer draws them), over every frame
@@ -438,7 +445,7 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
           if (held?.has(c.region) && s.part.shape === 'cylinder' && s.part.r <= HANDLE_R) continue
           const bound = boundClearance(c, s)
           if (bound > REACH) continue
-          const tol = s.part.pad ? PROP_TOL.pad : rest?.regions.includes(c.region) ? rest.tol : PROP_TOL.rigid
+          const tol = restTol(rest, c.region, s.part.pad)
           note(`${c.region} / ${label}`, 'prop', round(capsuleSolidClearance(c, s) * 1000), i, tol, 0)
         }
       }
@@ -447,13 +454,15 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
     for (const m of machines) {
       const { pose, colliders } = m.at(poses)
       const held = new Set(m.holds.flatMap((id) => [...(grips.get(id) ?? [])]))
+      // a support drawn from a template implement (its key is the implement id) keeps that implement's rest
+      const rest = b.rests?.find((r) => r.implement === m.key)
       for (const s of placeParts({ id: m.key, kind: 'bench', mass: 0, com: [0, 0, 0], parts: colliders, sites: {} }, pose)) {
         const label = `${m.key}:${colliders[s.index].kind}#${s.index}`
         const hull = enclosing(s.part, pose)
         for (const c of caps) {
           if (held.has(c.region) && s.part.shape === 'cylinder' && s.part.r <= HANDLE_R) continue
           if (capsuleClearance(c, hull) > MACHINE_REACH) continue
-          note(`${c.region} / ${label}`, 'machine', round(capsuleSolidClearance(c, s) * 1000), i, s.part.pad ? PROP_TOL.pad : PROP_TOL.rigid, 0)
+          note(`${c.region} / ${label}`, 'machine', round(capsuleSolidClearance(c, s) * 1000), i, restTol(rest, c.region, s.part.pad), 0)
         }
       }
     }

@@ -1,5 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { bake, compactSize, decode, encode, frameImplements, frameQ, type Baked } from '../../src/motion/bake.ts'
+import { bake, compactSize, decode, encode, frameImplements, frameQ, type Baked, type CompactMotion } from '../../src/motion/bake.ts'
 import { placeParts } from '../../src/motion/collide.ts'
 import type { Part } from '../../src/motion/implements.ts'
 import { createSkeleton, type SkeletonData } from '../../src/motion/skeleton.ts'
@@ -9,6 +10,7 @@ import { clearances, PROP_TOL, runGates, skeletonGate } from './gates.ts'
 import { loadMotionExercises, loadSkeleton, skeletonSourceIssue } from './load.ts'
 
 const skel = loadSkeleton()
+const BAKED = new URL('../../src/features/figure/motion/baked/', import.meta.url)
 
 function shipped(id: string, raw: Record<string, unknown>) {
   const b = bake(getTemplate(id), parseParams(id, raw), skel)
@@ -191,6 +193,20 @@ describe('penetration gate', () => {
     expect(roller.length).toBeGreaterThan(0)
     expect(Math.min(...roller.map((r) => r.min))).toBeLessThan(-PROP_TOL.rigid)
     expect(roller.every((r) => r.excess === 0)).toBe(true)
+  })
+
+  it('lets a declared rest raise the tolerance on a padded support, as an implement and as drawn', () => {
+    // incline push-up: flat palms on the box's rubber tread, where the hand's fist capsule reads as a sink
+    const file = readdirSync(BAKED).find((f) => f.startsWith('114-'))!
+    const b = decode((JSON.parse(readFileSync(new URL(file, BAKED), 'utf8')) as { motion: CompactMotion }).motion, skel)
+    const rest = b.rests!.find((r) => r.implement === 'box')!
+    const tread = (x: Baked) => clearances(x, skel).filter((r) => /^hand_l \/ box(#|:pad#)1$/.test(r.pair))
+    expect(tread(b).map((r) => r.kind).sort()).toEqual(['machine', 'prop'])
+    for (const r of tread(b)) expect(r.tol).toBe(rest.tol)
+    expect(penetration(b)).toEqual([])
+    // without the rest the pad tolerance applies, and a rest below it never tightens a pad
+    expect(penetration({ ...b, rests: undefined }).map((g) => g.name).sort()).toEqual(['penetration body-machine', 'penetration body-prop'])
+    for (const r of tread({ ...b, rests: [{ ...rest, tol: 5 }] })) expect(r.tol).toBe(PROP_TOL.pad)
   })
 
   it('checks the body against the floor, and takes per-template tolerance overrides', { timeout: 20_000 }, () => {
