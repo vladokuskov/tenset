@@ -11,7 +11,7 @@ import { computeGripAt, isWrapGrip, solveGrip, type GripName, type GripSolution,
 import type { FigureHighlight } from '../highlight'
 import { buildBarbell, buildEzBar } from '../props/barbell'
 import { buildCableStack, type AttachmentKind } from '../props/cable'
-import { benchLayout, pieceColliders } from '../props/collision.ts'
+import { benchColliders, benchLayout, pieceColliders, type Collider } from '../props/collision.ts'
 import { extensionLayouts } from '../props/extensions.ts'
 import { Kit, type Piece } from '../props/kit'
 import { buildLegPress, legPressDefaults } from '../props/legpress'
@@ -447,17 +447,20 @@ const WHOLE = new Set(['pullup', 'assisted-pullup'])
 function propPoints(props: PropSpec[], poseAt: (u: number) => Poses): number[] {
   const out: number[] = []
   const id = new Matrix4()
-  const add = (pieces: Piece[], whole: boolean) => {
-    for (const c of pieceColliders(pieces)) {
+  const addColliders = (colliders: Collider[], m: Matrix4, whole: boolean) => {
+    for (const c of colliders) {
       const pts: number[] = []
-      partPoints(c, id, pts)
+      partPoints(c, m, pts)
       let top = -Infinity
       for (let i = 1; i < pts.length; i += 3) top = Math.max(top, pts[i])
       if (whole || c.kind === 'plate' || top < FLOOR_PART) out.push(...pts)
     }
   }
+  const add = (pieces: Piece[], whole: boolean) => addColliders(pieceColliders(pieces), id, whole)
   for (const p of props) {
-    if (p.type === 'rigid' && !p.attach) add(p.pieces, WHOLE.has(p.key) || !!p.whole)
+    // the adjustable bench's floor stabilisers reach past its implement parts
+    if (p.type === 'bench') addColliders(benchColliders(p.params), new Matrix4().makeTranslation(...p.position), false)
+    else if (p.type === 'rigid' && !p.attach) add(p.pieces, WHOLE.has(p.key) || !!p.whole)
     else if (p.type === 'dynamic') for (const u of [0, 0.25, 0.5, 0.75]) add(p.build(poseAt(u)), WHOLE.has(p.key) || !!p.whole)
   }
   return out

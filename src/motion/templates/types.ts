@@ -20,6 +20,11 @@ export type BalanceSpec = {
   tol: number
   /** where the point should sit relative to the support line, m (+ forward); unloaded squats sit towards the heel */
   target?: number
+  /**
+   * the lateral balance gate judges free standing setups on their own (pipeline/motion/gates.ts); true also judges a
+   * setup it would skip (seated, kneeling, hand-supported), false never judges it (a lead decision)
+   */
+  lateral?: boolean
 }
 
 /**
@@ -33,7 +38,14 @@ export type Rest = { implement: string; regions: string[]; tol: number }
  * ('forearm / head', 'thigh / trunk (lumbar3)'), `floor` for every region against the floor. Each one is a lead
  * decision (docs/FAMILIES.md).
  */
-export type Tolerances = { body?: Record<string, number>; floor?: number }
+export type Tolerances = {
+  body?: Record<string, number>
+  floor?: number
+  /** largest angle of the upper arm behind the thorax frontal plane, deg (default 45) */
+  horizontalAbduction?: number
+  /** how far the centre of pressure may sit past the feet's outer edge laterally, mm (default 0) */
+  lateral?: number
+}
 
 export type Setup = {
   implements: ImplementSpec[]

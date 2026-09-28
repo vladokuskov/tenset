@@ -1,12 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, compactSize, decode, encode, frameImplements, frameQ, type Baked, type CompactMotion } from '../../src/motion/bake.ts'
+import { fk } from '../../src/motion/fk.ts'
 import { placeParts } from '../../src/motion/collide.ts'
 import type { Part } from '../../src/motion/implements.ts'
 import { createSkeleton, type SkeletonData } from '../../src/motion/skeleton.ts'
 import { dumbbellPoses } from '../../src/motion/templates/arms.ts'
 import { getTemplate, parseParams } from '../../src/motion/templates/index.ts'
-import { clearances, PROP_TOL, runGates, skeletonGate } from './gates.ts'
+import { armAngles, clearances, HORIZONTAL_ABDUCTION, PROP_TOL, runGates, skeletonGate } from './gates.ts'
 import { loadMotionExercises, loadSkeleton, skeletonSourceIssue } from './load.ts'
 
 const skel = loadSkeleton()
@@ -245,5 +246,96 @@ describe('penetration gate', () => {
     expect(skeletonGate(c, createSkeleton(data)).pass).toBe(false)
     expect(skeletonSourceIssue(skel)).toBeNull()
     expect(skeletonSourceIssue(createSkeleton({ ...skel.data, source: { ...skel.data.source, sha256: '0'.repeat(64) } }))).toMatch(/changed/)
+  })
+})
+
+describe('shoulder horizontal abduction gate', () => {
+  const record = (id: number) => loadMotionExercises().find((r) => r.id === id)!
+  const bakeRecord = (id: number) => {
+    const r = record(id)
+    return bake(getTemplate(r.template), parseParams(r.template, r.params, r.laterality), skel)
+  }
+  const gate = (x: Baked) => runGates(x, skel).find((g) => g.name === 'shoulder horizontal abduction')!
+  /** the lateral raise with both arms swung to `plane` (deg forward of the frontal plane) wherever they are raised */
+  const swung = (b: Baked, plane: number) => {
+    const q = b.q.slice()
+    for (let i = 0; i < b.frames; i++) for (const s of ['l', 'r']) if (q[i * b.nDof + skel.dof[`shoulder_${s}.elev`]] > 30) q[i * b.nDof + skel.dof[`shoulder_${s}.plane`]] = plane
+    return { ...b, q }
+  }
+
+  it('measures the arm behind the thorax frontal plane only while it is raised towards the horizontal', () => {
+    const b = bakeRecord(203)
+    const top = frameQ(b, 110)
+    expect(top[skel.dof['shoulder_l.plane']]).toBe(20)
+    const a = armAngles(skel, fk(skel, top), 'l')
+    expect(a.elev).toBeCloseTo(85, 0)
+    expect(a.behind).toBeCloseTo(-20, 0)
+    // the hanging arms at the bottom of the raise are outside the judged window
+    const low = Array.from({ length: b.frames }, (_, i) => armAngles(skel, fk(skel, frameQ(b, i)), 'l').elev)
+    expect(Math.min(...low)).toBeLessThan(HORIZONTAL_ABDUCTION.elev[0])
+  })
+
+  it('passes the approved lateral raise and an arm 40 deg behind the chest, fails one 55 deg behind', () => {
+    const b = bakeRecord(203)
+    expect(gate(b).pass).toBe(true)
+    expect(gate(swung(b, -40)).pass).toBe(true)
+    const bad = gate(swung(b, -55))
+    expect(bad.pass).toBe(false)
+    expect(bad.value).toBeCloseTo(55, 0)
+    expect(bad.detail).toMatch(/^shoulder_[lr] at \d+ deg elevation/)
+    expect(gate({ ...swung(b, -55), tolerances: { horizontalAbduction: 60 } }).pass).toBe(true)
+  })
+
+  it('does not read shoulder extension with the arm low (incline curl hang, back squat) as horizontal abduction', () => {
+    for (const id of [702, 401]) expect(gate(bakeRecord(id)).pass, `${id}`).toBe(true)
+  })
+})
+
+describe('lateral balance gate', () => {
+  const record = (id: number) => loadMotionExercises().find((r) => r.id === id)!
+  const bakeRecord = (id: number) => {
+    const r = record(id)
+    return bake(getTemplate(r.template), parseParams(r.template, r.params, r.laterality), skel)
+  }
+  const gate = (x: Baked) => runGates(x, skel).find((g) => g.name === 'balance (lateral, past the feet)')!
+
+  it('passes a bilateral stance and the cable pull a lifter leans against, fails a sideways pull nobody could stand', () => {
+    const curl = bakeRecord(711)
+    expect(gate(curl).pass).toBe(true)
+    expect(gate(curl).detail).toMatch(/^between the feet/)
+    // the one-sided cable raise leans against its cable and keeps the pressure between the feet
+    expect(gate(bakeRecord(204)).pass).toBe(true)
+    // 60 kg pulling the left dumbbell sideways at hand height tips the pressure well past the left foot
+    const pulled = { ...curl, cables: [{ pulley: [4, 0.9, 0] as [number, number, number], implement: 'db_l', point: [0, 0, 0] as [number, number, number], kg: 60 }] }
+    const bad = gate(pulled)
+    expect(bad.pass).toBe(false)
+    expect(bad.value).toBeGreaterThan(100)
+    expect(gate({ ...pulled, tolerances: { lateral: 2000 } }).pass).toBe(true)
+  })
+
+  it('holds single-leg work over the stance foot', () => {
+    const curl = bakeRecord(711)
+    // the left knee bent 70 deg lifts that foot: the same body now stands on the right foot with the pressure still
+    // between the feet
+    const q = curl.q.slice()
+    for (let i = 0; i < curl.frames; i++) q[i * curl.nDof + skel.dof['knee_l.flex']] = 70
+    const single = { ...curl, q, contacts: curl.contacts.filter((c) => !/_l$/.test(c.site) || c.kind === 'grip') }
+    const g = gate(single)
+    expect(g.detail).toMatch(/^over foot_r/)
+    expect(g.pass).toBe(false)
+    expect(g.value).toBeGreaterThan(60)
+  })
+
+  it('skips hanging, seated and hand-supported setups unless the template declares the check', () => {
+    expect(gate(bakeRecord(301)).detail).toBe('not judged: no planted feet')
+    expect(gate(bakeRecord(702)).detail).toMatch(/^not judged: /)
+    // the lean-away raise hangs off the post with the free hand: without it the lean would tip the lifter over
+    const lean = bakeRecord(214)
+    expect(gate(lean).detail).toBe('not judged: grip_l on post')
+    const declared = gate({ ...lean, balance: { ...lean.balance!, lateral: true } })
+    expect(declared.pass).toBe(false)
+    expect(declared.value).toBeGreaterThan(100)
+    const curl = bakeRecord(711)
+    expect(gate({ ...curl, balance: { ...curl.balance!, lateral: false } }).detail).toBe('not judged: declared off')
   })
 })

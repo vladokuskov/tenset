@@ -235,6 +235,117 @@ function balanceGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
   return [worst(spec.target ? `balance (forward offset from ${Math.round(spec.target * 1000)} mm)` : 'balance (forward offset)', 'mm', spec.tol * 1000, vals)]
 }
 
+// ---------- horizontal abduction ----------
+
+/**
+ * The upper arm may go at most `maxDeg` behind the thorax frontal plane, measured in the thorax transverse plane:
+ * normal passive horizontal abduction from 90 deg of abduction is about 45 deg (AAOS, Greene & Heckman 1994;
+ * Norkin & White). The angle only means horizontal abduction with the arm near the horizontal: below ~60 deg of
+ * elevation an arm behind the trunk is shoulder extension (rows, dips, the incline curl hang, a pure extension
+ * reads 90 deg here), which the joint limits cover, and overhead the transverse plane no longer describes it.
+ */
+export const HORIZONTAL_ABDUCTION = { maxDeg: 45, elev: [60, 120] as const }
+
+/** upper arm elevation from hanging and its angle behind the frontal plane (+ behind), thorax frame, deg */
+export function armAngles(skel: Skeleton, f: FK, side: 'l' | 'r'): { elev: number; behind: number } {
+  const thorax = f.rot[skel.segments[skel.seg[`clavicle_${side}`]].parent]
+  const [x, y, z] = qrot(qconj(thorax), sub(f.pos[skel.seg[`forearm_${side}`]], f.pos[skel.seg[`humerus_${side}`]]))
+  const n = Math.hypot(x, y, z)
+  const lateral = side === 'l' ? x : -x
+  return { elev: (Math.acos(Math.max(-1, Math.min(1, -y / n))) * 180) / Math.PI, behind: (Math.atan2(-z, lateral) * 180) / Math.PI }
+}
+
+function abductionGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
+  const [lo, hi] = HORIZONTAL_ABDUCTION.elev
+  const vals: { v: number; frame: number; detail?: string }[] = []
+  for (let i = 0; i < b.frames; i++) {
+    for (const s of ['l', 'r'] as const) {
+      const { elev, behind } = armAngles(skel, F.f[i], s)
+      if (elev >= lo && elev <= hi) vals.push({ v: behind, frame: i, detail: `shoulder_${s} at ${Math.round(elev)} deg elevation` })
+    }
+  }
+  return [worst('shoulder horizontal abduction', 'deg behind frontal plane', b.tolerances?.horizontalAbduction ?? HORIZONTAL_ABDUCTION.maxDeg, vals)]
+}
+
+// ---------- lateral balance ----------
+
+/**
+ * Free standing work keeps the centre of pressure (body, loads and cable pulls, as the fore-aft balance) inside the
+ * base of support sideways: between the outer edges of the feet on a bilateral stance, over the stance foot on
+ * single-leg work. The feet's edges are the foot capsules (about 96 mm wide), so the default tolerance is 0.
+ */
+export const LATERAL = {
+  /** a foot this close to the floor (lowest capsule point, mm) stands on it */
+  footDownMm: 10,
+  /** a trunk, pelvis, thigh or arm this close to fixed equipment (mm) rests on it: the setup is supported */
+  restMm: 10,
+  /** standing: the pelvis rises at least this share of its relaxed standing height above the feet at some frame */
+  standing: 0.8,
+  /** fixed equipment a hand only touches for balance (it cannot hold a lean) */
+  lightTouch: new Set(['grab_handle', 'wall']),
+}
+
+const FOOT_SITE = /^(heel|ball|toe|midfoot)_([lr])$/
+
+/** why the lateral balance gate does not judge this setup, or null when it does */
+export function lateralSkip(b: Baked, skel: Skeleton, F: Frames, rows: Clearance[]): string | null {
+  if (b.balance?.lateral === false) return 'declared off'
+  const feet = new Set(b.contacts.filter((c) => c.kind === 'planted').map((c) => FOOT_SITE.exec(c.site)?.[2]).filter((s) => s !== undefined))
+  if (!feet.size) return 'no planted feet'
+  if (b.balance?.lateral) return null
+  const fixed = (id: string) => {
+    const s = b.implements.find((x) => x.id === id)
+    return !!s && !MOVING_KINDS.has(s.kind) && !(b.cables ?? []).some((c) => c.implement === id)
+  }
+  for (const c of b.contacts) {
+    if (c.kind === 'planted' || !('implement' in c.target) || FOOT_SITE.test(c.site)) continue
+    const s = b.implements.find((x) => x.id === (c.target as { implement: string }).implement)!
+    if (fixed(s.id) && !LATERAL.lightTouch.has(s.kind)) return `${c.site} on ${s.id}`
+  }
+  for (const r of rows) {
+    if ((r.kind !== 'prop' && r.kind !== 'machine') || r.min > LATERAL.restMm) continue
+    const [region, other] = r.pair.split(' / ')
+    if (/^(hand|foot)_/.test(region)) continue
+    if (r.kind === 'prop' && !fixed(other.split('#')[0])) continue
+    return `${region} rests on ${other}`
+  }
+  const rest = fk(skel, zeroQ(skel))
+  const height = rest.pos[0][1] - sitePos(skel, rest, 'midfoot_l')[1]
+  let top = -Infinity
+  for (const f of F.f) top = Math.max(top, f.pos[0][1] - Math.min(...[...feet].map((s) => sitePos(skel, f, `midfoot_${s}`)[1])))
+  return top < LATERAL.standing * height ? 'not standing' : null
+}
+
+function lateralGates(b: Baked, skel: Skeleton, F: Frames, rows: Clearance[]): Gate[] {
+  const name = 'balance (lateral, past the feet)'
+  const skip = lateralSkip(b, skel, F, rows)
+  if (skip) return [{ name, unit: 'mm', limit: 0, value: 0, pass: true, detail: `not judged: ${skip}` }]
+  const planted = new Set(b.contacts.filter((c) => c.kind === 'planted').map((c) => FOOT_SITE.exec(c.site)?.[2]))
+  const resting = new Set(['l', 'r'].filter((s) => (b.rests ?? []).some((r) => r.regions.includes(`foot_${s}`))))
+  const tol = b.tolerances?.lateral ?? 0
+  const feetOf = (caps: Capsule[], s: string) => caps.filter((c) => c.region === `foot_${s}`)
+  const caps = F.f.map((f) => bodyCapsules(skel, f))
+  const down = (i: number, s: string) => Math.min(...feetOf(caps[i], s).map((c) => Math.min(c.a[1], c.b[1]) - c.r)) * 1000 <= LATERAL.footDownMm
+  // a foot that is down in some frames and up in others steps: while it is in the air the rep is dynamic (gait), not
+  // a static stance, so those frames are not judged
+  const stepping = ['l', 'r'].filter((s) => !planted.has(s) && !resting.has(s) && F.f.some((_, i) => down(i, s)) && F.f.some((_, i) => !down(i, s)))
+  const vals: { v: number; frame: number; detail?: string }[] = []
+  for (let i = 0; i < b.frames; i++) {
+    if (stepping.some((s) => !down(i, s))) continue
+    const support = ['l', 'r'].filter((s) => planted.has(s) || resting.has(s) || down(i, s))
+    const xs = support.flatMap((s) => feetOf(caps[i], s).flatMap((c) => [c.a[0] - c.r, c.a[0] + c.r, c.b[0] - c.r, c.b[0] + c.r]))
+    const impl = F.impl[i]
+    const loads = b.implements.filter((s) => s.mass > 0).map((s) => ({ mass: s.mass, pos: comWorld(s, impl.find((x) => x.id === s.id)!) }))
+    const forces = (b.cables ?? []).map((c) => cableForce(c, impl.find((x) => x.id === c.implement)!))
+    const [x] = centerOfPressure(skel, F.f[i], loads, forces)
+    const [lo, hi] = [Math.min(...xs), Math.max(...xs)]
+    vals.push({ v: Math.max(lo - x, x - hi) * 1000, frame: i, detail: `${support.length === 2 ? 'between the feet' : `over foot_${support[0]}`}, pressure at x ${Math.round(x * 1000)} mm, feet ${Math.round(lo * 1000)}..${Math.round(hi * 1000)}` })
+  }
+  if (!vals.length) return [{ name, unit: 'mm', limit: tol, value: 0, pass: true, detail: 'not judged: a foot steps in every frame' }]
+  const w = vals.reduce((a, v) => (v.v > a.v ? v : a))
+  return [{ name, unit: 'mm', limit: tol, value: round(w.v), frame: w.frame, detail: w.detail, pass: w.v <= tol }]
+}
+
 
 // ---------- penetration ----------
 
@@ -505,8 +616,7 @@ export function clearances(b: Baked, skel: Skeleton, F?: Frames): Clearance[] {
   return [...rows.values()].sort((x, y) => y.excess - x.excess || x.min + x.allowance - (y.min + y.allowance))
 }
 
-function penetrationGates(b: Baked, skel: Skeleton, F: Frames): Gate[] {
-  const rows = clearances(b, skel, F)
+function penetrationGates(rows: Clearance[]): Gate[] {
   const gate = (kind: Clearance['kind'], name: string): Gate => {
     const mine = rows.filter((r) => r.kind === kind)
     const w = mine[0]
@@ -533,6 +643,7 @@ export function skeletonGate(c: CompactMotion, skel: Skeleton): Gate {
 
 export function runGates(b: Baked, skel: Skeleton, sizeBytes?: number): Gate[] {
   const F = frames(b, skel)
+  const rows = clearances(b, skel, F)
   const gates = [
     ...contactGates(b, skel, F),
     ...limitGates(b, skel, F),
@@ -540,7 +651,9 @@ export function runGates(b: Baked, skel: Skeleton, sizeBytes?: number): Gate[] {
     ...seamGates(b, skel, F),
     ...symmetryGates(b, skel, F),
     ...balanceGates(b, skel, F),
-    ...penetrationGates(b, skel, F),
+    ...lateralGates(b, skel, F, rows),
+    ...abductionGates(b, skel, F),
+    ...penetrationGates(rows),
   ]
   if (sizeBytes !== undefined) gates.push({ name: 'compact size', unit: 'bytes', limit: LIMITS.sizeBytes, value: sizeBytes, pass: sizeBytes <= LIMITS.sizeBytes })
   return gates
