@@ -38,14 +38,16 @@ describe('push-up template', () => {
       expect(q[skel.dof['knee_l.flex']]).toBeCloseTo(2, 5)
       expect(q[skel.dof['lumbar.flex']]).toBeCloseTo(0, 5)
     }
-    // chest at the bottom: 6-10 cm over the support under the hands; with the feet on a box the head gets there
-    // first and keeps 4 cm off the floor
+    // bottom: the chest a fist (8 cm) over the support under the hands, or the head 4 cm off the floor where that
+    // comes first (feet on a box tip the head down; the neck extends there, so the chest still binds first)
     const support = b.params.elevation === 'hands' ? 0.45 : 0
     const caps = bodyCapsules(skel, fk(skel, frameQ(b, at(b, BOTTOM))))
     const low = (re: RegExp) => Math.min(...caps.filter((c) => re.test(c.segment)).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
-    expect(low(/^thorax/) - support).toBeGreaterThan(0.06)
-    if (b.params.elevation === 'feet') expect(low(/^head$/)).toBeCloseTo(0.04, 2)
-    else expect(low(/^thorax/) - support).toBeLessThan(0.1)
+    const chest = low(/^thorax/) - support, head = low(/^head$/)
+    expect(chest).toBeGreaterThan(0.06)
+    expect(chest).toBeLessThan(0.1)
+    expect(head).toBeGreaterThan(0.035)
+    expect(Math.min(chest - 0.08, head - 0.04)).toBeCloseTo(0, 3)
   })
 
   it.each([...baked.keys()])('%s: palms and balls of the feet planted, palms near flat, wrists in range, seamless', (id) => {
@@ -97,6 +99,26 @@ describe('push-up template', () => {
     expect(flare(regular, BOTTOM)).toBeGreaterThan(flare(plus, BOTTOM) + 10)
     expect(dof(plus, TOP, 'clavicle_l.prot')).toBeGreaterThan(dof(regular, TOP, 'clavicle_l.prot') + 12)
     expect(dof(plus, BOTTOM, 'clavicle_l.prot')).toBeLessThan(-5)
+  })
+
+  it('hands on a box: the palms stay on its top and the chest comes down at its near edge', () => {
+    const b = baked.get(114)!
+    const k = b.implements.findIndex((s) => s.kind === 'plyo_box')
+    const part = b.implements[k].parts[0]
+    if (part.shape !== 'box') throw new Error('plyo box without a box part')
+    const [w, , d] = part.size
+    for (let i = 0; i < b.frames; i += 3) {
+      const z0 = frameImplements(b, i)[k].pos[2]
+      for (const c of bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => /^palm_/.test(c.name))) {
+        for (const p of [c.a, c.b]) {
+          expect(Math.abs(p[0]) + c.r, `palm x @${i}`).toBeLessThan(w / 2 - 0.01)
+          expect(Math.abs(p[2] - z0) + c.r, `palm z @${i}`).toBeLessThan(d / 2)
+        }
+      }
+    }
+    const i = at(b, BOTTOM)
+    const chest = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => /^thorax/.test(c.segment)).map((c) => (c.a[1] - c.r < c.b[1] - c.r ? c.a : c.b)).sort((p, q) => p[1] - q[1])[0]
+    expect(Math.abs(chest[2] - (frameImplements(b, i)[k].pos[2] - d / 2))).toBeLessThan(0.06)
   })
 
   it('hands on a box incline the body, feet on a box decline it', () => {

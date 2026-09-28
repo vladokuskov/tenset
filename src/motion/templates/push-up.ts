@@ -28,6 +28,8 @@ const ELBOW_TOP = 6
 const CHEST_GAP = 0.08
 const HEAD_GAP = 0.04
 const BOX_H = PLYO_BOX.heights[2]
+/** hands on a box: a wide (foam) plyo box, so the palms of a 1.5 x shoulder grip rest on its top */
+const HANDS_BOX_W = 0.9
 const HIP = 2
 const KNEE = 2
 /** ankle dorsiflexion: heels up and back, toes turned under within the toe joint's range */
@@ -47,6 +49,9 @@ const WRIST_FLEX: [number, number] = [-95, 75]
 /** wrist extension at the top, deg: the hands sit that far ahead of the shoulders (past ~85 the rig's pronation and
  * deviation axes line up and the hand cannot keep the palm flat) */
 const WRIST_TOP = 84
+/** and at most this at the bottom, deg: the palms under the chest, the forearms leaning back towards the feet. A
+ * flared forearm also leans out, and the wrist only absorbs that lean well short of full extension */
+const WRIST_BOTTOM = 66
 /** upper arm's angle from the torso at the bottom (seen from above), deg, plus more per unit of grip width over
  * shoulder width: ~28 with the hands under the shoulders, ~40 at 1.5 x (coaching standard ~30-45) */
 const FLARE = [28, 24]
@@ -68,7 +73,8 @@ const KNOTS = 17
 /**
  * How far the capsule model sinks into a support at the palms and the balls of the feet, mm: the fist capsule models
  * fingers closed round a handle and the forefoot capsule straight toes, while here the palms lie flat and the toes
- * are turned under. The trunk, head and legs keep their clearance (push-up.test.ts). A lead decision.
+ * are turned under. The trunk, head and legs keep their clearance (push-up.test.ts). Palms on a box rest on it with
+ * the same sink. A lead decision.
  */
 const HAND_SINK = 45
 const FOOT_SINK = 65
@@ -207,21 +213,27 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     return Math.min(low(/^thorax/) - handsH - CHEST_GAP, low(/^head$/) - HEAD_GAP)
   }
   const bottomPitch = () => root1d(chest, 60, -40, { tol: 1e-6, scan: 20 }).x
-  // hands just far enough ahead of the shoulders for WRIST_TOP at the top; elbow pole (out and back towards the
-  // feet, the elbow pointing away from the floor) that gives the FLARE at the bottom
+  // hands just far enough ahead of the shoulders for WRIST_TOP at the top or WRIST_BOTTOM at the bottom, whichever
+  // binds (on a box: the plank pivots through a steeper arc, so the shoulders travel further forward on the way
+  // down); elbow pole (out and back towards the feet, the elbow pointing away from the floor) that gives the FLARE
+  // at the bottom
   const topPitch = () => root1d((a) => elbowOf(skel, frame(skel, p, base, pole, 1, a)) - ELBOW_TOP, 45, -10, { tol: 1e-6, scan: 11 }).x
   const wristTop = (z: number) => {
     palmPose.pos = [0, palmPose.pos[1], z]
-    return frame(skel, p, base, pole, 1, topPitch())[skel.dof['wrist_l.flex']] + WRIST_TOP
+    const w = (c: number, a: number) => frame(skel, p, base, pole, c, a)[skel.dof['wrist_l.flex']]
+    return Math.min(w(1, topPitch()) + WRIST_TOP, w(0, bottomPitch()) + WRIST_BOTTOM)
   }
   const flareTo = FLARE[0] + FLARE[1] * Math.max(0, p.gripWidth - 1)
   const elbowOut = (t: number) => {
     pole = poleAt(t)
     return flare(skel, frame(skel, p, base, pole, 0, bottomPitch())) - flareTo
   }
-  for (let pass = 0; pass < 2; pass++) {
+  // hand placement and elbow pole depend on each other once the bottom binds
+  for (let pass = 0; pass < 6; pass++) {
+    const z0 = palmPose.pos[2]
     palmPose.pos = [0, palmPose.pos[1], root1d(wristTop, 1.0, 1.7, { tol: 1e-5, scan: 7 }).x]
     pole = poleAt(root1d(elbowOut, 0, 80, { tol: 1e-4, scan: 8 }).x)
+    if (pass && Math.abs(palmPose.pos[2] - z0) < 1e-4) break
   }
   const elbowBottom = elbowOf(skel, frame(skel, p, base, pole, 0, bottomPitch()))
   const target = (c: number) => lerp(elbowBottom, ELBOW_TOP, c)
@@ -230,12 +242,14 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const pitch = monotoneCubic(cs, cs.map(pitchFor))
   const implements_: ImplementSpec[] = [palms]
   let boxPose: ImplementPose | undefined
+  let rests: Setup['rests']
   if (p.elevation !== 'floor') {
-    const box = plyoBox({ height: BOX_H })
+    const box = plyoBox({ height: BOX_H, width: p.elevation === 'hands' ? HANDS_BOX_W : PLYO_BOX.width })
     implements_.push(box)
     // hands: the palm heels just inside the edge nearer the feet; feet: the balls of the feet on its front edge
-    const z = p.elevation === 'hands' ? palmPose.pos[2] - 0.12 + PLYO_BOX.depth / 2 : BALL_EDGE - PLYO_BOX.depth / 2
+    const z = p.elevation === 'hands' ? palmPose.pos[2] - 0.135 + PLYO_BOX.depth / 2 : BALL_EDGE - PLYO_BOX.depth / 2
     boxPose = { id: box.id, pos: [0, 0, z], rot: qid() }
+    if (p.elevation === 'hands') rests = [{ implement: box.id, regions: ['hand_l', 'hand_r'], tol: HAND_SINK }]
   }
   const contacts: Contact[] = [
     { site: 'ball_l', kind: 'planted', target: { world: balls[0] } },
@@ -248,6 +262,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     contacts,
     tempo,
     symmetric: true,
+    ...(rests ? { rests } : {}),
     limits: { 'wrist_l.flex': WRIST_FLEX, 'wrist_r.flex': WRIST_FLEX },
     tolerances: { floor: p.elevation === 'feet' ? HAND_SINK : FOOT_SINK },
   }
