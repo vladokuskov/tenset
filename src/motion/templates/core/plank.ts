@@ -1,6 +1,6 @@
 import { attachHand, root1d, type FootTarget } from '../../constraints.ts'
 import { bodyCapsules, capsuleClearance, type Capsule } from '../../collide.ts'
-import { fk, type FK } from '../../fk.ts'
+import { fk, sitePos, type FK } from '../../fk.ts'
 import type { ImplementSpec } from '../../implements.ts'
 import { palmRest } from '../../implements/core.ts'
 import { floorMat } from '../../implements/shared.ts'
@@ -17,7 +17,8 @@ import { footContacts, legsToward, matClearance, MAT_TOP, mirrorArm, segPosOf, S
 // little, the hips settle a few millimetres), the quick concentric is the exhale and brace (pelvis tucks, the
 // shoulders push the floor away) with the highlight pulse. Front plank (804): prone on the forearms, elbows under the
 // shoulders, forearms parallel with loose fists, up on the toes. Side plank (803): on the working side's forearm, elbow
-// under the shoulder, legs stacked, hips up in line with ankles and shoulders, the free hand on the hip. Research
+// under the shoulder, legs stacked, hips up in line with ankles and shoulders, the free arm reaching straight up
+// (a hand resting on the curved flank cannot lie flat within the wrist's extension limit, so it floated). Research
 // (motion-authoring): anti-extension / anti-lateral-flexion holds keep a neutral spine; ranges are author judgment.
 
 type P = ParamsOf<'hold'>
@@ -27,15 +28,21 @@ export const FRONT = { lumbar: [2, 4.7], thorax: [-1.5, 1.2], tilt: [0, -3.1], c
 /** side plank posture, deg, inhaled -> braced: lateral sag of the lumbar spine (the pelvis list follows it so the
  * straight legs keep reaching the feet), ribs and neck */
 export const SIDE = { bend: [1.5, 0], thorax: [0.6, 0], clavicle: [4, 6.5], neck: [-2, 0] } as const
-/** ankles, deg; front plank toes nearly straight: the forefoot collision capsule is rigid with the foot and covers
- * the toes, so the plank stands on the toe tips where the capsule ends */
-const ANKLE = { front: 0, side: 4 }
-const TOES = -10
+/** ankles, deg: the front plank (as the push-up) has heels up and back and the balls of the feet on the mat, toes
+ * turned under and lying flat */
+const ANKLE = { front: 28, side: 4 }
+/**
+ * Front plank: how far the forefoot capsule sinks into the mat, mm. It is rigid with the foot and models straight
+ * toes, while here they are turned under (the push-up's FOOT_SINK, a lead decision).
+ */
+export const FOOT_SINK = 65
 /**
  * Stacked legs press the inner thighs together: the thigh capsules (up to 10 cm radius, fitted to the widest part of
  * the mesh) overlap ~41 mm when the feet stack 12 mm apart, mm (lead decision)
  */
 export const STACKED_THIGHS = 42
+/** side plank raised arm: share of the zero pose's shoulder-to-grip distance, ~12 deg of elbow flexion */
+const REACH_SOFT = 1.006
 /** elbow joint height with the forearm on the mat, m (the upper arm's distal capsule radius, sunk into the mat) */
 const ELBOW_Y = MAT_TOP + 0.054 - SINK
 
@@ -53,7 +60,10 @@ export type Plank = {
   /** fist grip targets on the mat */
   fists: Partial<Record<Side, { pos: V3; hand: Quat; elbow: V3 }>>
   rest?: ImplementSpec
-  hipLocal?: V3
+  /** side plank: top shoulder to the raised hand's grip site, m */
+  reach?: number
+  /** front plank: toe flexion that lays the turned-under toes flat, deg */
+  toe?: number
   /** side plank: hip adduction (both legs) that stacks the feet, deg */
   upAbd?: number
   /** hip to ankle distance of the straight legs, braced, m */
@@ -71,7 +81,7 @@ function fistHand(dir: V3): Quat {
 
 // ---------- front plank ----------
 
-function frontBody(skel: Skeleton, q: Float64Array, c: number, angle: number) {
+function frontBody(skel: Skeleton, q: Float64Array, c: number, angle: number, toe = 0) {
   setDofs(skel, q, {
     'lumbar.flex': lerp(FRONT.lumbar[1], FRONT.lumbar[0], c),
     'thorax.flex': lerp(FRONT.thorax[1], FRONT.thorax[0], c),
@@ -83,7 +93,7 @@ function frontBody(skel: Skeleton, q: Float64Array, c: number, angle: number) {
     'hip_*.abd': 2,
     'knee_*.flex': 2,
     'ankle_*.df': ANKLE.front,
-    'toe_*.flex': TOES,
+    'toe_*.flex': toe,
     'grip_*.close': 1,
   })
   q[skel.dof['pelvis.tilt']] = angle + lerp(FRONT.tilt[1], FRONT.tilt[0], c)
@@ -94,7 +104,6 @@ const shoulders = (skel: Skeleton, f: FK): V3 => {
   return [(l[0] + r[0]) / 2, (l[1] + r[1]) / 2, (l[2] + r[2]) / 2]
 }
 
-const FOREFOOT = (c: Capsule) => c.name.startsWith('forefoot_')
 
 /** two root DOFs that put the shoulder point on its target: height and the `axis` coordinate */
 function placeRoot(skel: Skeleton, q: Float64Array, at: (f: FK) => V3, target: V3, dofs: [string, string], guess: [number, number], axis: number) {
@@ -167,11 +176,17 @@ export function frontContext(skel: Skeleton, tempo: Tempo): Plank {
     const f0 = fk(skel, q)
     q[skel.dof['pelvis.tz']] = -shoulders(skel, f0)[2]
     const f = fk(skel, q)
-    // up on the toes: the forefoot rests on the mat
-    return [(shoulders(skel, f)[1] - shoulderY) * 10, (matClearance(bodyCapsules(skel, f).filter(FOREFOOT)) + SINK / 2) * 10]
+    // up on the toes: the balls of the feet on the mat
+    return [(shoulders(skel, f)[1] - shoulderY) * 10, (sitePos(skel, f, 'ball_l')[1] - MAT_TOP) * 10]
   }
   const s = dls(res, [0.3, 80], { tol: 1e-10, iters: 80 })
   res(s.x)
+  // toes turned under, lying flat on the mat
+  const toe = root1d((t) => {
+    q[skel.dof['toe_l.flex']] = t
+    return qrot(fk(skel, q).rot[skel.seg.toes_l], [0, 0, 1])[1]
+  }, -60, 30, { tol: 1e-6, scan: 9 }).x
+  q[skel.dof['toe_r.flex']] = toe
   const f = fk(skel, q)
   const feet: FootTarget[] = (['l', 'r'] as const).map((side) => ({ side, rot: f.rot[skel.seg[`foot_${side}`]], ankle: segPosOf(skel, f, `foot_${side}`) }))
   // fists straight ahead of the elbows (under the shoulders), forearms on the mat
@@ -186,22 +201,23 @@ export function frontContext(skel: Skeleton, tempo: Tempo): Plank {
   }
   const rest = palmRest({ id: 'fists', sites: { l: fists.l!.pos, r: fists.r!.pos } })
   const contacts: Contact[] = [
-    ...footContacts(skel, feet, ['ball', 'toe']),
+    ...footContacts(skel, feet, ['ball']),
     { site: 'grip_l', kind: 'grip', target: { implement: rest.id, grip: 'l' } },
     { site: 'grip_r', kind: 'grip', target: { implement: rest.id, grip: 'r' } },
   ]
-  const toeZ = toWorld(skel, f, 'foot_l', skel.data.sites.toe_l.local)[2]
-  const headZ = fists.l!.pos[2] + 0.1
-  const matSpec = floorMat()
-  const mat: ImplementPose = { id: matSpec.id, pos: [0, 0, (toeZ - 0.12 + headZ) / 2], rot: qid() }
-  const setup: Setup = { implements: [matSpec, rest], contacts, tempo, symmetric: true }
-  return { kind: 'plank', side: false, tempo, setup, work: 'r', angle0: s.x[1], legReach: legReach(skel, f), shoulder: target, feet, fists, rest, mat, guess: [q[skel.dof['pelvis.ty']], q[skel.dof['pelvis.tz']]] }
+  // mat from behind the balls of the feet to past the fists (the plank is longer than the standard 1.8 m mat)
+  const back = sitePos(skel, f, 'ball_l')[2] - 0.08, front = fists.l!.pos[2] + 0.08
+  const matSpec = floorMat({ length: front - back })
+  const mat: ImplementPose = { id: matSpec.id, pos: [0, 0, (back + front) / 2], rot: qid() }
+  const rests = [{ implement: matSpec.id, regions: ['foot_l', 'foot_r'], tol: FOOT_SINK }]
+  const setup: Setup = { implements: [matSpec, rest], contacts, tempo, symmetric: true, rests, tolerances: { floor: FOOT_SINK } }
+  return { kind: 'plank', side: false, tempo, setup, work: 'r', angle0: s.x[1], toe, legReach: legReach(skel, f), shoulder: target, feet, fists, rest, mat, guess: [q[skel.dof['pelvis.ty']], q[skel.dof['pelvis.tz']]] }
 }
 
 export function samplePlank(skel: Skeleton, v: Plank, c: number): Pose {
   if (v.side) return sampleSide(skel, v, c)
   const q = zeroQ(skel)
-  frontBody(skel, q, c, v.angle0)
+  frontBody(skel, q, c, v.angle0, v.toe)
   holdReach(skel, q, (f) => shoulders(skel, f), v, ['pelvis.ty', 'pelvis.tz'], 2)
   legsToward(skel, q, v.feet, [0, -1, 0])
   frontArms(skel, q, v)
@@ -234,14 +250,12 @@ const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
 function sideArms(skel: Skeleton, q: Float64Array, v: Plank) {
   const g = v.fists[v.work]!
   attachHand(skel, q, v.work, { pos: g.pos, axis: [0, 0, 1], palm: [v.work === 'r' ? 1 : -1, 0, 0], hand: g.hand }, { pole: elbowPole(skel, q, v.work, g), planeHint: 90 })
-  // free hand on the hip
+  // free arm straight up from the top shoulder, palm forward, elbow soft
   const free = other(v.work)
-  const f = fk(skel, q)
-  const hip = toWorld(skel, f, 'pelvis', v.hipLocal!)
-  const pelvis = f.rot[skel.seg.pelvis]
-  const down = qrot(pelvis, [free === 'l' ? -1 : 1, 0, 0])
-  const fingers = qrot(pelvis, [0, -0.45, 0.9])
-  attachHand(skel, q, free, { pos: hip, axis: qrot(pelvis, [0, 1, 0]), palm: down, hand: handFacing(free, down, fingers) }, { pole: qrot(pelvis, [free === 'l' ? 1 : -1, 0.2, -0.6]), planeHint: 0 })
+  const pos = add(segPosOf(skel, fk(skel, q), `humerus_${free}`), [0, v.reach!, 0])
+  const hand = handFacing(free, [0, 0, 1], [0, 1, 0])
+  attachHand(skel, q, free, { pos, axis: qrot(hand, [0, 0, 1]), palm: [0, 0, 1], hand }, { pole: [0, 0, -1], planeHint: 90 })
+  return pos
 }
 
 /** hand with its palm facing `palm` and fingers along `fingers` */
@@ -280,21 +294,22 @@ export function sideContext(p: P, skel: Skeleton, tempo: Tempo): Plank {
   const elbow: V3 = [sh[0], ELBOW_Y, sh[2]]
   const wrist: V3 = [sh[0], ELBOW_Y - 0.004, sh[2] + lf]
   const fists: Plank['fists'] = { [work]: { pos: add(wrist, qrot(hand, skel.data.sites[`grip_${work}`].local)), hand, elbow } }
-  // free hand resting on the top hip (pelvis frame): above the iliac crest, a little forward
-  const hipLocal: V3 = [up === 'l' ? 0.188 : -0.188, 0.1, 0.02]
+  // raised arm: shoulder to grip site with the elbow a little soft
+  const z = fk(skel, zeroQ(skel))
+  const reach = REACH_SOFT * dist(segPosOf(skel, z, `humerus_${up}`), toWorld(skel, z, `hand_${up}`, skel.data.sites[`grip_${up}`].local))
   const rest = palmRest({ id: 'fists', sites: { [work]: fists[work]!.pos } })
-  const hipRest = palmRest({ id: 'hip', sites: { [up]: hipLocal } })
+  const upRest = palmRest({ id: 'reach', sites: { [up]: [0, 0, 0] } })
   const contacts: Contact[] = [
     ...footContacts(skel, feet.filter((ft) => ft.side === work), ['heel', 'ball']),
     { site: `grip_${work}`, kind: 'grip', target: { implement: rest.id, grip: work } },
-    { site: `grip_${up}`, kind: 'grip', target: { implement: hipRest.id, grip: up } },
+    { site: `grip_${up}`, kind: 'grip', target: { implement: upRest.id, grip: up } },
   ]
   const footX = segPosOf(skel, f, `foot_${work}`)[0]
   const matSpec = floorMat()
   // the mat runs along the body (X)
   const mat: ImplementPose = { id: matSpec.id, pos: [(footX + 0.15 + sh[0] - 0.25) / 2, 0, 0.12], rot: qaxis([0, 1, 0], Math.PI / 2) }
-  const setup: Setup = { implements: [matSpec, rest, hipRest], contacts, tempo, symmetric: false, tolerances: { body: { 'thigh_l / thigh_r': STACKED_THIGHS } } }
-  return { kind: 'plank', side: true, tempo, setup, work, angle0: r.x[1], upAbd: r.x[2], legReach: legReach(skel, f), shoulder: sh, feet, fists, rest, hipLocal, mat, guess: [q[skel.dof['pelvis.tx']], q[skel.dof['pelvis.ty']]] }
+  const setup: Setup = { implements: [matSpec, rest, upRest], contacts, tempo, symmetric: false, tolerances: { body: { 'thigh_l / thigh_r': STACKED_THIGHS } } }
+  return { kind: 'plank', side: true, tempo, setup, work, angle0: r.x[1], upAbd: r.x[2], legReach: legReach(skel, f), shoulder: sh, feet, fists, rest, reach, mat, guess: [q[skel.dof['pelvis.tx']], q[skel.dof['pelvis.ty']]] }
 }
 
 function sampleSide(skel: Skeleton, v: Plank, c: number): Pose {
@@ -304,8 +319,6 @@ function sampleSide(skel: Skeleton, v: Plank, c: number): Pose {
   const at = (f: FK) => segPosOf(skel, f, `humerus_${v.work}`)
   holdReach(skel, q, at, v, ['pelvis.tx', 'pelvis.ty'], 0, { dof: 'pelvis.list', base: q[skel.dof['pelvis.list']] })
   legsToward(skel, q, v.feet, [0, 0, 1])
-  sideArms(skel, q, v)
-  const f = fk(skel, q)
-  const hipPose: ImplementPose = { id: 'hip', pos: segPosOf(skel, f, 'pelvis'), rot: f.rot[skel.seg.pelvis] }
-  return { q, implements: [v.mat, { id: v.rest!.id, pos: [0, 0, 0], rot: qid() }, hipPose], contacts: v.setup.contacts }
+  const pos = sideArms(skel, q, v)
+  return { q, implements: [v.mat, { id: v.rest!.id, pos: [0, 0, 0], rot: qid() }, { id: 'reach', pos, rot: qid() }], contacts: v.setup.contacts }
 }

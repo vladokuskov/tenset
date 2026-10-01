@@ -57,6 +57,16 @@ describe('leg-raise template', () => {
     expect(zHi - zLo).toBeLessThan(0.2)
   })
 
+  it('802: straight legs together (the cue), ankles and knees close all through the rep', () => {
+    const b = get(802)
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      // centre to centre; the ankles are ~7 cm wide, so ~10 cm apart reads as legs together
+      expect(segPos(skel, f, 'foot_l')[0] - segPos(skel, f, 'foot_r')[0]).toBeLessThan(0.12)
+      expect(segPos(skel, f, 'tibia_l')[0] - segPos(skel, f, 'tibia_r')[0]).toBeLessThan(0.18)
+    }
+  })
+
   it('807 lying: legs from just off the mat to vertical, lower back pressed down', () => {
     const b = get(807)
     const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)

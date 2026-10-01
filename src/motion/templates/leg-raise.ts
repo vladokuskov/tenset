@@ -18,7 +18,7 @@ import { memo, type Setup, type Template } from './types.ts'
 // the total flexion between thighs and thorax (hip plus lumbar and thoracic flexion); research (motion-authoring):
 // hip 0 -> 90-110 deg. Hanging (802, 806): active hang from a pull-up bar, elbows ~6 deg, the body's centre of mass
 // held under the grips every frame (so the trunk moves back and leans a little as the legs rise, it never swings);
-// straight legs (knees soft) or knees bending to the param on the way up. Lying (807): supine on a mat, palms down
+// straight legs together (knees soft) or knees bending to the param on the way up. Lying (807): supine on a mat, palms down
 // beside the hips, straight legs from just off the mat to the param, the lower back pressed down (posterior tilt
 // growing towards the top, the lumbar spine flattening so the upper back stays still).
 
@@ -26,6 +26,11 @@ type P = ParamsOf<'leg-raise'>
 
 /** hanging: lean back of the thorax at the top, lumbar and thoracic flexion bottom -> top (pelvis curls up), deg */
 export const HANG = { lean: 6, lumbar: [0, 16], thorax: [0, 4], clavicle: 12, elbow: 6, neck: [0, 8] } as const
+/** straight-leg hanging raise: hips adducted so the legs hang together (ankles ~10 cm apart centre to centre, the
+ * cue), deg; the inner thighs then press together, which the capsules read as ~41 mm of overlap (THIGHS_TOGETHER) */
+const LEGS_TOGETHER = -4
+/** thigh-thigh soft-tissue allowance with the legs together, mm (the side plank's stacked-thigh allowance, a lead decision) */
+export const THIGHS_TOGETHER = 42
 /** total flexion at the dead hang (thighs a touch forward), knee flexion hanging for bent-knee raises, deg */
 const HANG_FLEX = 4
 const HANG_KNEE_BENT = 16
@@ -66,7 +71,7 @@ function hangBody(skel: Skeleton, q: Float64Array, p: P, c: number) {
     'thorax.flex': thorax,
     'neck.flex': lerp(HANG.neck[0], HANG.neck[1], c),
     'hip_*.flex': total - lumbar - thorax,
-    'hip_*.abd': 1,
+    'hip_*.abd': bent(p) ? 1 : LEGS_TOGETHER,
     'knee_*.flex': kneeAt(p, c, true),
     'ankle_*.df': ANKLE,
     'grip_*.close': 1,
@@ -129,6 +134,7 @@ function hangContext(p: P, skel: Skeleton, tempo: Tempo): Hang {
     tempo,
     symmetric: true,
     balance: { point: 'com', over: { implement: spec.id, sites: ['l', 'r'] }, tol: 0.02 },
+    ...(bent(p) ? {} : { tolerances: { body: { 'thigh_l / thigh_r': THIGHS_TOGETHER } } }),
   }
   return { kind: 'hang', tempo, setup, bar: spec, barPose, root: (c) => [ys(c), zs(c)] }
 }

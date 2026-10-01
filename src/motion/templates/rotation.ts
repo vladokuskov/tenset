@@ -14,12 +14,12 @@ import { memo, type Setup, type Template } from './types.ts'
 // Rotation: cable woodchop high to low (809). Standing side-on to a high pulley on the working side, wide stance,
 // both hands on a two-hand D-handle with long arms; hips and torso turn together from facing the stack to facing
 // away (pelvis yaw plus lumbar and thoracic rotation, ~110 deg of shoulder-line turn), the weight shifts to the far
-// leg, the near foot pivots on its toes (heel up, turning in) and the knees soften as the handle finishes outside
-// the far knee. Research (motion-authoring): trunk rotation +-30-45 deg, transverse-plane motion is author judgment.
+// leg, the near foot pivots on the ball (heel up, turning in, toes flat) and the knees soften as the handle finishes low outside
+// the far hip. Research (motion-authoring): trunk rotation +-30-45 deg, transverse-plane motion is author judgment.
 
 type P = ParamsOf<'rotation'>
 
-/** start (c = 0, arms up towards the pulley) and finish (c = 1, handle outside the far knee), deg / m, for side right */
+/** start (c = 0, arms up towards the pulley) and finish (c = 1, handle low outside the far hip), deg / m, for side right */
 export const CHOP = {
   yaw: [-26, 24],
   lumbarRot: [-8, 7],
@@ -30,17 +30,20 @@ export const CHOP = {
   /** pelvis shift towards the far foot, m; hip height drop, m */
   shift: [-0.05, 0.07],
   drop: [0.015, 0.075],
-  /** near foot: heel lift about the toes and inward turn at the finish, deg */
-  heel: 14,
+  /** near foot: heel lift about the ball and inward turn at the finish, deg */
+  heel: 20,
   pivot: 32,
 } as const
 /** elbow flexion of the straighter arm (long arms), deg */
-const LONG_ELBOW = 10
+const LONG_ELBOW = 6
 const GAP = 0.1
 /** wrist deviation band for the two-hand grip, deg: the chop turns the handle across the palms, so the hands use
  * nearly the whole range (joint limits -35..20) instead of settling obliquely */
 const DEV: [number, number] = [-33, 18]
 const CABLE_KG = 12
+/** the near foot's forefoot capsule (rigid, straight toes) dips this far into the floor at full heel lift while the
+ * drawn toes lie flat, mm (the push-up and plank FOOT_SINK, a lead decision) */
+export const FOOT_SINK = 22
 const TOE_OUT = 15
 /** pulley beside the lifter on the working side, m */
 const PULLEY_OUT = 1.0
@@ -50,6 +53,10 @@ const PULLEY_Z = 0.5
 /** where the arms point, world, side right (mirrored for left): up towards the pulley at the start, outside the far
  * knee at the finish, bowing forward through the middle of the chop */
 const AIM = { start: [-0.85, 2.15, 0.4] as V3, end: [0.8, 0.5, 0.55] as V3, bow: 0.32 }
+/** where the thumbs point along the bar, world, side right: up at the start, forwards, up and across towards the far
+ * side at the finish, so both wrists stay inside their deviation band and the bar sits square in both fists (a bar
+ * turned straight forwards needs more radial deviation of the lower hand than it has, and slides across its palm) */
+const THUMBS = { start: [-0.25, 1, 0] as V3, end: [1, 0.5, 1] as V3 }
 
 type Ctx = {
   tempo: Tempo
@@ -58,20 +65,20 @@ type Ctx = {
   /** +1 when the stack is on the right (mirror sign for left) */
   s: number
   feet: { near: FootTarget; far: FootTarget }
-  nearToe: V3
+  nearBall: V3
   handle: ImplementSpec
   pulley: V3
   hipY: number
   reach: (c: number) => number
 }
 
-/** near foot pivoting on its toes: heel lifted and turned in by the share `k` of the finish (the forefoot collision
- * capsule is rigid with the foot and covers the toes, so it pivots at the toe site rather than the ball) */
-function nearFoot(skel: Skeleton, ctx: Pick<Ctx, 'work' | 's' | 'nearToe' | 'feet'>, k: number): FootTarget {
+/** near foot pivoting on the ball: heel lifted and turned in by the share `k` of the finish, the toes flexed back
+ * so they stay flat (the forefoot collision capsule is rigid with the foot and dips into the floor, FOOT_SINK) */
+function nearFoot(skel: Skeleton, ctx: Pick<Ctx, 'work' | 's' | 'nearBall' | 'feet'>, k: number): FootTarget {
   const turn = qaxis([0, 1, 0], ctx.s * CHOP.pivot * k * DEG)
   const lift = qaxis([1, 0, 0], CHOP.heel * k * DEG)
   const rot = qmul(qmul(turn, ctx.feet.near.rot), lift)
-  return { side: ctx.work, rot, ankle: sub(ctx.nearToe, qrot(rot, skel.data.sites[`toe_${ctx.work}`].local)) }
+  return { side: ctx.work, rot, ankle: sub(ctx.nearBall, qrot(rot, skel.data.sites[`ball_${ctx.work}`].local)) }
 }
 
 function body(skel: Skeleton, q: Float64Array, ctx: Ctx, c: number) {
@@ -110,8 +117,9 @@ function handleAt(skel: Skeleton, q: Float64Array, ctx: Ctx, c: number, d: numbe
   const aim = add(lerpV(AIM.start, AIM.end, c), [0, 0, AIM.bow * Math.sin(Math.PI * c)])
   const dir = norm(sub([ctx.s * aim[0], aim[1], aim[2]], mid))
   const center = add(mid, scale(dir, d))
-  // thumbs up across the arms at the start, forwards at the finish (the bar swings down like an axe handle)
-  const up = norm(reject(norm([0, 1 - c, c]), dir))
+  // thumbs up across the arms at the start, forwards and across at the finish (the bar swings down like an axe handle)
+  const [a, b] = [THUMBS.start, THUMBS.end].map((t): V3 => [ctx.s * t[0], t[1], t[2]])
+  const up = norm(reject(add(scale(a, 1 - c), scale(b, c)), dir))
   const toward = norm(reject(sub(ctx.pulley, center), up))
   const rot = qfromBasis(up, toward)
   const grip = scale(add(ctx.handle.sites.l.pos, ctx.handle.sites.r.pos), 0.5)
@@ -150,12 +158,12 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     near: plantFoot(skel, work, [nearX, 0, 0], TOE_OUT),
     far: plantFoot(skel, far, [-nearX, 0, 0], TOE_OUT),
   }
-  const nearToe = add(feet.near.ankle, qrot(feet.near.rot, skel.data.sites[`toe_${work}`].local))
+  const nearBall = add(feet.near.ankle, qrot(feet.near.rot, skel.data.sites[`ball_${work}`].local))
   // standing hip height with straight-ish legs over the wide stance
   const hipY = skel.data.standingHeight + hipMidLocal(skel)[1] - 0.03
   const handle = twoHandHandle({ gap: GAP })
   const pulley: V3 = [-s * PULLEY_OUT, 2.0, PULLEY_Z]
-  const ctx: Ctx = { tempo, setup: undefined as unknown as Setup, work, s, feet, nearToe, handle, pulley, hipY, reach: () => 0.6 }
+  const ctx: Ctx = { tempo, setup: undefined as unknown as Setup, work, s, feet, nearBall, handle, pulley, hipY, reach: () => 0.6 }
   // arm reach at knots: the straighter arm nearly straight
   const cs = Array.from({ length: 13 }, (_, k) => 0.5 - 0.5 * Math.cos((Math.PI * k) / 12))
   const ds = cs.map((c) => root1d((d) => {
@@ -167,12 +175,12 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   ctx.reach = naturalCubic(cs, ds)
   const cable: Cable = { pulley, implement: handle.id, point: [0, 0, 0], kg: CABLE_KG }
   const contacts: Contact[] = [
-    { site: `toe_${work}`, kind: 'planted', target: { world: nearToe } },
+    { site: `ball_${work}`, kind: 'planted', target: { world: nearBall } },
     ...(['heel', 'ball'] as const).map((site): Contact => ({ site: `${site}_${far}`, kind: 'planted', target: { world: add(feet.far.ankle, qrot(feet.far.rot, skel.data.sites[`${site}_${far}`].local)) } })),
     { site: 'grip_l', kind: 'grip', target: { implement: handle.id, grip: 'l' } },
     { site: 'grip_r', kind: 'grip', target: { implement: handle.id, grip: 'r' } },
   ]
-  ctx.setup = { implements: [handle, stackSpec(pulley, [-s, 0, 0])], contacts, tempo, symmetric: false, cables: [cable] }
+  ctx.setup = { implements: [handle, stackSpec(pulley, [-s, 0, 0])], contacts, tempo, symmetric: false, cables: [cable], tolerances: { floor: FOOT_SINK } }
   return ctx
 })
 

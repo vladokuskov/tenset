@@ -24,7 +24,7 @@ export const KNEEL = { tilt: 16, lumbar: [-2, 28], thorax: [0, 32], neck: [4, 12
 const THIGH = 6
 const TOES = -55
 /** left fist (grip site) beside the temple, head frame, m: the strands pass either side of the head */
-const FIST: V3 = [0.125, 0.03, 0.06]
+const FIST: V3 = [0.14, 0.03, 0.035]
 /** rope grips below the carabiner, m */
 const ROPE_DROP = 0.4
 /** cable from the rope to the pulley at the top of the rep, deg from vertical towards the stack */
@@ -33,6 +33,8 @@ const CABLE_LEAN = 35
 const PULLEY_Y = 2.0
 /** stack load for the cable force, kg */
 const CABLE_KG = 20
+/** mat length and its margins past the knees (front) and the toes (back), m */
+const MAT = { length: 1.0, front: 0.18, back: 0.1 }
 
 export type Kneel = {
   kind: 'kneel'
@@ -114,11 +116,11 @@ export function kneelContext(skel: Skeleton, tempo: Tempo): Kneel {
   fists(skel, q)
   const hands = dist(toWorld(skel, fk(skel, q), 'hand_l', skel.data.sites.grip_l.local), toWorld(skel, fk(skel, q), 'hand_r', skel.data.sites.grip_r.local))
   const rope = coreRope({ half: hands / 2, drop: ROPE_DROP })
-  // mat under the knees and feet
+  // mat under the knees and feet, the knees well inside its front edge
   const knees = toWorld(skel, f, 'tibia_l', [0, 0, 0])
   const toes = toWorld(skel, f, 'foot_l', skel.data.sites.toe_l.local)
-  const matSpec = floorMat({ length: 0.95 })
-  const mat: ImplementPose = { id: matSpec.id, pos: [0, 0, (knees[2] + 0.12 + toes[2] - 0.08) / 2], rot: qid() }
+  const matSpec = floorMat({ length: MAT.length })
+  const mat: ImplementPose = { id: matSpec.id, pos: [0, 0, (knees[2] + MAT.front + toes[2] - MAT.back) / 2], rot: qid() }
   const contacts: Contact[] = [
     { site: 'grip_l', kind: 'grip', target: { implement: rope.id, grip: 'l' } },
     { site: 'grip_r', kind: 'grip', target: { implement: rope.id, grip: 'r' } },

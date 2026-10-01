@@ -181,8 +181,8 @@ function hex(c: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
 
-/** groups whose highlight also tints the shorts over them (glutes hide under the shorts) */
-export const SHORTS_TINT_GROUPS = new Set(['glute_max', 'glute_med'])
+/** groups whose highlight also tints the shorts over them (glutes and the iliopsoas hide under the shorts) */
+export const SHORTS_TINT_GROUPS = new Set(['glute_max', 'glute_med', 'hip_flexors'])
 
 /** Region states for the mask bake (b marks highlighted regions the shorts tint over); returns whether anything is highlighted. */
 export function fillHighlightLut(lut: DataTexture, meta: AtlasMeta, h: ResolvedHighlight) {

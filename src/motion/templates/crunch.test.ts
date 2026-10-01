@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts, segmentDistance } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, segmentDistance } from '../collide.ts'
 import { fk, segPos } from '../fk.ts'
 import { cableForce } from '../implements.ts'
 import { FLOOR_MAT } from '../implements/shared.ts'
@@ -77,6 +77,23 @@ describe('crunch template', () => {
       for (const s of placeParts(b.implements[k], pose)) for (const c of head) expect(capsuleSolidClearance(c, s)).toBeGreaterThan(-0.003)
       const { at } = cableForce(b.cables![0], pose)
       for (const c of head) expect(segmentDistance(c.a, c.b, at, b.cables![0].pulley).d - c.r).toBeGreaterThan(0)
+    }
+  })
+
+  it('801: fists beside the temples clear of the brow, knees and toes well inside the mat', () => {
+    const b = get(801)
+    const m = b.implements.findIndex((s) => s.id === 'mat')
+    const box = b.implements[m].parts[0] as Extract<(typeof b.implements)[number]['parts'][number], { shape: 'box' }>
+    for (let i = 0; i < b.frames; i++) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i)))
+      const head = caps.filter((c) => c.region === 'head')
+      // the closed fingers reach ~1-2 cm past the fist capsule: at 15 mm their tips showed through the brow
+      for (const side of ['l', 'r']) for (const h of caps.filter((c) => c.region === `hand_${side}`)) for (const c of head) expect(capsuleClearance(h, c)).toBeGreaterThan(0.025)
+      const z = frameImplements(b, i)[m].pos[2]
+      const front = z + box.size[2] / 2, back = z - box.size[2] / 2
+      const legs = caps.filter((c) => c.region.startsWith('shank_') || c.region.startsWith('foot_'))
+      expect(front - Math.max(...legs.map((c) => Math.max(c.a[2], c.b[2]) + c.r))).toBeGreaterThan(0.05)
+      expect(Math.min(...legs.map((c) => Math.min(c.a[2], c.b[2]) - c.r)) - back).toBeGreaterThan(0.02)
     }
   })
 

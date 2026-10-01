@@ -8,6 +8,6 @@ export const hold: SceneSpec = {
     if (params.kind === 'side_plank') return { az: -22, elev: 0.12 }
     return { az: -35, elev: 0.3 }
   },
-  // fists resting on the mat, the free hand resting on the hip
-  grip: (ctx) => (ctx.spec.kind === 'palm_rest' ? (ctx.spec.id === 'hip' ? 'hip-rest' : 'loose-fist') : undefined),
+  // fists resting on the mat, the side plank's raised hand open
+  grip: (ctx) => (ctx.spec.kind === 'palm_rest' ? (ctx.spec.id === 'reach' ? 'open' : 'loose-fist') : undefined),
 }
