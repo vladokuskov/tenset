@@ -30,7 +30,7 @@
     509
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "leg-curl",
     "params": {
       "implement": "machine",
@@ -53,7 +53,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Movement is correct: knee 6 to 118 deg, thigh pad on the lower thighs, roller behind the ankles, hands closed on the handles. The hamstrings only show as a strip under the thigh because the seat hides them. A low near-side camera (elev 0.08) is the best of the views I tried; rear three-quarter was worse. That camera trade-off is for the owner. | skeptic: The movement is correct: knee 6 to 118 deg, hip fixed at 90 deg, thigh pad on the distal thighs, roller behind the lower calves and Achilles, hands closed. The hamstring primary shows only as a thin strip under the thigh in both figure-503.png and figure-503-side.png, because the seat hides the posterior thigh. The camera trade-off is for the owner, as the reviewer said. | skeptic: Movement is correct: roller behind the lower calf at every phase (footR close-up), thigh pad on the thighs, hands wrapped on the seat handles (wristR close-up), pivot at the knee. But the primary hamstrings show only as a thin red strip under the thigh in every frame (hero/figure-503.png, side/figure-503-side.png), so the pulse barely reads. That camera trade-off is for the owner. Small extra: in the flexed frames (footR t=0, 0.875) the toes rest on or brush the front floor rail of the base."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Movement is correct: knee 6 to 118 deg, thigh pad on the lower thighs, roller behind the ankles, hands closed on the handles. The hamstrings only show as a strip under the thigh because the seat hides them. A low near-side camera (elev 0.08) is the best of the views I tried; rear three-quarter was worse. That camera trade-off is for the owner. | skeptic: The movement is correct: knee 6 to 118 deg, hip fixed at 90 deg, thigh pad on the distal thighs, roller behind the lower calves and Achilles, hands closed. The hamstring primary shows only as a thin strip under the thigh in both figure-503.png and figure-503-side.png, because the seat hides the posterior thigh. The camera trade-off is for the owner, as the reviewer said. | skeptic: Movement is correct: roller behind the lower calf at every phase (footR close-up), thigh pad on the thighs, hands wrapped on the seat handles (wristR close-up), pivot at the knee. But the primary hamstrings show only as a thin red strip under the thigh in every frame (hero/figure-503.png, side/figure-503-side.png), so the pulse barely reads. That camera trade-off is for the owner. Small extra: in the flexed frames (footR t=0, 0.875) the toes rest on or brush the front floor rail of the base."
   }
 }

@@ -35,7 +35,7 @@
     206
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "external-rotation",
     "params": {
       "implement": "cable",
@@ -58,7 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Upper arm pinned (under 1 deg drift), elbow at 90, a 90 deg arc from 38 internal to 52 external rotation, trunk and free arm still, pulley at elbow height resisting across the body, working-side cuff highlighted. New this pass: the cue's folded towel is drawn between the elbow and the ribs (dark gray roll, touching both, forearm clears it). The cable showing at the waist from behind is correct occlusion through the gaps, not a render bug. | skeptic: I disagree with 'ok'. The new towel_roll prop reads as a black pipe with flat cut ends, not a folded towel. It sticks out well past the arm on both sides (hero t=0 from behind, a black rod at the elbow; hand-R close-up t=0.5/0.625, a large dark cylinder much wider than the arm). That is an unusual new prop design the owner should judge. Also, from the rear camera the hand and handle are hidden behind the elbow at the internal-rotation end (hand-R t=0.5). The front view shows it fine. The tower top is clipped in every view, but the bases are in frame and approved 204 is clipped the same way, so I did not count that. The motion itself is right: humerus pinned, 90 deg elbow, cable across the body at elbow height."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Upper arm pinned (under 1 deg drift), elbow at 90, a 90 deg arc from 38 internal to 52 external rotation, trunk and free arm still, pulley at elbow height resisting across the body, working-side cuff highlighted. New this pass: the cue's folded towel is drawn between the elbow and the ribs (dark gray roll, touching both, forearm clears it). The cable showing at the waist from behind is correct occlusion through the gaps, not a render bug. | skeptic: I disagree with 'ok'. The new towel_roll prop reads as a black pipe with flat cut ends, not a folded towel. It sticks out well past the arm on both sides (hero t=0 from behind, a black rod at the elbow; hand-R close-up t=0.5/0.625, a large dark cylinder much wider than the arm). That is an unusual new prop design the owner should judge. Also, from the rear camera the hand and handle are hidden behind the elbow at the internal-rotation end (hand-R t=0.5). The front view shows it fine. The tower top is clipped in every view, but the bases are in frame and approved 204 is clipped the same way, so I did not count that. The motion itself is right: humerus pinned, 90 deg elbow, cable across the body at elbow height."
   }
 }

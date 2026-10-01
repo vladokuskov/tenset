@@ -43,7 +43,7 @@
     513
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hinge",
     "params": {
       "implement": "dumbbell",
@@ -68,7 +68,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: The movement is right: the free leg works as a lever in line with the trunk at the bottom, hips square, the stance knee at 20 deg, and only the stance side is highlighted. The camera exception (az -155, nearly behind) has a trade-off. I tried -120 and -138: they read the hinge better, but hide the dumbbell behind the stance leg at the top. The free foot hovers behind with the knee bent 45 deg at the top and never touches down. | skeptic: The movement is right: stance hip reaches 86 deg, stance knee 3 to 20 deg, the free leg ends about in line with the trunk (side t=0.5), pelvis list and rotation are 0 (hips square), and only the right stance side is highlighted. Two things for the owner. The camera exception az -155 is nearly a rear view. And at the bottom of the hero sheet (figure-510.png t=0.5 and 0.625) the left hand holding the dumbbell is hidden behind the stance leg, so the grip reads only at the top. The free foot also hovers with the knee bent 45 deg at the top. | skeptic: The movement reads well from the side (refute-visual-side/figure-510-side.png: free leg in line with the trunk at t=0.5, stance foot planted and still per refute-visual-foot/figure-510-foot_R.png). The az -155 hero is nearly a rear view, so the trunk is foreshortened and the hinge reads weakly (refute-visual/figure-510.png t=0.5). At the top (t=0, t=0.875) the loaded left hand is hidden behind the thigh and only the dumbbell head shows (refute-visual-wristL/figure-510-wrist_L.png). The free foot hovers far behind with a bent knee at the top, which looks like mid-stride. The camera exception needs the owner's call."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: The movement is right: the free leg works as a lever in line with the trunk at the bottom, hips square, the stance knee at 20 deg, and only the stance side is highlighted. The camera exception (az -155, nearly behind) has a trade-off. I tried -120 and -138: they read the hinge better, but hide the dumbbell behind the stance leg at the top. The free foot hovers behind with the knee bent 45 deg at the top and never touches down. | skeptic: The movement is right: stance hip reaches 86 deg, stance knee 3 to 20 deg, the free leg ends about in line with the trunk (side t=0.5), pelvis list and rotation are 0 (hips square), and only the right stance side is highlighted. Two things for the owner. The camera exception az -155 is nearly a rear view. And at the bottom of the hero sheet (figure-510.png t=0.5 and 0.625) the left hand holding the dumbbell is hidden behind the stance leg, so the grip reads only at the top. The free foot also hovers with the knee bent 45 deg at the top. | skeptic: The movement reads well from the side (refute-visual-side/figure-510-side.png: free leg in line with the trunk at t=0.5, stance foot planted and still per refute-visual-foot/figure-510-foot_R.png). The az -155 hero is nearly a rear view, so the trunk is foreshortened and the hinge reads weakly (refute-visual/figure-510.png t=0.5). At the top (t=0, t=0.875) the loaded left hand is hidden behind the thigh and only the dumbbell head shows (refute-visual-wristL/figure-510-wrist_L.png). The free foot hovers far behind with a bent knee at the top, which looks like mid-stride. The camera exception needs the owner's call."
   }
 }

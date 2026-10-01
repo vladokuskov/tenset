@@ -33,7 +33,7 @@
     809
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hold",
     "params": {
       "kind": "pallof_press",
@@ -59,7 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Pallof press is correct: side-on to a chest-height pulley, the handle presses straight out to about 10 deg of elbow flexion with a pause at arm's length, and the hips and shoulders stay square (trunk rotation under 0.5 deg). Obliques are highlighted on the working side only. Minor because the column top is clipped at the frame edge with the bases in frame, the same trade-off as approved 719 and 407. | skeptic: The anti-rotation is correct. pelvis, lumbar and thorax rotation are exactly 0 in all frames, the handle path is straight out along +z (0.309 to 0.667 m) at sternum height, and the stack lifts on the press-out. The column top is clipped with the bases in frame (reviewer's point, same trade-off as 719 and 407). Also, the far arm is not long at the press-out: elbow_l.flex is 31 deg at frames 0-10 while elbow_r is 10. The cue asks for 'long arms', and the press-out pause is only the default 0.5 s top pause. | skeptic: I agree with minor. The column top is clipped at the frame edge with the bases in frame (hero/figure-808.png, row 1 top), the same trade-off as approved 719 and 407. The movement is correct: pulley and handle at lower-chest level, straight press-out, trunk square, stack lifts slightly on the press-out as it should, two-hand grip closed on the D-handle (hands/figure-808-wrist_R.png), feet flat and still."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Pallof press is correct: side-on to a chest-height pulley, the handle presses straight out to about 10 deg of elbow flexion with a pause at arm's length, and the hips and shoulders stay square (trunk rotation under 0.5 deg). Obliques are highlighted on the working side only. Minor because the column top is clipped at the frame edge with the bases in frame, the same trade-off as approved 719 and 407. | skeptic: The anti-rotation is correct. pelvis, lumbar and thorax rotation are exactly 0 in all frames, the handle path is straight out along +z (0.309 to 0.667 m) at sternum height, and the stack lifts on the press-out. The column top is clipped with the bases in frame (reviewer's point, same trade-off as 719 and 407). Also, the far arm is not long at the press-out: elbow_l.flex is 31 deg at frames 0-10 while elbow_r is 10. The cue asks for 'long arms', and the press-out pause is only the default 0.5 s top pause. | skeptic: I agree with minor. The column top is clipped at the frame edge with the bases in frame (hero/figure-808.png, row 1 top), the same trade-off as approved 719 and 407. The movement is correct: pulley and handle at lower-chest level, straight press-out, trunk square, stack lifts slightly on the press-out as it should, two-hand grip closed on the D-handle (hands/figure-808-wrist_R.png), feet flat and still."
   }
 }

@@ -39,7 +39,7 @@
     408
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "lunge",
     "params": {
       "implement": "dumbbell",
@@ -63,7 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: The motion is clean: the right foot steps forward into a 90/90 lunge and pushes back home. It is still an in-place forward lunge standing in for a walking lunge, because a fixed camera and a seamless seam cannot show travel. Cue 3 said the back leg comes through, which the loop contradicts, so I changed it to \"Push through the front foot to rise out of each step\" (test:cues passes). The owner should judge whether this reads as walking lunges. | skeptic: The movement is clean: front knee 102 deg, rear knee 89 deg, trunk 8.4 deg, front knee 24 mm outside the foot line, COP 242 mm at the bottom (front midfoot z 546). The COM moves ahead of the stance foot while stepping forward (frames 24-32, up to 25 cm past the stance ball), as a real forward lunge does. It is still a forward lunge that pushes back to the start, not a walking lunge: params say travel: true, the loop never brings the rear leg through, and only the right leg ever leads. The owner has to decide whether this reads as walking lunges. The rewritten cue 3 now matches the loop. | skeptic: Clean in-place forward lunge (side t=0.25 step forward, 0.5 is a 90/90 bottom, 0.875 home). At 480 px it reads almost the same as 409 at the bottom (compare hero/figure-409.png and hero/figure-411.png, t=0.5-0.625). The only difference is which way the foot steps, so it does not read as walking lunges. The owner has to judge the stand-in. The rewritten cue 3 is consistent with the loop."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: The motion is clean: the right foot steps forward into a 90/90 lunge and pushes back home. It is still an in-place forward lunge standing in for a walking lunge, because a fixed camera and a seamless seam cannot show travel. Cue 3 said the back leg comes through, which the loop contradicts, so I changed it to \"Push through the front foot to rise out of each step\" (test:cues passes). The owner should judge whether this reads as walking lunges. | skeptic: The movement is clean: front knee 102 deg, rear knee 89 deg, trunk 8.4 deg, front knee 24 mm outside the foot line, COP 242 mm at the bottom (front midfoot z 546). The COM moves ahead of the stance foot while stepping forward (frames 24-32, up to 25 cm past the stance ball), as a real forward lunge does. It is still a forward lunge that pushes back to the start, not a walking lunge: params say travel: true, the loop never brings the rear leg through, and only the right leg ever leads. The owner has to decide whether this reads as walking lunges. The rewritten cue 3 now matches the loop. | skeptic: Clean in-place forward lunge (side t=0.25 step forward, 0.5 is a 90/90 bottom, 0.875 home). At 480 px it reads almost the same as 409 at the bottom (compare hero/figure-409.png and hero/figure-411.png, t=0.5-0.625). The only difference is which way the foot steps, so it does not read as walking lunges. The owner has to judge the stand-in. The rewritten cue 3 is consistent with the loop."
   }
 }

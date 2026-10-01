@@ -41,7 +41,7 @@
     206
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "rear-raise",
     "params": {
       "implement": "cable",
@@ -65,7 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Crossed cables resist through the whole rep, arms go from crossed in front of the chest to in line with the shoulders, elbows soft, balance 4.7 mm. Minor because from straight behind the hands at the end position overlap the far tower columns and read as gripping them, and the figure is small. Wider towers (tried 1.28 m) still touch the columns and shrink the figure further. | skeptic: The movement is right. It goes from plane 88 (hands straight ahead, cables crossed, each held in the opposite hand as the cue says) to plane -2 at elev 86-88, elbow fixed at 15, balance 4.7 mm. The hero from behind (t=0, t=0.875) projects the hands onto the far tower columns, so they read as gripping the uprights. The top-view sheet shows the pulleys well ahead of the hands, so this is projection only. The stretch is modest (hands only in front of the shoulders, not crossed past the midline), which is acceptable. | skeptic: Confirmed. With the camera straight behind, both hands at the end position (hero t=0 and t=0.875) sit exactly over the tower columns, so the lifter reads as gripping the columns. The hand-R close-up at t=0 shows the handle directly in front of the column upright. The figure is also small. The side view shows the towers about 1 m in front of the lifter, which is a legitimate setup. The movement and cable resistance are right."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Crossed cables resist through the whole rep, arms go from crossed in front of the chest to in line with the shoulders, elbows soft, balance 4.7 mm. Minor because from straight behind the hands at the end position overlap the far tower columns and read as gripping them, and the figure is small. Wider towers (tried 1.28 m) still touch the columns and shrink the figure further. | skeptic: The movement is right. It goes from plane 88 (hands straight ahead, cables crossed, each held in the opposite hand as the cue says) to plane -2 at elev 86-88, elbow fixed at 15, balance 4.7 mm. The hero from behind (t=0, t=0.875) projects the hands onto the far tower columns, so they read as gripping the uprights. The top-view sheet shows the pulleys well ahead of the hands, so this is projection only. The stretch is modest (hands only in front of the shoulders, not crossed past the midline), which is acceptable. | skeptic: Confirmed. With the camera straight behind, both hands at the end position (hero t=0 and t=0.875) sit exactly over the tower columns, so the lifter reads as gripping the columns. The hand-R close-up at t=0 shows the handle directly in front of the column upright. The figure is also small. The side view shows the towers about 1 m in front of the lifter, which is a legitimate setup. The movement and cable resistance are right."
   }
 }

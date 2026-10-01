@@ -39,7 +39,7 @@
     405
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "smith",
@@ -65,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise)."
   }
 }

@@ -37,7 +37,7 @@
     212
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-press",
     "params": {
       "implement": "machine",
@@ -63,7 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Motion is right: handles go from chin level (elbow 118) up an arc about a pivot behind the seat to elevation 156 with elbow 12 (machine stop), back on the pad, hands closed on the handles, all bases in frame. The owner should judge the prop, a new generic lever machine: its lever arms pivot at chin height behind the seat, so in side view they run past the head (the 3/4 view reads fine and the gates find no penetration). | skeptic: I agree with the reviewer. The motion is right: elbow 118 to 12, back pad contact at -10 mm (trunk/pad#61 and #67), pelvis on the seat. I checked a crop of the side view at u 0.5: the thighs sit about 36 mm above the seat pad but the buttocks are down, which is plausible because the knees are higher than the hips. The prop is a new lever machine whose arms pivot at chin height behind the seat. In the side view (figure-208-side.png, u 0.5-0.625) the lever runs straight across the head, and the owner has not seen this design. | skeptic: The motion and contacts are right: back on the pad, handles closed, bottom at chin level, lockout overhead, all floor parts in frame. The prop is new and the owner should judge it. In side view at t=0.5 to 0.75 (qa/out/F2/refute-visual/side/figure-208-side.png) the horizontal lever arms run right past the face at ear height and read as crossing the head. The front view shows they are outboard, and the gates find no penetration. The cam disk sits beside the head in the close-up (hands/figure-208-wrist_R.png t=0.5)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Motion is right: handles go from chin level (elbow 118) up an arc about a pivot behind the seat to elevation 156 with elbow 12 (machine stop), back on the pad, hands closed on the handles, all bases in frame. The owner should judge the prop, a new generic lever machine: its lever arms pivot at chin height behind the seat, so in side view they run past the head (the 3/4 view reads fine and the gates find no penetration). | skeptic: I agree with the reviewer. The motion is right: elbow 118 to 12, back pad contact at -10 mm (trunk/pad#61 and #67), pelvis on the seat. I checked a crop of the side view at u 0.5: the thighs sit about 36 mm above the seat pad but the buttocks are down, which is plausible because the knees are higher than the hips. The prop is a new lever machine whose arms pivot at chin height behind the seat. In the side view (figure-208-side.png, u 0.5-0.625) the lever runs straight across the head, and the owner has not seen this design. | skeptic: The motion and contacts are right: back on the pad, handles closed, bottom at chin level, lockout overhead, all floor parts in frame. The prop is new and the owner should judge it. In side view at t=0.5 to 0.75 (qa/out/F2/refute-visual/side/figure-208-side.png) the horizontal lever arms run right past the face at ear height and read as crossing the head. The front view shows they are outboard, and the gates find no penetration. The cam disk sits beside the head in the close-up (hands/figure-208-wrist_R.png t=0.5)."
   }
 }

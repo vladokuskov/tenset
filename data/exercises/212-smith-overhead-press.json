@@ -40,7 +40,7 @@
     208
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-press",
     "params": {
       "implement": "smith",
@@ -65,7 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Bar rides one vertical rail line slightly in front of the head, from chin height (elbow 142) to lockout (elbow 5, humerus 161 deg, in front). Head moves back as the bar passes the face. Hands closed on the bar. The whole tall Smith frame is in frame. The figure is small inside the tall frame, the same as the approved 407. The cues ('chin height') match what the loop shows. | skeptic: The motion itself is correct: bar on one vertical line just in front of the face, elbow 142 to 5, head moves back at the pass, grips closed, default tempo. The reviewer's reason for ok does not hold, though. The report says the small figure inside the tall frame is 'the same as the approved 407', but data/exercises/407 is still media.status 'card' and qa.motion 'pending', and PLAN.md says 407 waits for the owner. No Smith exercise is approved yet. 212 also brings a new family-specific 'tall-smith' prop (props/families/press-vertical-bodyweight.ts:49, whole: true) that differs from the Smith used on 407. In the hero (figure-212.png) the figure fills only about 55% of the frame height, against about 90% on 201. A new prop, Smith props that don't match across exercises and a framing trade-off with no approved precedent should go to the owner, not ship automatically."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Bar rides one vertical rail line slightly in front of the head, from chin height (elbow 142) to lockout (elbow 5, humerus 161 deg, in front). Head moves back as the bar passes the face. Hands closed on the bar. The whole tall Smith frame is in frame. The figure is small inside the tall frame, the same as the approved 407. The cues ('chin height') match what the loop shows. | skeptic: The motion itself is correct: bar on one vertical line just in front of the face, elbow 142 to 5, head moves back at the pass, grips closed, default tempo. The reviewer's reason for ok does not hold, though. The report says the small figure inside the tall frame is 'the same as the approved 407', but data/exercises/407 is still media.status 'card' and qa.motion 'pending', and PLAN.md says 407 waits for the owner. No Smith exercise is approved yet. 212 also brings a new family-specific 'tall-smith' prop (props/families/press-vertical-bodyweight.ts:49, whole: true) that differs from the Smith used on 407. In the hero (figure-212.png) the figure fills only about 55% of the frame height, against about 90% on 201. A new prop, Smith props that don't match across exercises and a framing trade-off with no approved precedent should go to the owner, not ship automatically."
   }
 }

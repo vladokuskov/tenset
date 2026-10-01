@@ -30,7 +30,7 @@
     308
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "shrug",
     "params": {
       "implement": "barbell",
@@ -53,7 +53,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Same as 308: straight-up elevation, no rolling, bar in front of the thighs, and the near hand is visible. The primary highlight is limited to the atlas's small upper-traps collar, so the owner should judge whether the shrug reads at 480 px. | skeptic: Same as 308. Straight-up elevation from -3 to 26, protraction fixed, elbows 13 bent and still, bar rising 9 cm in front of the thighs, hands at x +-24 cm (just outside the thighs, matching the cue). The primary highlight is limited to the small upper-traps collar (review-figure/figure-314.png), so the owner should judge whether it reads at 480 px. | skeptic: Same as 308. The elevation goes straight up, the bar stays in front of the thighs with the hands just outside them (front/figure-314-front.png), and the near hand is closed (handR). The upper-traps highlight is only a small collar at the neck from the hero camera, so the primary barely reads at 480 px. The far hand is hidden by the body in the hero view. There are faint floor shadow smudges from the plates (hero t=0, lower left)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Same as 308: straight-up elevation, no rolling, bar in front of the thighs, and the near hand is visible. The primary highlight is limited to the atlas's small upper-traps collar, so the owner should judge whether the shrug reads at 480 px. | skeptic: Same as 308. Straight-up elevation from -3 to 26, protraction fixed, elbows 13 bent and still, bar rising 9 cm in front of the thighs, hands at x +-24 cm (just outside the thighs, matching the cue). The primary highlight is limited to the small upper-traps collar (review-figure/figure-314.png), so the owner should judge whether it reads at 480 px. | skeptic: Same as 308. The elevation goes straight up, the bar stays in front of the thighs with the hands just outside them (front/figure-314-front.png), and the near hand is closed (handR). The upper-traps highlight is only a small collar at the neck from the hero camera, so the primary barely reads at 480 px. The far hand is hidden by the body in the hero view. There are faint floor shadow smudges from the plates (hero t=0, lower left)."
   }
 }

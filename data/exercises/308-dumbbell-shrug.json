@@ -30,7 +30,7 @@
     314
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "shrug",
     "params": {
       "implement": "dumbbell"
@@ -51,7 +51,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: The shrug is correct: the clavicles go from -3 to 26 deg with protraction fixed (no rolling), arms straight, and the dumbbells rise about 8 cm. But the atlas upper_traps region is a thin collar at the base of the neck, so the primary highlight and its pulse barely read from the rear camera, and the rise is subtle at 480 px. The owner should judge whether it reads. The atlas is not a family file. | skeptic: The shrug is correct. Clavicle elevation goes from -3 to 26 (research 0 -> ~25), protraction is fixed at -2 so there is no rolling, elbow 6 and still, and the dumbbells rise 9 cm (88 -> 97 cm) with a 2 s eccentric and 1 s concentric. But the only primary is upper_traps, and the atlas draws it as a thin collar at the neck base (review-figure/figure-308.png). The primary highlight and its pulse barely read from the rear camera, and the rise is about 25 px in the 480 px sheet. The owner should judge whether it reads. | skeptic: The shrug is correct. It goes straight up with no rolling, the shoulders visibly rise in front/figure-308-front.png (t=0 vs t=0.5), and the fists are closed on the handles (handR). But the only primary, upper_traps, shows as a thin red collar at the base of the neck from the az -140 hero (hero, all frames), so the highlight and its pulse barely read at 480 px. That's an atlas limitation, not something in the family's files, so the owner should judge it."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: The shrug is correct: the clavicles go from -3 to 26 deg with protraction fixed (no rolling), arms straight, and the dumbbells rise about 8 cm. But the atlas upper_traps region is a thin collar at the base of the neck, so the primary highlight and its pulse barely read from the rear camera, and the rise is subtle at 480 px. The owner should judge whether it reads. The atlas is not a family file. | skeptic: The shrug is correct. Clavicle elevation goes from -3 to 26 (research 0 -> ~25), protraction is fixed at -2 so there is no rolling, elbow 6 and still, and the dumbbells rise 9 cm (88 -> 97 cm) with a 2 s eccentric and 1 s concentric. But the only primary is upper_traps, and the atlas draws it as a thin collar at the neck base (review-figure/figure-308.png). The primary highlight and its pulse barely read from the rear camera, and the rise is about 25 px in the 480 px sheet. The owner should judge whether it reads. | skeptic: The shrug is correct. It goes straight up with no rolling, the shoulders visibly rise in front/figure-308-front.png (t=0 vs t=0.5), and the fists are closed on the handles (handR). But the only primary, upper_traps, shows as a thin red collar at the base of the neck from the az -140 hero (hero, all frames), so the highlight and its pulse barely read at 480 px. That's an atlas limitation, not something in the family's files, so the owner should judge it."
   }
 }

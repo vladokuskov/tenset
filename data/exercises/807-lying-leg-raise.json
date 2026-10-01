@@ -35,7 +35,7 @@
     805
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "leg-raise",
     "params": {
       "posture": "lying_supine",
@@ -58,7 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. repaired: see repair report | skeptic after repair: The motion is correct. Straight legs go from 14 deg off the mat to vertical (hip flexion 13.7 to 79.7 plus 10 deg of posterior pelvic tilt, total 90). The lower back flattens as the legs rise (lumbar 3 to 13), so it presses down as the cue says. Palms rest flat beside the hips and the tempo reads (review-figure/figure-807-side.png, t=0.5 bottom, t=0.875 top). The hero and side sheets agree at every t. Small cosmetic point: the head rests with the chin slightly up (neck at the -8 deg clamp), the same helper the floor crunch uses (scratchpad r2-807-head-t5.png). The open item is the same new hip-flexor shorts tint as 802 and 806 (red slash on the shorts at t=0.5 to 0.75). It is a pending lead decision and the owner has not seen it. | skeptic after repair: The motion reads correctly. Hero and side sheets: straight legs go from just above the mat (t=0.5) to vertical (t=0), the back and seat stay on the mat, the hands are flat beside the hips, and the mat is fully in frame. The posterior pelvic tilt at the top is subtle and hard to see at 480 px (feet/figure-807-side-upperleg01_R.png, t=0 compared with t=0.5). The hip-flexor tint shows as a red zig-zag squiggle on the shorts at t=0.375 to 0.75 and looks like an artifact, not a muscle. The owner should judge the tint."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. repaired: see repair report | skeptic after repair: The motion is correct. Straight legs go from 14 deg off the mat to vertical (hip flexion 13.7 to 79.7 plus 10 deg of posterior pelvic tilt, total 90). The lower back flattens as the legs rise (lumbar 3 to 13), so it presses down as the cue says. Palms rest flat beside the hips and the tempo reads (review-figure/figure-807-side.png, t=0.5 bottom, t=0.875 top). The hero and side sheets agree at every t. Small cosmetic point: the head rests with the chin slightly up (neck at the -8 deg clamp), the same helper the floor crunch uses (scratchpad r2-807-head-t5.png). The open item is the same new hip-flexor shorts tint as 802 and 806 (red slash on the shorts at t=0.5 to 0.75). It is a pending lead decision and the owner has not seen it. | skeptic after repair: The motion reads correctly. Hero and side sheets: straight legs go from just above the mat (t=0.5) to vertical (t=0), the back and seat stay on the mat, the hands are flat beside the hips, and the mat is fully in frame. The posterior pelvic tilt at the top is subtle and hard to see at 480 px (feet/figure-807-side-upperleg01_R.png, t=0 compared with t=0.5). The hip-flexor tint shows as a red zig-zag squiggle on the shorts at t=0.375 to 0.75 and looks like an artifact, not a muscle. The owner should judge the tint."
   }
 }

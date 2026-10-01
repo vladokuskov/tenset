@@ -38,7 +38,7 @@
     107
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "push-up",
     "params": {
       "elevation": "floor",
@@ -62,7 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Plank is rigid, hands under the shoulders, elbow flare about 28 deg at the bottom, chest a fist off the floor, palms flat, toes turned under. The plus raises the thorax about 5 cm between the shoulder blades, but it is blended into the second half of the concentric instead of coming after lockout. At 480 px it reads only subtly against the cue 'Press up, then push the floor away'. Starting the plus later (c 0.6 or 0.7) fails the elbow jerk gate, so I left it as is. Serratus (primary) is visible on the ribs in side view, less so in the hero. | skeptic: I agree with the reviewer. The plank is rigid, flare is about 28 deg, and serratus is primary per the record. The plus is blended into the concentric and only reads as a small rise of the thorax at 480 px (figure-106-side.png, u 0.875 to 0), so the loop only partly shows cue 3 ('then push the floor away to spread your shoulder blades'). Serratus is hard to see in the hero. | skeptic: The plank, hand stack, depth and palms are right. The scapular protraction 'plus' is hard to see at 480 px. In hero and side, t=0 and t=0.875 look almost the same as the t=0.25 lockout, and there is no separate push-away after the arms are straight. So the cue 'Press up, then push the floor away to spread your shoulder blades' is only weakly shown, and that is the variant's whole point. Serratus (primary) reads on the ribs in side view and only faintly in the hero."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Plank is rigid, hands under the shoulders, elbow flare about 28 deg at the bottom, chest a fist off the floor, palms flat, toes turned under. The plus raises the thorax about 5 cm between the shoulder blades, but it is blended into the second half of the concentric instead of coming after lockout. At 480 px it reads only subtly against the cue 'Press up, then push the floor away'. Starting the plus later (c 0.6 or 0.7) fails the elbow jerk gate, so I left it as is. Serratus (primary) is visible on the ribs in side view, less so in the hero. | skeptic: I agree with the reviewer. The plank is rigid, flare is about 28 deg, and serratus is primary per the record. The plus is blended into the concentric and only reads as a small rise of the thorax at 480 px (figure-106-side.png, u 0.875 to 0), so the loop only partly shows cue 3 ('then push the floor away to spread your shoulder blades'). Serratus is hard to see in the hero. | skeptic: The plank, hand stack, depth and palms are right. The scapular protraction 'plus' is hard to see at 480 px. In hero and side, t=0 and t=0.875 look almost the same as the t=0.25 lockout, and there is no separate push-away after the arms are straight. So the cue 'Press up, then push the floor away to spread your shoulder blades' is only weakly shown, and that is the variant's whole point. Serratus (primary) reads on the ribs in side view and only faintly in the hero."
   }
 }

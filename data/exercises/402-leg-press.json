@@ -37,7 +37,7 @@
     405
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "machine",
@@ -65,7 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Re-check: the glute tint rule added a thin orange strip of shorts at the seat edge after approval."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Re-check: the glute tint rule added a thin orange strip of shorts at the seat edge after approval."
   }
 }

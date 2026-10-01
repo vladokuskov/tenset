@@ -35,7 +35,7 @@
     111
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "fly",
     "params": {
       "implement": "cable",
@@ -59,7 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: High-to-low fly reads right: split stance leaning into the high cables, soft fixed elbows (20 deg), hands meet in front of the hips, hands closed on the D-handles. Minor only because both towers must be in frame, so the figure is about 45% of the frame height, smaller than the approved cable loops. | skeptic: The movement holds up: open at elev 104 / plane -10 (10 deg behind the frontal plane), closed at elev 40 / plane 100 with the hands together in front of the hips (front sheet t=0, t=0.875), elbow fixed at 20, forward balance 21.8 mm, the 18 deg lean into the high pulleys reads, and the wrist close-up t=0-0.75 shows the hands closed on the D-handles. The only issue is the accepted small figure (about 45% of the frame height, both towers in frame). | skeptic: The movement is right. Split stance, soft fixed elbows, and the hands meet in front of the thighs (hero t=0/0.875; hand-R close-up shows the fingers closed on the D-handle). Feet are flat and still (foot close-up). It stays minor only because both towers must be in frame, so the figure is small, about 45% of the frame height (hero/figure-105.png). That is an accepted lead decision, and the owner should see it."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: High-to-low fly reads right: split stance leaning into the high cables, soft fixed elbows (20 deg), hands meet in front of the hips, hands closed on the D-handles. Minor only because both towers must be in frame, so the figure is about 45% of the frame height, smaller than the approved cable loops. | skeptic: The movement holds up: open at elev 104 / plane -10 (10 deg behind the frontal plane), closed at elev 40 / plane 100 with the hands together in front of the hips (front sheet t=0, t=0.875), elbow fixed at 20, forward balance 21.8 mm, the 18 deg lean into the high pulleys reads, and the wrist close-up t=0-0.75 shows the hands closed on the D-handles. The only issue is the accepted small figure (about 45% of the frame height, both towers in frame). | skeptic: The movement is right. Split stance, soft fixed elbows, and the hands meet in front of the thighs (hero t=0/0.875; hand-R close-up shows the fingers closed on the D-handle). Feet are flat and still (foot close-up). It stays minor only because both towers must be in frame, so the figure is small, about 45% of the frame height (hero/figure-105.png). That is an accepted lead decision, and the owner should see it."
   }
 }

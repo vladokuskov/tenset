@@ -29,7 +29,7 @@
     506
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hip-abduction",
     "params": {
       "implement": "cable",
@@ -55,7 +55,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Family review 2026-10-01 rated minor. review: Pelvis level, knee straight, glute med and max tinted on the working side only, stance hand on the grab handle. The pressure point now includes the cable pull and sits 41 mm inside the stance foot. For the owner: the stretch starts at 24 deg hip flexion (leg forward and across), which a level pelvis requires, and the stack top is clipped with the bases in frame. | skeptic: Pelvis is level (obliquity 0 in every frame), the trunk stays upright (about 5 deg forward, with no side lean), knees are 4/6 deg, the toes point forward at the top (heel-to-ball vector along +Z), the glute med/max are tinted on the right only, and the cable clears the stance leg (foot 68 mm, shank 119 mm). Things for the owner: this is the accepted lead decision. At the stretch (ph 0.5) the working heel is at z 209 mm, about 8 cm in front of the standing toes, with hip flexion 24, so the leg sweeps up diagonally out and back (flexion drops to 8 at the top) rather than straight out to the side. The stack top is clipped (bases in frame). | skeptic: Rear views (figure-514.png, back/figure-514-back.png) look right: pelvis level, working knee straight, left hand closed on the grab handle, tint only on the working glutes. The owner should judge three things. The stack top is clipped while the bases stay in frame. The right hand on the hip covers part of the red glute med tint in every hero frame. The stretch at t=0.5 has the foot across, in front of the stance foot (accepted lead decision on 24 deg hip flexion)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated minor. review: Pelvis level, knee straight, glute med and max tinted on the working side only, stance hand on the grab handle. The pressure point now includes the cable pull and sits 41 mm inside the stance foot. For the owner: the stretch starts at 24 deg hip flexion (leg forward and across), which a level pelvis requires, and the stack top is clipped with the bases in frame. | skeptic: Pelvis is level (obliquity 0 in every frame), the trunk stays upright (about 5 deg forward, with no side lean), knees are 4/6 deg, the toes point forward at the top (heel-to-ball vector along +Z), the glute med/max are tinted on the right only, and the cable clears the stance leg (foot 68 mm, shank 119 mm). Things for the owner: this is the accepted lead decision. At the stretch (ph 0.5) the working heel is at z 209 mm, about 8 cm in front of the standing toes, with hip flexion 24, so the leg sweeps up diagonally out and back (flexion drops to 8 at the top) rather than straight out to the side. The stack top is clipped (bases in frame). | skeptic: Rear views (figure-514.png, back/figure-514-back.png) look right: pelvis level, working knee straight, left hand closed on the grab handle, tint only on the working glutes. The owner should judge three things. The stack top is clipped while the bases stay in frame. The right hand on the hip covers part of the red glute med tint in every hero frame. The stretch at t=0.5 has the foot across, in front of the stance foot (accepted lead decision on 24 deg hip flexion)."
   }
 }
