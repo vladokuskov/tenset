@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules } from '../collide.ts'
-import { fk, segPos, sitePos } from '../fk.ts'
+import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import { loopDuration } from '../timing.ts'
@@ -92,8 +92,15 @@ describe('lunge template', () => {
         if (frameQ(b, i)[skel.dof['knee_r.flex']] < 30 || heel[1] > (id === 410 ? 0.455 : 0.005)) continue
         // lateral distance of the knee from the heel-toe line, in the floor plane
         const [dx, dz] = [toe[0] - heel[0], toe[2] - heel[2]]
-        const off = Math.abs((knee[0] - heel[0]) * dz - (knee[2] - heel[2]) * dx) / Math.hypot(dx, dz)
-        expect(off, `${id} @${i}`).toBeLessThan(0.045)
+        // + inside (towards the midline), - outside the foot
+        const off = ((knee[0] - heel[0]) * dz - (knee[2] - heel[2]) * dx) / Math.hypot(dx, dz)
+        if (id !== 410) expect(Math.abs(off), `${id} @${i}`).toBeLessThan(0.045)
+        else {
+          // standing on the box foot the hip joint sits ~9 cm outside it (the centre of mass is over the foot), so the
+          // knee bending in the toes' plane lies outside the foot line; it never caves in towards the midline
+          expect(off, `${id} @${i}`).toBeGreaterThan(-0.105)
+          expect(off, `${id} @${i}`).toBeLessThan(0.015)
+        }
       }
     }
   })
@@ -150,20 +157,44 @@ describe('lunge template', () => {
     expect(b.limits?.['ankle_l.df']).toEqual([-70, 40])
   })
 
-  it('step-up: the working foot stays on the box, the other one steps down behind it and drives up past the box', () => {
+  it('step-up: both feet on the box at the top, the working foot stays there, the other one steps down behind it', () => {
     const b = get(410)
     const k = b.implements.findIndex((s) => s.kind === 'plyo_box')
     const boxTop = siteWorld(b.implements[k], frameImplements(b, 0)[k], 'top').pos[1]
     expect(boxTop).toBeCloseTo(0.45, 3)
     const f0 = fk(skel, frameQ(b, 0)), fb = fk(skel, frameQ(b, at(b, bottomU(b))))
-    expect(sitePos(skel, f0, 'heel_r')[1]).toBeCloseTo(boxTop, 2)
-    expect(Math.abs(sitePos(skel, fb, 'heel_l')[1])).toBeLessThan(0.005)
-    // top: standing tall on the box leg, the other knee driven up
+    // top: standing tall on the box with both feet (no knee drive)
+    for (const s of ['l', 'r']) expect(sitePos(skel, f0, `heel_${s}`)[1], s).toBeCloseTo(boxTop, 2)
     expect(dof(b, 0, 'knee_r.flex')).toBeLessThan(6)
-    expect(dof(b, 0, 'hip_l.flex')).toBeGreaterThan(60)
+    expect(dof(b, 0, 'hip_l.flex')).toBeLessThan(6)
+    // bottom: the trailing foot down behind the box, the box knee bent for a knee-height box
+    expect(Math.abs(sitePos(skel, fb, 'ball_l')[1])).toBeLessThan(0.005)
+    expect(sitePos(skel, fb, 'toe_l')[2]).toBeLessThan(siteWorld(b.implements[k], frameImplements(b, 0)[k], 'back').pos[2] - 0.05)
     const knee = dof(b, bottomU(b), 'knee_r.flex')
-    expect(knee).toBeGreaterThan(95)
-    expect(knee).toBeLessThan(115)
+    expect(knee).toBeGreaterThan(100)
+    expect(knee).toBeLessThan(120)
+  })
+
+  it('step-up: while the trailing foot is in the air the centre of mass stays over the box foot, fore-aft and sideways', () => {
+    const b = get(410)
+    const f0 = fk(skel, frameQ(b, 0))
+    let air = 0
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const caps = bodyCapsules(skel, f).filter((c) => c.region === 'foot_l')
+      const onBox = Math.abs(sitePos(skel, f, 'heel_l')[1] - sitePos(skel, f0, 'heel_l')[1]) < 0.005
+      const lifted = Math.min(...caps.map((c) => Math.min(c.a[1], c.b[1]) - c.r)) > 0.01 && !onBox
+      if (!lifted) continue
+      air++
+      const loads = ['l', 'r'].map((s) => ({ mass: 16, pos: sitePos(skel, f, `grip_${s}`) }))
+      const com = centerOfMass(skel, f, loads)
+      const heel = sitePos(skel, f, 'heel_r'), ball = sitePos(skel, f, 'ball_r')
+      expect(com[2], `@${i} fore-aft`).toBeGreaterThan(heel[2])
+      expect(com[2], `@${i} fore-aft`).toBeLessThan(ball[2])
+      // over the box foot's width (foot capsules about 96 mm wide)
+      expect(Math.abs(com[0] - (heel[0] + ball[0]) / 2), `@${i} sideways`).toBeLessThan(0.045)
+    }
+    expect(air).toBeGreaterThan(20)
   })
 
   it.each([

@@ -112,6 +112,8 @@ function sampleLying(u: number, skel: Skeleton, ctx: Ctx, v: Lying): Pose {
 
 /** ankle axis of the floor Nordic station, under the roller: the shins lie level on the kneeling pad */
 const NORDIC_ANKLE: V3 = [0, 0.145, -0.463]
+/** the ankle roller's pad sits this far into the shins kneeling upright: they press 4-5 mm deeper at the catch */
+const ROLLER_SINK = -0.007
 /** the kneecaps may press this far into the pad before the knees roll up onto them */
 const KNEE_PRESS = -0.012
 
@@ -178,7 +180,7 @@ function nordicContext(skel: Skeleton, tempo: Tempo): Ctx {
   const pad = restAgainst(legCaps, padBox([0, KNEEL_PAD_TOP - NORDIC.knee.thick / 2, axis[2] - 0.13], [NORDIC.knee.width, NORDIC.knee.thick, NORDIC.knee.depth]), [0, -1, 0], SINK)
   const kneePad: V3 = [0, pad.center[1] + pad.size[1] / 2, pad.center[2]]
   const along = axis[2] - 0.36
-  const roller = restAgainst(shins, { shape: 'cylinder', a: [-NORDIC.roller.half, axis[1] + 0.1, along], b: [NORDIC.roller.half, axis[1] + 0.1, along], r: NORDIC.roller.r, pad: true }, [0, 1, 0], SINK)
+  const roller = restAgainst(shins, { shape: 'cylinder', a: [-NORDIC.roller.half, axis[1] + 0.1, along], b: [NORDIC.roller.half, axis[1] + 0.1, along], r: NORDIC.roller.r, pad: true }, [0, 1, 0], ROLLER_SINK)
   const station = nordicStation({ kneePad, roller: [0, roller.a[1], along] })
 
   // knee roll per knee angle: the smallest lift that keeps the knees within KNEE_PRESS of the pad

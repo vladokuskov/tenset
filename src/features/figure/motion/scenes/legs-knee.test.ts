@@ -44,6 +44,10 @@ describe('legs-knee scenes', () => {
     expect(keys(512)).toEqual(expect.arrayContaining(['nordic-station', 'catch-mat']))
   })
 
+  it('lunges and the Nordic curl are seen from behind the right side: the working glute and the hamstrings face the camera', () => {
+    for (const id of [403, 409, 410, 411, 512]) expect(scene(id).hero.az, `${id}`).toBeLessThan(-100)
+  })
+
   it('highlights the leading right leg on the lunges, both legs on the machines', () => {
     for (const id of [403, 409, 410, 411]) expect(scene(id).highlight.side, `${id}`).toBe('r')
     for (const id of [404, 412, 503, 504, 512]) expect(scene(id).highlight.side, `${id}`).toBeUndefined()
