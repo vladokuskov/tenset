@@ -60,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Family review 2026-10-01 rated minor. repaired: see repair report | skeptic after repair: The pronated hands look open. In the wrist close-up (qa/out/F8/refute-v2-close-hands/figure-709-wrist_R.png, t=0.375 to 0.75), the fingers lie straight and flat over the handle and dumbbell head instead of wrapping around it. This shows at 480 px in the front sheet (refute-v2-front/figure-709-front.png, t=0.5 to 0.75): the hands read as flat palms pressing down on the dumbbells, not a closed overhand grip. The grip error gate passes (0.087 mm), so the hand is on target. The problem is the hand shape. The hero view hides the hands at the bottom behind the pad. The earlier fixes hold: the kneecap is inside the mat (side sheet, every phase), and the dumbbell now hangs clear of the pad at full flexion. Wrists go 51 to -49, the forearms are supported, and the extensors highlight."
   }
 }

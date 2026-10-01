@@ -55,6 +55,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Family review 2026-10-01 rated minor. review: Mechanics are right: knees at 4 deg, ankle -34 to 16, and the ball stays on the plate's lower lip in the foot close-up. For the owner: the figure is as small as in the approved 402 leg-press framing, so the heel travel is hard to read at 480 px. | skeptic: Mechanics are right: knees 4, ankle -34 to +16 (stretch within the research's 10-20), and the ball stays on the plate lip (review-close/figure-605-foot_R.png). In the hero (review-figure/figure-605.png) the feet are about 30 px tall and partly behind the plate edge and rails, so the heel travel, which is the whole point, barely reads at 480 px. The accepted 402 framing causes this. | skeptic: At 480 px the figure is small (figure-605.png), so the heel travel on the plate lip is hard to read. The foot close-up shows the ball on the lip, but the plate hides the heel at t=0.5 to 0.75. The hands match the approved 402 grip style (hand402/figure-402-wrist_R.png vs hand/figure-605-wrist_R.png)."
   }
 }

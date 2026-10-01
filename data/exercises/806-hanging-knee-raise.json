@@ -61,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Family review 2026-10-01 rated minor. repaired: see repair report | skeptic after repair: The motion is correct. Hip goes 4 to 90 deg plus 20 deg of spinal flexion, knees 16 to 90 deg, pelvis tilt to -26 (806 qa.json rom). The thighs finish about 20 deg above horizontal (hero t=0 and t=0.875), inside the 90 to 110 research range, and the pelvis curls up at the top, matching the 'Tilt your pelvis up' cue. The centre of mass stays under the grips (forward offset 0.2 mm), elbows are about 6 deg, nothing swings, and the bases are in frame. The only open item is the same new hip-flexor shorts tint as 802 (small red slashes on the shorts at t=0.5 to 0.75 in review-figure/figure-806.png). It is a pending lead decision and the owner has not seen it. | skeptic after repair: The motion is correct. Side sheet side/figure-806-side.png: the thighs rise about 20 deg above horizontal with the knees bent and the pelvis curled, the body stays still under the bar, and the bases are in frame. The only change is the hip-flexor tint, the same jagged red wedge on the shorts (hero t=0.375 to 0.75), which needs the owner's call like 802."
   }
 }

@@ -67,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Family review 2026-10-01 rated minor. review: Neutral-spine hinge over the 45 deg pad: hips 0 to 80, legs still, pad, roller and plate contacts sink 3 to 8 mm, lockout in line with the legs. Hamstrings, glutes and lower back are in red and read from the rear three-quarter view. The crossed arms sit physically stacked: the right forearm is one forearm-thickness in front of the chest, and moving it closer gives 32 mm forearm-on-forearm penetration. | skeptic: The hinge is right: rigid neutral trunk (lumbar and thorax fixed at 0, neck 6, head 4), hips 0 to 80, lockout in line with the legs, correct primaries. But at 480 px it does not read fully clean. In figure-505-side.png at t=0 and 0.875 the crossed hands hover in front of the chest instead of resting on the opposite shoulders, as the template comment says ('palms on the opposite shoulders'). At the bottom (hero t=0.5 and 0.625) the natural thoracic curve plus protracted clavicles (prot 8) and the crossed arms make the figure look curled, with the head tucked under, although the spine DOFs are neutral. A viewer may read it as a rounded back, which works against the 'long back' cue."
   }
 }

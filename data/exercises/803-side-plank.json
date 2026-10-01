@@ -35,7 +35,7 @@
     809
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hold",
     "params": {
       "kind": "side_plank",
@@ -58,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Auto-approved 2026-10-01 per owner sign-off rule: family review and two independent skeptics (biomechanics, visual) all rated ok."
   }
 }

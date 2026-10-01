@@ -66,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Family review 2026-10-01 rated minor. review: Correct pattern: facing away from the low pulley, the rope between the legs, hips 2 to 74 deg, full lockout. The wide rope V matches the approved 719 rope. The top of the cable stack is clipped (bases in frame, same as the approved cable curls). The hands stop in front of the knees at the bottom instead of passing between the thighs, so 'let your arms follow the rope through' is only partly shown. | skeptic: The pattern is right (facing away from the low pulley, hips 2 to 74 deg, knees 3 to 20 deg). But the signature 'arms follow the rope through' never happens. In figure-513-side.png at t=0.5 the fists stop in front of the knees and never pass between the thighs (CABLE_FOLLOW 0.6). At lockout (t=0) the whole body still leans about 10 deg forward (pelvis.tilt 9.8, ankle df 7.5) with the shoulders flexed about 20 deg, so the hands sit well in front of the groin and the 'stand tall' cue is only partly shown. The forward lean against an 18 kg cable is physically justified. The cable stack is clipped at the top, with bases in frame. | skeptic: The pattern is correct: the rope runs between the legs (refute-visual-front/figure-513-front.png), the stack rises at lockout, and the hands are closed on the rope ends (refute-visual-wrist/figure-513-wrist_R.png). At the bottom (t=0.5, t=0.625, hero and side) the hands stop in front of the knees instead of passing back between the thighs, so the cue 'let your arms follow the rope through' is only partly shown. The top of the cable stack is clipped, with the bases in frame (same precedent as the approved 407 and cable curls)."
   }
 }

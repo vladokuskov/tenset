@@ -62,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Family review 2026-10-01 rated minor. repaired: see repair report | skeptic after repair: The repair fixed the pivot foot and the finish grip. In feet/figure-809-foot_R.png at t=0, 0.125 and 0.875 the ball is planted, the heel is up and the toes are flat. At the finish both fists wrap the bar. The top of the chop (t=0.375 to 0.75) was not fixed. In hands-yaw/figure-809-wrist_R-yaw-60.png at t=0.5 and 0.625 the right fingers are splayed, with the D-handle rod passing between them. In hands-yaw/figure-809-wrist_L-yaw60.png at t=0.375 the fingers lie extended across the grip instead of wrapping it. In hands/figure-809-wrist_L.png at t=0.5 to 0.75 the upper hand's fingers point up past the end cap. Also at t=0.375 in the hero, the handle carabiner and cable end sit right at the chin (scratchpad refute-F9-visual/809-t375-hands.png). At 480 px the start grip still reads as holding (809-t5-hands.png), so this is minor, but it does not meet \"hands closed on handles\" across the loop, so I reject the repair agent's ok. Highlight (obliques primary, abs secondary), stance, and hips and torso turning together are all right."
   }
 }

@@ -44,7 +44,7 @@
     206
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "rear-raise",
     "params": {
       "implement": "dumbbell",
@@ -67,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Auto-approved 2026-10-01 per owner sign-off rule: family review and two independent skeptics (biomechanics, visual) all rated ok."
   }
 }
