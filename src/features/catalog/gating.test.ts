@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { activeExercises } from '../../data/catalog'
 import type { Exercise } from '../../domain/schema'
 import { motionIds } from '../figure/motion/library'
+import { ExerciseCardMedia } from './ExerciseCardMedia'
 import { ExerciseMedia } from './ExerciseMotion'
 import { showsMotion } from './media'
 
@@ -11,6 +12,8 @@ import { showsMotion } from './media'
 const render = (exercise: Exercise) => renderToStaticMarkup(createElement(ExerciseMedia, { exercise }))
 const CARD = 'Muscles worked by'
 const PLAYER = 'Position in the rep'
+const card = (exercise: Exercise, size: 'sm' | 'md') => renderToStaticMarkup(createElement(ExerciseCardMedia, { exercise, size }))
+const POSTER = '/media/posters/'
 
 describe('baked media gating', () => {
   const baked = activeExercises.filter((e) => motionIds.includes(e.id))
@@ -51,5 +54,17 @@ describe('baked media gating', () => {
     expect(showsMotion(unapproved)).toBe(true)
     expect(render(unapproved)).toContain(PLAYER)
     expect(render(noMotion)).not.toContain(PLAYER)
+  })
+
+  it('shows the baked poster on list and grid cards only where the motion may show', () => {
+    vi.stubEnv('DEV', false)
+    vi.stubEnv('PROD', true)
+    for (const size of ['sm', 'md'] as const) {
+      expect(card(approved, size)).toContain(`${POSTER}${approved.id}-`)
+      expect(card(unapproved, size)).not.toContain(POSTER)
+    }
+    expect(card({ ...noMotion, media: { ...noMotion.media, status: 'loop' } }, 'md')).not.toContain(POSTER)
+    vi.stubEnv('DEV', true)
+    expect(card(unapproved, 'md')).toContain(POSTER)
   })
 })

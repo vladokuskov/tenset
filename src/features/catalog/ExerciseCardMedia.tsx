@@ -4,7 +4,8 @@ import { cx } from '../../ui/cx'
 import { cropViewBox, MAP_HEIGHT, MAP_WIDTH, regionBounds, useAnatomy, type AnatomyView } from '../bodymap/anatomy'
 import { AnatomyFigure, type FigureVars } from '../bodymap/AnatomyFigure'
 import { tintVars } from '../bodymap/fills'
-import { cardView, equipmentGlyph, isCatalogExercise, type CardExercise } from './media'
+import { cardView, equipmentGlyph, isCatalogExercise, showsMotion, type CardExercise } from './media'
+import { posterUrl } from './posters'
 import { useRoles } from './useRoles'
 
 export type ExerciseCardMediaProps = {
@@ -89,10 +90,45 @@ function useBand(groups: string, minHeight: number): string | null {
 }
 
 /**
- * M1 card: the exercise's map view with primary muscles in the strong tint and secondary ones in the
- * light tint, plus an equipment glyph. Later the same slot shows the baked poster and loop.
+ * List and grid media: the baked poster when the exercise may show its motion (see showsMotion), otherwise the M1
+ * card, the exercise's map view with primary muscles in the strong tint and secondary ones in the light tint, plus
+ * an equipment glyph. The detail hero (lg) always uses the card; ExerciseMedia swaps in the live figure there.
  */
-export function ExerciseCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
+export function ExerciseCardMedia(props: ExerciseCardMediaProps) {
+  const poster = props.size !== 'lg' && showsMotion(props.exercise) ? posterUrl(props.exercise.id) : null
+  return poster ? <PosterMedia {...props} src={poster} /> : <MapCardMedia {...props} />
+}
+
+function PosterMedia({ exercise, size, className, src }: ExerciseCardMediaProps & { src: string }) {
+  const { icon: Glyph } = equipmentGlyph(exercise.equipment)
+  const label = equipmentLabel(exercise.equipment)
+  if (size === 'sm') {
+    return (
+      <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-md bg-white', className)} aria-hidden>
+        <img src={src} alt="" width={480} height={480} loading="lazy" decoding="async" className="block size-full object-cover" />
+      </div>
+    )
+  }
+  return (
+    <div className={cx('relative aspect-[4/5] overflow-hidden rounded-lg bg-white', className)}>
+      <img
+        src={src}
+        alt={`${exercise.name} demonstration, worked muscles highlighted. ${label}.`}
+        width={480}
+        height={480}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 block size-full object-contain"
+      />
+      <span className="glass absolute bottom-2 left-2 flex h-6 max-w-[calc(100%-1rem)] items-center gap-1 rounded-full py-0.5 pl-1.5 pr-2 text-[0.6875rem] text-ink-2 shadow-thumb">
+        <Glyph size={12} strokeWidth={2} aria-hidden className="shrink-0" />
+        <span className="truncate font-medium">{label}</span>
+      </span>
+    </div>
+  )
+}
+
+function MapCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
   const roles = useRoles(exercise)
   const heads = isCatalogExercise(exercise) ? exercise.heads : undefined
   const view = cardView(exercise, roles)

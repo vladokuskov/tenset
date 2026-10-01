@@ -6,7 +6,7 @@ import { ExerciseCardMedia } from './ExerciseCardMedia'
 import { primaryGroupNames } from './media'
 import { useIsCustomized, useRoles } from './useRoles'
 
-/** Grid card: M1 media, name and primary muscles. The whole card links to the detail screen. */
+/** Grid card: poster (or the M1 card until the motion is approved), name and primary muscles. The whole card links to the detail screen. */
 export function ExerciseCard({ exercise, className }: { exercise: Exercise; className?: string }) {
   const roles = useRoles(exercise)
   const customized = useIsCustomized(exercise)
