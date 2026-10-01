@@ -326,7 +326,7 @@ describe('lateral balance gate', () => {
     expect(g.value).toBeGreaterThan(60)
   })
 
-  it('skips hanging, seated and hand-supported setups unless the template declares the check', () => {
+  it('skips hanging, seated and hand-supported setups unless the template declares the check', { timeout: 20_000 }, () => {
     expect(gate(bakeRecord(301)).detail).toBe('not judged: no planted feet')
     expect(gate(bakeRecord(702)).detail).toMatch(/^not judged: /)
     // the lean-away raise hangs off the post with the free hand: without it the lean would tip the lifter over

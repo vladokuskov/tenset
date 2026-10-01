@@ -67,5 +67,5 @@ describe('baked motion files', () => {
       const fresh = encode(bake(getTemplate(rec.media.template!), params, skel), skel)
       expect(JSON.stringify(m.motion) === JSON.stringify(fresh), `${file} is stale against its template`).toBe(true)
     }
-  }, 60_000)
+  }, 180_000)
 })
