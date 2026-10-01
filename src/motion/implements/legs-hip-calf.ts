@@ -45,8 +45,7 @@ export function footBar(o: { id: string; kind: 'calf_machine' | 'seated_calf'; t
 
 /**
  * the standing machine's yoke in its own frame: origin between the shoulder pad bottoms, handles hang from its arms.
- * The pads are not marked padded so the template's girdle rest tolerance applies (a padded part always takes the pad
- * default); the drawn pads come from these boxes all the same.
+ * The shoulder pads are padded; the template's girdle rest raises their tolerance (a rest may raise a pad's).
  */
 export function calfYoke(o: { id?: string } = {}): ImplementSpec {
   const { pad, handle } = CALF_STANDING
@@ -54,7 +53,7 @@ export function calfYoke(o: { id?: string } = {}): ImplementSpec {
   const sites: Record<string, Site> = {}
   for (const s of [1, -1]) {
     const h = (-s * pad.roll * Math.PI) / 360
-    parts.push({ shape: 'box', center: [s * pad.x, pad.size[1] / 2, 0], size: pad.size, rot: [0, 0, Math.sin(h), Math.cos(h)] })
+    parts.push({ shape: 'box', center: [s * pad.x, pad.size[1] / 2, 0], size: pad.size, rot: [0, 0, Math.sin(h), Math.cos(h)], pad: true })
     parts.push(cyl([s * handle.x, handle.top, handle.dz], [s * handle.x, handle.bottom, handle.dz], handle.r))
     sites[s > 0 ? 'l' : 'r'] = { pos: [s * handle.x, (handle.top + handle.bottom) / 2, handle.dz], axis: [0, 1, 0] }
   }
@@ -166,10 +165,8 @@ export const STRAP_ABOVE_ANKLE = 0.085
 /**
  * The shared plyo box as a calf-raise step. The forefoot capsule is rigid with the foot while the toes extend flat on
  * the tread at the top of a raise, so the box is collided once, as this implement, where the template's rest tolerance
- * for the standing foot applies (the tread is not marked padded, which would override it); the drawn box does not
- * collide again.
+ * for the standing foot raises the rubber tread's; the drawn box does not collide again.
  */
 export function calfStep(o: { id?: string; height: number }): ImplementSpec {
-  const box = plyoBox(o)
-  return { ...box, kind: 'calf_step', parts: box.parts.map((p) => ({ ...p, pad: false })) }
+  return { ...plyoBox(o), kind: 'calf_step' }
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
-import { fk, sitePos } from '../fk.ts'
-import { siteWorld } from '../implements.ts'
+import { centerOfPressure, fk, sitePos } from '../fk.ts'
+import { cableForce, comWorld, siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -77,6 +77,35 @@ describe('hip-abduction template', () => {
         // pad centre on the named side of the knee
         const knee = fk(skel, frameQ(b, i)).pos[skel.seg.tibia_l]
         expect(Math.sign(pad.center[0] - knee[0])).toBe(out)
+      }
+    }
+  })
+
+  it('seated machine: the arms hang to the side handles, not reaching back behind the trunk', () => {
+    for (const id of [506, 507]) {
+      const b = get(id)
+      for (let i = 0; i < b.frames; i += 10) {
+        // handles at hip height 12 cm up had the elbows at 83 and the upper arms 61 deg up behind the trunk
+        expect(dof(b, i, 'elbow_l.flex')).toBeLessThan(70)
+        expect(dof(b, i, 'shoulder_l.elev')).toBeLessThan(55)
+      }
+    }
+  })
+
+  it('standing cable: the centre of pressure, cable pull included, stays well inside the stance foot sideways', () => {
+    for (const id of [514, 515]) {
+      const b = get(id)
+      for (let i = 0; i < b.frames; i += 3) {
+        const f = fk(skel, frameQ(b, i))
+        const impl = frameImplements(b, i)
+        const loads = b.implements.filter((s) => s.mass > 0).map((s) => ({ mass: s.mass, pos: comWorld(s, impl.find((x) => x.id === s.id)!) }))
+        const forces = (b.cables ?? []).map((c) => cableForce(c, impl.find((x) => x.id === c.implement)!))
+        const [x] = centerOfPressure(skel, f, loads, forces)
+        const foot = bodyCapsules(skel, f).filter((c) => c.region === 'foot_l')
+        const lo = Math.min(...foot.flatMap((c) => [c.a[0] - c.r, c.b[0] - c.r])), hi = Math.max(...foot.flatMap((c) => [c.a[0] + c.r, c.b[0] + c.r]))
+        // balancing the centre of mass alone left 515 on the inner edge of the foot (0.2 mm inside)
+        expect(x - lo, `${id} @${i}`).toBeGreaterThan(0.02)
+        expect(hi - x, `${id} @${i}`).toBeGreaterThan(0.02)
       }
     }
   })

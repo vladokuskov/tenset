@@ -6,7 +6,7 @@ export const hipAbduction: SceneSpec = {
     if (params.implement === 'machine') {
       // seated: the back pad hides the glutes from behind; a near-front three-quarter shows both knees travel with the
       // pads outside them and the outer hip (abduction), or looks down between the knees at the inner thighs (adduction)
-      return abduction ? { az: -28, elev: 0.32 } : { az: -24, elev: 0.36 }
+      return abduction ? { az: -52, elev: 0.45 } : { az: -24, elev: 0.36 }
     }
     // standing cable, right leg working: abduction from behind the working side so the glute med reads and the stack
     // stands clear on the far side; adduction from the front-left, the working inner thigh faces the camera

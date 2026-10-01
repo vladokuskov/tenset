@@ -1,6 +1,6 @@
 import { attachHand, legKinematics, plantFoot, root1d, writeLeg, type FootTarget } from '../constraints.ts'
 import { bodyCapsules, restAgainst } from '../collide.ts'
-import { centerOfMass, centerOfPressure, fk, localToWorld, segPos, sitePos, type FK } from '../fk.ts'
+import { centerOfPressure, fk, localToWorld, segPos, sitePos, type FK } from '../fk.ts'
 import { cableForce, comWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { ankleStrap, GRAB, grabHandle, HIP_MACHINE, hipArm, hipSeat, STRAP_ABOVE_ANKLE } from '../implements/legs-hip-calf.ts'
 import { add, clamp, DEG, lerp, neg, norm, qaxis, qfromBasis, qid, qmul, qrot, reject, scale, sub, type Quat, type V3 } from '../math.ts'
@@ -28,7 +28,7 @@ const CABLE = {
   // until the leg is ~15 deg out (flexion eased between c 0.2 and 0.8, over the floor-clearing angle everywhere)
   abduction: { abd: [-2, 34], flex: [24, 8], ease: [0.2, 0.8] },
   // the working foot finishes in front of the standing foot
-  adduction: { abd: [26, -4], flex: [10, 30], ease: [0, 1] },
+  adduction: { abd: [26, -2], flex: [10, 30], ease: [0, 0.85] },
 } as const
 const SEAT_KNEE = 80
 const SEAT_HIP: V3 = [0, 0.66, 0]
@@ -36,7 +36,7 @@ const SEAT_HIP: V3 = [0, 0.66, 0]
 const PAD_ALONG = 0.36
 const PAD_SINK = 0.008
 const CABLE_KG = 8
-/** the centre of mass sits over the inner half of the stance foot, m */
+/** the centre of pressure sits over the inner half of the stance foot, m */
 const MEDIAL = 0.015
 const STANCE_KNEE = 4
 const SWING_KNEE = 6
@@ -114,7 +114,7 @@ function machineContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const backRot = qfromBasis([1, 0, 0], neg(behind)) as [number, number, number, number]
   const backGuess = add(add(segPos(skel, f, 'pelvis'), scale(up, 0.36)), scale(behind, 0.2))
   const back = restAgainst(caps.filter((c) => c.region === 'trunk'), { shape: 'box', center: backGuess, size: HIP_MACHINE.back.size, rot: backRot, pad: true }, behind, -0.01)
-  const handles = { l: [0.3, SEAT_HIP[1] - 0.05, -0.07] as V3, r: [-0.3, SEAT_HIP[1] - 0.05, -0.07] as V3 }
+  const handles = { l: [0.3, SEAT_HIP[1] - 0.12, -0.08] as V3, r: [-0.3, SEAT_HIP[1] - 0.12, -0.08] as V3 }
   const seatSpec = hipSeat({ seat, back, handles })
   // hands on the side handles, left solved and mirrored
   setDofs(skel, q, { 'clavicle_*.prot': 2, 'clavicle_*.elev': 0, 'grip_*.close': 1 })
@@ -212,15 +212,15 @@ function standOn(skel: Skeleton, q: Float64Array, v: Cable, x: number, y: number
 }
 
 /**
- * Balance point: sideways the centre of mass (the hand on the machine takes the cable's sideways pull), forward the
- * centre of pressure with the cable pull
+ * Balance point: the centre of pressure with the cable pull, both ways (the grab handle is a light touch, so the body
+ * leans against the cable's sideways pull, as the lateral balance gate judges it)
  */
 function copOf(skel: Skeleton, q: Float64Array, v: Cable): [number, number] {
   const f = fk(skel, q)
   const sp = strapPose(skel, f, v.work, v.pulley)
   const { at, force } = cableForce({ pulley: v.pulley, implement: 'strap', point: [0, 0, 0], kg: CABLE_KG }, sp)
   const loads = [{ mass: v.strap.mass, pos: comWorld(v.strap, sp) }]
-  return [centerOfMass(skel, f, loads)[0], centerOfPressure(skel, f, loads, [{ at, force }])[1]]
+  return centerOfPressure(skel, f, loads, [{ at, force }])
 }
 
 /**
