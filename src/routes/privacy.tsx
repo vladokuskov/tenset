@@ -70,6 +70,15 @@ function PrivacyPage() {
           </p>
         </Section>
 
+        <Section title="Building a program with Claude">
+          <p className="px-1">
+            If you connect Claude to this site, Claude sends the program it drafts to this site's server, which checks it
+            and turns it into a share link. The program is handled in memory and not stored. This only happens when you
+            use that connection; the app itself never sends your programs anywhere. What you tell Claude is covered by
+            Anthropic's terms, not this page.
+          </p>
+        </Section>
+
         <Section title="Hosting">
           <p className="px-1">
             The app's files are served by Vercel Inc. as a processor on our behalf. To deliver them, Vercel handles

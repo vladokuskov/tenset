@@ -81,7 +81,7 @@ export default defineConfig({
   ],
   optimizeDeps: { entries: ['index.html'] },
   test: {
-    include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts', 'api/**/*.test.ts'],
     environment: 'node',
   },
 })

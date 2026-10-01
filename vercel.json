@@ -1,8 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/mcp.ts": {
+      "includeFiles": "data/{exercises,splits}/*.json"
+    }
+  },
   "rewrites": [
     {
-      "source": "/((?!assets/|media/|models/|anatomy/|icons/).*)",
+      "source": "/((?!api/|assets/|media/|models/|anatomy/|icons/).*)",
       "destination": "/index.html"
     }
   ],
@@ -33,6 +38,15 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         }
       ]
     },

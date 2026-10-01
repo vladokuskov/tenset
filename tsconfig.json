@@ -9,6 +9,9 @@
     },
     {
       "path": "./tsconfig.pipeline.json"
+    },
+    {
+      "path": "./api"
     }
   ]
 }

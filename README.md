@@ -2,7 +2,7 @@
 
 A phone-first, offline web app for planning a weekly gym program. Pick a split template or start blank, add exercises to each day, and a head-level body map shows which muscles each day and the whole week train. Every exercise is animated by our own procedural 3D figure.
 
-No accounts and no backend: programs live in the browser (localStorage), and share links carry the program in the URL fragment.
+No accounts and no backend: programs live in the browser (localStorage), and share links carry the program in the URL fragment. The one server piece is an optional, stateless MCP endpoint that lets Claude build share links (see below).
 
 Live: https://gym-builder-nine.vercel.app
 
@@ -30,6 +30,15 @@ Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js
 | Production build | `pnpm build` (fails if the service worker precache goes over 8 MiB) |
 | End-to-end tests (desktop and iPhone profiles) | `pnpm e2e` |
 
+## Use with Claude
+
+`api/mcp.ts` is a stateless MCP server (Streamable HTTP, JSON responses) at `https://gym-builder-nine.vercel.app/api/mcp`. It stores nothing. Claude looks up exercise ids, sends a program, and gets back a `/shared#...` link plus weekly sets per muscle group. Opening the link shows the usual preview with a Save button.
+
+- claude.ai (web, then also the mobile app): Settings, Connectors, Add custom connector, paste the URL. No auth.
+- Claude Code: `claude mcp add --transport http gym-builder https://gym-builder-nine.vercel.app/api/mcp`
+- Tools: `get_reference`, `search_exercises`, `list_splits`, `create_program`, `read_program` (turns a share link back into editable input).
+- Local check: `npx @modelcontextprotocol/inspector`, then connect to a preview deploy's `/api/mcp`.
+
 ## Media pipeline (build time only)
 
 The figure, motions, loops and posters are generated locally and committed; CI never renders. Rendering needs Playwright Chromium on the Metal GPU (the scripts check for it).
@@ -48,6 +57,7 @@ An exercise shows its animation in production only when its record has `media.st
 
 - Vercel deploys `main` automatically on every push. The build settings live in the Vercel dashboard (`pnpm build`, output `dist`).
 - `vercel.json` sets the Content-Security-Policy and security headers, a one-year immutable cache for hashed assets, posters and loops, no-cache for the app shell and service worker, and the SPA rewrite to `index.html`. The CSP e2e test reads the policy from it.
+- `api/mcp.ts` is built by Vercel's Node runtime from `api/tsconfig.json` (`rewriteRelativeImportExtensions` turns the `.ts` imports from `src/domain` into `.js`). It reads `data/exercises` and `data/splits` at runtime, so `vercel.json` lists them in `includeFiles`.
 - After a deploy, check the live headers with `curl -sI https://gym-builder-nine.vercel.app/exercise/chest-dip`.
 - The Vercel Hobby plan is for non-commercial use only.
 
