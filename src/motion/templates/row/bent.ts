@@ -11,7 +11,7 @@ import { elbowPole, gripContacts, lerp, mirrorArm, phases, PROT, reach, shoulder
 
 // Bent-over barbell row: hips hinged so the trunk sits at torsoAngle from vertical (45) with a neutral spine and soft
 // knees (~22 deg), both held still. The bar hangs from the protracted shoulders (elbows ~8 deg), then the scapulae
-// set back and the elbows drive the bar up to the upper abdomen, just under the lower ribs (elbow ~0 -> ~124 deg,
+// set back and the elbows drive the bar up to the lower stomach, at the shorts' waistband (elbow ~0 -> ~124 deg,
 // humerus to ~30-60 deg behind the trunk; research: elbow 0 -> 90-110, shoulder to 0..-30 extension; higher on the
 // ribs folds the elbow past 130 on this figure, lower lands on the hip crease). The bar path runs from under the
 // shoulders to the trunk; the ankles keep body + bar over the midfoot.
@@ -110,8 +110,7 @@ export function bentContext(p: P, skel: Skeleton, tempo: Tempo): Bent {
   }
   const dy = root1d((d) => elbowAt(d) - BOTTOM_ELBOW, 0.45, 0.75, { tol: 1e-6 }).x
   v.bottom = [0, sm0[1] - dy, sm0[2]]
-  // finish: the bar against the lower ribs, reached along the trunk's front normal (straight down from the ribs would
-  // land it on the belly of a 45 deg trunk)
+  // finish: the bar against the lower stomach, reached along the trunk's front normal
   const q1 = base(1, tilt)
   const pel1 = pelvisPos(skel, q1)
   const f1 = fk(skel, q1)

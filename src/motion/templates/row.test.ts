@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { fk, segPos, sitePos } from '../fk.ts'
+import { fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { add, angleBetween, dist, norm, qrot, RAD, scale, sub } from '../math.ts'
+import { zeroQ } from '../skeleton.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
@@ -108,6 +110,23 @@ describe('row template', () => {
       expect(range(b, (i) => frameQ(b, i)[skel.dof['pelvis.tilt']])).toBeLessThan(0.5)
       expect(range(b, (i) => frameQ(b, i)[skel.dof['pelvis.ty']])).toBeLessThan(0.01)
     }
+  })
+
+  it('barbell row: the bar finishes on the lower stomach, as cue 3 says (not the ribs)', () => {
+    const b = get(304)
+    const i = at(b, TOP)
+    const f = fk(skel, frameQ(b, i))
+    const rest = fk(skel, zeroQ(skel))
+    // the bar centre carried back into the standing pose through thorax1
+    const r = f.rot[skel.seg.thorax1]
+    const loc = qrot([-r[0], -r[1], -r[2], r[3]], sub(frameImplements(b, i)[0].pos, segPos(skel, f, 'thorax1')))
+    const y = localToWorld(skel, rest, 'thorax1', loc)[1]
+    // above the hip crease, below the costal margin (thorax1 origin)
+    expect(y).toBeGreaterThan(sitePos(skel, rest, 'hip_crease')[1] + 0.1)
+    expect(y).toBeLessThan(segPos(skel, rest, 'thorax1')[1])
+    const record = JSON.parse(readFileSync(new URL('../../../data/exercises/304-barbell-row.json', import.meta.url), 'utf8'))
+    expect(record.cues.some((c: string) => /stomach/.test(c))).toBe(true)
+    expect(record.cues.some((c: string) => /ribs/.test(c))).toBe(false)
   })
 
   it('seated cable rows lean a little forward at the stretch and finish upright, the trunk settling early', () => {
