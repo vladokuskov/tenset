@@ -7,7 +7,7 @@ import { dist, qconj, qrot, sub, type V3 } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { DEFAULT_TEMPO, loopDuration } from '../timing.ts'
 import { getTemplate, parseParams } from './index.ts'
-import { flareOf, minClear, solidOf } from './press-body.ts'
+import { armElevation, flareOf, forearmLean, forearmTilt, minClear, solidOf } from './press-body.ts'
 
 const skel = testSkeleton()
 const T = 'incline-press'
@@ -29,6 +29,8 @@ const inThorax = (b: Baked, u: number, p: V3) => {
   const { f } = pose(b, u)
   return qrot(qconj(f.rot[skel.seg.thorax2]), sub(p, f.pos[skel.seg.thorax2]))
 }
+/** the frames with the elbows folded past 60 deg, where the forearm's lean and the elbow position read */
+const folded = (b: Baked) => Array.from({ length: b.frames }, (_, i) => frameQ(b, i)).filter((q) => q[skel.dof['elbow_l.flex']] > 60).map((q) => fk(skel, q))
 const load = (b: Baked) => (b.params.implement === 'dumbbell' ? 'db_l' : 'bar')
 
 describe('incline-press template', () => {
@@ -125,8 +127,36 @@ describe('incline-press template', () => {
     }
   })
 
-  it('barbell and Smith flare the elbows to ~45 deg at the 1.4x grip (Green & Comfort 2007), dumbbells to 55', () => {
-    for (const [id, want] of [[103, 45], [109, 45], [102, 55]] as const) expect(Math.abs(flareOf(skel, pose(get(id), BOTTOM).f) - want), String(id)).toBeLessThan(2)
+  it('barbell and Smith flare the elbows to ~38 deg at the 1.4x grip, dumbbells to 40 (under 45: Green & Comfort 2007)', () => {
+    for (const [id, want] of [[103, 38], [109, 38], [102, 40]] as const) expect(Math.abs(flareOf(skel, pose(get(id), BOTTOM).f) - want), String(id)).toBeLessThan(2)
+  })
+
+  it.each([
+    [103, 37, 38],
+    [109, 36, 32],
+  ])('%s: mid-press the elbows stay off the ribs (upper arm >= %s deg from the trunk) and the forearm leans at most %s deg', (id, elev, lean) => {
+    // the frontal-only forearm hold pinned the elbows (103: 34.5 deg) with the forearm leaning ~35 deg towards the
+    // head; a J (103) or the fixed rail (109) keeps some lean, now split between the planes
+    const b = get(id)
+    for (const f of folded(b)) {
+      expect(armElevation(skel, f)).toBeGreaterThan(elev)
+      expect(forearmLean(skel, f)).toBeLessThan(lean)
+      expect(forearmTilt(skel, f)).toBeGreaterThan(-28)
+    }
+  })
+
+  it('dumbbells (102) keep the forearms at their touch lean the whole press, elbows opening steadily', () => {
+    // the forearm leaned ~38 deg towards the head mid-press (dumbbells beside the face) with the elbows at 35 deg
+    const b = get(102)
+    const { f: fb, impl } = pose(b, BOTTOM)
+    const k = b.implements.findIndex((s) => s.id === 'db_l')
+    const [lean0, elev0] = [forearmLean(skel, fb), armElevation(skel, fb)]
+    expect(lean0).toBeLessThan(21)
+    for (const f of folded(b)) {
+      expect(forearmLean(skel, f)).toBeLessThan(lean0 + 6)
+      expect(armElevation(skel, f)).toBeGreaterThan(elev0 - 2)
+    }
+    for (let i = 0; i < b.frames; i++) expect(frameImplements(b, i)[k].pos[0] - impl[k].pos[0]).toBeLessThan(0.1)
   })
 
   it('dumbbells (102) clear the chest at the bottom and converge over the shoulders without touching', () => {

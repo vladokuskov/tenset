@@ -8,20 +8,21 @@ import { add, lerp, norm, qid, scale, type V3 } from '../math.ts'
 import { zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { phaseAt, type Tempo } from '../timing.ts'
 import {
-  BACK_CAPS, flarePole, minClear, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, solidOf, solveLeftArm, trunkPose, wristSchedule,
-  type ArmRig, type Posture,
+  armElevation, BACK_CAPS, flareLean, forearmSag, forearmTilt, holdArm, holdFade, minClear, naturalCubic, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, solidOf,
+  solveLeftArm, trunkPose, wristSchedule, type ArmRig, type Posture,
 } from './press-body.ts'
 import type { ParamsOf } from './schemas.ts'
 import type { Setup } from './types.ts'
 
 // Bench press lying on a flat bench or reclined on an incline: implement driver. The body is still (feet planted,
 // butt and upper back on the pads with a moderate arch, scapulae retracted and depressed); the bar or the dumbbells
-// follow a J-curve from the chest to over the shoulders (Madsen & McLaughlin 1984): vertical near lockout, curving
-// towards the feet at the bottom, where most of the horizontal travel happens early in the press. Flat: touch on
-// the lower chest; incline: the touch point moves up the chest towards the clavicles. The arms are solved to the
-// grips each frame with the elbow pole set so the upper arm sits at `elbowFlare` from the torso (frontal-plane
-// abduction) at the bottom. Grip 1.0-1.7 x biacromial keeps abduction under ~45-75 deg (Larsen 2021; Green &
-// Comfort 2007). With the bar on the chest the elbows fold to ~135-150 deg: this rig's grip site sits mid-palm.
+// press back in a J-curve from the chest to over the shoulders (Madsen & McLaughlin 1984): vertical near lockout,
+// curving towards the feet at the bottom, where most of the horizontal travel happens early in the press; the descent
+// is a straight diagonal. Flat: touch on the lower chest; incline: the touch point moves up the chest towards the
+// clavicles. The arms are solved to the grips each frame with the elbow pole set so the upper arm sits at
+// `elbowFlare` from the torso (frontal-plane abduction) at the bottom. Grip 1.0-1.7 x biacromial keeps abduction
+// under ~45-75 deg (Larsen 2021; Green & Comfort 2007). With the bar on the chest the elbows fold to ~135-150 deg:
+// this rig's grip site sits mid-palm.
 
 export type PressParams = ParamsOf<'horizontal-press'> | ParamsOf<'incline-press'>
 
@@ -38,8 +39,13 @@ export const LOCK_ELBOW = 6
 const WRIST_EXT = 15
 /** touch point along the torso (thorax2 frame, y up the spine): flat = lower chest, incline = upper chest */
 export const TOUCH_Y = { flat: -0.05, incline: 0.04 }
-/** J-curve: fore-aft offset from lockout = full offset x (1 - h)^J_EXP at press height fraction h */
-const J_EXP = 2
+/**
+ * J-curve: fore-aft offset from lockout = full offset x (1 - h)^exp at press height fraction h. The bar comes down
+ * on a straight diagonal to the touch and presses back in the J (most of the travel early); a J on the way down
+ * too keeps the bar over the shoulders until the arms are half folded, with the elbows tucked at the ribs
+ */
+const J_EXP = { ecc: 1, con: 2 }
+export type Stroke = keyof typeof J_EXP
 /** the bar sinks this far into the chest at the touch (soft tissue), m */
 const BAR_SINK = 0.004
 /** flat bench: the seat's front edge sits this far past the hip joints so the thighs leave the bench there, m */
@@ -47,9 +53,11 @@ const SEAT_FRONT = 0.1
 const DB_KG = 18
 /** dumbbells: handle centres at lockout, |x| (inner heads ~4 cm apart), and their clearance off the chest and arms at the bottom */
 const DB_TOP_X = 0.17
+/** holdDumbbells: deg of forearm lean traded per cm of path offset */
+const DB_OFF = 0.5
 const DB_CLEAR = 0.012
-/** dumbbell handles at the bottom this far below the top of the chest (deeper takes the upper arm past ~40 deg of horizontal abduction), m */
-const DB_BELOW = 0.01
+/** dumbbell handles at the bottom this far below the top of the chest (level: deeper takes the upper arm past ~40 deg below the chest plane), m */
+const DB_BELOW = 0
 /** J-cups: the racked bar sits this far below and towards the head from the lockout, m */
 const RACK_DROP = 0.05
 const RACK_BACK = 0.1
@@ -71,7 +79,8 @@ export type BenchCtx = {
   /** bar centre or left dumbbell handle path: lockout, touch */
   top: V3
   bottom: V3
-  rig: ArmRig
+  /** load path and arm rig per stroke (the paths differ) */
+  strokes: Record<Stroke, { path: (c: number) => V3; rig: ArmRig }>
   fixed: ImplementPose[]
 }
 
@@ -121,8 +130,40 @@ function placeBody(skel: Skeleton, a: number, bench: ImplementSpec, pose: Implem
  * J-curve point at press height fraction h (0 touch, 1 lockout): the fore-aft offset goes early in the press, the
  * dumbbells' lateral offset late (they rise clear of the chest, then converge over the shoulders)
  */
-export function jCurve(top: V3, bottom: V3, h: number): V3 {
-  return [lerp(top[0], bottom[0], 1 - h * h), lerp(bottom[1], top[1], h), top[2] + (bottom[2] - top[2]) * (1 - h) ** J_EXP]
+export function jCurve(top: V3, bottom: V3, h: number, stroke: Stroke = 'con'): V3 {
+  return [lerp(top[0], bottom[0], 1 - h * h), lerp(bottom[1], top[1], h), top[2] + (bottom[2] - top[2]) * (1 - h) ** J_EXP[stroke]]
+}
+
+/**
+ * Dumbbells are free to move sideways, so their path can keep the forearms at their touch lean (about vertical) the
+ * whole way up, the elbows opening steadily to lockout, instead of the barbell's trade-off (holdArm). Per knot over
+ * contraction: the path offset (dx, dz, cm) and the pole lean th that hold the touch lean in both planes with the
+ * upper-arm elevation rising as c^2 to its lockout value, traded at DB_OFF deg per cm of offset (least squares), faded
+ * out towards lockout. `solve(c, offset, th)` poses the arm.
+ */
+function holdDumbbells(skel: Skeleton, solve: (c: number, off: V3, th: number) => Float64Array, th0: number, samples = 33) {
+  const at = (c: number, x: number[]) => {
+    const f = fk(skel, solve(c, [x[0] / 100, 0, x[1] / 100], x[2]))
+    return { fr: forearmTilt(skel, f), sag: forearmSag(skel, f), elev: armElevation(skel, f) }
+  }
+  const touch = at(0, [0, 0, th0])
+  const lock = at(1, [0, 0, th0]).elev
+  const cs = Array.from({ length: samples }, (_, i) => i / (samples - 1))
+  let x = [0, 0, th0]
+  const knots = cs.map((c) => {
+    const elev = touch.elev + (lock - touch.elev) * c * c
+    x = dls((y) => {
+      const m = at(c, y)
+      return [m.fr - touch.fr, m.sag - touch.sag, m.elev - elev, y[0] * DB_OFF, y[1] * DB_OFF]
+    }, x, { h: 1e-3, iters: 40, tol: 1e-4 }).x
+    const w = holdFade(solve(c, [0, 0, 0], th0)[skel.dof['elbow_l.flex']])
+    return [w * x[0], w * x[1], th0 + w * (x[2] - th0)]
+  })
+  // the fade towards lockout is quick in c: a few [1 2 1] passes over the knots keep the jerk down
+  for (let pass = 0; pass < 4; pass++) for (const v of [0, 1, 2]) for (let i = 1, prev = knots[0][v]; i < knots.length - 1; i++) [prev, knots[i][v]] = [knots[i][v], (prev + 2 * knots[i][v] + knots[i + 1][v]) / 4]
+  const [dx, dz, th] = [0, 1, 2].map((k) => naturalCubic(cs, knots.map((v) => v[k])))
+  const clamp = (c: number) => Math.max(0, Math.min(1, c))
+  return { offset: (c: number): V3 => [dx(clamp(c)) / 100, 0, dz(clamp(c)) / 100], pole: (c: number) => poleAt(th(clamp(c))) }
 }
 
 function gripOf(ctx: Pick<BenchCtx, 'hold' | 'bar'>, center: V3) {
@@ -172,6 +213,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   const trunkCaps = bodyCapsules(skel, f0).filter((c) => c.region === 'trunk')
   const surface = root1d((y) => minClear(trunkCaps, placeParts(probe, { id: 'bar', pos: [0, y, touch[2]], rot: qid() })[0]) + BAR_SINK, touch[1] - 0.1, touch[1] + 0.25, { tol: 1e-6 }).x
   let bottom: V3 = bar ? [0, surface, touch[2]] : [0.3, surface - DB_BELOW, touch[2]]
+  let lean = 60
   if (hold === 'dumbbell') {
     // dumbbells beside the chest, just clear of it, of the upper arms and of the head
     const db = implements_[0]
@@ -184,19 +226,39 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     }
     for (let pass = 0; pass < 3; pass++) {
       bottom = [root1d((x) => gap([x, bottom[1], bottom[2]]), 0.2, 0.5, { tol: 1e-5 }).x, bottom[1], bottom[2]]
-      rig.pole = flarePole(skel, p.elbowFlare, (pole) => arm(bottom, pole))
+      rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
     }
-  } else rig.pole = flarePole(skel, p.elbowFlare, (pole) => arm(bottom, pole))
+  } else rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
   // lockout over the shoulder joints (the Smith bar stays on its rail over the touch point), elbows soft
   const topZ = hold === 'smith' ? bottom[2] : gh[2]
   const topX = hold === 'dumbbell' ? DB_TOP_X : 0
   const topY = root1d((y) => arm([topX, y, topZ])[skel.dof['elbow_l.flex']] - LOCK_ELBOW, bottom[1], bottom[1] + 0.8, { tol: 1e-6 }).x
   const top: V3 = [topX, topY, topZ]
-  rig.oblique = wristSchedule((c, o) => {
-    const q = Float64Array.from(base)
-    solveLeftArm(skel, q, gripOf({ hold, bar }, jCurve(top, bottom, c)), { ...rig, oblique: () => o }, c, true)
-    return q[skel.dof['wrist_l.dev']]
-  })
+  const strokeOf = (stroke: Stroke) => {
+    const r: ArmRig = { ...rig }
+    const pose = (center: V3, pole: V3) => {
+      const q = Float64Array.from(base)
+      solveLeftArm(skel, q, gripOf({ hold, bar }, center), { ...r, pole })
+      return q
+    }
+    let path = (c: number) => jCurve(top, bottom, c, stroke)
+    if (hold === 'dumbbell') {
+      const j = path
+      const h = holdDumbbells(skel, (c, off, th) => pose(add(j(c), off), poleAt(th)), lean)
+      path = (c) => add(j(c), h.offset(c))
+      r.poleOf = h.pole
+    } else {
+      // the bar's path is set: the forearms stay as close to under it as the elbows allow, without closing onto the ribs
+      r.poleOf = holdArm(skel, (c, pole) => pose(path(c), pole), lean, (th) => poleAt(th))
+    }
+    r.oblique = wristSchedule((c, o) => {
+      const q = Float64Array.from(base)
+      solveLeftArm(skel, q, gripOf({ hold, bar }, path(c)), { ...r, oblique: () => o }, c, true)
+      return q[skel.dof['wrist_l.dev']]
+    })
+    return { path, rig: r }
+  }
+  const strokes = { ecc: strokeOf('ecc'), con: strokeOf('con') }
 
   const setup: Setup = { implements: implements_, contacts, tempo, symmetric: true }
   if (bar) setup.rests = [{ implement: bar.id, regions: ['trunk'], tol: 10 }]
@@ -218,14 +280,15 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     implements_.push(rack)
     fixed.push({ id: 'rack', pos: [0, 0, top[2] - RACK_BACK - rack.sites.l.pos[2]], rot: qid() })
   }
-  return { kind: 'bench', tempo, setup, hold, base, bar, top, bottom, rig, fixed }
+  return { kind: 'bench', tempo, setup, hold, base, bar, top, bottom, strokes, fixed }
 }
 
 export function sampleBench(u: number, skel: Skeleton, ctx: BenchCtx): Pose {
-  const c = phaseAt(u, ctx.tempo).c
+  const { c, name } = phaseAt(u, ctx.tempo)
+  const stroke: Stroke = name === 'ecc' ? 'ecc' : 'con'
   const q = Float64Array.from(ctx.base)
-  const center = jCurve(ctx.top, ctx.bottom, c)
-  solveLeftArm(skel, q, gripOf(ctx, center), ctx.rig, c)
+  const center = ctx.strokes[stroke].path(c)
+  solveLeftArm(skel, q, gripOf(ctx, center), ctx.strokes[stroke].rig, c)
   const implements_: ImplementPose[] = []
   if (ctx.hold === 'dumbbell') {
     const f = fk(skel, q)

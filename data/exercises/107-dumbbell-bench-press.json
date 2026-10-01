@@ -46,7 +46,8 @@
     "params": {
       "implement": "dumbbell",
       "benchAngle": 0,
-      "grip": "pronated"
+      "grip": "pronated",
+      "elbowFlare": 45
     },
     "mapView": "F"
   },

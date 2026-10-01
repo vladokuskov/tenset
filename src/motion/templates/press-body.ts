@@ -83,6 +83,8 @@ export function mirrorArm(skel: Skeleton, q: Float64Array) {
 
 export type ArmRig = {
   pole: V3
+  /** the elbow pole over the rep (contraction c), when it changes; see holdArm */
+  poleOf?: (c: number) => V3
   palm: V3
   wristBias: number
   /** how obliquely the handle crosses the palm over the rep (contraction c), deg; see wristSchedule */
@@ -97,13 +99,13 @@ const RELAXED: { devBand: [number, number]; limits: { dev: [number, number] } } 
 export function solveLeftArm(skel: Skeleton, q: Float64Array, grip: Omit<GripTarget, 'palm'>, rig: ArmRig, c = 0, relaxed = false): number {
   const oblique = rig.oblique?.(c) ?? 0
   const band = relaxed ? RELAXED : rig.oblique ? { devBand: JOINT_DEV } : {}
-  const err = attachHand(skel, q, 'l', { ...grip, palm: rig.palm, ...(oblique ? { oblique } : {}) }, { pole: rig.pole, wristBias: rig.wristBias, planeHint: 60, ...band })
+  const err = attachHand(skel, q, 'l', { ...grip, palm: rig.palm, ...(oblique ? { oblique } : {}) }, { pole: rig.poleOf?.(c) ?? rig.pole, wristBias: rig.wristBias, planeHint: 60, ...band })
   mirrorArm(skel, q)
   return err
 }
 
 /** natural cubic spline through (xs, ys), xs ascending: C2, so the scheduled channel has no acceleration steps */
-function naturalCubic(xs: number[], ys: number[]): (x: number) => number {
+export function naturalCubic(xs: number[], ys: number[]): (x: number) => number {
   const n = xs.length
   const h = xs.slice(1).map((x, i) => x - xs[i])
   // tridiagonal solve for the second derivatives (zero at both ends)
@@ -158,6 +160,86 @@ export function wristSchedule(devAt: (c: number, oblique: number) => number, sam
   return naturalCubic(cs, obl)
 }
 
+/** holdArm fades out between these elbow flexions, deg, and eases in over this much contraction from the touch */
+const HOLD_FADE = [20, 80]
+const TOUCH_EASE = 0.2
+/** holdArm: cost per deg^2 of pole lean away from th0 (keeps it put where the forearm lean does not care) */
+const HOLD_REG = 0.3
+export const smooth = (x: number) => {
+  const w = Math.min(1, Math.max(0, x))
+  return w * w * (3 - 2 * w)
+}
+
+/** forearm lean from vertical in the world frontal plane, deg (negative: the elbow sits outside the hand) */
+export function forearmTilt(skel: Skeleton, f: FK, side: 'l' | 'r' = 'l'): number {
+  const w = sub(segPos(skel, f, `hand_${side}`), segPos(skel, f, `forearm_${side}`))
+  return Math.atan2(side === 'l' ? w[0] : -w[0], w[1]) * RAD
+}
+
+/** forearm lean from vertical in the world sagittal plane, deg (positive: the hand sits headwards of the elbow) */
+export function forearmSag(skel: Skeleton, f: FK, side: 'l' | 'r' = 'l'): number {
+  const w = sub(segPos(skel, f, `hand_${side}`), segPos(skel, f, `forearm_${side}`))
+  return Math.atan2(-w[2], w[1]) * RAD
+}
+
+/** the fade weight of holdArm at this elbow flexion */
+export const holdFade = (flex: number) => smooth((flex - HOLD_FADE[0]) / (HOLD_FADE[1] - HOLD_FADE[0]))
+
+/** forearm lean from vertical in 3D, deg */
+export function forearmLean(skel: Skeleton, f: FK, side: 'l' | 'r' = 'l'): number {
+  const w = sub(segPos(skel, f, `hand_${side}`), segPos(skel, f, `forearm_${side}`))
+  return Math.acos(Math.min(1, w[1] / Math.hypot(...w))) * RAD
+}
+
+/** upper-arm elevation from the trunk (0 hanging along it), deg */
+export function armElevation(skel: Skeleton, f: FK, side: 'l' | 'r' = 'l'): number {
+  const thorax = f.rot[skel.segments[skel.seg[`clavicle_${side}`]].parent]
+  const h = qrot(qconj(thorax), sub(segPos(skel, f, `forearm_${side}`), segPos(skel, f, `humerus_${side}`)))
+  return Math.acos(Math.max(-1, Math.min(1, -h[1] / Math.hypot(...h)))) * RAD
+}
+
+/**
+ * With a fixed pole the elbow drifts out past the hand as the press starts, and holding the frontal forearm lean
+ * alone pins the elbows to the ribs mid-press (upper arm down to ~30 deg from the trunk) while the forearm leans
+ * ~30 deg towards the head. Here the pole lean `th` is chosen at knots over contraction to keep the forearm as close
+ * to vertical as it gets (3D) without the upper arm closing more than `drop` deg below its angle at the touch;
+ * it fades back to `th0` towards lockout, where the forearm lies along the arm and the pole no longer matters.
+ * `solve(c, pole)` poses the arm.
+ */
+export function holdArm(skel: Skeleton, solve: (c: number, pole: V3) => Float64Array, th0: number, pole: (th: number) => V3, drop = 10, samples = 33): (c: number) => V3 {
+  const at = (c: number, th: number) => {
+    const q = solve(c, pole(th))
+    const f = fk(skel, q)
+    return { lean: forearmLean(skel, f), elev: armElevation(skel, f), flex: q[skel.dof['elbow_l.flex']] }
+  }
+  const floor = at(0, th0).elev - drop
+  const cost = (c: number, th: number) => {
+    const m = at(c, th)
+    return m.lean ** 2 + 4 * Math.max(0, floor - m.elev) ** 2 + HOLD_REG * (th - th0) ** 2
+  }
+  const cs = Array.from({ length: samples }, (_, i) => i / (samples - 1))
+  let prev = th0
+  const ths = cs.map((c) => {
+    // local search from the previous knot (continuation keeps the schedule on one branch), parabolic refinement
+    let best = prev, bc = cost(c, prev)
+    for (let th = prev - 15; th <= prev + 15; th += 1) {
+      const k = cost(c, th)
+      if (k < bc) [best, bc] = [th, k]
+    }
+    const [l, r] = [cost(c, best - 1), cost(c, best + 1)]
+    const den = l - 2 * bc + r
+    if (den > 1e-9) best += Math.max(-1, Math.min(1, (0.5 * (l - r)) / den))
+    prev = best
+    // the touch keeps the record's flare (th0); the hold eases in over the first TOUCH_EASE of the press
+    const w = holdFade(at(c, th0).flex) * smooth(c / TOUCH_EASE)
+    return th0 + w * (best - th0)
+  })
+  // the elevation floor switching on leaves a kink in the knots: a few [1 2 1] passes take it out
+  for (let pass = 0; pass < 4; pass++) for (let i = 1, prev = ths[0]; i < ths.length - 1; i++) [prev, ths[i]] = [ths[i], (prev + 2 * ths[i] + ths[i + 1]) / 4]
+  const spline = naturalCubic(cs, ths)
+  return (c) => pole(spline(Math.max(0, Math.min(1, c))))
+}
+
 /** upper-arm abduction from the torso in its frontal plane, deg */
 export function flareOf(skel: Skeleton, f: FK, side: 'l' | 'r' = 'l'): number {
   const h = sub(segPos(skel, f, `forearm_${side}`), segPos(skel, f, `humerus_${side}`))
@@ -173,6 +255,10 @@ export const poleAt = (th: number, down = 0.6, back = 1): V3 => [Math.sin(th * D
  * the lean between `range`)
  */
 export function flarePole(skel: Skeleton, flare: number, solve: (pole: V3) => Float64Array, pole: (th: number) => V3 = (th) => poleAt(th), range: [number, number] = [15, 140]): V3 {
-  const th = root1d((t) => flareOf(skel, fk(skel, solve(pole(t)))) - flare, range[0], range[1], { tol: 1e-4 }).x
-  return pole(th)
+  return pole(flareLean(skel, flare, solve, pole, range))
+}
+
+/** the pole lean `th` of flarePole */
+export function flareLean(skel: Skeleton, flare: number, solve: (pole: V3) => Float64Array, pole: (th: number) => V3 = (th) => poleAt(th), range: [number, number] = [15, 140]): number {
+  return root1d((t) => flareOf(skel, fk(skel, solve(pole(t)))) - flare, range[0], range[1], { tol: 1e-4 }).x
 }

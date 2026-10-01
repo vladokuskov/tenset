@@ -7,7 +7,7 @@ import { dist, qconj, qrot, sub, type V3 } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { DEFAULT_TEMPO, loopDuration } from '../timing.ts'
 import { getTemplate, parseParams } from './index.ts'
-import { flareOf, minClear, solidOf } from './press-body.ts'
+import { armElevation, flareOf, forearmLean, forearmTilt, minClear, solidOf } from './press-body.ts'
 
 const skel = testSkeleton()
 const T = 'horizontal-press'
@@ -29,6 +29,8 @@ const inThorax = (b: Baked, u: number, p: V3) => {
   const { f } = pose(b, u)
   return qrot(qconj(f.rot[skel.seg.thorax2]), sub(p, f.pos[skel.seg.thorax2]))
 }
+/** the frames with the elbows folded past 60 deg, where the forearm's lean and the elbow position read */
+const folded = (b: Baked) => Array.from({ length: b.frames }, (_, i) => frameQ(b, i)).filter((q) => q[skel.dof['elbow_l.flex']] > 60).map((q) => fk(skel, q))
 
 describe('horizontal-press template', () => {
   it('covers every record of the template', () => {
@@ -103,9 +105,9 @@ describe('horizontal-press template', () => {
 
   it('elbow flare follows the grip: the close grip tucks, the 1.4x grip stays under ~45 deg (Green & Comfort 2007)', () => {
     const flare = (id: number) => flareOf(skel, pose(get(id), BOTTOM).f)
-    expect(Math.abs(flare(707) - 25)).toBeLessThan(2)
+    expect(Math.abs(flare(707) - 20)).toBeLessThan(2)
     expect(Math.abs(flare(101) - 45)).toBeLessThan(2)
-    expect(Math.abs(flare(107) - 55)).toBeLessThan(2)
+    expect(Math.abs(flare(107) - 45)).toBeLessThan(2)
     expect(get(707).params.gripWidth).toBeLessThan(get(101).params.gripWidth as number)
   })
 
@@ -134,6 +136,54 @@ describe('horizontal-press template', () => {
     const below = (Math.asin(-ua[2] / Math.hypot(...ua)) * 180) / Math.PI
     expect(below).toBeGreaterThan(25)
     expect(below).toBeLessThan(40)
+  })
+
+  it.each([
+    [101, 40, 36],
+    [707, 20, 43],
+  ])('%s: mid-press the elbows stay off the ribs (upper arm >= %s deg from the trunk) and the forearm leans at most %s deg', (id, elev, lean) => {
+    // the frontal-only forearm hold pinned the elbows to the ribs mid-press (101: 33 deg, 707: 14) and flared them
+    // back out at the touch, with the forearm leaning ~34 / 40 deg towards the head. On a J path the bar is over the
+    // shoulders before the elbows are, so some lean is inherent: it is now split between the planes, the elbows open
+    const b = get(id)
+    const touch = armElevation(skel, pose(b, BOTTOM).f)
+    for (const f of folded(b)) {
+      expect(armElevation(skel, f)).toBeGreaterThan(elev)
+      expect(armElevation(skel, f)).toBeGreaterThan(touch - 18)
+      expect(forearmLean(skel, f)).toBeLessThan(lean)
+      // the elbows never swing far out past the hands either (a fixed pole leaned the forearms in ~30 deg)
+      expect(forearmTilt(skel, f)).toBeGreaterThan(-30)
+    }
+  })
+
+  it('dumbbells (107) keep the forearms vertical the whole press ("forearms vertical"), elbows opening steadily', () => {
+    // with the hands free sideways the forearm holds its touch lean in 3D (it leaned ~35 deg towards the head
+    // mid-press with the elbows pinned at 29 deg); the dumbbells arc a little wider on the way up
+    const b = get(107)
+    const { f: fb, impl } = pose(b, BOTTOM)
+    const k = b.implements.findIndex((s) => s.id === 'db_l')
+    const [lean0, elev0] = [forearmLean(skel, fb), armElevation(skel, fb)]
+    expect(lean0).toBeLessThan(15)
+    for (const f of folded(b)) {
+      expect(forearmLean(skel, f)).toBeLessThan(lean0 + 6)
+      expect(armElevation(skel, f)).toBeGreaterThan(elev0 - 2)
+    }
+    for (let i = 0; i < b.frames; i++) expect(frameImplements(b, i)[k].pos[0] - impl[k].pos[0]).toBeLessThan(0.1)
+  })
+
+  it.each([101, 707])('%s: the bar comes down on a straight diagonal (half the horizontal travel at half height)', (id) => {
+    const b = get(id)
+    const bottom = implPos(b, BOTTOM, 'bar')
+    const top = implPos(b, TOP, 'bar')
+    const mid = (bottom[1] + top[1]) / 2
+    let best = { dy: Infinity, z: 0 }
+    for (let i = 0; i < b.frames; i++) {
+      const p = frameImplements(b, i)[0].pos
+      if (i / b.frames < BOTTOM && Math.abs(p[1] - mid) < best.dy) best = { dy: Math.abs(p[1] - mid), z: p[2] }
+    }
+    const done = (best.z - top[2]) / (bottom[2] - top[2])
+    expect(done).toBeGreaterThan(0.4)
+    expect(done).toBeLessThan(0.6)
   })
 
   it('dumbbells (107) clear the chest at the bottom, never touch each other, and finish close over the shoulders', () => {
