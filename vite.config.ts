@@ -2,7 +2,7 @@
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { reviewPlugin } from './src/features/review/devServer.ts'
 
@@ -19,8 +19,25 @@ function precacheBudget<T extends { url: string; size: number }>(entries: T[]) {
   return { manifest: entries }
 }
 
+// Review notes (qa.note) are for /dev/review, which reads the record files directly; keep them out of the app bundle.
+function stripReviewNotes(): Plugin {
+  return {
+    name: 'strip-review-notes',
+    apply: 'build',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/[\\/]data[\\/]exercises[\\/][^\\/]+\.json$/.test(id)) return null
+      const record = JSON.parse(code) as { qa?: { note?: string } }
+      if (!record.qa?.note) return null
+      delete record.qa.note
+      return { code: JSON.stringify(record), map: null }
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
+    stripReviewNotes(),
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     react(),
     tailwindcss(),
@@ -51,9 +68,10 @@ export default defineConfig({
         ],
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,bin,glb,txt,woff2}'],
-        // The notices file (~250 KB) is only opened from /credits, so it stays network-only.
-        globIgnores: ['**/media/loops/**', '**/models/**', '**/THIRD_PARTY_NOTICES.txt'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,bin,glb,txt,woff2}', 'models/*.json'],
+        // The notices file (~250 KB) is only opened from /credits, so it stays network-only. The figure model and
+        // atlas (~1.1 MB) are precached so the detail demos work offline.
+        globIgnores: ['**/media/loops/**', '**/THIRD_PARTY_NOTICES.txt'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         manifestTransforms: [precacheBudget],
       },
