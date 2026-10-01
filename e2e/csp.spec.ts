@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { expect, startFromTemplate, test } from './fixtures'
 
-// vite preview ignores public/_headers, so the test applies the production CSP to documents itself.
-const headers = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8')
-const CSP = /Content-Security-Policy:\s*(.+)/.exec(headers)?.[1]?.trim() ?? ''
+// vite preview ignores vercel.json, so the test applies the production CSP to documents itself.
+type VercelHeaders = { headers: { source: string; headers: { key: string; value: string }[] }[] }
+const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')) as VercelHeaders
+const CSP = vercel.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy')?.value ?? ''
 
 test.use({ serviceWorkers: 'block' })
 

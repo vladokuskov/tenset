@@ -66,10 +66,10 @@ Yes, procedurally. The agent can't produce raster images or video from a diffusi
 | PWA | vite-plugin-pwa 1.3 `injectManifest`, own `sw.ts`, `injectRegister: 'script'` |
 | Share | custom binary codec, base64url `#fragment`, version byte; uqr for QR |
 | Tests | Vitest 5 + Playwright 1.63 (+ axe) |
-| Hosting | Cloudflare Workers static assets, assets-only (no Worker script). Free: unlimited static requests, 20k files, 25 MiB/file |
+| Hosting | Vercel static (moved from the planned Cloudflare Workers assets, 2026-09-28): `vercel.json` holds the CSP, cache headers and the SPA rewrite. Hobby plan terms are non-commercial |
 | Compliance | CI license allowlist (MIT, ISC, BSD, 0BSD, Apache-2.0, CC0, OFL, BlueOak) + generated `THIRD_PARTY_NOTICES.txt` |
 
-**Zero third-party runtime requests** (license, privacy and offline): banned drei helpers `MatcapTexture`, `NormalTexture`, `Environment preset=`, `Cloud`, detect-gpu tiering, `<Text>` without a local font. Enforced by a strict CSP in `public/_headers` (`default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'`, etc.) and an e2e test that fails on any non-app request.
+**Zero third-party runtime requests** (license, privacy and offline): banned drei helpers `MatcapTexture`, `NormalTexture`, `Environment preset=`, `Cloud`, detect-gpu tiering, `<Text>` without a local font. Enforced by a strict CSP in `vercel.json` (`default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'`, etc.) and an e2e test that fails on any non-app request.
 
 ### Repo layout
 ```
@@ -89,7 +89,7 @@ gym-builder/
     domain/                  pure TS: muscles, volume, recovery, coverage, program, codec
     features/                catalog, builder, bodymap, figure, programs, welcome, share, export, settings, review (dev-only)
     store/  routes/  sw/  ui/ (Sheet.tsx ...)  styles/
-  public/models/body.glb  public/anatomy/  public/media/{cards,posters,loops}/  public/_headers
+  public/models/body.glb  public/anatomy/  public/media/{cards,posters,loops}/  vercel.json
   ATTRIBUTION.md  e2e/
 ```
 
@@ -186,7 +186,7 @@ Rules: `groups` alone drives bands. `heads` is optional emphasis inside a listed
 - **Banned**: free-exercise-db images/text/tags; ExerciseDB/Gym visual GIFs; wger content; Z-Anatomy/fitmitwith (except an owner-approved S2 fallback, as separate SVGs with their license); Mixamo; SMPL/AMASS/Fit3D; HY-Motion; ExRx/MuscleWiki/Liftosaur mappings and any ExRx scraping; mannequin.js; blwsk code; MakeHuman community-site assets; 3D marketplace models, manufacturer CAD, logos; pose extraction from third-party videos; RepDB clips as motion reference; third-party anatomy images as tracing references (Gray's 1918 plates are fine).
 - **Names**: generic primary names ("Nordic hamstring curl", "Reverse hyperextension", "Machine chest fly (pec deck)"); marks like Pendlay/Reverse Hyper/Nordic curl are search aliases only; no brand names. `/credits` says names are descriptive, no affiliation.
 - **Cues**: 3-5 short imperative lines, LLM-drafted only inside our closed taxonomy, never prompted with third-party text. `pnpm test:cues` fails on any word 7-gram shared with free-exercise-db or wger text (fetched to gitignored `.cache/`, never in prompts) and on known boilerplate ("this will be your starting position").
-- **Privacy**: no consent banner (localStorage + SW cache are strictly functional and stay on-device; ePrivacy 5(3) exemption, EDPB 2/2023). `/privacy` names the operator, Cloudflare as processor, what's stored locally, and that share links live in the URL fragment. Adding analytics later means revisiting this.
+- **Privacy**: no consent banner (localStorage + SW cache are strictly functional and stay on-device; ePrivacy 5(3) exemption, EDPB 2/2023). `/privacy` names the operator, Vercel as processor, what's stored locally, and that share links live in the URL fragment. Adding analytics later means revisiting this.
 - **Medical**: never claim injury prevention, rehab or treatment (keeps it well-being software, outside the EU MDR). No liability-waiver wording.
 - **Own license**: code MIT; data/media CC BY 4.0. Before launch: check your employment contract's IP clause covers side projects, and run a trademark knockout on the product name (USPTO/EUIPO/UKIPO) before buying a domain.
 - `ATTRIBUTION.md` at repo root (draft from the licensing review: this project, BodyParts3D, MakeHuman/MPFB2, fonts, OSS notices, research, contact), rendered at `/credits`.

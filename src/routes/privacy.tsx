@@ -70,11 +70,11 @@ function PrivacyPage() {
 
         <Section title="Hosting">
           <p className="px-1">
-            The app's files are served by Cloudflare, Inc. as a processor on our behalf. To deliver them, Cloudflare
-            handles standard request data such as your IP address, browser type, the address requested and the time,
-            and may keep it briefly in logs for security and reliability. See{' '}
-            <a href="https://www.cloudflare.com/privacypolicy/" className={link} rel="noreferrer" target="_blank">
-              Cloudflare's privacy policy
+            The app's files are served by Vercel Inc. as a processor on our behalf. To deliver them, Vercel handles
+            standard request data such as your IP address, browser type, the address requested and the time, and may
+            keep it briefly in logs for security and reliability. See{' '}
+            <a href="https://vercel.com/legal/privacy-policy" className={link} rel="noreferrer" target="_blank">
+              Vercel's privacy policy
             </a>
             .
           </p>
