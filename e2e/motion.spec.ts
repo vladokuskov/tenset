@@ -23,6 +23,8 @@ test('an unapproved animation shows the card, not the live figure', async ({ pag
 test('a vertical swipe on the live figure scrolls the detail page', async ({ page }) => {
   test.skip(!test.info().project.use.hasTouch, 'touch only')
   test.skip(!approved, 'no approved animation yet (media.status "loop")')
+  // the live figure renders in software WebGL on GPU-less CI runners, which keeps the main thread busy
+  test.slow()
   await page.goto(`/exercise/${approved!.slug}`)
   const layer = page.locator('.touch-pan-y')
   await expect(layer).toHaveCount(1, { timeout: 15_000 })
