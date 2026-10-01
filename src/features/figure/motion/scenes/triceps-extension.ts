@@ -2,8 +2,9 @@ import type { SceneSpec } from './types.ts'
 
 export const tricepsExtension: SceneSpec = {
   camera: (params) => {
-    // lying: from the lifter's right, a little towards the head and higher, so the arms' arc over the face reads
-    if (params.posture === 'lying_supine') return { az: -115, elev: 0.35 }
+    // lying: from the lifter's right and higher, so the arms' arc over the face reads; near the side, since from
+    // further towards the head the raised upper arm hides the triceps at lockout
+    if (params.posture === 'lying_supine') return { az: -95, elev: 0.35 }
     // kickback: from the working side, high enough that the triceps on top of the level upper arm reads
     if (params.support === 'bench') return { az: -95, elev: 0.3 }
     // seated overhead: nearer the side, so the forearms folding behind the head read past the torso

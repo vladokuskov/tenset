@@ -37,12 +37,6 @@ const SEATED = {
   /** smallest gap of the dumbbell and hands to the pad, head, neck and upper back at the stretch, m */
   clear: 0.012,
 }
-/**
- * the drawn bench's floor stabilisers in the bench frame (props sockets BENCH frontZ / rearZ from the seat centre, which
- * sits 0.095 m ahead of the upright back's hinge; feet out to +-0.285 m). Bench parts are framed, so its base stays in
- * the picture
- */
-const BASE = { z: [0.375, -0.625], x: 0.285 }
 /** dumbbell frame: X up the handle, Y forward, Z to the lifter's left; the left hand flat under the top head */
 const PLATE = { site: [0.035, -0.02, 0.06] as V3, fingers: [0.25, -1, 0.2] as V3, palm: [1, 0, -0.45] as V3 }
 
@@ -137,7 +131,6 @@ export function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Seated {
   const back = Math.min(...trunk.map((k) => Math.min(k.a[2], k.b[2]) - k.r)) + SEATED.sink
   // the drawn bench's back pad top sits 0.745 m above its seat top (props sockets BENCH)
   const benchSpec = bench({ backAngle: 90, seatHeight: seatTop, backLength: 0.745 })
-  for (const z of BASE.z) benchSpec.parts.push({ shape: 'cylinder', a: [-BASE.x, 0.02 - seatTop, z], b: [BASE.x, 0.02 - seatTop, z], r: 0.02 })
   const benchPose: ImplementPose = { id: benchSpec.id, pos: [0, seatTop, back], rot: qid() }
   const db = dumbbell({ id: 'db', mass: SEATED.kg })
   const { axis } = plateHand()

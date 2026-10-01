@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
+import { bodyCapsules, capsuleSolidClearance, placeParts, solidClearance } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, qconj, qrot, sub } from '../math.ts'
@@ -83,6 +83,35 @@ describe('wrist-curl template', () => {
         } else expect(dist(sitePos(skel, fi, c.site), c.target.world)).toBeLessThan(0.005)
       }
     }
+  })
+
+  it.each([...baked.keys()])('%s: the knees rest well inside the mat, the tucked toes on it', (id) => {
+    const b = get(id)
+    const k = b.implements.findIndex((s) => s.kind === 'mat')
+    const mat = frameImplements(b, 0)[k]
+    const box = b.implements[k].parts[0]
+    if (box.shape !== 'box') throw new Error('mat is a box')
+    // the mat is turned across the lifter: its width runs front to back (world Z)
+    const front = mat.pos[2] + box.size[0] / 2, back = mat.pos[2] - box.size[0] / 2
+    const legs = bodyCapsules(skel, fk(skel, frameQ(b, 0))).filter((c) => /^(thigh|shank|foot)_/.test(c.region))
+    const low = legs.flatMap((c) => [c.a, c.b].filter((e) => e[1] - c.r < 0.03).map((e) => [e[2] - c.r, e[2] + c.r]))
+    expect(front - Math.max(...low.map((z) => z[1]))).toBeGreaterThan(0.06)
+    expect(Math.min(...low.map((z) => z[0])) - back).toBeGreaterThan(0.02)
+  })
+
+  it.each([...baked.keys()])('%s: the hanging dumbbells clear the bench by 15 mm', (id) => {
+    const b = get(id)
+    const k = b.implements.findIndex((s) => s.kind === 'cross_bench')
+    let gap = Infinity
+    for (let i = 0; i < b.frames; i += 2) {
+      const impl = frameImplements(b, i)
+      const bench = placeParts(b.implements[k], impl[k])
+      for (const id of ['db_l', 'db_r']) {
+        const j = b.implements.findIndex((s) => s.id === id)
+        for (const d of placeParts(b.implements[j], impl[j])) for (const p of bench) gap = Math.min(gap, solidClearance(d, p))
+      }
+    }
+    expect(gap).toBeGreaterThan(0.015)
   })
 
   it.each([...baked.keys()])('%s: the loop closes without a jump', (id) => {

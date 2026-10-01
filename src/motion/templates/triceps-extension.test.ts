@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { fk, segPos, segRot, sitePos } from '../fk.ts'
@@ -35,7 +36,7 @@ function humerus(b: Baked, i: number): V3 {
 const STRETCH: Record<number, [number, number]> = {
   // rope: forearms just past parallel (cue); bar: up to chest height (cue); research ~120-140 for the rest
   704: [100, 115],
-  715: [115, 135],
+  715: [110, 120],
   706: [110, 135],
   705: [125, 140],
   716: [110, 135],
@@ -55,12 +56,11 @@ describe('triceps-extension template', () => {
     const [lo, hi] = STRETCH[id]
     expect(dof(b, u, 'elbow_*.flex')).toBeGreaterThan(lo)
     expect(dof(b, u, 'elbow_*.flex')).toBeLessThan(hi)
-    // the upper arm holds its direction against the trunk. Pushdowns let it ease forward ~3 deg; on the straight bar
-    // the hands follow the bar and the elbows also turn out a few degrees as it rises to the chest
+    // the upper arm holds its direction against the trunk (pushdowns let it ease forward ~3 deg)
     const h0 = humerus(b, 0)
     let drift = 0
     for (let i = 0; i < b.frames; i++) drift = Math.max(drift, angleBetween(h0, humerus(b, i)) * RAD)
-    expect(drift).toBeLessThan(id === 715 ? 13 : 6)
+    expect(drift).toBeLessThan(6)
   })
 
   it('holds the variant shoulder angle', () => {
@@ -118,11 +118,50 @@ describe('triceps-extension template', () => {
   })
 
   it('pushdowns: the body stands still (the approved curls sway at most ~25 mm)', () => {
-    for (const [id, most] of [[704, 0.005], [715, 0.035]] as const) {
+    for (const [id, most] of [[704, 0.005], [715, 0.005]] as const) {
       const b = get(id)
       const z = Array.from({ length: b.frames }, (_, i) => segPos(skel, fk(skel, frameQ(b, i)), 'head')[2])
       expect(Math.max(...z) - Math.min(...z)).toBeLessThan(most)
     }
+  })
+
+  it('straight bar: the elbows do not turn out as the bar rises (humeral rotation takes up the hand spacing)', () => {
+    const b = get(715)
+    const out = Array.from({ length: b.frames }, (_, i) => {
+      const h = humerus(b, i)
+      return Math.asin(h[0] / Math.hypot(...h)) * RAD
+    })
+    expect(Math.max(...out) - Math.min(...out)).toBeLessThan(1)
+    expect(dof(b, 0, 'elbow_*.flex')).toBeLessThan(5)
+    let pro = -Infinity
+    for (let i = 0; i < b.frames; i++) pro = Math.max(pro, frameQ(b, i)[skel.dof['forearm_l.pro']])
+    expect(pro).toBeLessThan(84)
+  })
+
+  it('straight bar: the bar rises to chest height, not to the collarbones (cue 4)', () => {
+    const b = get(715)
+    const u = (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] / 2) / (b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3])
+    const f = fk(skel, frameQ(b, at(b, u)))
+    const grip = sitePos(skel, f, 'grip_l')[1]
+    expect(Math.abs(grip - sitePos(skel, f, 'sternum')[1])).toBeLessThan(0.04)
+    expect(segPos(skel, f, 'humerus_l')[1] - grip).toBeGreaterThan(0.09)
+  })
+
+  it('seated overhead: the dumbbell lowers to neck level behind the head (cue 3)', () => {
+    const b = get(716)
+    const u = (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] / 2) / (b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3])
+    const i = at(b, u)
+    const f = fk(skel, frameQ(b, i))
+    const k = b.implements.findIndex((s) => s.id === 'db')
+    const db = frameImplements(b, i)[k].pos
+    const head = segPos(skel, f, 'head'), neck = segPos(skel, f, 'neck1')
+    expect(db[2]).toBeLessThan(head[2])
+    expect(db[1]).toBeLessThan(head[1] + 0.05)
+    expect(db[1]).toBeGreaterThan(neck[1] - 0.05)
+    // the backrest stops the elbows short of full flexion, so the cue names the depth the loop shows
+    expect(dof(b, u, 'elbow_*.flex')).toBeLessThan(140)
+    const rec = JSON.parse(readFileSync(new URL('../../../data/exercises/716-seated-overhead-dumbbell-extension.json', import.meta.url), 'utf8'))
+    expect(rec.cues.join(' ')).not.toMatch(/fully bent/)
   })
 
   it('seated overhead: both hands on the one dumbbell, cupping the top head', () => {

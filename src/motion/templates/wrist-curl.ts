@@ -37,10 +37,11 @@ const WRIST = {
   armIn: 0.03,
   /** the forearm's axis dips this much towards the wrist (its capsule tapers), deg */
   dip: 4,
-  /** kneeling mat, m: length across the lifter, width front to back */
-  mat: { length: 0.8, width: 0.6 },
-  /** wrist joint this far past the pad's far edge, m */
-  over: 0.045,
+  /** kneeling mat, m: length across the lifter, width front to back; its front edge this far ahead of the kneecaps */
+  mat: { length: 0.8, width: 0.76, knee: 0.08 },
+  /** wrist joint this far past the pad's far edge, m; palms down the flexed hand swings its dumbbell back under the
+   * pad, so the wrists sit further out to keep it clear */
+  over: { supinated: 0.045, pronated: 0.07 } as Record<'supinated' | 'pronated', number>,
   /** palms turned in from level, deg: full supination and pronation sit at the joint limits */
   palmIn: 14,
   /** wrist flexion (deg, + towards the palm) at the stretch and at the top */
@@ -138,15 +139,17 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const fore = bodyCapsules(skel, F).filter((c) => c.region === 'forearm_l' || c.region === 'forearm_r')
   const top = Math.min(...fore.map((c) => Math.min(c.a[1], c.b[1]) - c.r)) + WRIST.sink
   const wrist = segPos(skel, F, 'hand_l')
-  const center = wrist[2] - WRIST.over - DRAWN_BENCH.back.width / 2
+  const center = wrist[2] - WRIST.over[grip] - DRAWN_BENCH.back.width / 2
   // across the lifter: the bench's own +Z (the seat end) points to the lifter's left, the back pad centred on him
   const benchSpec = crossBench({ seatHeight: top })
   const bench: ImplementPose = { id: benchSpec.id, pos: [DRAWN_BENCH.gap + DRAWN_BENCH.back.len / 2, top, center], rot: qaxis([0, 1, 0], Math.PI / 2) }
-  // a short mat across, under the knees and feet
-  const knee = segPos(skel, F, 'tibia_l')
-  const toe = sitePos(skel, F, 'toe_l')
-  const matSpec = floorMat({ id: 'mat', ...WRIST.mat })
-  const mat: ImplementPose = { id: 'mat', pos: [0, 0, (knee[2] + toe[2]) / 2], rot: qaxis([0, 1, 0], Math.PI / 2) }
+  // a short mat across, under the knees and feet: its front edge well ahead of the kneecaps (the leg capsules' front
+  // where they meet the mat), the tucked toes inside its back edge
+  const legs = bodyCapsules(skel, F).filter((c) => /^(thigh|shank)_/.test(c.region))
+  const kneecap = Math.max(...legs.flatMap((c) => [c.a, c.b].filter((e) => e[1] - c.r < 0.03).map((e) => e[2] + c.r)))
+  const { length, width } = WRIST.mat
+  const matSpec = floorMat({ id: 'mat', length, width })
+  const mat: ImplementPose = { id: 'mat', pos: [0, 0, kneecap + WRIST.mat.knee - width / 2], rot: qaxis([0, 1, 0], Math.PI / 2) }
   const db = [dumbbell({ id: 'db_l', mass: WRIST.kg }), dumbbell({ id: 'db_r', mass: WRIST.kg })]
   const contacts: Contact[] = [
     ...(['l', 'r'] as const).map((s): Contact => ({ site: `ball_${s}`, kind: 'planted', target: { world: sitePos(skel, F, `ball_${s}`) } })),
