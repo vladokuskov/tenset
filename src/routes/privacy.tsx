@@ -21,10 +21,12 @@ function PrivacyPage() {
             <p className="px-1">
               {OPERATOR.name}. Contact: {OPERATOR.contact}
             </p>
-          ) : (
+          ) : import.meta.env.DEV ? (
             <Placeholder owner="lead">
               <p>Operator name and contact details go here before public launch.</p>
             </Placeholder>
+          ) : (
+            <p className="px-1">An independent developer. Contact details will be added to this page.</p>
           )}
         </Section>
 
