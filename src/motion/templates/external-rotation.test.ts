@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleClearance } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { angleBetween, dist, RAD, sub } from '../math.ts'
@@ -68,6 +68,23 @@ describe('external-rotation template', () => {
     expect(Math.max(...first.map((v, k) => Math.abs(v - last[k])))).toBeLessThan(0.5)
   })
 
+  it.each([...baked.keys()])('%s: the cue\'s rolled towel stays tucked between the elbow and the ribs', (slug) => {
+    const b = get(slug)
+    const k = b.implements.findIndex((x) => x.kind === 'towel_roll')
+    expect(k).toBeGreaterThanOrEqual(0)
+    for (let i = 0; i < b.frames; i += 3) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i)))
+      const towel = placeParts(b.implements[k], frameImplements(b, i)[k])
+      const gap = (region: string) => Math.min(...caps.filter((c) => c.region === region).flatMap((c) => towel.map((x) => capsuleSolidClearance(c, x))))
+      // touching both, inside the padded allowance
+      for (const region of ['upperarm_r', 'trunk']) {
+        expect(gap(region)).toBeLessThan(0.001)
+        expect(gap(region)).toBeGreaterThan(-0.015)
+      }
+      expect(gap('forearm_r')).toBeGreaterThan(0.005)
+    }
+  })
+
   it('cable: side-on to a stack on the far side at elbow height, the free arm still', () => {
     const b = get('211-cable-external-rotation')
     const cable = b.cables![0]
@@ -86,18 +103,26 @@ describe('external-rotation template', () => {
     const f0 = fk(skel, frameQ(b, 0))
     const caps = bodyCapsules(skel, f0)
     const low = (keep: (c: (typeof caps)[number]) => boolean) => Math.min(...caps.filter(keep).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
-    for (const keep of [(c: (typeof caps)[number]) => /^(girdle|upperarm)_l$/.test(c.region), (c: (typeof caps)[number]) => c.segment === 'pelvis' || c.region === 'thigh_l']) {
+    for (const keep of [(c: (typeof caps)[number]) => /^(girdle|upperarm)_l$/.test(c.region), (c: (typeof caps)[number]) => c.segment === 'pelvis' || c.name === 'thigh_l1']) {
       expect(low(keep) - top).toBeGreaterThan(-0.015)
       expect(low(keep) - top).toBeLessThan(0.001)
     }
-    // the bottom thigh lies on the seat up to the knee, the shins reach past its end, the legs lie stacked
-    const knee = segPos(skel, f0, 'tibia_l')[2]
-    expect(knee).toBeGreaterThan(seatEnd)
-    expect(knee).toBeLessThan(seatEnd + 0.12)
-    const shanks = (s: 'l' | 'r') => caps.filter((c) => c.region === `shank_${s}`)
-    const gap = Math.min(...shanks('l').flatMap((x) => shanks('r').map((y) => capsuleClearance(x, y))))
-    expect(gap).toBeLessThan(0.06)
-    expect(gap).toBeGreaterThan(-0.01)
+    // curled legs: the knees come forward, the shins come back over the seat and rest on it, the feet end at most a
+    // foot's width past its end (straight legs held level past the bench end read as floating)
+    const knee = segPos(skel, f0, 'tibia_l'), ankle = segPos(skel, f0, 'foot_l')
+    expect(knee[2]).toBeLessThan(seatEnd)
+    expect(ankle[2]).toBeLessThan(seatEnd + 0.1)
+    const k = b.implements.findIndex((x) => x.id === 'bench')
+    const bench = placeParts(b.implements[k], frameImplements(b, 0)[k])
+    const onBench = Math.min(...caps.filter((c) => c.region === 'shank_l').flatMap((c) => bench.map((x) => capsuleSolidClearance(c, x))))
+    expect(onBench).toBeGreaterThan(-0.015)
+    expect(onBench).toBeLessThan(0.005)
+    // stacked: the top leg's shin and foot lie on the bottom leg's
+    const gapOf = (r: string) => Math.min(...caps.filter((c) => c.region === `${r}_l`).flatMap((x) => caps.filter((c) => c.region === `${r}_r`).map((y) => capsuleClearance(x, y))))
+    expect(gapOf('shank')).toBeLessThan(0.04)
+    expect(gapOf('foot')).toBeLessThan(0.01)
+    expect(gapOf('foot')).toBeGreaterThan(-0.003)
+    expect(gapOf('thigh')).toBeGreaterThan(-0.015)
     const handAt = (u: number) => sitePos(skel, fk(skel, frameQ(b, at(b, u))), 'grip_r')
     const elbowAt = (u: number) => segPos(skel, fk(skel, frameQ(b, at(b, u))), 'forearm_r')
     expect(handAt(START)[1]).toBeLessThan(elbowAt(START)[1] - 0.1)

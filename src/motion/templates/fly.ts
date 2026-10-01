@@ -36,7 +36,7 @@ const ARCS: Record<'bench' | 'high' | 'low', Arc> = {
   // high pulleys: open a little above the shoulders, closed with the hands together in front of the hips
   high: { open: { plane: -10, elev: 104 }, closed: { plane: 100, elev: 40 }, prot: [-8, 4], shrug: 0.3, tilt: 0.6, fwd: 1.2 },
   // low pulleys: open just behind the hips, closed at chin height
-  low: { open: { plane: -22, elev: 30 }, closed: { plane: 100, elev: 90 }, prot: [-6, 3], shrug: 0.5, tilt: 0.6 },
+  low: { open: { plane: -22, elev: 30 }, closed: { plane: 100, elev: 95 }, prot: [-6, 3], shrug: 0.5, tilt: 0.6 },
 }
 
 const DB_KG = 10

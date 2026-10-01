@@ -6,9 +6,9 @@ import { Kit } from '../kit.ts'
 import { firstPose, poseMatrix4, type LayoutSource, type MachineLayout, type Poses } from '../layout.ts'
 import { buildPecDeck, buildPecDeckArm } from './chest-shoulder-isolation/pec-deck.ts'
 
-// F3 chest-shoulder-isolation: the pec deck (frame plus the two arms the hands hold) and the cable crossover (two
-// single-column cable stacks, each drawing its cable to the handle it pulls). Layout pieces are also the QA
-// penetration gate's collision primitives (collision.ts).
+// F3 chest-shoulder-isolation: the pec deck (frame plus the two arms the hands hold), the cable crossover (two
+// single-column cable stacks, each drawing its cable to the handle it pulls) and the rolled towel of the external
+// rotations. Layout pieces are also the QA penetration gate's collision primitives (collision.ts).
 
 const V = (v: readonly number[]) => new Vector3(v[0], v[1], v[2])
 const merged = (pieces: ReturnType<typeof buildPecDeckArm>['pieces'], m: Matrix4) => new Kit().merge({ pieces }, m).pieces
@@ -94,11 +94,28 @@ function crossoverLayouts(b: Baked, spec: ImplementSpec): MachineLayout[] {
   return out
 }
 
+/** rolled towel in its implement frame (along Z): a dark gym towel, the loose end lying along its underside */
+export function buildTowel(spec: ImplementSpec) {
+  const part = spec.parts[0] as Extract<ImplementSpec['parts'][number], { shape: 'cylinder' }>
+  const kit = new Kit()
+  kit.rod(part.a, part.b, part.r, 'mat', 24)
+  const r = part.r
+  kit.rod([0, -r * 0.8, part.a[2] + 0.004], [0, -r * 0.8, part.b[2] - 0.004], r * 0.32, 'mat', 12)
+  return kit.pieces
+}
+
+function towelLayouts(spec: ImplementSpec): MachineLayout[] {
+  const pieces = buildTowel(spec)
+  // the implement is the collider (a padded part), so the drawn roll adds none
+  return [{ key: spec.id, holds: [], fixed: false, build: (poses) => ({ placement: poseMatrix4(poses.get(spec.id)!), pieces }), solid: () => ({ placement: new Matrix4(), pieces: [] }) }]
+}
+
 export const layouts: LayoutSource = (b) => {
   const out: MachineLayout[] = []
   for (const spec of b.implements) {
     if (spec.kind === 'pec_deck') out.push(...pecDeckLayouts(b, spec))
     if (spec.kind === 'cable_crossover') out.push(...crossoverLayouts(b, spec))
+    if (spec.kind === 'towel_roll') out.push(...towelLayouts(spec))
   }
   return out
 }

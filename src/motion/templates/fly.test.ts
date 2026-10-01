@@ -89,7 +89,8 @@ describe('fly template', () => {
     expect(open[2]).toBeLessThan(hip[2])
     const closed = posAt(b, CLOSED, 'grip_l')
     expect(closed[1]).toBeGreaterThan(segAt(b, CLOSED, 'humerus_l')[1])
-    expect(closed[1]).toBeLessThan(posAt(b, CLOSED, 'head_top')[1] - 0.15)
+    // the cue's "about chin height"
+    expect(Math.abs(closed[1] - posAt(b, CLOSED, 'chin')[1])).toBeLessThan(0.03)
   })
 
   it('cable flies: each hand pulls its own tower\'s cable', () => {

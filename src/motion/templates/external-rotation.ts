@@ -1,9 +1,10 @@
-import { centerOfPressure, fk } from '../fk.ts'
+import { centerOfPressure, fk, segPos } from '../fk.ts'
 import { bodyCapsules, type Capsule } from '../collide.ts'
 import { cableForce, cableHandle, comWorld, dumbbell, type ImplementSpec, type Part } from '../implements.ts'
 import { dls } from '../ik.ts'
+import { towelRoll } from '../implements/chest-shoulder-isolation.ts'
 import { flatBench } from '../implements/shared.ts'
-import { DEG, eulerFrom, lerp, qaxis, qfromBasis, qid, qmul, RAD, type V3 } from '../math.ts'
+import { add, cross, DEG, dot, eulerFrom, lerp, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, RAD, reject, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { handFrame, implementFromHand } from '../constraints.ts'
@@ -42,6 +43,7 @@ type Ctx = {
   hip?: V3
   prop?: number
   benchPose?: ImplementPose
+  towel: TowelFit
 }
 
 function workingArm(skel: Skeleton, q: Float64Array, s: Side, c: number, rot: [number, number]) {
@@ -58,6 +60,62 @@ function workingArm(skel: Skeleton, q: Float64Array, s: Side, c: number, rot: [n
     [`scapula_${s}.uprot`]: g.uprot,
     [`grip_${s}.close`]: 1,
   })
+}
+
+// ---------- towel ----------
+
+/** the rolled towel sinks at least this far into the arm and the ribs, m (the arm turning about its axis adds up to ~9 mm; the pad allowance is 15) */
+const TOWEL_SQUASH = 0.003
+/** how far down the humerus the towel sits (shoulder 0, elbow 1): just above the elbow */
+const TOWEL_AT = 0.85
+
+type TowelFit = { r: number; pos: V3; rot: Quat }
+
+/** closest point to p on the segment a-b */
+function onSegment(p: V3, a: V3, b: V3): V3 {
+  const ab = sub(b, a)
+  const len2 = dot(ab, ab)
+  const t = len2 > 1e-12 ? Math.max(0, Math.min(1, dot(sub(p, a), ab) / len2)) : 0
+  return add(a, scale(ab, t))
+}
+
+/**
+ * The towel between the working upper arm and the ribs (the cue's folded towel): radius that fills the gap and its
+ * pose in the thorax2 frame. The humerus stays pinned to the trunk through the rep while it turns about its own
+ * axis, so the towel rides with the thorax, not the arm.
+ */
+function towelFit(skel: Skeleton, q: Float64Array, work: Side): TowelFit {
+  const f = fk(skel, q)
+  const sh = segPos(skel, f, `humerus_${work}`), el = segPos(skel, f, `forearm_${work}`)
+  const at = add(sh, scale(sub(el, sh), TOWEL_AT))
+  const caps = bodyCapsules(skel, f)
+  const clear = (p: V3, keep: (c: Capsule) => boolean) => Math.min(...caps.filter(keep).map((c) => Math.hypot(...sub(p, onSegment(p, c.a, c.b))) - c.r))
+  const isArm = (c: Capsule) => c.region === `upperarm_${work}`, isTrunk = (c: Capsule) => c.region === 'trunk'
+  // from the point on the humerus towards the nearest trunk axis, the spot as far from the arm as from the ribs
+  const trunkAxis = caps.filter(isTrunk).map((c) => onSegment(at, c.a, c.b)).sort((x, y) => Math.hypot(...sub(x, at)) - Math.hypot(...sub(y, at)))[0]
+  const n = norm(sub(trunkAxis, at))
+  const L = Math.hypot(...sub(trunkAxis, at))
+  let lo = 0, hi = L
+  for (let k = 0; k < 40; k++) {
+    const m = (lo + hi) / 2
+    const c = add(at, scale(n, m))
+    if (clear(c, isArm) < clear(c, isTrunk)) lo = m
+    else hi = m
+  }
+  const center = add(at, scale(n, lo))
+  const r = clear(center, isArm) + TOWEL_SQUASH
+  // rolled along the fore-aft axis of the chest
+  const th = f.rot[skel.seg.thorax2]
+  const axis = norm(reject(qrot(th, [0, 0, 1]), n))
+  const rot = qfromBasis(n, cross(axis, n))
+  const inv = qconj(th)
+  return { r, pos: qrot(inv, sub(center, f.pos[skel.seg.thorax2])), rot: qmul(inv, rot) }
+}
+
+function towelPose(skel: Skeleton, q: Float64Array, fit: TowelFit): ImplementPose {
+  const f = fk(skel, q)
+  const th = f.rot[skel.seg.thorax2]
+  return { id: 'towel', pos: add(f.pos[skel.seg.thorax2], qrot(th, fit.pos)), rot: qmul(th, fit.rot) }
 }
 
 // ---------- standing cable ----------
@@ -115,7 +173,9 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
     cables: [{ pulley, implement: 'handle', point: [0, 0, 0], kg: CABLE_KG }],
   }
-  const ctx: Ctx = { kind: 'cable', tempo, setup, work, stance, pulley, handle }
+  const towel = towelFit(skel, q, work)
+  setup.implements.push(towelRoll({ r: towel.r }))
+  const ctx: Ctx = { kind: 'cable', tempo, setup, work, stance, pulley, handle, towel }
   ctx.sway = limitSway((uu, sway) => standing(uu, skel, ctx, zeroQ(skel), sway))
   return ctx
 }
@@ -123,20 +183,20 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
 // ---------- side-lying on a flat bench ----------
 
 /**
- * side-lying legs a little bent and stacked: `lift` raises both towards the ceiling so they run level off the seat's
- * end (the bench is shorter than the lifter), the top leg adducted a further `topAbd` onto the bottom one; the neck's
+ * side-lying legs curled and stacked (the clamshell start: knees and feet together), the usual way to lie on a bench
+ * shorter than the lifter: hips and knees bent so the shins come back over the seat instead of sticking out past its
+ * end; `lift` raises both towards the ceiling, the top leg adducted `topAbd` and turned out `topRot` so its knee and
+ * foot come down onto the bottom leg's (the thighs then press within the default soft-tissue tolerance); the neck's
  * side bend onto the pillow arm
  */
-const SIDE = { hip: 12, topHip: 14, knee: 16, lift: 4, topAbd: -7, neckBend: 22 }
-/** stacked thighs press together at the root, where the fitted capsules are widest (the shins still clear), mm */
-const STACKED_THIGH_TOL = 36
+const SIDE = { hip: 38, knee: 120, lift: 16, topAbd: -1, topRot: -21, topAnkle: 0, ankle: -12, neckBend: 22 }
 /** the bottom arm overhead along the pad, the forearm folded back up behind and under the head as a pillow (the
  * elbow bends towards the back and the ceiling: the humeral rotation this needs stays inside the rig's range) */
 const PILLOW = { plane: 95, elev: 170, elbow: 135 }
 /** the bottom shoulder and hip sink this far into the pad, m */
 const SIDE_SINK = 0.012
-/** hip joints this far towards the feet end from the pad joint, so the knees sit just past the seat's end */
-const Z_SHIFT = 0.08
+/** hip joints this far towards the feet end from the pad joint, so the curled shins lie over the seat */
+const Z_SHIFT = -0.04
 
 /**
  * lying on the non-working side along the bench, head towards -Z: the lifter faces +X (working right arm up) or -X,
@@ -152,12 +212,13 @@ function sideBody(skel: Skeleton, q: Float64Array, work: Side, hip: V3, prop: nu
     'neck.flex': 4,
     'neck.bend': toRight ? SIDE.neckBend : -SIDE.neckBend,
     'head.flex': 2,
-    [`hip_${down}.flex`]: SIDE.hip,
-    [`hip_${work}.flex`]: SIDE.topHip,
+    'hip_*.flex': SIDE.hip,
     'knee_*.flex': SIDE.knee,
-    'ankle_*.df': -12,
+    [`ankle_${down}.df`]: SIDE.ankle,
+    [`ankle_${work}.df`]: SIDE.topAnkle,
     [`hip_${down}.abd`]: -SIDE.lift,
     [`hip_${work}.abd`]: SIDE.lift + SIDE.topAbd,
+    [`hip_${work}.rot`]: SIDE.topRot,
   })
   // body axes in the world: the spine along -Z, the down side's lateral axis pointing at the floor, facing +/-X
   const lat: V3 = toRight ? [0, -1, 0] : [0, 1, 0]
@@ -182,7 +243,7 @@ function sideContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     sideBody(skel, q, work, [x, v[0], z], v[1])
     const caps = bodyCapsules(skel, fk(skel, q))
     const shoulder = caps.filter((c) => [`girdle_${down}`, `upperarm_${down}`].includes(c.region) || c.segment === 'thorax2')
-    const hips = caps.filter((c) => c.segment === 'pelvis' || c.region === `thigh_${down}`)
+    const hips = caps.filter((c) => c.segment === 'pelvis' || c.name === `thigh_${down}1`)
     return [(lowest(shoulder) - target) * 100, (lowest(hips) - target) * 100]
   }, [BENCH_H + 0.2, 0], { tol: 1e-8, iters: 60 })
   const [y, prop] = r.x
@@ -194,9 +255,13 @@ function sideContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     contacts: [{ site: `grip_${work}`, kind: 'grip', target: { implement: db.id, grip: 'c' } }],
     tempo,
     symmetric: false,
-    tolerances: { body: { 'thigh_l / thigh_r': STACKED_THIGH_TOL } },
   }
-  return { kind: 'side', tempo, setup, work, hip: [x, y, z], prop, benchPose }
+  const qt = zeroQ(skel)
+  sideBody(skel, qt, work, [x, y, z], prop)
+  workingArm(skel, qt, work, 0.5, ROT.side_lying)
+  const towel = towelFit(skel, qt, work)
+  setup.implements.push(towelRoll({ r: towel.r }))
+  return { kind: 'side', tempo, setup, work, hip: [x, y, z], prop, benchPose, towel }
 }
 
 // ---------- template ----------
@@ -215,12 +280,12 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   if (ctx.kind === 'cable') {
     standing(u, skel, ctx, q, ctx.sway)
     const hp = handleInHand(skel, q, ctx.work, ctx.pulley!, ctx.handle!)
-    return { q, implements: [hp, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
+    return { q, implements: [hp, { id: 'stack', pos: [0, 0, 0], rot: qid() }, towelPose(skel, q, ctx.towel)], contacts: ctx.setup.contacts }
   }
   sideBody(skel, q, ctx.work, ctx.hip!, ctx.prop ?? 0)
   workingArm(skel, q, ctx.work, phaseAt(u, ctx.tempo).c, ROT.side_lying)
   const h = handFrame(skel, fk(skel, q), ctx.work)
-  return { q, implements: [{ id: `db_${ctx.work}`, pos: h.pos, rot: implementFromHand(h.axis, h.palm) }, ctx.benchPose!], contacts: ctx.setup.contacts }
+  return { q, implements: [{ id: `db_${ctx.work}`, pos: h.pos, rot: implementFromHand(h.axis, h.palm) }, ctx.benchPose!, towelPose(skel, q, ctx.towel)], contacts: ctx.setup.contacts }
 }
 
 export const externalRotation: Template<P> = {

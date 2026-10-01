@@ -2,10 +2,12 @@ import type { ImplementSpec, Part } from '../implements.ts'
 import type { V3 } from '../math.ts'
 
 // F3 chest-shoulder-isolation: the pec deck / reverse pec deck (one machine, two modes: the lifter sits with the
-// back or the chest against the pad) and the cable crossover (two cable stacks). The figure props
-// (src/features/figure/props/families/chest-shoulder-isolation) draw them at exactly these dimensions.
-export const KINDS = ['pec_deck', 'pec_deck_arm', 'cable_crossover'] as const
-export const MOVING: readonly string[] = ['pec_deck_arm']
+// back or the chest against the pad), the cable crossover (two cable stacks) and the rolled towel of the external
+// rotations. The figure props (src/features/figure/props/families/chest-shoulder-isolation) draw them at exactly
+// these dimensions.
+export const KINDS = ['pec_deck', 'pec_deck_arm', 'cable_crossover', 'towel_roll'] as const
+/** the towel moves with the lifter's arm, so like a held implement it is not fixed equipment to lean on */
+export const MOVING: readonly string[] = ['pec_deck_arm', 'towel_roll']
 
 const cyl = (a: V3, b: V3, r: number, pad?: boolean): Part => ({ shape: 'cylinder', a, b, r, ...(pad ? { pad: true } : {}) })
 
@@ -89,5 +91,21 @@ export function cableCrossover(o: { id?: string; pulleys: { l: V3; r: V3 }; faci
     com: [0, 0, 0],
     parts: [],
     sites: { l: { pos: o.pulleys.l, normal: o.facing.l }, r: { pos: o.pulleys.r, normal: o.facing.r } },
+  }
+}
+
+/** rolled towel tucked between the elbow and the ribs: length along the fore-aft axis and radius, m */
+export const TOWEL = { length: 0.13, r: 0.03 }
+
+/** Rolled towel: a soft cylinder along local Z, centred on the origin. */
+export function towelRoll(o: { id?: string; r?: number } = {}): ImplementSpec {
+  const r = o.r ?? TOWEL.r
+  return {
+    id: o.id ?? 'towel',
+    kind: 'towel_roll',
+    mass: 0,
+    com: [0, 0, 0],
+    parts: [cyl([0, 0, -TOWEL.length / 2], [0, 0, TOWEL.length / 2], r, true)],
+    sites: {},
   }
 }
