@@ -121,6 +121,29 @@ describe('push-up template', () => {
     expect(Math.abs(chest[2] - (frameImplements(b, i)[k].pos[2] - d / 2))).toBeLessThan(0.06)
   })
 
+  it('feet on a box: the balls of the feet on its top just behind the front edge, toes turned under, near level', () => {
+    const b = baked.get(115)!
+    const k = b.implements.findIndex((s) => s.kind === 'plyo_box')
+    const parts = b.implements[k].parts.filter((q): q is Extract<typeof q, { shape: 'box' }> => q.shape === 'box')
+    const d = parts[0].size[2]
+    const h = Math.max(...parts.map((q) => q.center[1] + q.size[1] / 2))
+    for (let i = 0; i < b.frames; i += 3) {
+      const box = frameImplements(b, i)[k].pos
+      const f = fk(skel, frameQ(b, i))
+      for (const s of ['l', 'r']) {
+        const ball = sitePos(skel, f, `ball_${s}`)
+        const edge = box[2] + d / 2 - ball[2]
+        expect(edge, `ball_${s} on the top @${i}`).toBeGreaterThan(0.02)
+        expect(edge, `ball_${s} near the front edge @${i}`).toBeLessThan(0.05)
+        expect(Math.abs(ball[1] - h), `ball_${s} height @${i}`).toBeLessThan(0.01)
+        // toes turned under (pointing at the hands), not hanging straight down off the edge (dir y ~ -1)
+        const toes = qrot(f.rot[skel.seg[`toes_${s}`]], [0, 0, 1])
+        expect(toes[2], `toes_${s} forward @${i}`).toBeGreaterThan(0.95)
+        expect(toes[1], `toes_${s} near level @${i}`).toBeGreaterThan(-0.25)
+      }
+    }
+  })
+
   it('hands on a box incline the body, feet on a box decline it', () => {
     const floor = baked.get(113)!, hands = baked.get(114)!, feet = baked.get(115)!
     expect(pitch(hands, BOTTOM)).toBeGreaterThan(pitch(floor, BOTTOM) + 20)

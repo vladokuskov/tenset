@@ -34,6 +34,10 @@ const HIP = 2
 const KNEE = 2
 /** ankle dorsiflexion: heels up and back, toes turned under within the toe joint's range */
 const ANKLE_DF = 28
+/** feet on a box: extra dorsiflexion as the plank tips head down (full at DECLINE_PITCH deg below horizontal), which
+ * keeps the turned-under toes near level within the toe joint's range */
+const DECLINE_DF = 10
+const DECLINE_PITCH = 25
 /** clavicle protraction at the bottom and the top, extra for the plus, deg; thorax rounding at the top of the plus */
 const PROT: [number, number] = [-12, 6]
 const PLUS = 16
@@ -67,17 +71,21 @@ const WRIST_SEED = [45, -80]
 /** grip site above the support: the palm capsules then rest ~1 mm off it */
 const PALM_LIFT = 0.001
 const PALM_LIFT_BOX = 0.003
-/** feet on a box: its top front edge this far ahead of the balls of the feet, m */
-const BALL_EDGE = 0.005
+/** feet on a box: its top front edge this far ahead of the balls of the feet, m. The balls rest on the top and the
+ * turned-under toes reach over the edge: at the toe joint's -60 stop they tip down ~10 deg at the bottom of the decline */
+const BALL_EDGE = 0.03
 const KNOTS = 17
 /**
  * How far the capsule model sinks into a support at the palms and the balls of the feet, mm: the fist capsule models
  * fingers closed round a handle and the forefoot capsule straight toes, while here the palms lie flat and the toes
- * are turned under. The trunk, head and legs keep their clearance (push-up.test.ts). Palms on a box rest on it with
- * the same sink. A lead decision.
+ * are turned under. The trunk, head and legs keep their clearance (push-up.test.ts). Palms on a box rest on it with the
+ * same sink, feet on its edge with a smaller one. A lead decision.
  */
 const HAND_SINK = 45
 const FOOT_SINK = 65
+/** the balls of the feet on the box's front edge: the forefoot capsule sinks ~28 mm into the edge, less than on the
+ * floor (the toes reach over it) */
+const FOOT_SINK_BOX = 30
 
 type Ctx = {
   tempo: Tempo
@@ -113,16 +121,14 @@ function plank(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Ctx, 'balls'>, c
     'head.flex': NECK[p.elevation === 'feet' ? 1 : 0][1],
     'hip_*.flex': HIP,
     'knee_*.flex': KNEE,
-    'ankle_*.df': ANKLE_DF,
+    'ankle_*.df': ANKLE_DF + (p.elevation === 'feet' ? DECLINE_DF * Math.min(1, Math.max(0, -pitch / DECLINE_PITCH)) : 0),
     'clavicle_*.prot': lerp(PROT[0], PROT[1], c) + PLUS * plus,
     'grip_*.close': 1,
   })
   q[skel.dof['pelvis.tilt']] = 90 - pitch
   const d = sub(ctx.balls[0], sitePos(skel, fk(skel, q), 'ball_l'))
   for (const [k, i] of [['pelvis.tx', 0], ['pelvis.ty', 1], ['pelvis.tz', 2]] as const) q[skel.dof[k]] += d[i]
-  // toes turned under, lying flat (pointing towards the hands); on a box the balls of the feet sit on its edge and the
-  // toes hang over it
-  if (p.elevation === 'feet') return
+  // toes turned under, lying flat (pointing towards the hands), on the floor or on the box top
   const toe = root1d((t) => {
     q[skel.dof['toe_l.flex']] = t
     const f = fk(skel, q)
@@ -246,10 +252,13 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.elevation !== 'floor') {
     const box = plyoBox({ height: BOX_H, width: p.elevation === 'hands' ? HANDS_BOX_W : PLYO_BOX.width })
     implements_.push(box)
-    // hands: the palm heels just inside the edge nearer the feet; feet: the balls of the feet on its front edge
+    // hands: the palm heels just inside the edge nearer the feet; feet: the balls of the feet just behind its front
+    // edge, the toes on the top
     const z = p.elevation === 'hands' ? palmPose.pos[2] - 0.135 + PLYO_BOX.depth / 2 : BALL_EDGE - PLYO_BOX.depth / 2
     boxPose = { id: box.id, pos: [0, 0, z], rot: qid() }
-    if (p.elevation === 'hands') rests = [{ implement: box.id, regions: ['hand_l', 'hand_r'], tol: HAND_SINK }]
+    rests = p.elevation === 'hands'
+      ? [{ implement: box.id, regions: ['hand_l', 'hand_r'], tol: HAND_SINK }]
+      : [{ implement: box.id, regions: ['foot_l', 'foot_r'], tol: FOOT_SINK_BOX }]
   }
   const contacts: Contact[] = [
     { site: 'ball_l', kind: 'planted', target: { world: balls[0] } },
