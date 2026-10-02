@@ -76,7 +76,7 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 | `/exercise/$slug` | `sheet`, `from` (day slug that opened it) | `days` (add to plan), `counts` (edit how this counts) |
 | `/welcome` | `step` (1..3) | none |
 | `/shared` | none; the program is in the `#fragment` | none |
-| `/settings` | `sheet` | `equipment`, `overrides` |
+| `/settings` | `sheet` | `equipment`, `overrides`, `custom` |
 | `/credits`, `/privacy`, `/about` | none | none |
 | `/dev/figure` | unchanged, dev only | none |
 

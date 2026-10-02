@@ -7,7 +7,6 @@ import { countLabel, joinMeta, plural } from '../../app/format'
 import { gapNote } from '../../app/knownGaps'
 import { useCatalog } from '../../app/useCatalog'
 import { computeCoverage } from '../../domain/coverage'
-import { equipment as allEquipment, matchPreset, presetEquipment, presets } from '../../domain/equipment'
 import { sequentialIds } from '../../domain/ids'
 import { applyTemplate } from '../../domain/program'
 import type { SplitTemplate } from '../../domain/schema'
@@ -16,7 +15,7 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { DayPicker } from '../builder'
 import { LEVEL_LABEL } from '../catalog'
-import { EquipmentChecklist } from '../settings/EquipmentChecklist'
+import { EquipmentPicker } from '../settings/EquipmentPicker'
 import { Button, Page, PageBody, StickyActions, cx, showToast } from '../../ui'
 import { TemplateCard } from './TemplateCard'
 
@@ -49,11 +48,9 @@ export function WelcomeScreen() {
   const [choice, setChoice] = useState<string>(() => splits[0]?.id ?? BLANK)
   const [days, setDays] = useState<DayIndex[] | null>(null)
   const [equip, setEquip] = useState<string[]>(() => [...prefs.equipment])
-  const [custom, setCustom] = useState(false)
 
   const template = choice === BLANK ? undefined : splitById.get(choice)
   const trainingDays = days ?? template?.defaultDays ?? [0, 2, 4]
-  const preset = custom ? null : matchPreset(equip)
   const gaps = gapNote(equip)
 
   const previews = useMemo(() => {
@@ -169,56 +166,7 @@ export function WelcomeScreen() {
             </>
           )}
 
-          {step === 3 && (
-            <>
-              <ul className="space-y-2" role="radiogroup" aria-label="Equipment">
-                {[...presets.map((p) => ({ id: p.id, name: p.name, count: p.equipment.length })), { id: 'custom', name: 'Custom', count: -1 }].map(
-                  (p) => {
-                    const selected = p.id === 'custom' ? preset === null : preset === p.id
-                    return (
-                      <li key={p.id}>
-                        <button
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          onClick={() => {
-                            if (p.id === 'custom') setCustom(true)
-                            else {
-                              setCustom(false)
-                              setEquip(presetEquipment(p.id))
-                            }
-                          }}
-                          className={cx(
-                            'flex min-h-14 w-full items-center gap-3 rounded-xl border-2 bg-surface px-4 text-left transition-colors',
-                            selected ? 'border-ink' : 'border-transparent hover:border-line-strong',
-                          )}
-                        >
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-base font-medium">{p.name}</span>
-                            <span className="num block text-sm text-ink-2">
-                              {p.count < 0
-                                ? selected
-                                  ? `${equip.length} of ${allEquipment.length} items`
-                                  : 'Pick items one by one'
-                                : p.count === 0
-                                  ? 'No equipment'
-                                  : `${p.count} of ${allEquipment.length} items`}
-                            </span>
-                          </span>
-                          <span
-                            aria-hidden
-                            className={cx('size-5 shrink-0 rounded-full border-2', selected ? 'border-ink bg-ink ring-4 ring-surface ring-inset' : 'border-line-strong')}
-                          />
-                        </button>
-                      </li>
-                    )
-                  },
-                )}
-              </ul>
-              {gaps && <p className="mt-4 text-sm text-ink-2">{gaps}</p>}
-              {preset === null && <EquipmentChecklist className="mt-4" value={equip} onChange={setEquip} />}
-            </>
-          )}
+          {step === 3 && <EquipmentPicker value={equip} onChange={setEquip} />}
         </div>
 
         <p className="mt-8 text-xs text-ink-3">{NOT_MEDICAL_ADVICE}</p>

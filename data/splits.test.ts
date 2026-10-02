@@ -155,29 +155,39 @@ describe('applying templates to equipment presets', () => {
     expect(out).toMatchInlineSnapshot(`
       {
         "bro-5x": {
+          "basic_gym": "29/29",
           "bodyweight": "13/29",
           "dumbbells_bench": "26/29",
           "full_gym": "29/29",
+          "home_gym": "28/29",
         },
         "full-body-3x": {
+          "basic_gym": "23/23",
           "bodyweight": "14/23",
           "dumbbells_bench": "23/23",
           "full_gym": "23/23",
+          "home_gym": "23/23",
         },
         "ppl-3x": {
+          "basic_gym": "18/18",
           "bodyweight": "10/18",
           "dumbbells_bench": "17/18",
           "full_gym": "18/18",
+          "home_gym": "18/18",
         },
         "ppl-6x": {
+          "basic_gym": "36/36",
           "bodyweight": "20/36",
           "dumbbells_bench": "34/36",
           "full_gym": "36/36",
+          "home_gym": "36/36",
         },
         "upper-lower-4x": {
+          "basic_gym": "27/27",
           "bodyweight": "15/27",
           "dumbbells_bench": "27/27",
           "full_gym": "27/27",
+          "home_gym": "27/27",
         },
       }
     `)

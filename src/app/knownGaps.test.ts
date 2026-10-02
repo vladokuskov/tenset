@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import raw from '../../data/known-gaps.json' with { type: 'json' }
-import { presetEquipment, presets } from '../domain/equipment'
-import { getGroup } from '../domain/taxonomy'
+import { activeExercises } from '../data/catalog'
+import { hasEquipment, presetEquipment, presets } from '../domain/equipment'
+import { bandedGroupIds, getGroup, isOptional } from '../domain/taxonomy'
 import { equipmentGaps, gapNote } from './knownGaps'
 
 describe('known equipment gaps', () => {
@@ -14,6 +15,8 @@ describe('known equipment gaps', () => {
 
   it('has no gaps with a full gym or dumbbells', () => {
     expect(equipmentGaps(presetEquipment('full_gym'))).toEqual([])
+    expect(equipmentGaps(presetEquipment('basic_gym'))).toEqual([])
+    expect(equipmentGaps(presetEquipment('home_gym'))).toEqual([])
     expect(gapNote(presetEquipment('dumbbells_bench'))).toBeNull()
   })
 
@@ -26,6 +29,17 @@ describe('known equipment gaps', () => {
     expect(equipmentGaps(['step'])).toEqual(equipmentGaps(presetEquipment('bodyweight')))
     expect(equipmentGaps([])).toEqual(equipmentGaps(presetEquipment('bodyweight')))
     expect(equipmentGaps(['pullup_bar', 'step', 'dumbbell'])).toEqual([])
+  })
+
+  it('gives every preset an exercise for each required group or lists the gap', () => {
+    for (const p of presets) {
+      const gaps = equipmentGaps(p.equipment)
+      for (const g of bandedGroupIds) {
+        if (isOptional(g) || gaps.includes(g)) continue
+        const has = activeExercises.some((e) => e.groups[g] && hasEquipment(e, p.equipment))
+        expect(has, `${p.id}: ${g}`).toBe(true)
+      }
+    }
   })
 
   it('keeps the note neutral', () => {

@@ -2,14 +2,14 @@ import { getRouteApi } from '@tanstack/react-router'
 import { ChevronRight, Plus } from 'lucide-react'
 import { dayName } from '../../app/days'
 import { countLabel, joinMeta } from '../../app/format'
-import { equipment as allEquipment, matchPreset, presets } from '../../domain/equipment'
 import { MAX_CUSTOM } from '../../domain/program'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useActiveProgram } from '../../store/program.store'
-import { Button, ChipGroup, Page, PageBody, PageHeader, Section, SegmentedControl, Sheet, useSheet } from '../../ui'
+import { Button, Page, PageBody, PageHeader, Section, SegmentedControl, Sheet, useSheet } from '../../ui'
 import { groupName } from '../builder/labels'
 import { CustomExerciseSheet } from './CustomExerciseSheet'
-import { EquipmentChecklist } from './EquipmentChecklist'
+import { EquipmentPicker } from './EquipmentPicker'
+import { equipmentSummary } from './equipmentSummary'
 import { OverridesSheet } from './OverridesSheet'
 
 const route = getRouteApi('/settings')
@@ -34,7 +34,6 @@ export function SettingsScreen() {
   const equipmentSheet = useSheet('equipment')
   const overridesSheet = useSheet('overrides')
   const customSheet = useSheet('custom', ['id'])
-  const preset = matchPreset(s.equipment)
   const overrideCount = Object.keys(s.overrides).length
   const custom = program?.custom ?? []
 
@@ -56,16 +55,13 @@ export function SettingsScreen() {
           />
         </Section>
 
-        <Section title="Equipment" description={preset ? presets.find((p) => p.id === preset)?.name : `Custom, ${s.equipment.length} of ${allEquipment.length} items`}>
-          <ChipGroup
-            label="Equipment preset"
-            options={presets.map((p) => ({ value: p.id, label: p.name }))}
-            value={preset}
-            onChange={(v) => v && s.setEquipmentPreset(v)}
-          />
-          <Button variant="link" size="sm" className="mt-2" onClick={() => equipmentSheet.show()}>
-            Choose individual items
-          </Button>
+        <Section title="Equipment">
+          <div className="flex min-h-14 items-center gap-3 rounded-xl bg-surface px-4 py-2">
+            <span className="num min-w-0 flex-1 text-base">{equipmentSummary(s.equipment)}</span>
+            <Button variant="secondary" size="sm" onClick={() => equipmentSheet.show()}>
+              Edit
+            </Button>
+          </div>
         </Section>
 
         <Section title="Counting" description={COUNTING_HINT[s.countingMode]}>
@@ -146,7 +142,7 @@ export function SettingsScreen() {
       </PageBody>
 
       <Sheet open={equipmentSheet.open} onClose={equipmentSheet.close} title="Equipment" description="Exercises that need something unchecked are left out of suggestions.">
-        <EquipmentChecklist value={s.equipment} onChange={s.setEquipment} />
+        <EquipmentPicker value={s.equipment} onChange={s.setEquipment} />
       </Sheet>
       <OverridesSheet open={overridesSheet.open} onClose={overridesSheet.close} />
       <CustomExerciseSheet id={search.id} open={customSheet.open} onClose={customSheet.close} />

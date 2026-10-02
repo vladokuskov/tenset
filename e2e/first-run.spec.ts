@@ -70,3 +70,15 @@ test('first run: back from the filled Plan does not restart first run', async ({
   const { programs } = await storedPrograms(page)
   expect(Object.keys(programs)).toHaveLength(1)
 })
+
+test('first run: a preset is a starting point that items can adjust', async ({ page }) => {
+  await page.goto('/welcome?step=3')
+  await page.getByRole('radio', { name: /^Home gym/ }).click()
+  await expect(page.getByRole('radio', { name: /^Home gym/ })).toHaveAttribute('aria-checked', 'true')
+  await page.getByRole('button', { name: /^Leg machines/ }).click()
+  await page.getByRole('checkbox', { name: 'Leg press' }).check({ force: true })
+  await expect(page.getByText('Custom, 10 of 26 items')).toBeVisible()
+  await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
+  await page.getByRole('checkbox', { name: 'Leg press' }).uncheck({ force: true })
+  await expect(page.getByRole('radio', { name: /^Home gym/ })).toHaveAttribute('aria-checked', 'true')
+})

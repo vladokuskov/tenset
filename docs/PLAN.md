@@ -30,7 +30,7 @@ Yes, procedurally. The agent can't produce raster images or video from a diffusi
 - **Weekly builder**: Mon..Sun. Phone: multi-add sheet from a day (primary), drag handle to reorder within a day, move/copy between days from the entry menu (also the non-drag path WCAG 2.5.7 requires). Drag between days only on the desktop board. Per entry: hard sets (stepper, default 3), rep range (preset chips). Duplicate/clear day, rest days, per-day free-text note (never counted). Destructive actions show an Undo toast (one-step snapshot undo), not a confirm dialog.
 - **Programs**: several named programs, one active. Templates, imports and share links always create a new program, never overwrite.
 - **Split templates**: Full Body 3x, Upper/Lower 4x, PPL 6x, PPL 3x, Bro 5x. Each is ordered sessions of slots (pattern + target group + sets + ranked options, e.g. BB bench > DB bench > push-up) plus a default weekday pattern. Loading fills each slot with the first option the user's equipment allows.
-- **First run** (`/welcome`, 3 skippable steps): template or blank, training days, equipment preset (full gym / dumbbells + bench / bodyweight / custom). Lands on a filled, colored week.
+- **First run** (`/welcome`, 3 skippable steps): template or blank, training days, equipment (preset as a starting point: full gym / basic gym / home gym / dumbbells + bench / bodyweight, then adjust items by group). Lands on a filled, colored week.
 - **Body map**: front + back, head-level, shaded by effective sets. Scope: Week or one day. Shading: Groups or Heads. Tap opens a muscle sheet: weekly sets (big number), band as a neutral text pill with "why?", Mon..Sun strip, head rows, contributing exercises with visible math ("Incline DB press · Mon · 3 x 1.0 = 3"), "Add exercise for this muscle".
 - **Coverage**: per-group table with bands; "not trained" chips with equipment-aware suggestions; balance insights as plain numbers.
 - **Recovery (info only)**: plain facts in secondary text ("Chest: also Sun, 1 day earlier, 8 sets"; "Trained Mon, Thu, Sat · gaps 3, 2, 2 days"). No red/amber, no "!" badges, no readiness %, none of "too soon / risk / overtrained / recover". Never in toasts, never blocks. (Chest on consecutive days is fine at moderate volume per the research; the strip just makes overlap visible.)
@@ -105,7 +105,7 @@ gym-builder/
 ```json
 { "id": 42, "slug": "incline-db-press-30", "name": "Incline Dumbbell Press",
   "aliases": ["incline db bench"], "family": "incline-press",
-  "equipment": ["dumbbell", "adjustable-bench"], "pattern": "incline-push", "mechanic": "compound",
+  "equipment": ["dumbbell", "adjustable_bench"], "pattern": "incline-push", "mechanic": "compound",
   "laterality": "bilateral", "level": 1, "unit": "reps",
   "defaults": { "sets": 3, "reps": "8-12", "strengthReps": "5-8" },
   "groups": { "chest": "primary", "front_delt": "secondary", "triceps": "secondary" },
