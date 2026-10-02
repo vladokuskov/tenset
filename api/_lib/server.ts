@@ -5,7 +5,8 @@ import { ToolError, createProgram, getReference, listSplits, readProgram, search
 const INSTRUCTIONS = `gym-builder plans a weekly gym program and shows weekly sets per muscle group on a body map.
 Workflow: call get_reference once for muscle group, equipment and pattern ids. Use list_splits for ready-made templates and search_exercises to find exercise ids (filter by the user's equipment). Then call create_program and give the user the returned url. Opening it shows a preview with a Save button. The app keeps programs only in the user's browser, so the link is the only way in.
 To change a program the user already has, ask them to share its link from the app and pass it to read_program; it returns the same shape create_program takes.
-Check weeklySets in the result: "target" is the intended range for most groups. Keep wording neutral.`
+Entries take optional restSec (rest between sets, 0 to 600, rounded to 15), rir (target reps in reserve, 0 to 5) and supersetWithPrevious (pairs the entry with the one above; pairs only, anything else is ignored and listed in "notes").
+Check weeklySets in the result: band "target" means the sets fall in the intended range for most groups, and "target" holds that range as [low, high] weekly sets. Keep wording neutral.`
 
 const json = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value) }] })
 

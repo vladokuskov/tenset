@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { decodeProgram } from '../../src/domain/codec.ts'
 import type { Exercise } from '../../src/domain/schema.ts'
 import { catalog } from './catalog.ts'
-import { ToolError, createProgram, listSplits, readProgram, searchExercises, type ProgramInput } from './tools.ts'
+import { ToolError, createProgram, getReference, listSplits, readProgram, searchExercises, type ProgramInput } from './tools.ts'
 
 const ORIGIN = 'https://example.test'
 
@@ -51,7 +51,55 @@ describe('createProgram', () => {
   it('reports weekly sets with bands', () => {
     const { weeklySets } = createProgram(upperLower, ORIGIN)
     const chest = weeklySets.find((g) => g.group === 'chest')
-    expect(chest).toMatchObject({ sets: 3, band: 'light' })
+    expect(chest).toMatchObject({ sets: 3, band: 'light', target: [10, 20] })
+  })
+
+  it('carries rest, RIR and supersets through the link and back', () => {
+    const input: ProgramInput = {
+      name: 'Push',
+      days: [
+        {
+          day: 0,
+          entries: [
+            { exerciseId: 101, sets: 3, reps: '6-8', restSec: 180, rir: 2 },
+            { exerciseId: 301, sets: 3, restSec: 60 },
+            { exerciseId: 401, sets: 2, rir: 0, supersetWithPrevious: true },
+          ],
+        },
+      ],
+    }
+    const result = createProgram(input, ORIGIN)
+    expect(result).not.toHaveProperty('notes')
+    const decoded = decodeProgram(result.url.split('#')[1])
+    expect(decoded.ok && decoded.program.days[0].entries.map((e) => [e.restSec, e.rir, e.withPrev])).toEqual([
+      [180, 2, undefined],
+      [60, undefined, undefined],
+      [undefined, 0, true],
+    ])
+    const { summary, ...back } = readProgram(result.url)
+    expect(back).toEqual({ ...input, custom: [] })
+    expect(summary.days[0].exercises[0]).toBe('Barbell Bench Press: 3 x 6-8, rest 180s, RIR 2')
+    expect(summary.days[0].exercises[1]).toMatch(/^\(superset A1\) .+: 3 x .+, rest 60s$/)
+    expect(summary.days[0].exercises[2]).toMatch(/^\(superset A2\) .+: 2 x .+, RIR 0$/)
+  })
+
+  it('rounds rest to the 15 second step', () => {
+    const { url } = createProgram({ name: 'Rest', days: [{ day: 0, entries: [{ exerciseId: 101, sets: 3, restSec: 97 }] }] }, ORIGIN)
+    expect(readProgram(url).days[0].entries[0].restSec).toBe(90)
+  })
+
+  it('drops supersets the pairs-only rule cannot keep, with a note', () => {
+    const entries = [
+      { exerciseId: 101, sets: 3, supersetWithPrevious: true },
+      { exerciseId: 301, sets: 3, supersetWithPrevious: true },
+      { exerciseId: 401, sets: 3, supersetWithPrevious: true },
+    ]
+    const result = createProgram({ name: 'Chain', days: [{ day: 2, entries }] }, ORIGIN)
+    expect(result.notes).toEqual([
+      'Wednesday entry 1: supersetWithPrevious ignored, the first entry of a day has nothing to pair with',
+      'Wednesday entry 3: supersetWithPrevious ignored, entry 2 is already paired (supersets are pairs only)',
+    ])
+    expect(readProgram(result.url).days[0].entries.map((e) => e.supersetWithPrevious)).toEqual([undefined, true, undefined])
   })
 
   it('lists every problem at once', () => {
@@ -115,4 +163,8 @@ describe('searchExercises', () => {
 it('lists splits with named options', () => {
   const split = listSplits().find((s) => s.id === 'bro-5x')!
   expect(split.sessions[0].slots[0].options[0]).toEqual({ id: 101, name: 'Barbell Bench Press' })
+})
+
+it('lists rest and RIR limits in the reference', () => {
+  expect(getReference().limits).toMatchObject({ restMaxSec: 600, restStepSec: 15, rirMax: 5 })
 })
