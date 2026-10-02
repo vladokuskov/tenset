@@ -65,6 +65,13 @@ it('explains bad input', async () => {
   expect((await call('program?program=%7Bnope')).body.problems[0]).toContain('not valid JSON')
   expect((await call(`program?program=${'x'.repeat(9000)}`)).body.problems[0]).toContain('POST')
   expect((await call('program', post({ name: '', days: [] }))).body.problems[0]).toMatch(/^name:/)
+
+  const entries = [{ exerciseId: 101, sets: 3, rir: 6, restSec: 700 }, { exerciseId: 301, sets: 3, rir: 1.5 }]
+  expect((await call('program', post({ name: 'Push', days: [{ day: 0, entries }] }))).body.problems).toEqual([
+    'days.0.entries.0.restSec: restSec must be 0 to 600',
+    'days.0.entries.0.rir: rir must be 0 to 5',
+    'days.0.entries.1.rir: rir must be a whole number',
+  ])
 })
 
 it('rejects unknown routes and methods', async () => {

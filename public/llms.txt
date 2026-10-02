@@ -28,7 +28,7 @@ Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what
 1. Ask the user how many days they train, what equipment they have, and any focus.
 2. Get ids from `reference`, then pick exercises with `exercises` (filter by the user's equipment) or start from a template in `splits`.
 3. Send the program to `program` and give the user the returned `url`.
-4. Check `weeklySets`: `band: "target"` is the intended range for most groups. Keep wording neutral.
+4. Check `weeklySets`: `band: "target"` means the sets fall in the intended range for most groups, and `target: [low, high]` gives that range in weekly sets. Read any `notes` (adjustments that did not block the program). Keep wording neutral.
 
 ## Program JSON
 
@@ -36,7 +36,11 @@ Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what
 {
   "name": "Full body",
   "days": [
-    { "day": 0, "label": "A", "entries": [{ "exerciseId": 401, "sets": 3, "reps": "6-10" }, { "exerciseId": 101, "sets": 3 }] },
+    { "day": 0, "label": "A", "entries": [
+      { "exerciseId": 401, "sets": 3, "reps": "6-10", "restSec": 180, "rir": 2 },
+      { "exerciseId": 101, "sets": 3, "restSec": 90 },
+      { "exerciseId": 304, "sets": 3, "supersetWithPrevious": true }
+    ] },
     { "day": 3, "entries": [{ "exerciseId": 501, "sets": 3 }] }
   ]
 }
@@ -45,6 +49,10 @@ Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what
 - `day`: 0 = Monday ... 6 = Sunday. Days left out are rest days.
 - `exerciseId`: a catalog id from `exercises`, or a custom id `"c1"`..`"c63"` defined in an optional `custom` array. Custom exercises take `id`, `name`, `equipment` (ids), `laterality` (`bilateral`, `unilateral` or `alternating`) and `groups` (`{ "<group id>": "primary" | "secondary" }`).
 - `reps` is optional (defaults to the exercise's own range). `sets` 1 to 20. `name` up to 40 characters.
+- `restSec` is optional: rest between sets in whole seconds, 0 to 600, rounded to the nearest 15.
+- `rir` is optional: target reps in reserve, a whole number 0 to 5.
+- `supersetWithPrevious: true` pairs the entry with the one above it. Supersets are pairs only: on the first entry of a day, or on an entry whose predecessor is already paired, it is ignored and the response lists it in `notes`.
+- The summary marks pairs as `(superset A1)` and `(superset A2)`, and lists rest and RIR after sets and reps, e.g. `Barbell Bench Press: 3 x 6-8, rest 180s, RIR 2`.
 
 Example (Monday squat, bench, row; Thursday Romanian deadlift):
 

@@ -1,16 +1,34 @@
 import { CODEC_EQUIPMENT_V1, CODEC_GROUPS_V1, REPS_PRESETS, decodeProgram, encodeProgram } from '../../src/domain/codec.ts'
 import { equipment, hasEquipment } from '../../src/domain/equipment.ts'
 import { sequentialIds } from '../../src/domain/ids.ts'
-import { LABEL_MAX, MAX_CUSTOM, MAX_SETS, NAME_MAX, NOTE_MAX } from '../../src/domain/program.ts'
+import {
+  LABEL_MAX,
+  MAX_CUSTOM,
+  MAX_SETS,
+  NAME_MAX,
+  NOTE_MAX,
+  REST_MAX,
+  REST_STEP,
+  RIR_MAX,
+  clampRest,
+  normalizeProgramSupersets,
+} from '../../src/domain/program.ts'
 import { isCustomRef } from '../../src/domain/resolve.ts'
-import { Pattern, Program, type CustomExercise, type Day, type Exercise, type ExerciseRef } from '../../src/domain/schema.ts'
+import { Pattern, Program, type CustomExercise, type Day, type Entry, type Exercise, type ExerciseRef } from '../../src/domain/schema.ts'
 import { groups } from '../../src/domain/taxonomy.ts'
 import { bandFor, computeWeek } from '../../src/domain/volume.ts'
 import { catalog, exercises, replacedBy, splits } from './catalog.ts'
 
 export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 
-export type EntryInput = { exerciseId: ExerciseRef; sets: number; reps?: string }
+export type EntryInput = {
+  exerciseId: ExerciseRef
+  sets: number
+  reps?: string
+  restSec?: number
+  rir?: number
+  supersetWithPrevious?: boolean
+}
 export type DayInput = { day: number; label?: string; note?: string; entries: EntryInput[] }
 export type ProgramInput = { name: string; days: DayInput[]; custom?: CustomExercise[] }
 
@@ -56,7 +74,16 @@ export function getReference() {
     equipment: equipment.map((e) => ({ id: e.id, name: e.name })),
     patterns: Pattern.options,
     repsPresets: REPS_PRESETS,
-    limits: { nameMax: NAME_MAX, labelMax: LABEL_MAX, noteMax: NOTE_MAX, setsMax: MAX_SETS, customMax: MAX_CUSTOM },
+    limits: {
+      nameMax: NAME_MAX,
+      labelMax: LABEL_MAX,
+      noteMax: NOTE_MAX,
+      setsMax: MAX_SETS,
+      customMax: MAX_CUSTOM,
+      restMaxSec: REST_MAX,
+      restStepSec: REST_STEP,
+      rirMax: RIR_MAX,
+    },
   }
 }
 
@@ -112,7 +139,34 @@ function checkRef(ref: ExerciseRef, where: string, customIds: Set<string>, probl
   }
 }
 
-export function buildProgram(input: ProgramInput): Program {
+const toEntry = (id: string, e: EntryInput): Entry => ({
+  id,
+  exerciseId: e.exerciseId,
+  sets: e.sets,
+  ...(e.reps ? { reps: e.reps } : {}),
+  ...(e.restSec !== undefined ? { restSec: clampRest(e.restSec) } : {}),
+  ...(e.rir !== undefined ? { rir: e.rir } : {}),
+  ...(e.supersetWithPrevious ? { withPrev: true as const } : {}),
+})
+
+/** Supersets the pairs-only rule dropped, as non-fatal notes. */
+function droppedSupersets(input: ProgramInput, program: Program) {
+  const notes: string[] = []
+  for (const d of input.days) {
+    const dayName = DAY_NAMES[d.day]
+    d.entries.forEach((e, i) => {
+      if (!e.supersetWithPrevious || program.days[d.day]?.entries[i]?.withPrev) return
+      notes.push(
+        i === 0
+          ? `${dayName} entry 1: supersetWithPrevious ignored, the first entry of a day has nothing to pair with`
+          : `${dayName} entry ${i + 1}: supersetWithPrevious ignored, entry ${i} is already paired (supersets are pairs only)`,
+      )
+    })
+  }
+  return notes
+}
+
+export function buildProgram(input: ProgramInput): { program: Program; notes: string[] } {
   const problems: string[] = []
   const custom = input.custom ?? []
   const customIds = checkCustom(custom, problems)
@@ -127,17 +181,28 @@ export function buildProgram(input: ProgramInput): Program {
     d.entries.forEach((e, i) => checkRef(e.exerciseId, `${dayName} entry ${i + 1}`, customIds, problems))
     const day: Day = {
       kind: 'train',
-      entries: d.entries.map((e) => ({ id: makeId(), exerciseId: e.exerciseId, sets: e.sets, ...(e.reps ? { reps: e.reps } : {}) })),
+      entries: d.entries.map((e) => toEntry(makeId(), e)),
     }
     if (d.label?.trim()) day.label = d.label.trim()
     if (d.note?.trim()) day.note = d.note.trim()
     days[d.day] = day
   }
 
-  const parsed = Program.safeParse({ id: 'shared', name: input.name.trim(), days, custom })
+  const parsed = Program.safeParse(normalizeProgramSupersets({ id: 'shared', name: input.name.trim(), days, custom }))
   if (!parsed.success) for (const i of parsed.error.issues) problems.push(`${i.path.join('.') || 'program'}: ${i.message}`)
   if (problems.length) throw new ToolError(problems)
-  return parsed.data!
+  return { program: parsed.data!, notes: droppedSupersets(input, parsed.data!) }
+}
+
+/** "A1", "A2" for the halves of the first superset in a day, "B1", "B2" for the next, and so on. */
+function supersetTags(entries: readonly Entry[]) {
+  let pair = -1
+  return entries.map((e, i) => {
+    if (e.withPrev) return `${String.fromCharCode(65 + pair)}2`
+    if (!entries[i + 1]?.withPrev) return undefined
+    pair += 1
+    return `${String.fromCharCode(65 + pair)}1`
+  })
 }
 
 function summarize(program: Program) {
@@ -145,24 +210,34 @@ function summarize(program: Program) {
   const customName = new Map(program.custom.map((c) => [c.id, c.name]))
   const nameOf = (ref: ExerciseRef) => (isCustomRef(ref) ? (customName.get(ref) ?? ref) : exerciseName(ref))
   const defaultReps = (ref: ExerciseRef) => (isCustomRef(ref) ? 'default reps' : (catalog.get(ref)?.defaults.reps ?? 'default reps'))
+  const describe = (e: Entry, tag: string | undefined) => {
+    const extras = [e.restSec !== undefined && `rest ${e.restSec}s`, e.rir !== undefined && `RIR ${e.rir}`].filter(Boolean)
+    const line = [`${e.sets} x ${e.reps ?? defaultReps(e.exerciseId)}`, ...extras].join(', ')
+    return `${tag ? `(superset ${tag}) ` : ''}${nameOf(e.exerciseId)}: ${line}`
+  }
   return {
-    days: program.days.map((d, i) => ({
-      day: i,
-      name: DAY_NAMES[i],
-      kind: d.kind,
-      label: d.label,
-      exercises: d.entries.map((e) => `${nameOf(e.exerciseId)}: ${e.sets} x ${e.reps ?? defaultReps(e.exerciseId)}`),
-    })),
+    days: program.days.map((d, i) => {
+      const tags = supersetTags(d.entries)
+      return { day: i, name: DAY_NAMES[i], kind: d.kind, label: d.label, exercises: d.entries.map((e, j) => describe(e, tags[j])) }
+    }),
     weeklySets: groups
-      .map((g) => ({ group: g.id, sets: Math.round(week.weekly[g.id] * 10) / 10, band: bandFor(g.id, week.weekly[g.id])?.band ?? null }))
+      .map((g) => {
+        const band = bandFor(g.id, week.weekly[g.id])
+        return {
+          group: g.id,
+          sets: Math.round(week.weekly[g.id] * 10) / 10,
+          band: band?.band ?? null,
+          ...(band ? { target: [band.cited[1], band.cited[2]] as [number, number] } : {}),
+        }
+      })
       .filter((g) => g.sets > 0 || g.band !== null),
   }
 }
 
 export function createProgram(input: ProgramInput, origin: string) {
-  const program = buildProgram(input)
+  const { program, notes } = buildProgram(input)
   const url = `${origin.replace(/\/$/, '')}/shared#${encodeProgram(program)}`
-  return { url, ...summarize(program) }
+  return { url, ...summarize(program), ...(notes.length ? { notes } : {}) }
 }
 
 export function readProgram(link: string): ProgramInput & { summary: ReturnType<typeof summarize> } {
@@ -177,7 +252,14 @@ export function readProgram(link: string): ProgramInput & { summary: ReturnType<
       day,
       ...(d.label ? { label: d.label } : {}),
       ...(d.note ? { note: d.note } : {}),
-      entries: d.entries.map((e) => ({ exerciseId: e.exerciseId, sets: e.sets, ...(e.reps ? { reps: e.reps } : {}) })),
+      entries: d.entries.map((e) => ({
+        exerciseId: e.exerciseId,
+        sets: e.sets,
+        ...(e.reps ? { reps: e.reps } : {}),
+        ...(e.restSec !== undefined ? { restSec: e.restSec } : {}),
+        ...(e.rir !== undefined ? { rir: e.rir } : {}),
+        ...(e.withPrev ? { supersetWithPrevious: true } : {}),
+      })),
     })
   })
   return { name: p.name, days, custom: p.custom, summary: summarize(p) }

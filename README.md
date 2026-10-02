@@ -37,6 +37,7 @@ Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js
 - claude.ai (web, then also the mobile app): Settings, Connectors, Add custom connector, paste the URL. No auth.
 - Claude Code: `claude mcp add --transport http gym-builder https://gym-builder-nine.vercel.app/api/mcp`
 - Tools: `get_reference`, `search_exercises`, `list_splits`, `create_program`, `read_program` (turns a share link back into editable input).
+- Entries take `exerciseId`, `sets` and optional `reps`, `restSec` (0 to 600, rounded to 15), `rir` (0 to 5) and `supersetWithPrevious` (pairs only). `public/llms.txt` has the full rules.
 - Local check: `npx @modelcontextprotocol/inspector`, then connect to a preview deploy's `/api/mcp`.
 - Agents without an MCP client: `api/agent/[tool].ts` serves the same tools as plain JSON over GET/POST (`/api/agent/reference`, `splits`, `exercises`, `program`, `read`). Logic is in `api/_lib/http.ts`; MCP and HTTP share the zod inputs in `api/_lib/inputs.ts`.
 - Discovery: `public/llms.txt` (the agent guide, keep it in sync with the tools), `public/robots.txt`, `public/.well-known/mcp.json`, and the `<noscript>` block in `index.html`, which is all a fetch-only agent sees of the shell.
