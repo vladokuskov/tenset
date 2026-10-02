@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { bandFor } from '../domain/volume'
-import { bandExplanation, bandExplanationFor, bandLabel, bandLabelFor, bandRange, displayBand, targetText } from './bands'
+import {
+  bandExplanation,
+  bandExplanationFor,
+  bandLabel,
+  bandLabelFor,
+  bandRange,
+  bandTargetText,
+  citedRangeText,
+  displayBand,
+  targetText,
+} from './bands'
 
 const ukWords = /(оптимальн|недостатньо|підтримуюч|ризик|зарано|перетрен|відновл|небезпе|попередж)/i
 const words = /\b(risk|too soon|overtrained|optimal|under|under-?trained|maintenance|danger|warning)\b/i
@@ -42,6 +52,17 @@ describe('band copy', () => {
     expect(bandRange('very_high', [4, 10, 20, 30])).toBe('over 30 sets')
   })
 
+  it('names a personal range as the user\'s own and keeps the cited one', () => {
+    const more = bandFor('chest', 18, { chest: { mode: 'more' } })!
+    expect(bandTargetText(more)).toBe('your range 15-25')
+    expect(bandTargetText(bandFor('chest', 18)!)).toBe('target 10-20')
+    expect(bandTargetText(more, 'uk')).toBe('ваш діапазон 15-25')
+    expect(citedRangeText(more.cited)).toBe('Research range: 10-20 sets a week. You set your own.')
+    expect(citedRangeText(more.cited, 'uk')).toBe('Діапазон із досліджень: 10-20 підходів на тиждень. Ви задали свій.')
+    expect(bandExplanationFor(more)).toBe('15 to 25 weekly sets, inside your range.')
+    expect(bandFor('chest', 18, { chest: { mode: 'skip' } })).toBeNull()
+  })
+
   it('explains the band a result reads as', () => {
     expect(bandExplanationFor(bandFor('abs', 2)!)).toBe('Fewer than 4 weekly sets. This group is optional.')
     expect(bandExplanationFor(bandFor('abs', 5)!)).toBe('4 to 6 weekly sets.')
@@ -50,7 +71,7 @@ describe('band copy', () => {
 
   it('keeps explanations neutral', () => {
     for (const b of ['none', 'some', 'light', 'moderate', 'target', 'high', 'very_high'] as const) {
-      for (const opts of [{}, { goal: 'general' as const }]) {
+      for (const opts of [{}, { goal: 'general' as const }, { personal: true }]) {
         expect(bandExplanation(b, [4, 10, 20, 30], opts)).not.toMatch(words)
         expect(bandExplanation(b, [4, 10, 20, 30], opts)).not.toContain(String.fromCharCode(0x2014))
         expect(bandRange(b, [4, 10, 20, 30])).not.toMatch(words)
@@ -63,7 +84,7 @@ describe('band copy', () => {
     expect(bandLabel('none', {}, 'uk')).toBe('не тренується')
     expect(bandLabel('target', {}, 'uk')).toBe('цільовий діапазон')
     expect(bandLabel('moderate', { goal: 'general' }, 'uk')).toBe('добре для загальної форми')
-    expect(targetText([4, 10, 20, 30], 'uk')).toBe('ціль 10-20')
+    expect(targetText([4, 10, 20, 30], {}, 'uk')).toBe('ціль 10-20')
     expect(bandRange('moderate', [4, 10, 20, 30], 'uk')).toBe('від 4 до 10 підходів')
     expect(bandRange('some', [4, 6, 16, 26], 'uk')).toBe('менше 4 підходів')
     expect(bandRange('light', [1.5, 3, 6, 9], 'uk')).toBe('менше 1,5 підходу')
@@ -72,7 +93,7 @@ describe('band copy', () => {
 
   it('keeps Ukrainian copy neutral', () => {
     for (const b of ['none', 'some', 'light', 'moderate', 'target', 'high', 'very_high'] as const) {
-      for (const opts of [{}, { goal: 'general' as const }]) {
+      for (const opts of [{}, { goal: 'general' as const }, { personal: true }]) {
         expect(bandExplanation(b, [4, 10, 20, 30], opts, 'uk')).not.toMatch(ukWords)
         expect(bandExplanation(b, [4, 10, 20, 30], opts, 'uk')).not.toContain(String.fromCharCode(0x2014))
         expect(bandRange(b, [4, 10, 20, 30], 'uk')).not.toMatch(ukWords)

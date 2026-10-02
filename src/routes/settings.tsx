@@ -1,12 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { idParam, sheetParam } from '../app/search'
+import { groupParam, idParam, sheetParam } from '../app/search'
 import { SettingsScreen } from '../features/settings/SettingsScreen'
 
-// URL contract: /settings?sheet=equipment|overrides|custom (&id=new|c1..c63 for custom)
+// URL contract: /settings?sheet=equipment|overrides|custom|targets (&id=new|c1..c63 for custom, &group=<id> for targets)
 const SettingsSearch = z.object({
-  sheet: sheetParam(['equipment', 'overrides', 'custom']),
+  sheet: sheetParam(['equipment', 'overrides', 'custom', 'targets']),
   id: idParam,
+  group: groupParam,
 })
 
 export const Route = createFileRoute('/settings')({

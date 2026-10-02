@@ -53,9 +53,9 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 - `useCatalog()`: exercises, active exercises, catalog map, by-slug map, replacements, splits. Overridable through `AppProviders catalog={...}`.
 - `useWeek(program?)`: memoized `computeWeek` + `computeCoverage` + recovery schedule for the active program (or a passed one, e.g. a decoded share link) under current prefs. Returns `{ program, week, coverage, schedule, order, days, dayFacts(day), prefs }`. `days[d]` has `kind`, `label`, `exercises`, `hardSets`, `topGroups`, `estMinutes` (planned session length rounded to 5 minutes, 0 for rest or empty days, from `src/domain/session.ts`). `order` is display order from `weekStart`.
 - `days.ts`: `DayIndex` (0 = Monday), slugs `mon..sun`, `dayName(d, 'short'|'long'|'letter')`, `weekOrder(weekStart)`, `sortDays`, `formatDayList`, `todayIndex`.
-- `bands.ts`: `bandLabel(band, { goal, optional })` gives not trained / light / moderate / target range / high / very high; optional groups never read "light"; the general goal reads moderate as "good for general fitness". Also `targetText(edges)` ("target 10-20"), `bandRange`, `bandExplanation` (neutral one-liners for "why?").
+- `bands.ts`: `bandLabel(band, { goal, optional })` gives not trained / light / moderate / target range / high / very high; optional groups never read "light"; the general goal reads moderate as "good for general fitness". Also `targetText(edges, { personal }?)` ("target 10-20", or "your range 15-25" when personal), `bandTargetText(band)` (personal when `band.mode !== 'normal'`), `citedRangeText(band.cited)` (the research range line for "why?" when the user set their own), `bandRange`, `bandExplanation` (neutral one-liners for "why?").
 - `format.ts`: `formatSets(7.5)` "7.5", `setsLabel`, `countLabel`, `formatMath(3, 0.5)` "3 × 0.5 = 1.5", `formatDelta(8, 11)` "8 → 11", `joinMeta`, `formatDaySummary(5, 17, locale, 55)` "5 exercises · 17 sets · about 55 min" (minutes only when above 0), `formatRest(90)` "90 s" / `formatRest(120)` "2 min", `formatRir(2)` "RIR 2".
-- `volumeScale.ts`: `VOLUME_COLOR[band]`, `ROLE_COLOR[role]`, `groupShade(group, sets, scale)`, `headShade(head, sets, scale)`, `dayEdges(edges)` (weekly edges times 10/30 for the day scale).
+- `volumeScale.ts`: `VOLUME_COLOR[band]`, `ROLE_COLOR[role]`, `groupShade(group, sets, scale, targets?)`, `headShade(head, sets, scale, targets?)` (personal ranges move the steps via `shadeEdges`; skipped groups shade on the research range; pass `usePrefsStore((s) => s.targets)`), `dayEdges(edges)` (weekly edges times 10/30 for the day scale).
 - `search.ts`: zod building blocks for search params (every param optional, invalid values become `undefined`).
 - `firstRun.ts`: `/`, `/day/*` and `/body` redirect to `/welcome` while no program exists. Catalog, detail, settings, legal pages and `/shared` stay reachable. Skipping the welcome creates a blank program.
 - `brand.ts`: `APP_NAME` (working name) and the not-medical-advice line.
@@ -76,7 +76,7 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 | `/exercise/$slug` | `sheet`, `from` (day slug that opened it) | `days` (add to plan), `counts` (edit how this counts) |
 | `/welcome` | `step` (1..3) | none |
 | `/shared` | none; the program is in the `#fragment` | none |
-| `/settings` | `sheet` | `equipment`, `overrides`, `custom` |
+| `/settings` | `sheet`, `id`, `group` | `equipment`, `overrides`, `custom` (`id`), `targets` (`group` expands and scrolls to that muscle) |
 | `/credits`, `/privacy`, `/about` | none | none |
 | `/dev/figure` | unchanged, dev only | none |
 

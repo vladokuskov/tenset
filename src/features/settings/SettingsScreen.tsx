@@ -14,6 +14,8 @@ import { EquipmentPicker } from './EquipmentPicker'
 import { equipmentSummary } from './equipmentSummary'
 import { settingsMessages } from './messages'
 import { OverridesSheet } from './OverridesSheet'
+import { targetsSummary } from './targetRanges'
+import { TargetsSheet } from './TargetsSheet'
 
 const route = getRouteApi('/settings')
 
@@ -26,6 +28,7 @@ export function SettingsScreen() {
   const equipmentSheet = useSheet('equipment')
   const overridesSheet = useSheet('overrides')
   const customSheet = useSheet('custom', ['id'])
+  const targetsSheet = useSheet('targets', ['group'])
   const overrideCount = Object.keys(s.overrides).length
   const custom = program?.custom ?? []
   const m = useMessages(settingsMessages)
@@ -58,6 +61,15 @@ export function SettingsScreen() {
             <span className="num min-w-0 flex-1 text-base">{equipmentSummary(s.equipment, locale)}</span>
             <Button variant="secondary" size="sm" onClick={() => equipmentSheet.show()}>
               {m.edit}
+            </Button>
+          </div>
+        </Section>
+
+        <Section title={m.muscleRanges} description={m.muscleRangesHint}>
+          <div className="flex min-h-14 items-center gap-3 rounded-xl bg-surface px-4 py-2">
+            <span className="min-w-0 flex-1 text-base">{targetsSummary(s.targets, locale)}</span>
+            <Button variant="secondary" size="sm" onClick={() => targetsSheet.show()}>
+              {m.adjust}
             </Button>
           </div>
         </Section>
@@ -143,6 +155,7 @@ export function SettingsScreen() {
         <EquipmentPicker value={s.equipment} onChange={s.setEquipment} />
       </Sheet>
       <OverridesSheet open={overridesSheet.open} onClose={overridesSheet.close} />
+      <TargetsSheet open={targetsSheet.open} onClose={targetsSheet.close} focus={search.group} />
       <CustomExerciseSheet id={search.id} open={customSheet.open} onClose={customSheet.close} />
     </Page>
   )

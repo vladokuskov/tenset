@@ -82,6 +82,7 @@ export const bodymapMessages = defineMessages({
     // coverage
     setsOnDay: (sets: number, day: DayIndex) => `${formatSets(sets, 'en')} on ${dayName(day, 'short', 'en')}`,
     noBand: 'no target',
+    noRangeSet: 'no range set',
     optional: 'optional',
     coverage: 'Coverage',
     groupsTrained: (trained: number, total: number) => `${trained} of ${total} groups trained this week`,
@@ -122,6 +123,8 @@ export const bodymapMessages = defineMessages({
     targetRange: (lo: number, hi: number) =>
       `${formatSets(lo, 'en')} to ${formatSets(hi, 'en')} weekly sets, this group's target range.`,
     noBandNote: 'Tracked for reference, with no target range.',
+    skippedNote: 'No range set for this muscle.',
+    changeRange: 'Change range',
     days: 'Days',
     heads: (_group: string) => 'Parts',
     lighterEmphasis: (pct: number) => `Less direct work, ${pct}% of the group's sets`,
@@ -210,6 +213,7 @@ export const bodymapMessages = defineMessages({
 
     setsOnDay: (sets, day) => `${dayName(day, 'short', 'uk')}: ${formatSets(sets, 'uk')}`,
     noBand: 'без цілі',
+    noRangeSet: 'діапазон не задано',
     optional: 'необовʼязкова',
     coverage: 'Охоплення',
     groupsTrained: (trained, total) => `Цього тижня тренується ${trained} з ${total} груп`,
@@ -248,6 +252,8 @@ export const bodymapMessages = defineMessages({
     targetRange: (lo, hi) =>
       `Від ${formatSets(lo, 'uk')} до ${formatSets(hi, 'uk')} підходів на тиждень, цільовий діапазон цієї групи.`,
     noBandNote: 'Відстежується для довідки, без цільового діапазону.',
+    skippedNote: 'Для цього мʼяза діапазон не задано.',
+    changeRange: 'Змінити діапазон',
     days: 'Дні',
     heads: (group) => (BUNDLES.has(group) ? 'Пучки' : 'Частини'),
     lighterEmphasis: (pct) => `Менший акцент, ${pct}% підходів групи`,

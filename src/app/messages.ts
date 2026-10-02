@@ -33,6 +33,8 @@ export const appMessages = defineMessages({
       very_high: 'very high',
     },
     targetText: (lo: number, hi: number) => `target ${formatSets(lo, 'en')}-${formatSets(hi, 'en')}`,
+    yourRangeText: (lo: number, hi: number) => `your range ${formatSets(lo, 'en')}-${formatSets(hi, 'en')}`,
+    citedRange: (lo: number, hi: number) => `Research range: ${enN(lo)}-${enN(hi)} sets a week. You set your own.`,
     range: {
       none: '0 sets',
       light: ([a]: Edges) => `fewer than ${enN(a)} sets`,
@@ -48,6 +50,7 @@ export const appMessages = defineMessages({
       moderate: ([a, b]: Edges) => `${enN(a)} to ${enN(b)} weekly sets.`,
       moderateGeneral: ([a, b]: Edges) => `${enN(a)} to ${enN(b)} weekly sets, which is plenty for general fitness.`,
       target: ([, b, c]: Edges) => `${enN(b)} to ${enN(c)} weekly sets, the range most studies use for muscle growth.`,
+      targetPersonal: ([, b, c]: Edges) => `${enN(b)} to ${enN(c)} weekly sets, inside your range.`,
       high: ([, , c, d]: Edges) => `${enN(c)} to ${enN(d)} weekly sets. Each extra set adds less than the ones before it.`,
       very_high: ([, , , d]: Edges) => `More than ${enN(d)} weekly sets.`,
     },
@@ -72,6 +75,8 @@ export const appMessages = defineMessages({
       very_high: 'дуже багато',
     },
     targetText: (lo, hi) => `ціль ${formatSets(lo, 'uk')}-${formatSets(hi, 'uk')}`,
+    yourRangeText: (lo, hi) => `ваш діапазон ${formatSets(lo, 'uk')}-${formatSets(hi, 'uk')}`,
+    citedRange: (lo, hi) => `Діапазон із досліджень: ${ukN(lo)}-${common.uk.sets(hi)} на тиждень. Ви задали свій.`,
     range: {
       none: '0 підходів',
       light: ([a]) => `менше ${ukSets(a)}`,
@@ -87,6 +92,7 @@ export const appMessages = defineMessages({
       moderate: ([a, b]) => `Від ${ukN(a)} до ${ukSets(b)} на тиждень.`,
       moderateGeneral: ([a, b]) => `Від ${ukN(a)} до ${ukSets(b)} на тиждень, цього вистачає для загальної форми.`,
       target: ([, b, c]) => `Від ${ukN(b)} до ${ukSets(c)} на тиждень, діапазон, який використовує більшість досліджень росту мʼязів.`,
+      targetPersonal: ([, b, c]) => `Від ${ukN(b)} до ${ukSets(c)} на тиждень, у межах вашого діапазону.`,
       high: ([, , c, d]) => `Від ${ukN(c)} до ${ukSets(d)} на тиждень. Кожен додатковий підхід дає менше, ніж попередні.`,
       very_high: ([, , , d]) => `Понад ${common.uk.sets(d)} на тиждень.`,
     },

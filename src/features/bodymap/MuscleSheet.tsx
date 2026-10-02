@@ -1,7 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { bandExplanationFor, bandLabelFor, targetText } from '../../app/bands'
+import { bandExplanationFor, bandLabelFor, bandTargetText, citedRangeText, isPersonal } from '../../app/bands'
 import { dayName, daySlug, type DayIndex } from '../../app/days'
 import { formatSets } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
@@ -10,7 +10,7 @@ import { headShade, VOLUME_COLOR } from '../../app/volumeScale'
 import { groupName, headName } from '../../data/localize'
 import { suggestions } from '../../domain/coverage'
 import type { Exercise } from '../../domain/schema'
-import { allHeadsOfGroup, getGroup, headsOfGroup } from '../../domain/taxonomy'
+import { allHeadsOfGroup, getGroup, headsOfGroup, isBanded } from '../../domain/taxonomy'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
@@ -84,6 +84,7 @@ function Body({
   const nameOfHead = (id: string) => headName(id, locale)
   const equipment = usePrefsStore((s) => s.equipment)
   const overrides = usePrefsStore((s) => s.overrides)
+  const targets = usePrefsStore((s) => s.targets)
   const { week, coverage, schedule, order, program, prefs } = view
   const weekly = week.weekly[group] ?? 0
   const band = week.bands[group]
@@ -112,16 +113,18 @@ function Body({
             {band ? (
               <>
                 <Pill>{bandLabelFor(band, prefs.goal)}</Pill>
-                <span className="text-sm text-ink-2 num">{targetText(band.edges)}</span>
+                <span className="text-sm text-ink-2 num">{bandTargetText(band, locale)}</span>
                 <Why topic={m.bandTopic(groupName(group, locale))} sources={band.sourceIds}>
-                  {band.band === 'target' && band.sourceIds.includes('rp-2023')
+                  {band.band === 'target' && band.sourceIds.includes('rp-2023') && !isPersonal(band)
                     ? m.targetRange(band.edges[1], band.edges[2])
                     : bandExplanationFor(band, prefs.goal)}
+                  {isPersonal(band) && <p className="mt-2 text-ink-2">{citedRangeText(band.cited, locale)}</p>}
                 </Why>
               </>
             ) : (
-              <span className="text-sm text-ink-2">{m.noBandNote}</span>
+              <span className="text-sm text-ink-2">{isBanded(group) ? m.skippedNote : m.noBandNote}</span>
             )}
+            {isBanded(group) && <ChangeRange group={group} label={m.changeRange} />}
           </div>
         </div>
         <MuscleLocator
@@ -170,7 +173,7 @@ function Body({
                     >
                       <span
                         className="size-3 shrink-0 rounded-full ring-1 ring-line-strong ring-inset"
-                        style={{ background: VOLUME_COLOR[headShade(h, value, 'week')] }}
+                        style={{ background: VOLUME_COLOR[headShade(h, value, 'week', targets)] }}
                         aria-hidden
                       />
                       <span className="min-w-0 flex-1">
@@ -263,6 +266,19 @@ function Body({
         </>
       )}
     </div>
+  )
+}
+
+function ChangeRange({ group, label }: { group: string; label: string }) {
+  const navigate = useNavigate()
+  return (
+    <Button
+      variant="link"
+      size="sm"
+      onClick={() => void navigate({ to: '/settings', search: { sheet: 'targets', group }, state: sheetState('targets') })}
+    >
+      {label}
+    </Button>
   )
 }
 

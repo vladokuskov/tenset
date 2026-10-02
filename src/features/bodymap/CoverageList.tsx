@@ -1,14 +1,15 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { bandLabelFor, targetText, type GoalId } from '../../app/bands'
+import { bandLabelFor, bandTargetText, type GoalId } from '../../app/bands'
 import type { DayIndex } from '../../app/days'
 import { formatSets, joinMeta } from '../../app/format'
 import { groupName } from '../../data/localize'
 import { groupShade, VOLUME_COLOR } from '../../app/volumeScale'
 import type { Coverage } from '../../domain/coverage'
-import { groups as allGroups, taxonomy } from '../../domain/taxonomy'
+import { groups as allGroups, isBanded, taxonomy } from '../../domain/taxonomy'
 import type { WeekResult } from '../../domain/volume'
 import { useLocale } from '../../i18n/messages'
+import { usePrefsStore } from '../../store/prefs.store'
 import { Chip } from '../../ui/Chip'
 import { cx } from '../../ui/cx'
 import { Panel, Section } from '../../ui/Page'
@@ -27,10 +28,11 @@ type Props = {
 }
 
 function Swatch({ group, sets }: { group: string; sets: number }) {
+  const targets = usePrefsStore((s) => s.targets)
   return (
     <span
       className="size-3 shrink-0 rounded-full ring-1 ring-line-strong ring-inset"
-      style={{ background: VOLUME_COLOR[groupShade(group, sets, 'week')] }}
+      style={{ background: VOLUME_COLOR[groupShade(group, sets, 'week', targets)] }}
       aria-hidden
     />
   )
@@ -44,7 +46,7 @@ function Row({ group, week, goal, day, selected, onSelect }: Omit<Props, 'covera
   const daySets = day === null ? null : (week.daily[group]?.[day] ?? 0)
   const meta = joinMeta([
     daySets !== null && m.setsOnDay(daySets, day!),
-    band ? targetText(band.edges) : m.noBand,
+    band ? bandTargetText(band, locale) : isBanded(group) ? m.noRangeSet : m.noBand,
     band?.optional && m.optional,
   ])
   return (
