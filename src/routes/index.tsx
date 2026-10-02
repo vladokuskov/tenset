@@ -3,9 +3,9 @@ import { z } from 'zod'
 import { daySlugParam, groupParam, optionalEnum, sheetParam } from '../app/search'
 import { PlanScreen } from '../features/builder/PlanScreen'
 
-// URL contract: /?sheet=menu | programs | share | export | paste | map (1024-1279 week map) | add (&day=mon &tab=... &group=chest for add)
+// URL contract: /?sheet=menu | programs | share | export | paste | image (week PNG) | calendar (.ics) | map (1024-1279 week map) | add (&day=mon &tab=... &group=chest for add)
 const PlanSearch = z.object({
-  sheet: sheetParam(['menu', 'programs', 'share', 'export', 'paste', 'map', 'add']),
+  sheet: sheetParam(['menu', 'programs', 'share', 'export', 'paste', 'image', 'calendar', 'map', 'add']),
   day: daySlugParam,
   tab: optionalEnum(['suggested', 'muscle', 'equipment', 'pattern']),
   group: groupParam,

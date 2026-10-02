@@ -8,6 +8,7 @@ import { useWeek } from '../../app/useWeek'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
+import { ImageSheet } from '../export'
 import { CustomExerciseSheet } from '../settings/CustomExerciseSheet'
 import { Button, EmptyState, IconButton, Page, PageBody, PageHeader, StickyActions, cx, useSheet } from '../../ui'
 import { AddSheet, type AddTab } from './AddSheet'
@@ -35,6 +36,7 @@ export function DayScreen() {
   const entry = useSheet('entry', ['entry'])
   const reps = useSheet('reps', ['entry'])
   const options = useSheet('day')
+  const image = useSheet('image')
   const custom = useSheet('custom', ['id'])
   const [customName, setCustomName] = useState('')
   const locale = useLocale()
@@ -164,7 +166,8 @@ export function DayScreen() {
       {/* Saving or cancelling returns to the add sheet in the same history entry; back leaves both. */}
       <CustomExerciseSheet id={search.id} open={custom.open} onClose={() => custom.switchTo('add')} initialName={customName} />
       <EntrySheets />
-      <DayOptionsSheet day={day} open={options.open} onClose={options.close} />
+      <DayOptionsSheet day={day} open={options.open} onClose={options.close} onImage={() => options.switchTo('image')} />
+      <ImageSheet open={image.open} onClose={image.close} day={day} />
     </Page>
   )
 }

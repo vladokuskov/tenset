@@ -1,4 +1,4 @@
-import { BedDouble, Dumbbell, Eraser } from 'lucide-react'
+import { BedDouble, Dumbbell, Eraser, ImageDown } from 'lucide-react'
 import { useState } from 'react'
 import { dayName, type DayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
@@ -14,7 +14,18 @@ import { carryUndo, undoLastChange, useChange } from './useChange'
 
 const field = 'w-full rounded-md bg-surface-2 px-3 text-base text-ink placeholder:text-ink-3'
 
-export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: boolean; onClose: () => void }) {
+export function DayOptionsSheet({
+  day,
+  open,
+  onClose,
+  onImage,
+}: {
+  day: DayIndex
+  open: boolean
+  onClose: () => void
+  /** Opens the image sheet in place of this one. */
+  onImage?: () => void
+}) {
   const view = useWeek()
   const store = useProgramStore((s) => s)
   const change = useChange()
@@ -52,6 +63,12 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
     if (note.trim() !== (d.note ?? '')) return run(note.trim() ? m.noteSaved : m.noteRemoved, () => store.setNote(day, note))
     return null
   }
+  // Typed label and note are saved before leaving, by close or by switching to another sheet.
+  const saveAll = () => {
+    const labelChange = saveLabel()
+    const noteChange = saveNote()
+    carryUndo(noteChange ?? labelChange ?? status)
+  }
   const undo = () => {
     if (!undoLastChange()) return
     setStatus(c.undone)
@@ -65,9 +82,7 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
     <Sheet
       open={open}
       onClose={() => {
-        const labelChange = saveLabel()
-        const noteChange = saveNote()
-        carryUndo(noteChange ?? labelChange ?? status)
+        saveAll()
         onClose()
       }}
       title={name}
@@ -161,6 +176,21 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
             {m.clearAll}
           </button>
         </li>
+        {onImage && (
+          <li>
+            <button
+              type="button"
+              className="flex min-h-12 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-2"
+              onClick={() => {
+                saveAll()
+                onImage()
+              }}
+            >
+              <ImageDown size={20} strokeWidth={1.75} className="text-ink-2" aria-hidden />
+              {m.saveImage}
+            </button>
+          </li>
+        )}
       </ul>
     </Sheet>
   )

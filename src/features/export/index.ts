@@ -1,4 +1,7 @@
+export { CalendarSheet } from './CalendarSheet'
 export { ExportDialog, type ExportDialogProps } from './ExportDialog'
+export { ImageSheet, type ImageSheetProps } from './ImageSheet'
 export { PasteSheet, type PasteSheetProps } from './PasteSheet'
 export { PrintPage } from './PrintPage'
+export { canShareFiles, download, shareOrDownload, type ShareResult } from './files'
 export { createBackup, parseBackup, serializeBackup, type Backup, type ParsedBackup } from './backup'

@@ -69,8 +69,8 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 
 | Route | Search params | Sheets |
 |---|---|---|
-| `/` | `sheet`, `day` | `menu`, `programs`, `share`, `export`, `paste`, `add` (`day`) |
-| `/day/$dow` | `sheet`, `entry`, `tab`, `group` | `add` (`tab`, `group`), `entry`, `move`, `copy`, `swap` (`entry`), `day` |
+| `/` | `sheet`, `day` | `menu`, `programs`, `share`, `export`, `paste`, `image` (week PNG), `calendar` (.ics), `add` (`day`) |
+| `/day/$dow` | `sheet`, `entry`, `tab`, `group` | `add` (`tab`, `group`), `entry`, `move`, `copy`, `swap` (`entry`), `day`, `image` (day PNG) |
 | `/body` | `scope` (week or mon..sun), `shade` (groups, heads), `view` (front, back, both), `sheet`, `group`, `head` | `muscle` (`group`, `head`) |
 | `/exercises` | `q`, `muscle`, `equip` (mine, all), `pattern`, `sheet` | `muscle` (filter via map) |
 | `/exercise/$slug` | `sheet`, `from` (day slug that opened it) | `days` (add to plan), `counts` (edit how this counts) |
@@ -153,6 +153,13 @@ DayPicker(props: {
 - Text goes through `parseProgramText` and `assignDays` (`src/domain/importText.ts`, pure): weekday headers keep their day; other sessions fill the free days in order when the text lists rest days, otherwise spread like templates (`SPREAD`: 3 sessions on Mon, Wed, Fri). Unreadable lines are warnings, never errors.
 - Names go through `createMatcher` (`importMatch.ts`): exact name or alias, then MiniSearch (OR, fuzzy, prefix) over the localized catalog plus the active program's custom exercises. Weak or missing matches carry a neutral "Check this one" pill until the user picks, skips, or keeps the line as their own exercise (one optional primary group). Lines with no match start skipped.
 - "Create program" always adds a new program (`importProgram`, names deduped with `withUniqueNames`), which becomes active, then a toast. Nothing existing is changed.
+
+### Files, image and calendar (`src/features/export`)
+
+- `files.ts`: `download(file)` (temporary `<a download>`), `canShareFiles(file?)` (Web Share with files; pass the file to check its type), `shareOrDownload(file, title)` (share sheet when possible, else download; resolves `'shared' | 'downloaded' | 'cancelled'`). Use these instead of new local copies.
+- Sheet `image` (`ImageSheet`, prop `day` for one session, none for the week): on `/` from the Plan menu ("Save week as image"), on `/day/$dow` from day options ("Save as image", a `switchTo` that saves the typed label and note first). Shows a preview `<img>` from a blob URL (revoked on close) with Download and, when the browser can share files, Share. Files: `gym-plan-monday.png`, `gym-plan-week.png`.
+- `image.ts`: 1080 px wide Canvas 2D drawing, no deps. Pure layout (`wrapText`, `ellipsize`, `layoutDay`, `layoutWeek`) returns draw ops and the height; `renderImage` draws them. The map is drawn from the parsed `AnatomyDoc` paths with `Path2D` (never the live SVG). Colors come from the light-theme tokens through `resolvePalette()` (probe element, read back through a 1 px canvas) with `FALLBACK_PALETTE` when the canvas cannot parse a value. Content (titles, rows, legend) comes from `imageContent.ts`; entry text ("3 × 6-8", "rest 2 min", "RIR 2", A1/A2) from `planText.ts`.
+- Sheet `calendar` (`CalendarSheet`) on `/` from the Plan menu ("Add to calendar"): start time (default 18:00), Download .ics and Share. `ics.ts` is pure: one VEVENT per training day with exercises, `RRULE:FREQ=WEEKLY`, floating local DTSTART on the next matching weekday (today counts; day 0 = Monday whatever `weekStart`), DTEND from `estMinutes` (at least 15 min), stable `UID` `<programId>-<mon..sun>@gym-builder`, CRLF, TEXT escaping and 75-octet folding that never splits a UTF-8 character. Events are a one-time copy; later edits do not update them.
 
 ## Copy and color rules (from the plan, enforced in review)
 

@@ -41,6 +41,8 @@ export const builderMessages = defineMessages({
       share: 'Share or QR code',
       export: 'Export or import',
       paste: 'Paste a program',
+      image: 'Save week as image',
+      calendar: 'Add to calendar',
       print: 'Print',
       settings: 'Settings',
       credits: 'Credits',
@@ -80,6 +82,7 @@ export const builderMessages = defineMessages({
     duplicate: (day: number) => `Duplicate ${dayName(day, 'long', 'en')}`,
     cleared: (day: number) => `Cleared ${dayName(day, 'long', 'en')}`,
     clearAll: 'Clear all exercises',
+    saveImage: 'Save as image',
 
     // This day card
     musclesOn: (day: number) => `Muscles trained ${dayName(day, 'on', 'en')}`,
@@ -267,6 +270,8 @@ export const builderMessages = defineMessages({
       share: 'Поділитися або QR-код',
       export: 'Експорт або імпорт',
       paste: 'Вставити програму',
+      image: 'Зберегти тиждень як зображення',
+      calendar: 'Додати в календар',
       print: 'Друк',
       settings: 'Налаштування',
       credits: 'Подяки',
@@ -308,6 +313,7 @@ export const builderMessages = defineMessages({
     duplicate: () => 'Дублювати день',
     cleared: (day) => `${dayName(day, 'long', 'uk')} очищено`,
     clearAll: 'Прибрати всі вправи',
+    saveImage: 'Зберегти як зображення',
 
     musclesOn: (day) => `Мʼязи, які тренуються ${dayName(day, 'on', 'uk')}`,
     noSetsToday: 'У цей день підходів поки не враховано.',
