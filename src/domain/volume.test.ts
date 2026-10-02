@@ -60,6 +60,8 @@ describe('bands', () => {
       band: 'target',
       value: 12,
       edges: [4, 10, 20, 30],
+      cited: [4, 10, 20, 30],
+      mode: 'normal',
       optional: false,
       sourceIds: ['pelland-2026', 'acsm-2026', 'baz-valle-2022'],
     })

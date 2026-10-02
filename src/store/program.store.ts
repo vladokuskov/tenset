@@ -46,6 +46,9 @@ export type ProgramActions = {
   swapEntry(entryId: string, ref: ExerciseRef): void
   setSets(entryId: string, sets: number): void
   setReps(entryId: string, reps: string | undefined): void
+  setRestSec(entryId: string, sec: number | undefined): void
+  setRir(entryId: string, rir: number | undefined): void
+  linkWithPrev(entryId: string, on: boolean): void
   duplicateDay(from: Day, to: Day): void
   clearDay(day: Day): void
   setRest(day: Day): void
@@ -124,7 +127,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           importProgram: (raw) => {
             const parsed = Program.safeParse(raw)
             if (!parsed.success) return null
-            return addProgram('importProgram', { ...parsed.data, id: newProgramId() })
+            return addProgram('importProgram', ops.normalizeProgramSupersets({ ...parsed.data, id: newProgramId() }))
           },
 
           duplicateProgram: (id) => {
@@ -162,6 +165,9 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           swapEntry: (entryId, ref) => mutate('swapEntry', (p) => ops.swapEntry(p, entryId, ref)),
           setSets: (entryId, sets) => mutate('setSets', (p) => ops.setSets(p, entryId, sets)),
           setReps: (entryId, reps) => mutate('setReps', (p) => ops.setReps(p, entryId, reps)),
+          setRestSec: (entryId, sec) => mutate('setRestSec', (p) => ops.setRestSec(p, entryId, sec)),
+          setRir: (entryId, rir) => mutate('setRir', (p) => ops.setRir(p, entryId, rir)),
+          linkWithPrev: (entryId, on) => mutate('linkWithPrev', (p) => ops.linkWithPrev(p, entryId, on)),
           duplicateDay: (from, to) => mutate('duplicateDay', (p) => ops.duplicateDay(p, from, to, makeId)),
           clearDay: (day) => mutate('clearDay', (p) => ops.clearDay(p, day)),
           setRest: (day) => mutate('setRest', (p) => ops.setRest(p, day)),

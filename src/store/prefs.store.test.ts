@@ -6,7 +6,7 @@ import { memoryStorage } from './storage.ts'
 describe('prefs store', () => {
   it('has the planned defaults', () => {
     const p = defaultPrefs('pl-PL')
-    expect(p).toEqual({ locale: 'en', goal: 'hypertrophy', equipment: [...equipmentIds], countingMode: 'fractional', weekStart: 0, overrides: {} })
+    expect(p).toEqual({ locale: 'en', goal: 'hypertrophy', equipment: [...equipmentIds], countingMode: 'fractional', weekStart: 0, overrides: {}, targets: {} })
   })
 
   it('picks the language from the browser and keeps the choice', () => {
@@ -73,7 +73,7 @@ describe('prefs store', () => {
     const raw = JSON.parse(storage.getItem(PREFS_KEY)!)
     expect(raw.version).toBe(1)
     expect(raw.state.goal).toBe('strength')
-    expect(Object.keys(raw.state).sort()).toEqual(['countingMode', 'equipment', 'goal', 'locale', 'overrides', 'weekStart'])
+    expect(Object.keys(raw.state).sort()).toEqual(['countingMode', 'equipment', 'goal', 'locale', 'overrides', 'targets', 'weekStart'])
   })
 
   it('rehydrates valid prefs and rejects corrupt ones', () => {

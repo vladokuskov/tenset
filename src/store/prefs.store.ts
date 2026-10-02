@@ -2,7 +2,7 @@ import { useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { createStore } from 'zustand/vanilla'
 import { presetEquipment, presets } from '../domain/equipment.ts'
-import { Prefs } from '../domain/schema.ts'
+import { Prefs, type TargetPref } from '../domain/schema.ts'
 import { detectLocale, type Locale } from '../i18n/locale.ts'
 import { PREFS_VERSION, prefsMigrations, runMigrations } from './migrations/index.ts'
 import { backupCorrupt, browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
@@ -22,10 +22,12 @@ export type PrefsActions = {
   setOverride(exerciseId: number | string, group: string, role: OverrideRole | null): void
   /** Clears one exercise's overrides, or all of them. */
   resetOverrides(exerciseId?: number | string): void
+  /** null goes back to the research range. */
+  setTarget(group: string, target: TargetPref | null): void
   reset(): void
 }
 
-export type PrefsState = Prefs & { locale: Locale } & PrefsActions
+export type PrefsState = Prefs & { locale: Locale; targets: NonNullable<Prefs['targets']> } & PrefsActions
 
 /** 0 = Monday. Intl weekInfo uses 1 = Monday .. 7 = Sunday; not every engine has it. */
 export function localeWeekStart(locale?: string): number {
@@ -43,7 +45,7 @@ export function localeWeekStart(locale?: string): number {
   }
 }
 
-export function defaultPrefs(locale?: string): Prefs & { locale: Locale } {
+export function defaultPrefs(locale?: string): Prefs & { locale: Locale; targets: NonNullable<Prefs['targets']> } {
   return {
     locale: detectLocale(locale),
     goal: 'hypertrophy',
@@ -51,6 +53,7 @@ export function defaultPrefs(locale?: string): Prefs & { locale: Locale } {
     countingMode: 'fractional',
     weekStart: localeWeekStart(locale),
     overrides: {},
+    targets: {},
   }
 }
 
@@ -61,6 +64,7 @@ const pickPrefs = (s: PrefsState): Prefs => ({
   countingMode: s.countingMode,
   weekStart: s.weekStart,
   overrides: s.overrides,
+  targets: s.targets,
 })
 
 export type PrefsStoreOptions = { storage?: SyncStorage; locale?: string }
@@ -95,6 +99,10 @@ export function createPrefsStore(options: PrefsStoreOptions = {}) {
           const { [String(exerciseId)]: _removed, ...rest } = get().overrides
           set({ overrides: rest })
         },
+        setTarget: (group, target) => {
+          const { [group]: _old, ...rest } = get().targets
+          set({ targets: target ? { ...rest, [group]: target } : rest })
+        },
         reset: () => set({ ...defaultPrefs(options.locale), locale: get().locale }),
       }),
       {
@@ -116,7 +124,7 @@ export function createPrefsStore(options: PrefsStoreOptions = {}) {
             backupCorrupt(storage, PREFS_KEY, JSON.stringify(persisted))
             return current
           }
-          return { ...current, ...parsed.data, locale: parsed.data.locale ?? current.locale }
+          return { ...current, ...parsed.data, locale: parsed.data.locale ?? current.locale, targets: parsed.data.targets ?? {} }
         },
       },
     ),

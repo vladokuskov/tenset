@@ -63,6 +63,7 @@ export function createBackup(
       countingMode: prefs.countingMode,
       weekStart: prefs.weekStart,
       overrides: prefs.overrides,
+      targets: prefs.targets ?? {},
     },
   }
 }

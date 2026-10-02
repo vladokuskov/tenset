@@ -57,9 +57,11 @@ const MISSING_CHECKS: [MissingPatternKind, Pattern][] = [
 export function computeCoverage(week: WeekResult, goal: Prefs['goal']): Coverage {
   const required: UntrainedItem[] = []
   const optional: UntrainedItem[] = []
-  for (const g of bandedGroupIds) {
+  // Groups the user skipped have no band and are left out entirely.
+  const counted = bandedGroupIds.filter((g) => week.bands[g])
+  for (const g of counted) {
     if (week.weekly[g] > 0) continue
-    const item = { group: g, optional: isOptional(g), sourceId: HEURISTIC }
+    const item = { group: g, optional: week.bands[g]?.optional ?? isOptional(g), sourceId: HEURISTIC }
     if (item.optional) optional.push(item)
     else required.push(item)
   }
@@ -105,8 +107,8 @@ export function computeCoverage(week: WeekResult, goal: Prefs['goal']): Coverage
   }
 
   return {
-    trainedBanded: bandedGroupIds.length - required.length - optional.length,
-    totalBanded: bandedGroupIds.length,
+    trainedBanded: counted.length - required.length - optional.length,
+    totalBanded: counted.length,
     untrained: { required, optional },
     missingPatterns,
     balance: {

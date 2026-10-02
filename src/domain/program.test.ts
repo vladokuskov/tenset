@@ -229,3 +229,75 @@ describe('applyTemplate', () => {
     expect(dropped.notes.some((n) => n.kind === 'dropped_slot')).toBe(true)
   })
 })
+
+describe('rest, RIR and supersets', () => {
+  // Day 0: a, b, c, d with b+c paired
+  const paired = () => {
+    const ids = sequentialIds('e')
+    let p = ops.blankProgram('p1', 'Test')
+    p = ops.addEntries(p, 0, [BENCH.id, ROW.id, PUSH_UP.id, PULL_UP.id], ids)
+    p = ops.linkWithPrev(p, 'e3', true)
+    return deepFreeze(p)
+  }
+  const flags = (p: Program, day = 0) => p.days[day].entries.map((e) => `${e.id}${e.withPrev ? '+' : ''}`)
+
+  it('quantizes rest and clamps RIR, and clears them with undefined', () => {
+    let p = ops.setRestSec(base(), 'e1', 97)
+    expect(p.days[0].entries[0].restSec).toBe(90)
+    expect(ops.setRestSec(p, 'e1', 9999).days[0].entries[0].restSec).toBe(600)
+    expect(ops.setRestSec(p, 'e1', undefined).days[0].entries[0]).not.toHaveProperty('restSec')
+    p = ops.setRir(p, 'e1', 9)
+    expect(p.days[0].entries[0].rir).toBe(5)
+    expect(ops.setRir(p, 'e1', 0).days[0].entries[0].rir).toBe(0)
+    expect(ops.setRir(p, 'e1', undefined).days[0].entries[0]).not.toHaveProperty('rir')
+    expect(Program.safeParse(p).success).toBe(true)
+  })
+
+  it('links pairs only', () => {
+    const p = paired()
+    expect(flags(p)).toEqual(['e1', 'e2', 'e3+', 'e4'])
+    expect(ops.linkWithPrev(p, 'e1', true)).toBe(p)
+    expect(ops.linkWithPrev(p, 'e4', true)).toBe(p)
+    expect(ops.linkWithPrev(p, 'e2', true)).toBe(p)
+    expect(flags(ops.linkWithPrev(p, 'e3', false))).toEqual(['e1', 'e2', 'e3', 'e4'])
+  })
+
+  it('removing either half dissolves the pair', () => {
+    expect(flags(ops.removeEntry(paired(), 'e2'))).toEqual(['e1', 'e3', 'e4'])
+    expect(flags(ops.removeEntry(paired(), 'e3'))).toEqual(['e1', 'e2', 'e4'])
+    expect(flags(ops.removeEntry(paired(), 'e1'))).toEqual(['e2', 'e3+', 'e4'])
+  })
+
+  it('moving or reordering an entry takes it out of its pair and never lands inside one', () => {
+    expect(flags(ops.moveEntry(paired(), 'e2', 1))).toEqual(['e1', 'e3', 'e4'])
+    expect(flags(ops.moveEntry(paired(), 'e2', 1), 1)).toEqual(['e2'])
+    expect(flags(ops.reorder(paired(), 0, 0, 2))).toEqual(['e2', 'e3+', 'e1', 'e4'])
+    expect(flags(ops.reorder(paired(), 0, 3, 0))).toEqual(['e4', 'e1', 'e2', 'e3+'])
+    expect(flags(ops.reorder(paired(), 0, 2, 0))).toEqual(['e3', 'e1', 'e2', 'e4'])
+    expect(flags(ops.reorder(paired(), 0, 3, 2))).toEqual(['e1', 'e2', 'e4', 'e3'])
+  })
+
+  it('copies leave the pair, duplicated days keep it', () => {
+    const ids = sequentialIds('x')
+    const copied = ops.copyEntry(paired(), 'e3', 0, ids)
+    expect(flags(copied)).toEqual(['e1', 'e2', 'e3+', 'e4', 'x1'])
+    expect(flags(ops.duplicateDay(paired(), 0, 1, sequentialIds('y')), 1)).toEqual(['y1', 'y2', 'y3+', 'y4'])
+  })
+
+  it('removing a custom exercise dissolves its pair', () => {
+    const ids = sequentialIds('e')
+    const added = ops.addCustomExercise(ops.blankProgram('p1'), { name: 'Band', equipment: [], laterality: 'bilateral', groups: { rear_delt: 'primary' } })!
+    let p = ops.addEntries(added.program, 0, [BENCH.id, added.id, ROW.id], ids)
+    p = ops.linkWithPrev(p, 'e2', true)
+    expect(ops.linkWithPrev(p, 'e3', true)).toBe(p)
+    expect(flags(p)).toEqual(['e1', 'e2+', 'e3'])
+    expect(flags(ops.removeCustomExercise(p, added.id))).toEqual(['e1', 'e3'])
+  })
+
+  it('normalizes imported flags', () => {
+    const p = paired()
+    const broken = { ...p, days: p.days.map((d, i) => (i === 0 ? { ...d, entries: d.entries.map((e) => ({ ...e, withPrev: true as const })) } : d)) }
+    expect(flags(ops.normalizeProgramSupersets(broken))).toEqual(['e1', 'e2+', 'e3', 'e4+'])
+    expect(ops.normalizeProgramSupersets(p)).toBe(p)
+  })
+})

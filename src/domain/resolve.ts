@@ -17,6 +17,8 @@ export type ResolvedExercise = {
   equipment: string[]
   pattern: Pattern | null
   mechanic: Exercise['mechanic'] | null
+  unit: Exercise['unit']
+  defaultReps: string
   /** Effective roles after overrides; "none" groups are removed. Weight is 0 for secondary in primary-only mode. */
   groups: Record<string, ResolvedGroup>
   /** Emphasis for every visible and deep head of every listed group (omitted heads = 1). */
@@ -29,6 +31,8 @@ export type ResolveContext = {
   countingMode: CountingModeValue
   overrides: Overrides
 }
+
+export const CUSTOM_DEFAULT_REPS = '8-12'
 
 export const ROLE_WEIGHT = { primary: 1, secondary: 0.5 } as const
 
@@ -52,6 +56,8 @@ export function resolveExercise(ref: ExerciseRef, ctx: ResolveContext): Resolved
       equipment: [...c.equipment],
       pattern: null,
       mechanic: null,
+      unit: 'reps',
+      defaultReps: CUSTOM_DEFAULT_REPS,
       baseGroups: c.groups,
       emphasis: {},
     })
@@ -65,6 +71,8 @@ export function resolveExercise(ref: ExerciseRef, ctx: ResolveContext): Resolved
     equipment: [...ex.equipment],
     pattern: ex.pattern,
     mechanic: ex.mechanic,
+    unit: ex.unit,
+    defaultReps: ex.defaults.reps,
     baseGroups: ex.groups,
     emphasis: ex.heads ?? {},
   })
@@ -108,6 +116,8 @@ function build(ref: ExerciseRef, ctx: ResolveContext, base: Base): ResolvedExerc
     equipment: base.equipment,
     pattern: base.pattern,
     mechanic: base.mechanic,
+    unit: base.unit,
+    defaultReps: base.defaultReps,
     groups,
     heads,
   }

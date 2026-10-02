@@ -65,6 +65,39 @@ const GOLDEN_SIMPLE_V1 = 'AQtVcHBlci9Mb3dlchUFBVVwcGVyBUxvd2VyAAADEgBlARABMRoAyw
 const GOLDEN_CUSTOM_V1 =
   'AQ1HYXJhZ2UgZ3ltIMO8QQIEV2FsawEVU3VwZXJzZXQgdGhlIGxhc3QgdHdvAgEPQmFuZCBwdWxsLWFwYXJ0AAACDAUDDVNhbmRiYWcgY2FycnkCAhgZAxIVLQKc__8FQU1SQVABAQELAwUAAAAAASAAAQ'
 
+// Frozen v2 fixture: rest, RIR (including 0), a superset, a custom ref and text reps.
+const GOLDEN_EXT: Program = {
+  id: 'shared',
+  name: 'Supersets',
+  custom: [{ id: 'c2', name: 'Band face pull', equipment: [], laterality: 'bilateral', groups: { rear_delt: 'primary' } }],
+  days: [
+    {
+      kind: 'train',
+      label: 'Upper',
+      entries: [
+        { id: 'e1', exerciseId: 101, sets: 4, reps: '6-8', restSec: 180, rir: 2 },
+        { id: 'e2', exerciseId: 305, sets: 3, reps: '8-12', rir: 0 },
+        { id: 'e3', exerciseId: 'c2', sets: 3, reps: 'to 15', restSec: 60, withPrev: true },
+        { id: 'e4', exerciseId: 203, sets: 2 },
+      ],
+    },
+    empty(),
+    empty(),
+    empty(),
+    empty(),
+    empty(),
+    empty(),
+  ],
+}
+const GOLDEN_EXT_V2 = 'AglTdXBlcnNldHMBAQVVcHBlcgABAg5CYW5kIGZhY2UgcHVsbAAAAQwEGgBlARMMEgExAgIVAgV0byAxNQUECADLAAAAAAAAAA'
+
+const v2 = (b64: string) => {
+  const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((b64.length + 3) % 4))
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0))
+}
+const toB64 = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
 describe('share codec', () => {
   it('round-trips a program with custom exercises, labels, notes and reps', () => {
     const encoded = encodeProgram(GOLDEN_CUSTOM)
@@ -122,7 +155,7 @@ describe('share codec', () => {
     expect(decodeProgram('A')).toEqual({ ok: false, error: 'malformed' })
     expect(decodeProgram(good.slice(0, -6))).toEqual({ ok: false, error: 'malformed' })
     expect(decodeProgram(`${good}AAAA`)).toEqual({ ok: false, error: 'malformed' })
-    expect(decodeProgram('Ag')).toEqual({ ok: false, error: 'unsupported_version' })
+    expect(decodeProgram('Aw')).toEqual({ ok: false, error: 'unsupported_version' })
     expect(decodeProgram('x'.repeat(20000))).toEqual({ ok: false, error: 'malformed' })
   })
 
@@ -146,5 +179,71 @@ describe('share codec', () => {
   it('v1 encoder output is stable', () => {
     expect(encodeProgram(GOLDEN_SIMPLE)).toBe(GOLDEN_SIMPLE_V1)
     expect(encodeProgram(GOLDEN_CUSTOM)).toBe(GOLDEN_CUSTOM_V1)
+  })
+
+  it('decodes the frozen v2 string forever and encodes it stably', () => {
+    expect(decodeProgram(GOLDEN_EXT_V2)).toEqual({ ok: true, program: GOLDEN_EXT })
+    expect(encodeProgram(GOLDEN_EXT)).toBe(GOLDEN_EXT_V2)
+  })
+
+  it('keeps writing v1 when no entry uses a v2 field', () => {
+    expect(v2(encodeProgram(GOLDEN_SIMPLE))[0]).toBe(1)
+    expect(v2(GOLDEN_EXT_V2)[0]).toBe(2)
+  })
+
+  it('decodes v2 without adding absent fields', () => {
+    const res = decodeProgram(GOLDEN_EXT_V2)
+    expect(res.ok && res.program.days[0].entries[3]).toStrictEqual({ id: 'e4', exerciseId: 203, sets: 2 })
+  })
+
+  it('repairs superset flags that break the pairs-only rule', () => {
+    const p = withIds({
+      ...GOLDEN_EXT,
+      days: GOLDEN_EXT.days.map((d, i) =>
+        i === 0 ? { ...d, entries: d.entries.map((e, k) => (k === 0 || k === 3 ? { ...e, withPrev: true as const } : e)) } : d,
+      ),
+    })
+    const res = decodeProgram(encodeProgram(p))
+    expect(res.ok && res.program.days[0].entries.map((e) => !!e.withPrev)).toEqual([false, false, true, false])
+  })
+
+  it('rejects bad v2 extension bytes', () => {
+    // Day 1 holds one entry: header (3 sets, no reps), u16 ref, then the extension byte under test.
+    const one = (ext: number[]) => {
+      const head = v2(encodeProgram(withIds({ ...GOLDEN_SIMPLE, days: GOLDEN_SIMPLE.days.map(() => empty()) })))
+      const bytes = [2, ...head.slice(1, -7), 1, 2 << 3, 0, 101, ...ext, 0, 0, 0, 0, 0, 0]
+      return decodeProgram(toB64(Uint8Array.from(bytes)))
+    }
+    expect(one([0]).ok).toBe(true)
+    expect(one([1, 40])).toMatchObject({ ok: true })
+    expect(one([1, 41])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([0x40])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([2 | (6 << 3)])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([3 << 3])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([1])).toEqual({ ok: false, error: 'malformed' })
+  })
+
+  it('keeps a fully specified week short', () => {
+    const p = withIds({
+      id: 'x',
+      name: 'PPL',
+      custom: [],
+      days: Array.from({ length: 7 }, (_, d) => ({
+        kind: 'train' as const,
+        label: `Day ${d + 1}`,
+        entries: Array.from({ length: 6 }, (_, k) => ({
+          id: '',
+          exerciseId: 100 + d * 10 + k,
+          sets: 3,
+          reps: '8-12',
+          restSec: 90,
+          rir: 2,
+          ...(k % 2 ? { withPrev: true as const } : {}),
+        })),
+      })),
+    })
+    const encoded = encodeProgram(p)
+    expect(encoded.length).toBeLessThan(560)
+    expect(decodeProgram(encoded, { id: 'x' })).toEqual({ ok: true, program: p })
   })
 })

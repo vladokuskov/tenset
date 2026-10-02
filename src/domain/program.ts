@@ -11,6 +11,9 @@ export const LABEL_MAX = 24
 export const NOTE_MAX = 80
 export const NAME_MAX = 40
 export const DEFAULT_PROGRAM_NAME = 'My program'
+export const REST_STEP = 15
+export const REST_MAX = 600
+export const RIR_MAX = 5
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
 
@@ -56,6 +59,50 @@ function updateEntry(program: Program, entryId: string, fn: (e: Entry) => Entry)
   }))
 }
 
+const unlinked = ({ withPrev: _drop, ...e }: Entry): Entry => e
+
+/** Pairs only: the first entry and an entry whose predecessor is already paired cannot link up. */
+export function normalizeSupersets(entries: readonly Entry[]): Entry[] {
+  let changed = false
+  const out: Entry[] = []
+  entries.forEach((e, i) => {
+    const orphan = e.withPrev && (i === 0 || out[i - 1].withPrev)
+    if (orphan) changed = true
+    out.push(orphan ? unlinked(e) : e)
+  })
+  return changed ? out : (entries as Entry[])
+}
+
+/** Repairs superset flags on every day, for data that did not come through these ops. */
+export function normalizeProgramSupersets(program: Program): Program {
+  let changed = false
+  const days = program.days.map((d) => {
+    const entries = normalizeSupersets(d.entries)
+    if (entries === d.entries) return d
+    changed = true
+    return { ...d, entries }
+  })
+  return changed ? { ...program, days } : program
+}
+
+/** True when the entry is the first or second half of a superset. */
+export function inSuperset(entries: readonly Entry[], index: number): boolean {
+  return !!entries[index]?.withPrev || !!entries[index + 1]?.withPrev
+}
+
+/** Takes the entry at index out of its pair, so moving or removing it leaves no half-pair behind. */
+function detach(entries: readonly Entry[], index: number): Entry[] {
+  return entries.map((e, i) => (i === index || (i === index + 1 && e.withPrev) ? unlinked(e) : e))
+}
+
+/** An entry inserted at index must not end up between the two halves of a pair. */
+function insertAt(entries: readonly Entry[], index: number, entry: Entry): Entry[] {
+  const next = [...entries]
+  next.splice(index, 0, unlinked(entry))
+  if (next[index + 1]?.withPrev) next[index + 1] = unlinked(next[index + 1])
+  return normalizeSupersets(next)
+}
+
 function withReps(entry: Entry, reps: string | undefined): Entry {
   const { reps: _drop, ...rest } = entry
   const clean = cleanText(reps, 16)
@@ -76,37 +123,43 @@ export function addEntries(
   return updateDay(program, day, (d) => ({ ...d, kind: 'train', entries: [...d.entries, ...added] }))
 }
 
+/** Removing either half of a superset dissolves the pair. */
 export function removeEntry(program: Program, entryId: string): Program {
   const found = findEntry(program, entryId)
   if (!found) return program
-  return updateDay(program, found.day, (d) => ({ ...d, entries: d.entries.filter((e) => e.id !== entryId) }))
+  return updateDay(program, found.day, (d) => ({
+    ...d,
+    entries: normalizeSupersets(detach(d.entries, found.index).filter((e) => e.id !== entryId)),
+  }))
 }
 
+/** A moved entry leaves its superset. */
 export function moveEntry(program: Program, entryId: string, toDay: DayIndex, toIndex?: number): Program {
   const found = findEntry(program, entryId)
   if (!found || !program.days[toDay]) return program
   const without = removeEntry(program, entryId)
-  return updateDay(without, toDay, (d) => {
-    const entries = [...d.entries]
-    entries.splice(toIndex ?? entries.length, 0, found.entry)
-    return { ...d, kind: 'train', entries }
-  })
+  return updateDay(without, toDay, (d) => ({
+    ...d,
+    kind: 'train',
+    entries: insertAt(d.entries, toIndex ?? d.entries.length, found.entry),
+  }))
 }
 
 export function copyEntry(program: Program, entryId: string, toDay: DayIndex, makeId: IdFactory): Program {
   const found = findEntry(program, entryId)
   if (!found || !program.days[toDay]) return program
-  const copy = { ...found.entry, id: makeId() }
+  const copy = unlinked({ ...found.entry, id: makeId() })
   return updateDay(program, toDay, (d) => ({ ...d, kind: 'train', entries: [...d.entries, copy] }))
 }
 
+/** A reordered entry leaves its superset. */
 export function reorder(program: Program, day: DayIndex, from: number, to: number): Program {
   const entries = program.days[day]?.entries
   if (!entries || from < 0 || from >= entries.length || from === to) return program
-  const next = [...entries]
+  const next = detach(entries, from)
   const [moved] = next.splice(from, 1)
-  next.splice(Math.max(0, Math.min(to, next.length)), 0, moved)
-  return updateDay(program, day, (d) => ({ ...d, entries: next }))
+  const placed = insertAt(normalizeSupersets(next), Math.max(0, Math.min(to, next.length)), moved)
+  return updateDay(program, day, (d) => ({ ...d, entries: placed }))
 }
 
 export function swapEntry(program: Program, entryId: string, ref: ExerciseRef): Program {
@@ -119,6 +172,34 @@ export function setSets(program: Program, entryId: string, sets: number): Progra
 
 export function setReps(program: Program, entryId: string, reps: string | undefined): Program {
   return updateEntry(program, entryId, (e) => withReps(e, reps))
+}
+
+export const clampRest = (sec: number) =>
+  Math.min(REST_MAX, Math.max(0, Math.round((Number.isFinite(sec) ? sec : 0) / REST_STEP) * REST_STEP))
+
+/** Undefined clears it, so the estimate falls back to the default for the exercise. */
+export function setRestSec(program: Program, entryId: string, sec: number | undefined): Program {
+  return updateEntry(program, entryId, ({ restSec: _drop, ...e }) => (sec === undefined ? e : { ...e, restSec: clampRest(sec) }))
+}
+
+export function setRir(program: Program, entryId: string, rir: number | undefined): Program {
+  return updateEntry(program, entryId, ({ rir: _drop, ...e }) =>
+    rir === undefined || !Number.isFinite(rir) ? e : { ...e, rir: Math.min(RIR_MAX, Math.max(0, Math.round(rir))) },
+  )
+}
+
+/** Whether the entry can be paired with the one above it. */
+export function canLinkWithPrev(entries: readonly Entry[], index: number): boolean {
+  return index > 0 && index < entries.length && !entries[index].withPrev && !inSuperset(entries, index - 1) && !entries[index + 1]?.withPrev
+}
+
+export function linkWithPrev(program: Program, entryId: string, on: boolean): Program {
+  const found = findEntry(program, entryId)
+  if (!found) return program
+  const entries = program.days[found.day].entries
+  if (!on) return found.entry.withPrev ? updateEntry(program, entryId, unlinked) : program
+  if (!canLinkWithPrev(entries, found.index)) return program
+  return updateEntry(program, entryId, (e) => ({ ...e, withPrev: true }))
 }
 
 /** Replaces the target day with a copy of the source day (fresh entry ids). */
@@ -192,7 +273,13 @@ export function removeCustomExercise(program: Program, id: string): Program {
   return {
     ...program,
     custom: program.custom.filter((c) => c.id !== id),
-    days: program.days.map((d) => ({ ...d, entries: d.entries.filter((e) => e.exerciseId !== id) })),
+    days: program.days.map((d) => {
+      let entries = d.entries
+      d.entries.forEach((e, i) => {
+        if (e.exerciseId === id) entries = detach(entries, i)
+      })
+      return { ...d, entries: normalizeSupersets(entries.filter((e) => e.exerciseId !== id)) }
+    }),
   }
 }
 

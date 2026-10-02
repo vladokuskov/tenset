@@ -150,6 +150,10 @@ export const Entry = z.object({
   exerciseId: ExerciseRef,
   sets: z.number().int().min(1).max(20),
   reps: z.string().optional(),
+  restSec: z.number().int().min(0).max(600).multipleOf(15).optional(),
+  rir: z.number().int().min(0).max(5).optional(),
+  /** Superset: paired with the entry above. Pairs only; program ops keep this consistent. */
+  withPrev: z.literal(true).optional(),
 })
 
 export const Day = z.object({
@@ -180,6 +184,12 @@ export const CountingMode = z.enum(['fractional', 'primary'])
 
 export const Locale = z.enum(['en', 'uk'])
 
+export const TargetMode = z.enum(['normal', 'more', 'less', 'skip', 'custom'])
+export const TargetPref = z.union([
+  z.object({ mode: z.enum(['more', 'less', 'skip']) }),
+  z.object({ mode: z.literal('custom'), min: z.number().int().min(1).max(59), max: z.number().int().min(2).max(60) }),
+])
+
 export const Prefs = z.object({
   /** Missing in prefs saved before languages existed; the store fills it from the browser. */
   locale: Locale.optional(),
@@ -188,6 +198,8 @@ export const Prefs = z.object({
   countingMode: CountingMode,
   weekStart: DayIndex,
   overrides: z.record(z.string(), z.record(z.string(), z.enum(['primary', 'secondary', 'none']))),
+  /** Per-group personal range; a missing key means the cited range. */
+  targets: z.record(z.string(), TargetPref).optional(),
 })
 
 export type Taxonomy = z.infer<typeof Taxonomy>
@@ -207,5 +219,7 @@ export type TaxonomyText = z.infer<typeof TaxonomyText>
 export type EquipmentText = z.infer<typeof EquipmentText>
 export type SplitText = z.infer<typeof SplitText>
 export type Prefs = z.infer<typeof Prefs>
+export type TargetPref = z.infer<typeof TargetPref>
+export type TargetMode = z.infer<typeof TargetMode>
 export type Role = z.infer<typeof Role>
 export type ExerciseRef = z.infer<typeof ExerciseRef>

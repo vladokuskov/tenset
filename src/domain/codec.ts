@@ -1,10 +1,14 @@
 import { sequentialIds, type IdFactory } from './ids.ts'
+import { normalizeSupersets } from './program.ts'
 import { Program, type CustomExercise, type Day, type Entry, type ExerciseRef } from './schema.ts'
 
 // Share link format. Version byte first, then a compact binary program, then base64url.
 // The tables below are part of the v1 wire format: append only, never reorder or remove.
+// v2 is v1 plus one extension byte per entry. Programs that use no v2 field still encode as v1,
+// so older cached apps keep reading them.
 
-export const CODEC_VERSION = 1
+export const CODEC_VERSION = 2
+const V1 = 1
 
 export const REPS_PRESETS = ['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'] as const
 
@@ -29,6 +33,16 @@ const MAX_INPUT = 16384
 const REPS_NONE = 0
 const REPS_PRESET = 1
 const REPS_TEXT = 2
+
+// v2 entry extension byte: bit0 rest follows (u8, steps of 15 s), bit1 has rir, bit2 superset with previous,
+// bits3-5 rir, bits6-7 reserved (0)
+const EXT_REST = 1
+const EXT_RIR = 2
+const EXT_WITH_PREV = 4
+const REST_STEP = 15
+const REST_STEPS_MAX = 40
+
+const usesV2 = (e: Entry) => e.restSec !== undefined || e.rir !== undefined || !!e.withPrev
 
 class CodecError extends Error {}
 
@@ -123,7 +137,8 @@ const customNumber = (id: string) => Number(id.slice(1))
 
 export function encodeProgram(program: Program): string {
   const w = writer()
-  w.u8(CODEC_VERSION)
+  const ext = program.days.some((d) => d.entries.some(usesV2))
+  w.u8(ext ? CODEC_VERSION : V1)
   w.str(program.name)
   w.u8(mask(program.days, (d) => d.kind === 'train'))
   w.u8(mask(program.days, (d) => !!d.label))
@@ -157,6 +172,13 @@ export function encodeProgram(program: Program): string {
       else w.u16(e.exerciseId)
       if (repsKind === REPS_PRESET) w.u8(preset)
       else if (repsKind === REPS_TEXT) w.str(e.reps!)
+      if (ext) {
+        const rest = e.restSec === undefined ? -1 : Math.round(e.restSec / REST_STEP)
+        w.u8(
+          (rest >= 0 ? EXT_REST : 0) | (e.rir !== undefined ? EXT_RIR | (e.rir << 3) : 0) | (e.withPrev ? EXT_WITH_PREV : 0),
+        )
+        if (rest >= 0) w.u8(rest)
+      }
     }
   }
   return toBase64Url(w.done())
@@ -192,8 +214,9 @@ export function decodeProgram(input: string, opts: DecodeOptions = {}): DecodeRe
   try {
     const bytes = fromBase64Url(s)
     const r = reader(bytes)
-    if (r.u8() !== CODEC_VERSION) return { ok: false, error: 'unsupported_version' }
-    candidate = readV1(r, opts)
+    const version = r.u8()
+    if (version !== V1 && version !== CODEC_VERSION) return { ok: false, error: 'unsupported_version' }
+    candidate = readV1(r, opts, version === CODEC_VERSION)
     if (!r.atEnd()) throw new CodecError('trailing bytes')
   } catch (e) {
     if (e instanceof CodecError || e instanceof TypeError || e instanceof RangeError) return { ok: false, error: 'malformed' }
@@ -212,7 +235,23 @@ export function decodeProgram(input: string, opts: DecodeOptions = {}): DecodeRe
   return { ok: true, program: parsed.data }
 }
 
-function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions) {
+function readExtension(r: ReturnType<typeof reader>, entry: Entry) {
+  const x = r.u8()
+  if (x & 0xc0) throw new CodecError('extension bits')
+  const rir = (x >> 3) & 7
+  if (x & EXT_RIR) {
+    if (rir > 5) throw new CodecError('rir')
+    entry.rir = rir
+  } else if (rir) throw new CodecError('rir without flag')
+  if (x & EXT_WITH_PREV) entry.withPrev = true
+  if (x & EXT_REST) {
+    const steps = r.u8()
+    if (steps > REST_STEPS_MAX) throw new CodecError('rest')
+    entry.restSec = steps * REST_STEP
+  }
+}
+
+function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions, ext = false) {
   const makeId = opts.makeId ?? sequentialIds('e')
   const name = r.str()
   const trainMask = r.u8()
@@ -264,9 +303,10 @@ function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions) {
         entry.reps = reps
       } else if (repsKind === REPS_TEXT) entry.reps = r.str()
       else if (repsKind !== REPS_NONE) throw new CodecError('reps kind')
+      if (ext) readExtension(r, entry)
       entries.push(entry)
     }
-    const day: Day = { kind: trainMask & (1 << d) ? 'train' : 'rest', entries }
+    const day: Day = { kind: trainMask & (1 << d) ? 'train' : 'rest', entries: normalizeSupersets(entries) }
     if (labels[d] !== undefined) day.label = labels[d]
     if (notes[d] !== undefined) day.note = notes[d]
     days.push(day)

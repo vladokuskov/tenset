@@ -2,14 +2,14 @@ import type { ExerciseRef, Prefs, Program, Role } from './schema.ts'
 import { resolveExercise, type Catalog, type ResolvedExercise } from './resolve.ts'
 import {
   allHeadsOfGroup,
-  bandEdges,
   bandSources,
   deepHeadsOf,
   groupIds,
   headsOfGroup,
-  isOptional,
   type BandEdges,
 } from './taxonomy.ts'
+import { resolveTarget, type Targets } from './targets.ts'
+import type { TargetMode } from './schema.ts'
 
 export const DAYS = 7
 export const WEEK_INTENSITY_SETS = 30
@@ -21,6 +21,9 @@ export type BandResult = {
   band: BandId
   value: number
   edges: BandEdges
+  /** The research edges; differs from edges when the user set their own range. */
+  cited: BandEdges
+  mode: TargetMode
   optional: boolean
   sourceIds: string[]
 }
@@ -44,7 +47,7 @@ export type ResolvedEntry = {
 
 export type EngineContext = {
   catalog: Catalog
-  prefs: Pick<Prefs, 'countingMode' | 'overrides'>
+  prefs: Pick<Prefs, 'countingMode' | 'overrides' | 'targets'>
 }
 
 export type Series = { weekly: Record<string, number>; daily: Record<string, number[]> }
@@ -90,13 +93,12 @@ export function classifyBand(value: number, edges: BandEdges, optional: boolean)
   return 'very_high'
 }
 
-/** Weekly band for a group; null for unbanded groups (value only). */
-export function bandFor(groupId: string, weeklySets: number): BandResult | null {
-  const edges = bandEdges(groupId)
-  if (!edges) return null
-  const optional = isOptional(groupId)
+/** Weekly band for a group; null for unbanded and skipped groups (value only). */
+export function bandFor(groupId: string, weeklySets: number, targets?: Targets): BandResult | null {
+  const { edges, cited, optional, mode } = resolveTarget(groupId, targets)
+  if (!edges || !cited) return null
   const value = round(weeklySets)
-  return { band: classifyBand(value, edges, optional), value, edges, optional, sourceIds: bandSources(groupId) }
+  return { band: classifyBand(value, edges, optional), value, edges, cited, mode, optional, sourceIds: bandSources(groupId) }
 }
 
 export function computeWeek(program: Program, ctx: EngineContext): WeekResult {
@@ -148,7 +150,7 @@ export function computeWeek(program: Program, ctx: EngineContext): WeekResult {
     daily[g] = daily[g].map(round)
     weekly[g] = round(daily[g].reduce((a, b) => a + b, 0))
     frequency[g] = round(dayMaxWeight[g].reduce((a, b) => a + b, 0))
-    bands[g] = bandFor(g, weekly[g])
+    bands[g] = bandFor(g, weekly[g], ctx.prefs.targets)
   }
 
   const heads = seriesFromDaily(headDaily)
