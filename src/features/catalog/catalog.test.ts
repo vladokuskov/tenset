@@ -3,7 +3,10 @@ import { activeExercises } from '../../data/catalog'
 import { groupName, localizeExercise } from '../../data/localize'
 import { presetEquipment } from '../../domain/equipment'
 import { blankProgram } from '../../domain/program'
-import { alternativesFor } from './alternatives'
+import type { ResolveContext } from '../../domain/resolve'
+import type { CustomExercise } from '../../domain/schema'
+import { catalogOf, fixtureExercise } from '../../domain/test-fixtures'
+import { alternativesFor, headOverlap, headVector, rankAlternatives } from './alternatives'
 import { lightestTrainingDay, shortCite } from './detail'
 import { catalogMessages } from './messages'
 import { PATTERN_GROUPS, patternLabel } from './patterns'
@@ -94,14 +97,57 @@ describe('roles', () => {
   })
 })
 
+const altCtx = (patch: Partial<ResolveContext> = {}): ResolveContext => ({
+  catalog: catalogOf(...activeExercises),
+  custom: [],
+  countingMode: 'fractional',
+  overrides: {},
+  ...patch,
+})
+
 describe('alternatives', () => {
   it('keeps the pattern and puts available equipment first', () => {
     const bench = activeExercises.find((e) => e.slug === 'barbell-bench-press')!
-    const alts = alternativesFor(bench, activeExercises, presetEquipment('dumbbells_bench'))
+    const alts = alternativesFor(bench, activeExercises, presetEquipment('dumbbells_bench'), altCtx())
     expect(alts.length).toBeGreaterThan(0)
     expect(alts.map((a) => a.exercise.id)).not.toContain(bench.id)
     const firstUnavailable = alts.findIndex((a) => !a.available)
     if (firstUnavailable >= 0) expect(alts.slice(firstUnavailable).every((a) => !a.available)).toBe(true)
+  })
+})
+
+describe('rankAlternatives', () => {
+  const flat = fixtureExercise(1, { groups: { chest: 'primary', triceps: 'secondary' }, heads: { pec_clavicular: 0.5, pec_sternal: 1 } })
+  const incline = fixtureExercise(2, { groups: { chest: 'primary', triceps: 'secondary' }, heads: { pec_clavicular: 1, pec_sternal: 0.5 } })
+  const decline = fixtureExercise(3, { groups: { chest: 'primary', triceps: 'secondary' }, heads: { pec_clavicular: 0.25, pec_sternal: 1 } })
+  const dip = fixtureExercise(4, { groups: { triceps: 'primary', chest: 'secondary' }, level: 3 })
+  const cable = fixtureExercise(5, { groups: { chest: 'primary' }, heads: { pec_sternal: 1 }, equipment: ['cable'] })
+  const ctx = (patch: Partial<ResolveContext> = {}) => altCtx({ catalog: catalogOf(flat, incline, decline, dip, cable), ...patch })
+  const ids = (list: { exercise: { id: number | string } }[]) => list.map((r) => r.exercise.id)
+
+  it('ranks by head overlap after equipment', () => {
+    expect(ids(rankAlternatives(flat, [incline, dip, decline, cable], ctx(), []))).toEqual([3, 2, 4, 5])
+  })
+
+  it('puts the curated list before overlap', () => {
+    const target = { ...flat, alternatives: [4] }
+    expect(ids(rankAlternatives(target, [incline, dip, decline], ctx(), []))[0]).toBe(4)
+  })
+
+  it('follows overrides and counting mode', () => {
+    const base = headOverlap(headVector(flat, ctx()), headVector(dip, ctx()))
+    const primaryOnly = headOverlap(headVector(flat, ctx({ countingMode: 'primary' })), headVector(dip, ctx({ countingMode: 'primary' })))
+    expect(primaryOnly).toBe(0)
+    expect(base).toBeGreaterThan(0)
+    const moved = ctx({ overrides: { '4': { chest: 'primary', triceps: 'secondary' } } })
+    expect(headOverlap(headVector(flat, moved), headVector(dip, moved))).toBeGreaterThan(base)
+  })
+
+  it('handles custom exercises', () => {
+    const mine: CustomExercise = { id: 'c1', name: 'Mine', equipment: [], laterality: 'bilateral', groups: { chest: 'primary' } }
+    const ranked = rankAlternatives(mine, [dip, decline], ctx({ custom: [mine] }), [])
+    expect(ids(ranked)).toEqual([3, 4])
+    expect(ranked[0].overlap).toBeGreaterThan(0)
   })
 })
 

@@ -2,7 +2,9 @@ import { useMemo } from 'react'
 import { sessionLabel } from '../data/localize'
 import { computeCoverage, type Coverage } from '../domain/coverage'
 import { dayFacts, weekSchedule, type GroupSchedule, type RecoveryFact } from '../domain/recovery'
+import type { ResolveContext } from '../domain/resolve'
 import type { Prefs, Program } from '../domain/schema'
+import { estimateDay } from '../domain/session'
 import { computeWeek, type WeekResult } from '../domain/volume'
 import type { Locale } from '../i18n/locale'
 import { useLocale } from '../i18n/messages'
@@ -21,6 +23,8 @@ export type DaySummary = {
   hardSets: number
   /** Groups with the most fractional sets that day, highest first (max 3). */
   topGroups: string[]
+  /** Planned session length in minutes (nearest 5); 0 for rest or empty days. */
+  estMinutes: number
 }
 
 export type WeekView = {
@@ -38,7 +42,7 @@ export type WeekView = {
   prefs: Pick<Prefs, 'goal' | 'countingMode' | 'weekStart'>
 }
 
-function summarize(program: Program, week: WeekResult, locale: Locale): DaySummary[] {
+function summarize(program: Program, week: WeekResult, locale: Locale, ctx: ResolveContext): DaySummary[] {
   return program.days.map((d, day) => {
     const topGroups = Object.entries(week.daily)
       .filter(([, days]) => days[day] > 0)
@@ -53,6 +57,7 @@ function summarize(program: Program, week: WeekResult, locale: Locale): DaySumma
       exercises: d.kind === 'train' ? d.entries.length : 0,
       hardSets: d.kind === 'train' ? d.entries.reduce((s, e) => s + e.sets, 0) : 0,
       topGroups: d.kind === 'train' ? topGroups : [],
+      estMinutes: estimateDay(d, ctx),
     }
   })
 }
@@ -80,7 +85,7 @@ export function useWeek(programOverride?: Program | null): WeekView | null {
       coverage: computeCoverage(week, goal),
       schedule: weekSchedule(week.daily, weekStart),
       order: weekOrder(weekStart),
-      days: summarize(program, week, locale),
+      days: summarize(program, week, locale, { catalog, custom: program.custom, countingMode, overrides }),
       dayFacts: (day: DayIndex) => dayFacts(week.daily, day),
       prefs: { goal, countingMode, weekStart },
     }

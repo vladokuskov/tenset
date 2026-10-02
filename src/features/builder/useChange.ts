@@ -3,6 +3,7 @@ import { toastWithUndo } from '../../app/undo'
 import { useCatalog } from '../../app/useCatalog'
 import { dismissToast } from '../../ui/toast'
 import { prefsStore } from '../../store/prefs.store'
+import type { Program } from '../../domain/schema'
 import { programStore, type ProgramState } from '../../store/program.store'
 import { common } from '../../i18n/common'
 import { getLocale } from '../../i18n/messages'
@@ -15,11 +16,15 @@ export type ChangeResult = { message: string; deltas: GroupDelta[] }
 export type ChangeOptions = {
   /** false when a sheet shows the result itself (toasts sit under an open dialog). */
   toast?: boolean
+  /** Say so when the action broke up a superset (drag reorder, move). */
+  noteSplit?: boolean
 }
 
 type Describe = string | ((deltas: GroupDelta[]) => string)
 
 const activeOf = (s: ProgramState) => (s.activeId ? (s.programs[s.activeId] ?? null) : null)
+
+const pairCount = (p: Program | null) => p?.days.reduce((n, d) => n + d.entries.filter((e) => e.withPrev).length, 0) ?? 0
 
 /**
  * Runs a program-store action, then reports the week delta: a toast with Undo and a pulse on
@@ -47,10 +52,13 @@ export function useChange() {
           dayChanges(wb, wa),
         )
       }
-      const base = typeof describe === 'function' ? describe(deltas) : describe
       const locale = getLocale()
+      const m = builderMessages[locale]
+      const described = typeof describe === 'function' ? describe(deltas) : describe
+      const split = options.noteSplit && before && after && before.id === after.id && pairCount(after) < pairCount(before)
+      const base = split ? m.supersetSplit(described) : described
       const detail = deltaText(deltas, 2, locale)
-      const message = detail ? builderMessages[locale].withDelta(base, detail) : base
+      const message = detail ? m.withDelta(base, detail) : base
       // A visible toast's Undo would now revert this change instead of the one it names.
       if (options.toast !== false) toastWithUndo(message)
       else dismissToast()

@@ -5,16 +5,17 @@ import { dayName, type DayIndex } from '../../app/days'
 import { formatDaySummary, joinMeta } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
-import { availableSet, hasEquipment } from '../../domain/equipment'
+import { availableSet } from '../../domain/equipment'
 import { resolveExercise } from '../../domain/resolve'
 import type { Entry } from '../../domain/schema'
 import { common } from '../../i18n/common'
-import { compareText } from '../../i18n/format'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, Chip, Sheet, Stepper, cx, useSheet } from '../../ui'
+import { rankAlternatives } from '../catalog'
 import { ChangeBar } from './ChangeBar'
+import { RestPicker, RirPicker, SupersetToggle } from './EntryTargets'
 import { REPS_PRESETS, SECONDS_PRESETS, defaultReps, isCustom, repsText, unitOf, type AnyExercise } from './labels'
 import { exerciseFor, findEntry } from './lookup'
 import { builderMessages } from './messages'
@@ -114,6 +115,9 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
       </div>
 
       <RepsPicker key={String(open)} entry={entry} exercise={ex} onChange={run} className="mt-5" />
+      <RestPicker key={`rest-${open}`} entry={entry} exercise={ex} onChange={run} className="mt-5" />
+      <RirPicker entry={entry} onChange={run} className="mt-5" />
+      <SupersetToggle entry={entry} index={data.found.index} day={day} exercise={ex} onChange={run} className="-mx-2 mt-4" />
 
       <ul className="-mx-2 mt-5 border-t border-line pt-2">
         <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => onSwitch('swap')} />
@@ -291,19 +295,14 @@ function SwapSheet({ open, onClose, data }: { open: boolean; onClose: () => void
       .map(([g]) => g)
   const mine = primaries(ex)
   const avail = availableSet(equipment)
-  const alternatives = isCustom(ex) ? [] : ex.alternatives
   const candidates = activeExercises.filter((e) => {
     if (e.id === ex.id) return false
     if (!isCustom(ex)) return e.pattern === ex.pattern
     return primaries(e).some((g) => mine.includes(g))
   })
-  const fitting = candidates.filter((e) => hasEquipment(e, avail))
-  const list = (all ? candidates : fitting).sort((a, b) => {
-    const ra = alternatives.indexOf(a.id)
-    const rb = alternatives.indexOf(b.id)
-    const shared = (e: AnyExercise) => primaries(e).filter((g) => mine.includes(g)).length
-    return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb) || shared(b) - shared(a) || compareText(locale, a.name, b.name)
-  })
+  const ranked = rankAlternatives(ex, candidates, ctx, avail)
+  const fitting = ranked.filter((r) => r.available)
+  const list = (all ? ranked : fitting).map((r) => r.exercise)
   const hidden = candidates.length - fitting.length
 
   return (
@@ -360,7 +359,7 @@ function DayTargetSheet({ mode, open, onClose, data }: { mode: 'move' | 'copy'; 
 
   const pick = (d: DayIndex) => {
     onClose()
-    if (mode === 'move') change(m.movedTo(data.exercise.name, d), () => moveEntry(entry.id, d))
+    if (mode === 'move') change(m.movedTo(data.exercise.name, d), () => moveEntry(entry.id, d), { noteSplit: true })
     else change(m.copiedTo(data.exercise.name, d), () => copyEntry(entry.id, d))
   }
 
@@ -387,7 +386,7 @@ function DayTargetSheet({ mode, open, onClose, data }: { mode: 'move' | 'copy'; 
                     ? m.thisDay
                     : s.kind === 'rest'
                       ? m.restBecomesTraining
-                      : joinMeta([s.label, formatDaySummary(s.exercises, s.hardSets, locale)])
+                      : joinMeta([s.label, formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes)])
                 }
               />
             </li>

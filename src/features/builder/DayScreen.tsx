@@ -52,7 +52,7 @@ export function DayScreen() {
     <Page>
       <PageHeader
         title={summary.label ? `${name} · ${summary.label}` : name}
-        subtitle={rest ? m.restDay : formatDaySummary(summary.exercises, summary.hardSets, locale)}
+        subtitle={rest ? m.restDay : formatDaySummary(summary.exercises, summary.hardSets, locale, summary.estMinutes)}
         back={{ to: '/', label: m.plan }}
         actions={<IconButton icon={Ellipsis} label={m.dayOptionsFor(name)} onClick={() => options.show()} />}
       >
@@ -67,7 +67,7 @@ export function DayScreen() {
                 params={{ dow: daySlug(i) }}
                 replace
                 aria-current={current ? 'page' : undefined}
-                aria-label={m.dayLink(i, s.kind === 'rest' ? null : formatDaySummary(s.exercises, s.hardSets, locale))}
+                aria-label={m.dayLink(i, s.kind === 'rest' ? null : formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes))}
                 className={cx(
                   'hit flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-full border px-1 text-sm font-medium leading-none transition-colors',
                   current ? 'border-ink bg-ink text-on-ink' : 'border-line-strong text-ink hover:bg-surface-2',

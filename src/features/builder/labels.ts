@@ -1,4 +1,4 @@
-import type { CustomExercise, Exercise, Prefs } from '../../domain/schema'
+import type { CustomExercise, Entry, Exercise, Prefs } from '../../domain/schema'
 import { groupName } from '../../data/localize'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
@@ -61,4 +61,20 @@ export function matchesQuery(e: AnyExercise, query: string): boolean {
   const hay = normalize([e.name, ...(isCustom(e) ? [] : [...e.aliases, e.family])].join(' '))
   const words = hay.split(' ')
   return q.split(' ').every((t) => words.some((w) => w.startsWith(t)) || hay.includes(t))
+}
+
+export type SupersetLabel = { letter: string; position: 1 | 2; label: string }
+
+/** A1/A2, B1/B2... by pair order within the day; solo entries get null. */
+export function supersetLabels(entries: readonly Pick<Entry, 'withPrev'>[]): (SupersetLabel | null)[] {
+  const out: (SupersetLabel | null)[] = entries.map(() => null)
+  let pairs = 0
+  entries.forEach((e, i) => {
+    if (!e.withPrev || i === 0 || out[i - 1]) return
+    const letter = pairs < 26 ? String.fromCharCode(65 + pairs) : String(pairs + 1)
+    pairs++
+    out[i - 1] = { letter, position: 1, label: `${letter}1` }
+    out[i] = { letter, position: 2, label: `${letter}2` }
+  })
+  return out
 }

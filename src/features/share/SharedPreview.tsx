@@ -2,7 +2,7 @@ import { useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { Link2Off } from 'lucide-react'
 import { useMemo } from 'react'
 import { dayName } from '../../app/days'
-import { formatDaySummary, setsLabel } from '../../app/format'
+import { formatDaySummary, formatRest, formatRir, joinMeta, setsLabel } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
@@ -11,6 +11,7 @@ import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
 import { Button, EmptyState, LinkButton, Page, PageBody, PageHeader, Panel, Section, StickyActions, showToast } from '../../ui'
 import { BodyMini } from '../bodymap'
+import { supersetLabels } from '../builder/labels'
 import { shareMessages } from './messages'
 import { uniqueName } from './names'
 import { exerciseName, isKnown } from './resolveNames'
@@ -99,22 +100,30 @@ export function SharedPreview() {
             {order.map((d) => {
               const s = days[d]
               const entries = shared.days[d].entries
+              const pairs = supersetLabels(entries)
               return (
                 <li key={d} className="px-4 py-3">
                   <div className="flex items-baseline gap-3">
                     <span className="w-10 shrink-0 font-semibold">{dayName(d, 'short', locale)}</span>
                     <span className="min-w-0 flex-1 truncate">{s.kind === 'rest' ? m.rest : (s.label ?? m.training)}</span>
                     {s.kind === 'train' && (
-                      <span className="shrink-0 text-sm text-ink-2 num">{formatDaySummary(s.exercises, s.hardSets, locale)}</span>
+                      <span className="shrink-0 text-sm text-ink-2 num">{formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes)}</span>
                     )}
                   </div>
                   {s.kind === 'train' && entries.length > 0 && (
                     <ul className="mt-2 space-y-1 pl-[3.25rem] text-sm">
-                      {entries.map((e) => (
+                      {entries.map((e, i) => (
                         <li key={e.id} className="flex gap-3">
-                          <span className="min-w-0 flex-1 text-ink">{exerciseName(e.exerciseId, catalog, shared.custom, locale)}</span>
+                          <span className="min-w-0 flex-1 text-ink">
+                            {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
+                            {exerciseName(e.exerciseId, catalog, shared.custom, locale)}
+                          </span>
                           <span className="shrink-0 text-ink-2 num">
-                            {e.reps ? `${e.sets} × ${e.reps}` : setsLabel(e.sets, locale)}
+                            {joinMeta([
+                              e.reps ? `${e.sets} × ${e.reps}` : setsLabel(e.sets, locale),
+                              e.restSec !== undefined && formatRest(e.restSec, locale),
+                              e.rir !== undefined && formatRir(e.rir, locale),
+                            ])}
                           </span>
                         </li>
                       ))}
