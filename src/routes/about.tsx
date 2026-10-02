@@ -64,11 +64,11 @@ function AboutPage() {
             ))}
           </Panel>
           <div className="mt-3 space-y-3 px-1 text-sm">
-            <p>{m.customRanges(custom.map((g) => ({ id: g.id, target: targetText(g.bandEdges!, locale) })))}</p>
+            <p>{m.customRanges(custom.map((g) => ({ id: g.id, target: targetText(g.bandEdges!, {}, locale) })))}</p>
             <p>
               {m.optionalGroups(
                 optional.map((g) => g.id),
-                targetText(optional[0]?.bandEdges ?? [4, 6, 16, 26], locale),
+                targetText(optional[0]?.bandEdges ?? [4, 6, 16, 26], {}, locale),
                 optional[0]?.bandEdges?.[0] ?? 4,
               )}{' '}
               {m.trackedGroups(tracked.map((g) => g.id))}

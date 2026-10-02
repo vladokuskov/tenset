@@ -1,5 +1,6 @@
 import { groupShade, headShade, ROLE_COLOR, VOLUME_COLOR, type MapScale } from '../../app/volumeScale'
 import type { Role } from '../../domain/schema'
+import type { Targets } from '../../domain/targets'
 import { deepHeadsOf, headsOfGroup, visibleHeads } from '../../domain/taxonomy'
 import type { FigureVars } from './AnatomyFigure'
 
@@ -22,13 +23,13 @@ export type BodyTint = {
 }
 
 /** Volume fills: --g-<group> in groups mode, --h-<head> for every visible head in heads mode. */
-export function valueVars(values: BodyValues, shade: 'groups' | 'heads', scale: MapScale): FigureVars {
+export function valueVars(values: BodyValues, shade: 'groups' | 'heads', scale: MapScale, targets?: Targets): FigureVars {
   const vars: FigureVars = {}
   if (shade === 'heads') {
-    for (const h of visibleHeads) vars[`--h-${h.id}`] = VOLUME_COLOR[headShade(h.id, values.heads[h.id] ?? 0, scale)]
+    for (const h of visibleHeads) vars[`--h-${h.id}`] = VOLUME_COLOR[headShade(h.id, values.heads[h.id] ?? 0, scale, targets)]
     return vars
   }
-  for (const [g, sets] of Object.entries(values.groups)) vars[`--g-${g}`] = VOLUME_COLOR[groupShade(g, sets, scale)]
+  for (const [g, sets] of Object.entries(values.groups)) vars[`--g-${g}`] = VOLUME_COLOR[groupShade(g, sets, scale, targets)]
   return vars
 }
 
@@ -62,6 +63,7 @@ export function miniVars(
   groups: Readonly<Record<string, number>> | undefined,
   roles: Readonly<Record<string, Role>> | undefined,
   scale: MapScale,
+  targets?: Targets,
 ): FigureVars {
   const vars: FigureVars = {}
   if (roles) {
@@ -69,7 +71,7 @@ export function miniVars(
     return vars
   }
   for (const [g, sets] of Object.entries(groups ?? {})) {
-    if (sets > 0) vars[`--g-${g}`] = VOLUME_COLOR[groupShade(g, sets, scale)]
+    if (sets > 0) vars[`--g-${g}`] = VOLUME_COLOR[groupShade(g, sets, scale, targets)]
   }
   return vars
 }

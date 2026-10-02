@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Role } from '../../domain/schema'
 import type { MapScale } from '../../app/volumeScale'
+import { usePrefsStore } from '../../store/prefs.store'
 import { cx } from '../../ui/cx'
 import { MAP_ASPECT, type AnatomyView } from './anatomy'
 import { AnatomyFigure } from './AnatomyFigure'
@@ -23,7 +24,8 @@ export type BodyMiniProps = {
 /** Small group-level map for day rows, cards and chips. Every instance shares one <symbol>. */
 export function BodyMini({ view, groups, roles, scale = 'week', height = 72, label, className }: BodyMiniProps) {
   const views: AnatomyView[] = view === 'both' ? ['front', 'back'] : [view]
-  const vars = useMemo(() => miniVars(groups, roles, scale), [groups, roles, scale])
+  const targets = usePrefsStore((s) => s.targets)
+  const vars = useMemo(() => miniVars(groups, roles, scale, targets), [groups, roles, scale, targets])
   return (
     <div
       role={label ? 'img' : undefined}

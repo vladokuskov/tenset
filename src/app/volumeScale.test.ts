@@ -25,4 +25,11 @@ describe('volume scale', () => {
     expect(headShade('pec_clavicular', 12)).toBe('target')
     expect(groupShade('serratus', 5)).toBe('moderate')
   })
+
+  it('follows personal ranges and shades skipped groups on the research range', () => {
+    expect(groupShade('chest', 12, 'week', { chest: { mode: 'more' } })).toBe('moderate')
+    expect(groupShade('chest', 22, 'week', { chest: { mode: 'more' } })).toBe('target')
+    expect(headShade('pec_clavicular', 12, 'week', { chest: { mode: 'more' } })).toBe('moderate')
+    expect(groupShade('calves', 12, 'week', { calves: { mode: 'skip' } })).toBe('target')
+  })
 })

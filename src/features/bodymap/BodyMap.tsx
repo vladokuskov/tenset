@@ -3,6 +3,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type Mo
 import { groupAt, hitTest, pickGroup, viewBoxToRaster } from '../../domain/idRaster'
 import type { MapScale } from '../../app/volumeScale'
 import { useMessages } from '../../i18n/messages'
+import { usePrefsStore } from '../../store/prefs.store'
 import { cx } from '../../ui/cx'
 import { IconButton } from '../../ui/IconButton'
 import { SegmentedControl } from '../../ui/SegmentedControl'
@@ -162,7 +163,11 @@ export function BodyMap({
   const hovered = useRef<string | null>(null)
   const zoomDoc = useAnatomy(zoomView, 'full')
 
-  const vars = useMemo(() => (tint ? tintVars(tint) : valueVars(values, shade, scale)), [tint, values, shade, scale])
+  const targets = usePrefsStore((s) => s.targets)
+  const vars = useMemo(
+    () => (tint ? tintVars(tint) : valueVars(values, shade, scale, targets)),
+    [tint, values, shade, scale, targets],
+  )
 
   if (view !== 'both' && zoomView !== view) setZoomView(view)
 

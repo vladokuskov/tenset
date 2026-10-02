@@ -60,7 +60,7 @@ export function WelcomeScreen() {
     const out = new Map<string, { weekly: Record<string, number>; trained: number; total: number; missing: number; sets: number }>()
     for (const s of splits) {
       const { program } = applyTemplate(s, s.defaultDays, equip, catalog, { id: 'preview', makeId: sequentialIds('p') })
-      const week = computeWeek(program, { catalog, prefs: { countingMode: prefs.countingMode, overrides: prefs.overrides } })
+      const week = computeWeek(program, { catalog, prefs: { countingMode: prefs.countingMode, overrides: prefs.overrides, targets: prefs.targets } })
       const coverage = computeCoverage(week, prefs.goal)
       const sets = program.days.reduce((n, d) => n + d.entries.reduce((a, e) => a + e.sets, 0), 0)
       out.set(s.id, {
@@ -72,7 +72,7 @@ export function WelcomeScreen() {
       })
     }
     return out
-  }, [splits, equip, catalog, prefs.countingMode, prefs.overrides, prefs.goal])
+  }, [splits, equip, catalog, prefs.countingMode, prefs.overrides, prefs.targets, prefs.goal])
 
   const go = (next: number) => void navigate({ to: '/welcome', search: { step: next } })
 

@@ -69,11 +69,12 @@ export function useWeek(programOverride?: Program | null): WeekView | null {
   const countingMode = usePrefsStore((s) => s.countingMode)
   const weekStart = usePrefsStore((s) => s.weekStart)
   const overrides = usePrefsStore((s) => s.overrides)
+  const targets = usePrefsStore((s) => s.targets)
   const locale = useLocale()
 
   return useMemo(() => {
     if (!program) return null
-    const week = computeWeek(program, { catalog, prefs: { countingMode, overrides } })
+    const week = computeWeek(program, { catalog, prefs: { countingMode, overrides, targets } })
     return {
       program,
       week,
@@ -84,5 +85,5 @@ export function useWeek(programOverride?: Program | null): WeekView | null {
       dayFacts: (day: DayIndex) => dayFacts(week.daily, day),
       prefs: { goal, countingMode, weekStart },
     }
-  }, [program, catalog, goal, countingMode, weekStart, overrides, locale])
+  }, [program, catalog, goal, countingMode, weekStart, overrides, targets, locale])
 }

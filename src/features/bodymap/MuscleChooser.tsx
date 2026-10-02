@@ -3,6 +3,7 @@ import { formatSets } from '../../app/format'
 import { groupShade, VOLUME_COLOR, type MapScale } from '../../app/volumeScale'
 import { groupName } from '../../data/localize'
 import { useLocale } from '../../i18n/messages'
+import { usePrefsStore } from '../../store/prefs.store'
 import { TAP_RADIUS_PX, type AnatomyView } from './anatomy'
 import type { BodyValues } from './fills'
 import { bodymapMessages } from './messages'
@@ -40,6 +41,7 @@ export function MuscleChooser({
   onClose: () => void
 }) {
   const locale = useLocale()
+  const targets = usePrefsStore((s) => s.targets)
   const m = bodymapMessages[locale]
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
@@ -114,7 +116,7 @@ export function MuscleChooser({
                 >
                   <span
                     className="size-3 shrink-0 rounded-full ring-1 ring-line-strong ring-inset"
-                    style={{ background: VOLUME_COLOR[groupShade(g, sets, scale)] }}
+                    style={{ background: VOLUME_COLOR[groupShade(g, sets, scale, targets)] }}
                     aria-hidden
                   />
                   <span className="min-w-0 flex-1 truncate font-medium">{groupName(g, locale)}</span>

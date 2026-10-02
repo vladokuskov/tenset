@@ -2,6 +2,7 @@ import { dayName, type DayIndex } from '../../app/days'
 import { formatSets } from '../../app/format'
 import { groupShade, VOLUME_COLOR } from '../../app/volumeScale'
 import { useLocale } from '../../i18n/messages'
+import { usePrefsStore } from '../../store/prefs.store'
 import { cx } from '../../ui/cx'
 import { bodymapMessages } from './messages'
 
@@ -22,6 +23,7 @@ export function DayStrip({
   caption: string
 }) {
   const locale = useLocale()
+  const targets = usePrefsStore((s) => s.targets)
   const max = Math.max(4, ...daily)
   const summary = order.map((d) => `${dayName(d, 'long', locale)} ${formatSets(daily[d] ?? 0, locale)}`).join(', ')
   return (
@@ -39,7 +41,7 @@ export function DayStrip({
                     className="block w-full max-w-9 rounded-t-[6px] rounded-b-[2px]"
                     style={{
                       height: Math.max(6, Math.round((v / max) * BAR_PX)),
-                      background: VOLUME_COLOR[groupShade(group, v, 'day')],
+                      background: VOLUME_COLOR[groupShade(group, v, 'day', targets)],
                     }}
                   />
                 ) : (
