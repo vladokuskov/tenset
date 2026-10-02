@@ -2,7 +2,6 @@ import { availableSet, hasEquipment } from './equipment.ts'
 import type { IdFactory } from './ids.ts'
 import type { Catalog } from './resolve.ts'
 import type { CustomExercise, Day, Entry, Exercise, ExerciseRef, Program, SplitTemplate } from './schema.ts'
-import { getGroup } from './taxonomy.ts'
 
 export const DEFAULT_SETS = 3
 export const MAX_SETS = 20
@@ -197,17 +196,16 @@ export function removeCustomExercise(program: Program, id: string): Program {
   }
 }
 
+/** Structured; the UI puts them into words. */
 export type TemplateNote =
-  | { kind: 'dropped_slot'; day: DayIndex; session: string; slot: number; pattern: string; group: string; message: string }
-  | { kind: 'day_count'; expected: number; got: number; message: string }
+  | { kind: 'dropped_slot'; day: DayIndex; session: string; slot: number; pattern: string; group: string }
+  | { kind: 'day_count'; expected: number; got: number }
 
 export type ApplyTemplateOptions = {
   id: string
   makeId: IdFactory
   name?: string
 }
-
-const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 /** Follows replacedBy links of retired records; null when the chain ends nowhere usable. */
 export function activeExercise(catalog: Catalog, id: number): Exercise | null {
@@ -238,12 +236,7 @@ export function applyTemplate(
   const avail = availableSet(available)
   const notes: TemplateNote[] = []
   if (days.length !== template.daysPerWeek) {
-    notes.push({
-      kind: 'day_count',
-      expected: template.daysPerWeek,
-      got: days.length,
-      message: `This template is built for ${template.daysPerWeek} days a week; it was placed on ${days.length}.`,
-    })
+    notes.push({ kind: 'day_count', expected: template.daysPerWeek, got: days.length })
   }
 
   const program = blankProgram(opts.id, opts.name ?? template.name, days)
@@ -265,7 +258,6 @@ export function applyTemplate(
           slot: slotIndex,
           pattern: slot.pattern,
           group: slot.group,
-          message: `${DAY_NAMES[day]}: no option for your equipment, so the ${(getGroup(slot.group)?.name ?? slot.group).toLowerCase()} slot was left out.`,
         })
         return
       }

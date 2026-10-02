@@ -1,12 +1,13 @@
 import type { CustomExercise, Exercise, Prefs } from '../../domain/schema'
-import { getGroup } from '../../domain/taxonomy'
+import { groupName } from '../../data/localize'
+import type { Locale } from '../../i18n/locale'
+import { getLocale } from '../../i18n/messages'
+import { builderMessages } from './messages'
 
 export const REPS_PRESETS = ['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'] as const
 export const SECONDS_PRESETS = ['15-30', '30-45', '30-60', '45-60'] as const
 
-export function groupName(group: string): string {
-  return getGroup(group)?.name ?? group
-}
+export { groupName }
 
 export type AnyExercise = Exercise | CustomExercise
 
@@ -15,9 +16,10 @@ export function isCustom(e: AnyExercise): e is CustomExercise {
 }
 
 /** Second line of an exercise row: primary muscles, flagged when the mapping is the user's own. */
-export function rowMeta(e: AnyExercise, primaries: readonly string[]): string {
-  const muscles = primaries.join(', ') || 'No muscles mapped'
-  return isCustom(e) ? `Custom, your mapping · ${muscles}` : muscles
+export function rowMeta(e: AnyExercise, primaries: readonly string[], locale: Locale = getLocale()): string {
+  const m = builderMessages[locale]
+  const muscles = primaries.join(', ') || m.noMusclesMapped
+  return isCustom(e) ? m.customMeta(muscles) : muscles
 }
 
 export function unitOf(e: AnyExercise): 'reps' | 'seconds' {
@@ -34,16 +36,20 @@ export function defaultReps(e: AnyExercise, goal: Prefs['goal']): string | undef
 }
 
 /** "8-12 reps", "30-45 s". */
-export function repsText(reps: string | undefined, unit: 'reps' | 'seconds'): string {
-  if (!reps) return unit === 'seconds' ? 'Time' : 'Reps'
-  return unit === 'seconds' ? `${reps} s` : `${reps} reps`
+export function repsText(reps: string | undefined, unit: 'reps' | 'seconds', locale: Locale = getLocale()): string {
+  const m = builderMessages[locale]
+  if (!reps) return unit === 'seconds' ? m.timeEmpty : m.repsEmpty
+  return unit === 'seconds' ? m.seconds(reps) : m.reps(reps)
 }
 
+/** Lowercase letters and digits of any script; apostrophes fold to one form so "мʼяз" matches "м'яз". */
 export function normalize(text: string): string {
   return text
     .toLowerCase()
+    .replace(/[ʼ’'`]/g, 'ʼ')
     .normalize('NFKD')
-    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\p{M}+/gu, '')
+    .replace(/[^\p{L}\p{N}ʼ ]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }

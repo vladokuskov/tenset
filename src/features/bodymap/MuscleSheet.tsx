@@ -3,13 +3,16 @@ import { Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { bandExplanationFor, bandLabelFor, targetText } from '../../app/bands'
 import { dayName, daySlug, type DayIndex } from '../../app/days'
-import { formatMath, formatSets, plural } from '../../app/format'
+import { formatMath, formatSets } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import type { WeekView } from '../../app/useWeek'
 import { headShade, VOLUME_COLOR } from '../../app/volumeScale'
+import { groupName, headName } from '../../data/localize'
 import { suggestions } from '../../domain/coverage'
 import type { Exercise } from '../../domain/schema'
-import { allHeadsOfGroup, deepHeads, getGroup, headsOfGroup, visibleHeads } from '../../domain/taxonomy'
+import { allHeadsOfGroup, getGroup, headsOfGroup } from '../../domain/taxonomy'
+import { common } from '../../i18n/common'
+import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { Button } from '../../ui/Button'
 import { cx } from '../../ui/cx'
@@ -18,12 +21,10 @@ import { Sheet } from '../../ui/Sheet'
 import { DayPicker } from '../builder'
 import { ExerciseRow } from '../catalog'
 import { scheduleText } from './copy'
+import { bodymapMessages } from './messages'
 import { DayStrip } from './DayStrip'
 import { MuscleLocator } from './MuscleLocator'
 import { Why } from './Why'
-
-const headName = (id: string) =>
-  visibleHeads.find((h) => h.id === id)?.name ?? deepHeads.find((h) => h.id === id)?.name ?? id
 
 function Heading({ children, action }: { children: string; action?: ReactNode }) {
   return (
@@ -48,12 +49,14 @@ export type MuscleSheetProps = {
 /** Muscle detail: weekly sets, band, day strip, heads, contributing exercises with visible math. */
 export function MuscleSheet({ open, onClose, group, head, onSelectHead, view, day }: MuscleSheetProps) {
   const g = group ? getGroup(group) : undefined
+  const locale = useLocale()
+  const m = bodymapMessages[locale]
   return (
     <Sheet
       open={open && Boolean(g)}
       onClose={onClose}
-      title={g?.name ?? 'Muscle'}
-      description={g?.banded && g.optional ? 'Optional group' : undefined}
+      title={g ? groupName(g.id, locale) : m.muscle}
+      description={g?.banded && g.optional ? m.optionalGroup : undefined}
       footer={g ? <AddFooter group={g.id} view={view} day={day} /> : undefined}
     >
       {g && <Body group={g.id} head={head} onSelectHead={onSelectHead} view={view} day={day} />}
@@ -75,6 +78,9 @@ function Body({
   day: DayIndex | null
 }) {
   const { catalog } = useCatalog()
+  const locale = useLocale()
+  const m = bodymapMessages[locale]
+  const nameOfHead = (id: string) => headName(id, locale)
   const equipment = usePrefsStore((s) => s.equipment)
   const overrides = usePrefsStore((s) => s.overrides)
   const { week, coverage, schedule, order, program, prefs } = view
@@ -98,22 +104,22 @@ function Body({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="num">
-            <span className="text-display font-light">{formatSets(weekly)}</span>
-            <span className="ml-2 text-base text-ink-2">weekly {plural(weekly, 'set')}</span>
+            <span className="text-display font-light">{formatSets(weekly, locale)}</span>
+            <span className="ml-2 text-base text-ink-2">{m.weeklySets(weekly)}</span>
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
             {band ? (
               <>
                 <Pill>{bandLabelFor(band, prefs.goal)}</Pill>
                 <span className="text-sm text-ink-2 num">{targetText(band.edges)}</span>
-                <Why topic={`${getGroup(group)?.name} band`} sources={band.sourceIds}>
+                <Why topic={m.bandTopic(groupName(group, locale))} sources={band.sourceIds}>
                   {band.band === 'target' && band.sourceIds.includes('rp-2023')
-                    ? `${formatSets(band.edges[1])} to ${formatSets(band.edges[2])} weekly sets, this group's target range.`
+                    ? m.targetRange(band.edges[1], band.edges[2])
                     : bandExplanationFor(band, prefs.goal)}
                 </Why>
               </>
             ) : (
-              <span className="text-sm text-ink-2">Tracked for reference, without a band.</span>
+              <span className="text-sm text-ink-2">{m.noBandNote}</span>
             )}
           </div>
         </div>
@@ -124,9 +130,9 @@ function Body({
         />
       </div>
 
-      <Heading>Days</Heading>
+      <Heading>{m.days}</Heading>
       {weekly <= 0 ? (
-        <p className="text-sm text-ink-2">{scheduleText(undefined, 0)}</p>
+        <p className="text-sm text-ink-2">{scheduleText(undefined, 0, locale)}</p>
       ) : (
         <DayStrip
           group={group}
@@ -136,13 +142,14 @@ function Body({
           caption={scheduleText(
             schedule.find((s) => s.group === group),
             weekly,
+            locale,
           )}
         />
       )}
 
       {(heads.length > 1 || deep.length > 0) && (
         <>
-          <Heading>Heads</Heading>
+          <Heading>{m.heads(group)}</Heading>
           {heads.length > 1 && (
             <ul className="-mx-2">
               {heads.map((h) => {
@@ -166,19 +173,18 @@ function Body({
                         aria-hidden
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-base text-ink">{headName(h)}</span>
+                        <span className="block truncate text-base text-ink">{nameOfHead(h)}</span>
                         {hint && (
                           <span className="block text-sm text-ink-2 num">
-                            Lighter emphasis, {Math.round(hint.ratio * 100)}% of group sets
+                            {m.lighterEmphasis(Math.round(hint.ratio * 100))}
                           </span>
                         )}
                       </span>
-                      <span className="num text-base text-ink">{formatSets(value)}</span>
+                      <span className="num text-base text-ink">{formatSets(value, locale)}</span>
                     </button>
                     {hint && (
-                      <Why topic={`${headName(h)} emphasis`} sources={[hint.sourceId]}>
-                        Heads shade by how much each exercise emphasizes them. This one gets less than 60% of the
-                        group&apos;s weekly sets, so it has less direct work than the rest of the group.
+                      <Why topic={m.emphasisTopic(nameOfHead(h))} sources={[hint.sourceId]}>
+                        {m.emphasisBody}
                       </Why>
                     )}
                   </li>
@@ -188,8 +194,8 @@ function Body({
           )}
           {deep.length > 0 && (
             <p className="mt-2 text-sm text-ink-2">
-              <span className="text-ink-3">includes: </span>
-              {deep.map(headName).join(', ')}
+              <span className="text-ink-3">{m.includes}</span>
+              {deep.map(nameOfHead).join(', ')}
             </p>
           )}
         </>
@@ -199,23 +205,22 @@ function Body({
         <>
           <Heading
             action={
-              <Why topic="How sets count" sources={['pelland-2026']}>
-                A set counts 1.0 toward a primary muscle and 0.5 toward a secondary one. The map adds these up per
-                group.
+              <Why topic={m.howSetsCount} sources={['pelland-2026']}>
+                {m.howSetsCountBody}
               </Why>
             }
           >
-            From your exercises
+            {m.fromYourExercises}
           </Heading>
           <ul className="divide-y divide-line">
             {contributions.map((c) => {
-              const name = nameOf(c.exerciseRef) ?? 'Unknown exercise'
+              const name = nameOf(c.exerciseRef) ?? m.unknownExercise
               const ex = typeof c.exerciseRef === 'number' ? catalog.get(c.exerciseRef) : undefined
               const body = (
                 <>
                   <span className="min-w-0 flex-1 truncate text-base text-ink">{name}</span>
                   <span className="num shrink-0 text-sm text-ink-2">
-                    {dayName(c.day)} · {formatMath(c.sets, c.weight, c.value)}
+                    {dayName(c.day, 'short', locale)} · {formatMath(c.sets, c.weight, c.value, locale)}
                   </span>
                 </>
               )
@@ -237,16 +242,16 @@ function Body({
             })}
           </ul>
           <p className="num mt-1 flex justify-between border-t border-line-strong pt-2 text-sm font-medium text-ink">
-            <span>Total</span>
-            <span>{formatSets(weekly)}</span>
+            <span>{m.total}</span>
+            <span>{formatSets(weekly, locale)}</span>
           </p>
         </>
       )}
 
       {suggested.length > 0 && (
         <>
-          <Heading>{selectedHead ? `Most emphasis on ${headName(selectedHead).toLowerCase()}` : 'Ideas for this muscle'}</Heading>
-          <p className="-mt-1 mb-1 text-sm text-ink-2">Using the equipment in your settings.</p>
+          <Heading>{selectedHead ? m.mostEmphasis(nameOfHead(selectedHead)) : m.ideas}</Heading>
+          <p className="-mt-1 mb-1 text-sm text-ink-2">{m.usingEquipment}</p>
           <ul className="divide-y divide-line">
             {suggested.map((s) => (
               <li key={s.exercise.id}>
@@ -263,6 +268,8 @@ function Body({
 function AddFooter({ group, view, day }: { group: string; view: WeekView; day: DayIndex | null }) {
   const navigate = useNavigate()
   const [picking, setPicking] = useState(false)
+  const locale = useLocale()
+  const m = bodymapMessages[locale]
   const go = (d: DayIndex) =>
     void navigate({ to: '/day/$dow', params: { dow: daySlug(d) }, search: { sheet: 'add', tab: 'muscle', group } })
 
@@ -270,24 +277,24 @@ function AddFooter({ group, view, day }: { group: string; view: WeekView; day: D
     const hints: Partial<Record<DayIndex, string>> = {}
     for (const d of view.order) {
       const sets = view.week.daily[group]?.[d] ?? 0
-      if (view.program.days[d].kind === 'rest') hints[d] = 'Rest'
-      else if (sets > 0) hints[d] = formatSets(sets)
+      if (view.program.days[d].kind === 'rest') hints[d] = m.rest
+      else if (sets > 0) hints[d] = formatSets(sets, locale)
     }
     return (
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium text-ink">Add to which day?</p>
+          <p className="text-sm font-medium text-ink">{m.addToWhichDay}</p>
           <Button variant="link" size="sm" onClick={() => setPicking(false)}>
-            Cancel
+            {common[locale].cancel}
           </Button>
         </div>
-        <DayPicker label="Add to which day?" value={[]} hints={hints} onChange={(days) => days[0] !== undefined && go(days[0])} />
+        <DayPicker label={m.addToWhichDay} value={[]} hints={hints} onChange={(days) => days[0] !== undefined && go(days[0])} />
       </div>
     )
   }
   return (
     <Button variant="primary" block icon={Plus} onClick={() => (day === null ? setPicking(true) : go(day))}>
-      {day === null ? 'Add exercise for this muscle' : `Add exercise on ${dayName(day, 'long')}`}
+      {day === null ? m.addForMuscle : m.addOnDay(day)}
     </Button>
   )
 }

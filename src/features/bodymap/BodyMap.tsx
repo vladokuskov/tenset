@@ -2,6 +2,7 @@ import { ZoomIn, ZoomOut } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import { hitTest, pickGroup, viewBoxToRaster } from '../../domain/idRaster'
 import type { MapScale } from '../../app/volumeScale'
+import { useMessages } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
 import { IconButton } from '../../ui/IconButton'
 import { SegmentedControl } from '../../ui/SegmentedControl'
@@ -17,6 +18,7 @@ import {
   type AnatomyView,
 } from './anatomy'
 import { regionFill, tintVars, valueVars, type BodyTint, type BodyValues } from './fills'
+import { bodymapMessages } from './messages'
 import { MuscleChooser, type ChooserState } from './MuscleChooser'
 
 export type BodyView = 'front' | 'back' | 'both'
@@ -83,6 +85,7 @@ function Outline({ regions, width }: { regions: AnatomyRegion[]; width: number }
 
 function Figure({ view, width, interactive, highlight, outline, caption, onTap, onHover }: FigureProps) {
   const doc = useAnatomy(view, 'full')
+  const m = useMessages(bodymapMessages)
   const regions = doc?.regions ?? []
   return (
     <figure className="m-0 flex shrink-0 flex-col items-center" style={{ width }}>
@@ -125,7 +128,7 @@ function Figure({ view, width, interactive, highlight, outline, caption, onTap, 
           </svg>
         )}
       </div>
-      {caption && <figcaption className="mt-1.5 text-xs text-ink-3">{view === 'front' ? 'Front' : 'Back'}</figcaption>}
+      {caption && <figcaption className="mt-1.5 text-xs text-ink-3">{view === 'front' ? m.front : m.back}</figcaption>}
     </figure>
   )
 }
@@ -141,9 +144,10 @@ export function BodyMap({
   onSelectGroup,
   onHoverGroup,
   zoomable,
-  label = 'Body map',
+  label,
   className,
 }: BodyMapProps) {
+  const m = useMessages(bodymapMessages)
   const wrapRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [zoomed, setZoomed] = useState(false)
@@ -251,7 +255,7 @@ export function BodyMap({
       className={cx('relative w-full', className)}
       style={{ containerType: 'inline-size', ...(vars as CSSProperties) }}
     >
-      <div role="img" aria-label={label}>
+      <div role="img" aria-label={label ?? m.bodyMap}>
         {zoomed ? (
           <div
             ref={scrollRef}
@@ -272,12 +276,12 @@ export function BodyMap({
         <div className="pointer-events-none absolute inset-x-1 top-1 flex items-start justify-between gap-2">
           {zoomed && view === 'both' ? (
             <SegmentedControl
-              label="Zoomed view"
+              label={m.zoomedView}
               size="sm"
               className="glass pointer-events-auto shadow-thumb"
               options={[
-                { value: 'front', label: 'Front' },
-                { value: 'back', label: 'Back' },
+                { value: 'front', label: m.front },
+                { value: 'back', label: m.back },
               ]}
               value={zoomView}
               onChange={switchZoomView}
@@ -287,7 +291,7 @@ export function BodyMap({
           )}
           <IconButton
             icon={zoomed ? ZoomOut : ZoomIn}
-            label={zoomed ? 'Zoom out' : 'Zoom in'}
+            label={zoomed ? m.zoomOut : m.zoomIn}
             size={36}
             variant="tonal"
             aria-pressed={zoomed}

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { bandFor } from '../domain/volume'
 import { bandExplanation, bandExplanationFor, bandLabel, bandLabelFor, bandRange, displayBand, targetText } from './bands'
 
+const ukWords = /(оптимальн|недостатньо|підтримуюч|ризик|зарано|перетрен|відновл|небезпе|попередж)/i
 const words = /\b(risk|too soon|overtrained|optimal|under|under-?trained|maintenance|danger|warning)\b/i
 
 describe('band copy', () => {
@@ -54,6 +55,28 @@ describe('band copy', () => {
         expect(bandExplanation(b, [4, 10, 20, 30], opts)).not.toContain(String.fromCharCode(0x2014))
         expect(bandRange(b, [4, 10, 20, 30])).not.toMatch(words)
         expect(bandLabel(b, opts)).not.toMatch(words)
+      }
+    }
+  })
+
+  it('labels and describes bands in Ukrainian', () => {
+    expect(bandLabel('none', {}, 'uk')).toBe('не тренується')
+    expect(bandLabel('target', {}, 'uk')).toBe('цільовий діапазон')
+    expect(bandLabel('moderate', { goal: 'general' }, 'uk')).toBe('добре для загальної форми')
+    expect(targetText([4, 10, 20, 30], 'uk')).toBe('ціль 10-20')
+    expect(bandRange('moderate', [4, 10, 20, 30], 'uk')).toBe('від 4 до 10 підходів')
+    expect(bandRange('some', [4, 6, 16, 26], 'uk')).toBe('менше 4 підходів')
+    expect(bandRange('light', [1.5, 3, 6, 9], 'uk')).toBe('менше 1,5 підходу')
+    expect(bandExplanationFor(bandFor('abs', 2)!, undefined, 'uk')).toBe('Менше 4 підходів на тиждень. Ця група необовʼязкова.')
+  })
+
+  it('keeps Ukrainian copy neutral', () => {
+    for (const b of ['none', 'some', 'light', 'moderate', 'target', 'high', 'very_high'] as const) {
+      for (const opts of [{}, { goal: 'general' as const }]) {
+        expect(bandExplanation(b, [4, 10, 20, 30], opts, 'uk')).not.toMatch(ukWords)
+        expect(bandExplanation(b, [4, 10, 20, 30], opts, 'uk')).not.toContain(String.fromCharCode(0x2014))
+        expect(bandRange(b, [4, 10, 20, 30], 'uk')).not.toMatch(ukWords)
+        expect(bandLabel(b, opts, 'uk')).not.toMatch(ukWords)
       }
     }
   })

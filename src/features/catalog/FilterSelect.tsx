@@ -1,6 +1,8 @@
 import { ChevronDown } from 'lucide-react'
 import { useId } from 'react'
+import { useMessages } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
+import { catalogMessages } from './messages'
 
 export type FilterSelectGroup = { label: string; options: readonly { value: string; label: string }[] }
 
@@ -8,6 +10,7 @@ export type FilterSelectGroup = { label: string; options: readonly { value: stri
 export function FilterSelect({
   label,
   placeholder,
+  anyLabel,
   value,
   groups,
   onChange,
@@ -15,11 +18,14 @@ export function FilterSelect({
   label: string
   /** Chip text when nothing is selected, e.g. "Pattern". */
   placeholder: string
+  /** First option, e.g. "Any pattern"; defaults to a generic form built from the placeholder. */
+  anyLabel?: string
   value: string | undefined
   groups: readonly FilterSelectGroup[]
   onChange: (value: string | undefined) => void
 }) {
   const id = useId()
+  const m = useMessages(catalogMessages)
   const current = groups.flatMap((g) => g.options).find((o) => o.value === value)
   const selected = Boolean(current)
   return (
@@ -40,7 +46,7 @@ export function FilterSelect({
         onChange={(e) => onChange(e.target.value || undefined)}
         className="absolute inset-x-0 -inset-y-[7px] cursor-pointer appearance-none opacity-0"
       >
-        <option value="">{`Any ${placeholder.toLowerCase()}`}</option>
+        <option value="">{anyLabel ?? m.anyOf(placeholder)}</option>
         {groups.map((g) =>
           g.label ? (
             <optgroup key={g.label} label={g.label}>

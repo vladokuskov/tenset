@@ -1,14 +1,13 @@
+import { groupName } from '../../data/localize'
 import { groups } from '../../domain/taxonomy'
+import { useLocale } from '../../i18n/messages'
 import { BodyMap } from '../bodymap'
 import { Chip } from '../../ui/Chip'
 import { Sheet } from '../../ui/Sheet'
+import { catalogMessages } from './messages'
 
 const EMPTY = { heads: {}, groups: {} }
-const AREAS = [
-  { id: 'upper', label: 'Upper body' },
-  { id: 'core', label: 'Core' },
-  { id: 'lower', label: 'Lower body' },
-] as const
+const AREAS = ['upper', 'core', 'lower'] as const
 
 export type MuscleFilterSheetProps = {
   open: boolean
@@ -21,12 +20,14 @@ export type MuscleFilterSheetProps = {
 
 /** "Filter by muscle": tap the map or pick from the list (the list is the accessible path). */
 export function MuscleFilterSheet({ open, onClose, value, onSelect, counts }: MuscleFilterSheetProps) {
+  const locale = useLocale()
+  const m = catalogMessages[locale]
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title="Filter by muscle"
-      description="Tap a muscle on the map or pick one below. Shows exercises where it is a primary muscle."
+      title={m.filterByMuscle}
+      description={m.filterDescription}
     >
       <BodyMap
         view="both"
@@ -34,15 +35,15 @@ export function MuscleFilterSheet({ open, onClose, value, onSelect, counts }: Mu
         scale="week"
         highlight={value ? [value] : undefined}
         onSelectGroup={(g) => onSelect(g)}
-        label="Body map, tap a muscle to filter"
+        label={m.filterMap}
         className="mx-auto max-w-[19rem]"
       />
       {AREAS.map((area) => (
-        <section key={area.id} className="mt-5">
-          <h3 className="mb-2 px-1 text-sm font-semibold text-ink-2">{area.label}</h3>
+        <section key={area} className="mt-5">
+          <h3 className="mb-2 px-1 text-sm font-semibold text-ink-2">{m.area[area]}</h3>
           <div className="flex flex-wrap gap-2">
             {groups
-              .filter((g) => g.area === area.id)
+              .filter((g) => g.area === area)
               .map((g) => (
                 <Chip
                   key={g.id}
@@ -52,7 +53,7 @@ export function MuscleFilterSheet({ open, onClose, value, onSelect, counts }: Mu
                   disabled={!counts[g.id] && value !== g.id}
                   onClick={() => onSelect(value === g.id ? undefined : g.id)}
                 >
-                  {g.name}
+                  {groupName(g.id, locale)}
                 </Chip>
               ))}
           </div>

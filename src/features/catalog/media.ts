@@ -1,7 +1,11 @@
 import { Cable, Cog, Dumbbell, PersonStanding, type LucideIcon } from 'lucide-react'
 import type { CustomExercise, Exercise, Role } from '../../domain/schema'
+import { groupName } from '../../data/localize'
 import { getGroup, visibleHeads } from '../../domain/taxonomy'
+import type { Locale } from '../../i18n/locale'
+import { getLocale } from '../../i18n/messages'
 import { hasMotion } from '../figure/motion/library'
+import { catalogMessages } from './messages'
 
 export type CardExercise = Exercise | CustomExercise
 
@@ -20,11 +24,12 @@ export function showsMotion(e: CardExercise, dev: boolean = import.meta.env.DEV)
 const FREE_WEIGHTS = new Set(['barbell', 'dumbbell', 'ez_bar', 'plate'])
 const BODYWEIGHT = new Set(['pullup_bar', 'dip_station', 'step', 'flat_bench', 'adjustable_bench', 'rack'])
 
-export function equipmentGlyph(equipment: readonly string[]): { icon: LucideIcon; label: string } {
-  if (equipment.includes('cable')) return { icon: Cable, label: 'Cable' }
-  if (equipment.some((e) => FREE_WEIGHTS.has(e))) return { icon: Dumbbell, label: 'Free weights' }
-  if (equipment.every((e) => BODYWEIGHT.has(e))) return { icon: PersonStanding, label: 'Bodyweight' }
-  return { icon: Cog, label: 'Machine' }
+export function equipmentGlyph(equipment: readonly string[], locale: Locale = getLocale()): { icon: LucideIcon; label: string } {
+  const m = catalogMessages[locale].glyph
+  if (equipment.includes('cable')) return { icon: Cable, label: m.cable }
+  if (equipment.some((e) => FREE_WEIGHTS.has(e))) return { icon: Dumbbell, label: m.free }
+  if (equipment.every((e) => BODYWEIGHT.has(e))) return { icon: PersonStanding, label: m.bodyweight }
+  return { icon: Cog, label: m.machine }
 }
 
 const frontGroups = new Set(visibleHeads.filter((h) => h.view !== 'B').map((h) => h.group))
@@ -51,8 +56,8 @@ export function primaryArea(roles: Readonly<Record<string, Role>>): 'upper' | 'c
   return 'upper'
 }
 
-export function primaryGroupNames(roles: Readonly<Record<string, Role>>): string[] {
+export function primaryGroupNames(roles: Readonly<Record<string, Role>>, locale: Locale = getLocale()): string[] {
   return Object.entries(roles)
     .filter(([, r]) => r === 'primary')
-    .map(([g]) => getGroup(g)?.name ?? g)
+    .map(([g]) => groupName(g, locale))
 }

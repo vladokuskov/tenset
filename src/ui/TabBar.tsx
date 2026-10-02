@@ -1,17 +1,20 @@
 import { Link, useLocation } from '@tanstack/react-router'
+import { useMessages } from '../i18n/messages'
 import { cx } from './cx'
+import { uiMessages } from './messages'
 import { NAV_ITEMS } from './nav'
 
 /** Bottom tabs below 1280px. */
 export function TabBar({ className }: { className?: string }) {
   const pathname = useLocation({ select: (l) => l.pathname })
+  const m = useMessages(uiMessages)
   return (
     <nav
-      aria-label="Main"
+      aria-label={m.nav.main}
       className={cx('glass fixed inset-x-0 bottom-0 z-30 border-t border-line pb-safe desktop:hidden', className)}
     >
       <ul className="mx-auto flex h-[var(--tabbar-h)] max-w-[var(--page-max)] items-stretch px-2">
-        {NAV_ITEMS.map(({ to, label, icon: Icon, match }) => {
+        {NAV_ITEMS.map(({ to, labelKey, icon: Icon, match }) => {
           const current = match.test(pathname)
           return (
             <li key={to} className="flex flex-1">
@@ -24,7 +27,7 @@ export function TabBar({ className }: { className?: string }) {
                 )}
               >
                 <Icon size={24} strokeWidth={current ? 2 : 1.6} aria-hidden />
-                <span>{label}</span>
+                <span>{m.nav[labelKey]}</span>
               </Link>
             </li>
           )

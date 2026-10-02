@@ -2,17 +2,21 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeftRight, CalendarArrowUp, ChevronRight, Copy, Info, Trash2, type LucideIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { dayName, type DayIndex } from '../../app/days'
-import { formatDaySummary, joinMeta, plural } from '../../app/format'
+import { formatDaySummary, joinMeta } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
 import { availableSet, hasEquipment } from '../../domain/equipment'
 import { resolveExercise } from '../../domain/resolve'
+import { common } from '../../i18n/common'
+import { compareText } from '../../i18n/format'
+import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, Chip, Sheet, Stepper, cx, useSheet } from '../../ui'
 import { ChangeBar } from './ChangeBar'
 import { REPS_PRESETS, SECONDS_PRESETS, isCustom, repsText, unitOf, type AnyExercise } from './labels'
 import { exerciseFor, findEntry } from './lookup'
+import { builderMessages } from './messages'
 import { PickRow } from './PickRow'
 import { undoLastChange, useChange } from './useChange'
 
@@ -68,6 +72,9 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   const setReps = useProgramStore((s) => s.setReps)
   const removeEntry = useProgramStore((s) => s.removeEntry)
   const change = useChange()
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  const c = common[locale]
   const [status, setStatus] = useState<string | null>(null)
   const [customOpen, setCustomOpen] = useState(false)
   const [draft, setDraft] = useState('')
@@ -79,7 +86,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
       setCustomOpen(false)
     }
   }
-  if (!data) return <Sheet open={false} onClose={onClose} title="Exercise" />
+  if (!data) return <Sheet open={false} onClose={onClose} title={m.exercise} />
 
   const { entry, day } = data.found
   const ex = data.exercise
@@ -94,7 +101,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
 
   const applyReps = (reps: string | undefined) => {
     if ((reps ?? '') === (entry.reps ?? '')) return
-    run(reps ? `Reps set to ${repsText(reps, unit)}` : 'Reps cleared', () => setReps(entry.id, reps))
+    run(reps ? m.repsSetTo(repsText(reps, unit, locale)) : m.repsCleared, () => setReps(entry.id, reps))
   }
 
   const saveCustom = () => {
@@ -108,23 +115,23 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
       open={open}
       onClose={onClose}
       title={ex.name}
-      description={joinMeta([dayName(day, 'long'), `${entry.sets} ${plural(entry.sets, 'set')}`, entry.reps && repsText(entry.reps, unit)])}
-      footer={<ChangeBar message={status} onUndo={status && status !== 'Undone' ? () => undoLastChange() && setStatus('Undone') : undefined} />}
+      description={joinMeta([dayName(day, 'long', locale), c.sets(entry.sets), entry.reps && repsText(entry.reps, unit, locale)])}
+      footer={<ChangeBar message={status} onUndo={status && status !== c.undone ? () => undoLastChange() && setStatus(c.undone) : undefined} />}
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">Hard sets</h3>
+        <h3 className="text-sm font-semibold">{m.hardSets}</h3>
         <Stepper
           value={entry.sets}
-          onChange={(v) => run(`${ex.name}: ${v} ${plural(v, 'set')}`, () => setSets(entry.id, v))}
-          label={`Sets for ${ex.name}`}
-          unit="sets"
-          decrementLabel="Fewer sets"
-          incrementLabel="More sets"
+          onChange={(v) => run(m.setsChanged(ex.name, v), () => setSets(entry.id, v))}
+          label={m.setsFor(ex.name)}
+          unit={m.setsUnit}
+          decrementLabel={m.fewerSets}
+          incrementLabel={m.moreSets}
         />
       </div>
 
-      <h3 className="mt-5 text-sm font-semibold">{unit === 'seconds' ? 'Seconds per set' : 'Reps per set'}</h3>
-      <div role="group" aria-label={unit === 'seconds' ? 'Seconds per set' : 'Reps per set'} className="mt-2 flex flex-wrap gap-2">
+      <h3 className="mt-5 text-sm font-semibold">{unit === 'seconds' ? m.secondsPerSet : m.repsPerSet}</h3>
+      <div role="group" aria-label={unit === 'seconds' ? m.secondsPerSet : m.repsPerSet} className="mt-2 flex flex-wrap gap-2">
         {presets.map((p) => (
           <Chip key={p} selected={entry.reps === p} onClick={() => applyReps(entry.reps === p ? undefined : p)}>
             {p}
@@ -142,7 +149,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
             setCustomOpen(!customOpen)
           }}
         >
-          Custom
+          {m.custom}
         </Chip>
       </div>
       {customOpen && (
@@ -154,31 +161,31 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
           }}
         >
           <label className="min-w-0 flex-1">
-            <span className="sr-only">Custom {unit === 'seconds' ? 'seconds' : 'reps'}</span>
+            <span className="sr-only">{unit === 'seconds' ? m.customSeconds : m.customReps}</span>
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={16}
-              placeholder={unit === 'seconds' ? 'e.g. 40' : 'e.g. 12-20 or 5'}
+              placeholder={unit === 'seconds' ? m.secondsPlaceholder : m.repsPlaceholder}
               inputMode="text"
               className="h-11 w-full rounded-md bg-surface-2 px-3 text-base placeholder:text-ink-3"
             />
           </label>
           <Button type="submit" variant="primary">
-            Save
+            {c.save}
           </Button>
         </form>
       )}
 
       <ul className="-mx-2 mt-5 border-t border-line pt-2">
-        <ActionRow icon={ArrowLeftRight} label="Swap for a similar exercise" onClick={() => onSwitch('swap')} />
-        <ActionRow icon={CalendarArrowUp} label="Move to another day" onClick={() => onSwitch('move')} />
-        <ActionRow icon={Copy} label="Copy to another day" onClick={() => onSwitch('copy')} />
+        <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => onSwitch('swap')} />
+        <ActionRow icon={CalendarArrowUp} label={m.moveOther} onClick={() => onSwitch('move')} />
+        <ActionRow icon={Copy} label={m.copyOther} onClick={() => onSwitch('copy')} />
         {!isCustom(ex) && (
           <li>
             <Link to="/exercise/$slug" params={{ slug: ex.slug }} className={rowClass}>
               <Info size={20} strokeWidth={1.75} className="shrink-0 text-ink-2" aria-hidden />
-              <span className="flex-1">Exercise details</span>
+              <span className="flex-1">{m.exerciseDetails}</span>
               <ChevronRight size={18} className="text-ink-3" aria-hidden />
             </Link>
           </li>
@@ -186,10 +193,10 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
         <ActionRow
           icon={Trash2}
           tone="plain"
-          label="Remove from this day"
+          label={m.removeFromDay}
           onClick={() => {
             onClose()
-            change(`Removed ${ex.name}`, () => removeEntry(entry.id))
+            change(m.removed(ex.name), () => removeEntry(entry.id))
           }}
         />
       </ul>
@@ -205,9 +212,11 @@ function SwapSheet({ open, onClose, data }: { open: boolean; onClose: () => void
   const overrides = usePrefsStore((s) => s.overrides)
   const swapEntry = useProgramStore((s) => s.swapEntry)
   const change = useChange()
+  const locale = useLocale()
+  const m = builderMessages[locale]
   const [all, setAll] = useState(false)
 
-  if (!data) return <Sheet open={false} onClose={onClose} title="Swap" />
+  if (!data) return <Sheet open={false} onClose={onClose} title={m.swap} />
   const ex = data.exercise
   const ctx = { catalog, custom: view?.program.custom ?? [], countingMode, overrides }
   const primaries = (e: AnyExercise) =>
@@ -227,7 +236,7 @@ function SwapSheet({ open, onClose, data }: { open: boolean; onClose: () => void
     const ra = alternatives.indexOf(a.id)
     const rb = alternatives.indexOf(b.id)
     const shared = (e: AnyExercise) => primaries(e).filter((g) => mine.includes(g)).length
-    return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb) || shared(b) - shared(a) || a.name.localeCompare(b.name)
+    return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb) || shared(b) - shared(a) || compareText(locale, a.name, b.name)
   })
   const hidden = candidates.length - fitting.length
 
@@ -235,11 +244,11 @@ function SwapSheet({ open, onClose, data }: { open: boolean; onClose: () => void
     <Sheet
       open={open}
       onClose={onClose}
-      title={`Swap ${ex.name}`}
-      description={isCustom(ex) ? 'Exercises that train the same main muscles' : 'Same movement pattern'}
+      title={m.swapNamed(ex.name)}
+      description={isCustom(ex) ? m.sameMuscles : m.samePattern}
     >
       {list.length === 0 ? (
-        <p className="py-6 text-center text-base text-ink-2">No other exercise with this pattern fits your equipment.</p>
+        <p className="py-6 text-center text-base text-ink-2">{m.noSwap}</p>
       ) : (
         <ul className="divide-y divide-line">
           {list.map((e) => (
@@ -251,10 +260,10 @@ function SwapSheet({ open, onClose, data }: { open: boolean; onClose: () => void
                     size="sm"
                     onClick={() => {
                       onClose()
-                      change(`Swapped to ${e.name}`, () => swapEntry(data.found.entry.id, e.id))
+                      change(m.swappedTo(e.name), () => swapEntry(data.found.entry.id, e.id))
                     }}
                   >
-                    Swap
+                    {m.swap}
                   </Button>
                 }
               />
@@ -265,7 +274,7 @@ function SwapSheet({ open, onClose, data }: { open: boolean; onClose: () => void
       {hidden > 0 && (
         <div className="mt-4 flex justify-center">
           <Button variant="link" size="sm" onClick={() => setAll(!all)}>
-            {all ? 'Only my equipment' : `Show ${hidden} that need other equipment`}
+            {all ? m.onlyMine : m.showOtherEquipment(hidden)}
           </Button>
         </div>
       )}
@@ -278,21 +287,23 @@ function DayTargetSheet({ mode, open, onClose, data }: { mode: 'move' | 'copy'; 
   const moveEntry = useProgramStore((s) => s.moveEntry)
   const copyEntry = useProgramStore((s) => s.copyEntry)
   const change = useChange()
-  if (!data || !view) return <Sheet open={false} onClose={onClose} title={mode === 'move' ? 'Move' : 'Copy'} />
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  if (!data || !view) return <Sheet open={false} onClose={onClose} title={mode === 'move' ? m.move : m.copy} />
   const { day, entry } = data.found
 
   const pick = (d: DayIndex) => {
     onClose()
-    if (mode === 'move') change(`Moved ${data.exercise.name} to ${dayName(d, 'long')}`, () => moveEntry(entry.id, d))
-    else change(`Copied ${data.exercise.name} to ${dayName(d, 'long')}`, () => copyEntry(entry.id, d))
+    if (mode === 'move') change(m.movedTo(data.exercise.name, d), () => moveEntry(entry.id, d))
+    else change(m.copiedTo(data.exercise.name, d), () => copyEntry(entry.id, d))
   }
 
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={mode === 'move' ? `Move ${data.exercise.name}` : `Copy ${data.exercise.name}`}
-      description={mode === 'move' ? 'Pick the day it moves to.' : 'Pick the day that gets a copy.'}
+      title={mode === 'move' ? m.moveNamed(data.exercise.name) : m.copyNamed(data.exercise.name)}
+      description={mode === 'move' ? m.pickMove : m.pickCopy}
       desktop="center"
     >
       <ul className="-mx-2">
@@ -304,13 +315,13 @@ function DayTargetSheet({ mode, open, onClose, data }: { mode: 'move' | 'copy'; 
               <DayPickRow
                 disabled={current}
                 onClick={() => pick(d)}
-                title={dayName(d, 'long')}
+                title={dayName(d, 'long', locale)}
                 meta={
                   current
-                    ? 'This day'
+                    ? m.thisDay
                     : s.kind === 'rest'
-                      ? 'Rest, becomes a training day'
-                      : joinMeta([s.label, formatDaySummary(s.exercises, s.hardSets)])
+                      ? m.restBecomesTraining
+                      : joinMeta([s.label, formatDaySummary(s.exercises, s.hardSets, locale)])
                 }
               />
             </li>

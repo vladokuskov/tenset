@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { createStore } from 'zustand/vanilla'
 import { presetEquipment, presets } from '../domain/equipment.ts'
 import { Prefs } from '../domain/schema.ts'
+import { detectLocale, type Locale } from '../i18n/locale.ts'
 import { PREFS_VERSION, prefsMigrations, runMigrations } from './migrations/index.ts'
 import { backupCorrupt, browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
 
@@ -11,6 +12,7 @@ export const PREFS_KEY = 'gb:prefs'
 type OverrideRole = 'primary' | 'secondary' | 'none'
 
 export type PrefsActions = {
+  setLocale(locale: Locale): void
   setGoal(goal: Prefs['goal']): void
   setEquipment(equipment: readonly string[]): void
   setEquipmentPreset(presetId: string): void
@@ -23,7 +25,7 @@ export type PrefsActions = {
   reset(): void
 }
 
-export type PrefsState = Prefs & PrefsActions
+export type PrefsState = Prefs & { locale: Locale } & PrefsActions
 
 /** 0 = Monday. Intl weekInfo uses 1 = Monday .. 7 = Sunday; not every engine has it. */
 export function localeWeekStart(locale?: string): number {
@@ -41,8 +43,9 @@ export function localeWeekStart(locale?: string): number {
   }
 }
 
-export function defaultPrefs(locale?: string): Prefs {
+export function defaultPrefs(locale?: string): Prefs & { locale: Locale } {
   return {
+    locale: detectLocale(locale),
     goal: 'hypertrophy',
     equipment: presetEquipment('full_gym'),
     countingMode: 'fractional',
@@ -52,6 +55,7 @@ export function defaultPrefs(locale?: string): Prefs {
 }
 
 const pickPrefs = (s: PrefsState): Prefs => ({
+  locale: s.locale,
   goal: s.goal,
   equipment: s.equipment,
   countingMode: s.countingMode,
@@ -69,6 +73,7 @@ export function createPrefsStore(options: PrefsStoreOptions = {}) {
       (set, get) => ({
         ...defaultPrefs(options.locale),
 
+        setLocale: (locale) => set({ locale }),
         setGoal: (goal) => set({ goal }),
         setEquipment: (equipment) => set({ equipment: [...new Set(equipment)] }),
         setEquipmentPreset: (presetId) => {
@@ -90,7 +95,7 @@ export function createPrefsStore(options: PrefsStoreOptions = {}) {
           const { [String(exerciseId)]: _removed, ...rest } = get().overrides
           set({ overrides: rest })
         },
-        reset: () => set(defaultPrefs(options.locale)),
+        reset: () => set({ ...defaultPrefs(options.locale), locale: get().locale }),
       }),
       {
         name: PREFS_KEY,
@@ -111,7 +116,7 @@ export function createPrefsStore(options: PrefsStoreOptions = {}) {
             backupCorrupt(storage, PREFS_KEY, JSON.stringify(persisted))
             return current
           }
-          return { ...current, ...parsed.data }
+          return { ...current, ...parsed.data, locale: parsed.data.locale ?? current.locale }
         },
       },
     ),

@@ -1,7 +1,9 @@
 import { X } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useMessages } from '../i18n/messages'
 import { cx } from './cx'
 import { IconButton } from './IconButton'
+import { uiMessages } from './messages'
 import { sheetClosed, sheetOpened } from './sheetFocus'
 
 export type SheetProps = {
@@ -36,6 +38,7 @@ export function Sheet({
   desktop = 'side',
   className,
 }: SheetProps) {
+  const m = useMessages(uiMessages)
   const ref = useRef<HTMLDialogElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const openRef = useRef(open)
@@ -121,7 +124,7 @@ export function Sheet({
               )}
             </div>
             {headerEnd}
-            <IconButton icon={X} label="Close" onClick={onClose} />
+            <IconButton icon={X} label={m.close} onClick={onClose} />
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">{children}</div>
           {footer && (

@@ -3,16 +3,20 @@ import { ChevronRight } from 'lucide-react'
 import { dayName, daySlug, todayIndex } from '../../app/days'
 import { formatDaySummary } from '../../app/format'
 import type { WeekView } from '../../app/useWeek'
+import { useLocale, useMessages } from '../../i18n/messages'
 import { cx } from '../../ui'
 import { groupName } from './labels'
+import { builderMessages } from './messages'
 import { PulseMini } from './PulseMini'
 
 /** Seven day rows in display order; rest rows are compact. */
 export function WeekList({ view }: { view: WeekView }) {
   const { order, days, week } = view
   const today = todayIndex()
+  const locale = useLocale()
+  const m = useMessages(builderMessages)
   return (
-    <ul className="divide-y divide-line rounded-xl bg-surface" aria-label="Week">
+    <ul className="divide-y divide-line rounded-xl bg-surface" aria-label={m.week}>
       {order.map((d) => {
         const s = days[d]
         const rest = s.kind === 'rest'
@@ -25,18 +29,18 @@ export function WeekList({ view }: { view: WeekView }) {
               className={cx('flex items-center gap-3 px-4', rest ? 'min-h-12 py-1.5' : 'min-h-[4.75rem] py-2.5')}
             >
               <span className={cx('w-11 shrink-0 text-base font-semibold', rest && 'font-medium text-ink-3')}>
-                {dayName(d)}
-                {d === today && <span className="block text-[0.6875rem] font-normal text-ink-3">Today</span>}
+                {dayName(d, 'short', locale)}
+                {d === today && <span className="block text-[0.6875rem] font-normal text-ink-3">{m.today}</span>}
               </span>
               <span className="min-w-0 flex-1">
                 {rest ? (
-                  <span className="block truncate text-base text-ink-3">Rest</span>
+                  <span className="block truncate text-base text-ink-3">{m.rest}</span>
                 ) : (
                   <>
-                    <span className="block truncate text-base">{s.label ?? 'Training'}</span>
-                    <span className="num block truncate text-sm text-ink-2">{formatDaySummary(s.exercises, s.hardSets)}</span>
+                    <span className="block truncate text-base">{s.label ?? m.training}</span>
+                    <span className="num block truncate text-sm text-ink-2">{formatDaySummary(s.exercises, s.hardSets, locale)}</span>
                     {s.topGroups.length > 0 && (
-                      <span className="block truncate text-xs text-ink-3">{s.topGroups.map(groupName).join(', ')}</span>
+                      <span className="block truncate text-xs text-ink-3">{s.topGroups.map((g) => groupName(g, locale)).join(', ')}</span>
                     )}
                   </>
                 )}

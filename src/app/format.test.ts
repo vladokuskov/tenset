@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countLabel, formatDaySummary, formatDelta, formatMath, formatSets, joinMeta, setsLabel } from './format'
+import { formatDaySummary, formatDelta, formatMath, formatSets, joinMeta, setsLabel } from './format'
 
 describe('format', () => {
   it('formats fractional sets', () => {
@@ -14,7 +14,13 @@ describe('format', () => {
   it('pluralizes', () => {
     expect(setsLabel(1)).toBe('1 set')
     expect(setsLabel(0.5)).toBe('0.5 sets')
-    expect(countLabel(5, 'exercise')).toBe('5 exercises')
+  })
+
+  it('formats Ukrainian numbers and counts', () => {
+    expect(formatSets(7.5, 'uk')).toBe('7,5')
+    expect(setsLabel(3, 'uk')).toBe('3 підходи')
+    expect(formatDaySummary(5, 17, 'uk')).toBe('5 вправ · 17 підходів')
+    expect(formatMath(3, 0.5, undefined, 'uk')).toBe('3 × 0,5 = 1,5')
   })
 
   it('shows math and deltas', () => {

@@ -1,12 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { z } from 'zod'
-import { NOT_MEDICAL_ADVICE } from '../app/brand'
+import { NotMedicalAdvice } from '../app/brand'
 import { DAY_SLUGS, dayFromSlug, dayName, daySlug } from '../app/days'
 import { groupParam, headParam, optionalEnum, sheetParam } from '../app/search'
 import { useWeek } from '../app/useWeek'
 import { BodyMap, CoverageList, Insights, MuscleSheet, VolumeLegend } from '../features/bodymap'
+import { useMessages } from '../i18n/messages'
 import { ChipGroup, Page, PageBody, PageHeader, Panel, SegmentedControl, useSheet } from '../ui'
+import { bodyMessages } from './-messages'
 
 // URL contract: /body?scope=week|mon..sun&shade=groups|heads&view=front|back|both
 //               &sheet=muscle&group=chest(&head=pec_clavicular)
@@ -28,6 +30,7 @@ function BodyPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const view = useWeek()
+  const m = useMessages(bodyMessages)
   const muscle = useSheet('muscle', ['group', 'head'])
   const scope = search.scope ?? 'week'
   const shade = search.shade ?? 'groups'
@@ -55,36 +58,36 @@ function BodyPage() {
   return (
     <Page>
       <div className="desktop:[--page-max:72rem]">
-        <PageHeader title="Body">
+        <PageHeader title={m.title} language>
           <div className="space-y-3">
             <ChipGroup
-              label="Scope"
+              label={m.scope}
               scroll
               size="sm"
-              options={[{ value: 'week', label: 'Week' }, ...order.map((d) => ({ value: daySlug(d), label: dayName(d) }))]}
+              options={[{ value: 'week', label: m.week }, ...order.map((d) => ({ value: daySlug(d), label: dayName(d) }))]}
               value={scope}
               onChange={(v) => set({ scope: v === 'week' ? undefined : (v ?? undefined) })}
             />
             <div className="flex gap-2 desktop:max-w-[34rem]">
               <SegmentedControl
-                label="Views"
+                label={m.views}
                 size="sm"
                 className="flex-[3]"
                 options={[
-                  { value: 'both', label: 'Both' },
-                  { value: 'front', label: 'Front' },
-                  { value: 'back', label: 'Back' },
+                  { value: 'both', label: m.both },
+                  { value: 'front', label: m.front },
+                  { value: 'back', label: m.back },
                 ]}
                 value={mapView}
                 onChange={(v) => set({ view: v === 'both' ? undefined : v })}
               />
               <SegmentedControl
-                label="Shading"
+                label={m.shading}
                 size="sm"
                 className="flex-[2]"
                 options={[
-                  { value: 'groups', label: 'Groups' },
-                  { value: 'heads', label: 'Heads' },
+                  { value: 'groups', label: m.groups },
+                  { value: 'heads', label: m.heads },
                 ]}
                 value={shade}
                 onChange={(v) => set({ shade: v === 'groups' ? undefined : v })}
@@ -105,9 +108,7 @@ function BodyPage() {
               onSelectGroup={openGroup}
               zoomable
               label={
-                day === null
-                  ? 'Weekly volume by muscle. The coverage list below has the same information.'
-                  : `Volume on ${dayName(day, 'long')} by muscle. The coverage list below has the same information.`
+                day === null ? m.mapWeek : m.mapDay(day)
               }
             />
             <VolumeLegend scale={scale} className="mx-auto mt-4 max-w-[30rem] px-1 desktop:max-w-[26rem]" />
@@ -123,7 +124,7 @@ function BodyPage() {
               onSelect={openGroup}
             />
             <Insights coverage={coverage} />
-            <p className="mt-8 px-1 text-center text-xs text-ink-3">{NOT_MEDICAL_ADVICE}</p>
+            <p className="mt-8 px-1 text-center text-xs text-ink-3"><NotMedicalAdvice /></p>
           </div>
         </PageBody>
       </div>

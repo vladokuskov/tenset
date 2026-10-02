@@ -2,10 +2,12 @@ import { z } from 'zod'
 import { useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { createStore } from 'zustand/vanilla'
+import { appMessages } from '../app/messages.ts'
 import { randomId, type IdFactory } from '../domain/ids.ts'
 import * as ops from '../domain/program.ts'
 import type { Catalog } from '../domain/resolve.ts'
 import { Program, type ExerciseRef, type SplitTemplate } from '../domain/schema.ts'
+import { getMessages } from '../i18n/messages.ts'
 import { PROGRAMS_VERSION, programMigrations, runMigrations } from './migrations/index.ts'
 import { backupCorrupt, browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
 
@@ -108,7 +110,8 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           activeId: null,
           lastChange: null,
 
-          createBlank: (name, trainingDays) => addProgram('createBlank', ops.blankProgram(newProgramId(), name, trainingDays)),
+          createBlank: (name = getMessages(appMessages).defaultProgramName, trainingDays) =>
+            addProgram('createBlank', ops.blankProgram(newProgramId(), name, trainingDays)),
 
           createFromTemplate: (template, trainingDays, available, catalog) => {
             const { program, notes } = ops.applyTemplate(template, trainingDays, available, catalog, {

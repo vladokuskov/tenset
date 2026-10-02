@@ -1,7 +1,9 @@
 import type { Prefs } from '../domain/schema'
 import type { BandEdges } from '../domain/taxonomy'
 import type { BandId, BandResult } from '../domain/volume'
-import { formatSets } from './format'
+import type { Locale } from '../i18n/locale'
+import { getLocale } from '../i18n/messages'
+import { appMessages } from './messages'
 
 export type GoalId = Prefs['goal']
 
@@ -20,75 +22,34 @@ export function displayBand(result: Pick<BandResult, 'band' | 'value' | 'edges' 
 }
 
 /** Pill text. Never "optimal", "under" or "maintenance". */
-export function bandLabel(band: DisplayBand, { goal }: BandCopyOptions = {}): string {
-  switch (band) {
-    case 'none':
-      return 'not trained'
-    case 'some':
-      return 'some sets'
-    case 'light':
-      return 'light'
-    case 'moderate':
-      return goal === 'general' ? 'good for general fitness' : 'moderate'
-    case 'target':
-      return 'target range'
-    case 'high':
-      return 'high'
-    case 'very_high':
-      return 'very high'
-  }
+export function bandLabel(band: DisplayBand, { goal }: BandCopyOptions = {}, locale: Locale = getLocale()): string {
+  const m = appMessages[locale].band
+  return band === 'moderate' && goal === 'general' ? m.moderateGeneral : m[band]
 }
 
-export function bandLabelFor(result: BandResult, goal?: GoalId): string {
-  return bandLabel(displayBand(result), { goal })
+export function bandLabelFor(result: BandResult, goal?: GoalId, locale: Locale = getLocale()): string {
+  return bandLabel(displayBand(result), { goal }, locale)
 }
 
 /** "target 10-20" (optional groups carry their own edges, e.g. "target 6-16"). */
-export function targetText(edges: BandEdges): string {
-  return `target ${formatSets(edges[1])}-${formatSets(edges[2])}`
+export function targetText(edges: BandEdges, locale: Locale = getLocale()): string {
+  return appMessages[locale].targetText(edges[1], edges[2])
 }
 
 /** Weekly set range a band covers, for legends and the "why?" popover. */
-export function bandRange(band: DisplayBand, edges: BandEdges): string {
-  const [a, b, c, d] = edges.map(formatSets)
-  switch (band) {
-    case 'none':
-      return '0 sets'
-    case 'some':
-    case 'light':
-      return `fewer than ${a} sets`
-    case 'moderate':
-      return `${a} to ${b} sets`
-    case 'target':
-      return `${b} to ${c} sets`
-    case 'high':
-      return `${c} to ${d} sets`
-    case 'very_high':
-      return `over ${d} sets`
-  }
+export function bandRange(band: DisplayBand, edges: BandEdges, locale: Locale = getLocale()): string {
+  const m = appMessages[locale].range
+  if (band === 'none') return m.none
+  return m[band === 'some' ? 'light' : band](edges)
 }
 
 /** One plain sentence explaining a band. Neutral: no warnings, no advice to cut back. */
-export function bandExplanation(band: DisplayBand, edges: BandEdges, { goal }: BandCopyOptions = {}): string {
-  const [a, b, c, d] = edges.map(formatSets)
-  switch (band) {
-    case 'none':
-      return 'No sets count toward this group this week.'
-    case 'some':
-      return `Fewer than ${a} weekly sets. This group is optional.`
-    case 'light':
-      return `Fewer than ${a} weekly sets.`
-    case 'moderate':
-      return goal === 'general' ? `${a} to ${b} weekly sets, which is plenty for general fitness.` : `${a} to ${b} weekly sets.`
-    case 'target':
-      return `${b} to ${c} weekly sets, the range most studies use for muscle growth.`
-    case 'high':
-      return `${c} to ${d} weekly sets. Each extra set adds less than the ones before it.`
-    case 'very_high':
-      return `More than ${d} weekly sets.`
-  }
+export function bandExplanation(band: DisplayBand, edges: BandEdges, { goal }: BandCopyOptions = {}, locale: Locale = getLocale()): string {
+  const m = appMessages[locale].explain
+  if (band === 'none') return m.none
+  return m[band === 'moderate' && goal === 'general' ? 'moderateGeneral' : band](edges)
 }
 
-export function bandExplanationFor(result: BandResult, goal?: GoalId): string {
-  return bandExplanation(displayBand(result), result.edges, { goal })
+export function bandExplanationFor(result: BandResult, goal?: GoalId, locale: Locale = getLocale()): string {
+  return bandExplanation(displayBand(result), result.edges, { goal }, locale)
 }

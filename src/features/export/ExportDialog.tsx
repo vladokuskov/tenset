@@ -1,25 +1,17 @@
 import { Download, FileUp, Printer, Share } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { countLabel } from '../../app/format'
+import { dateFormat } from '../../i18n/format'
+import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { prefsStore, usePrefsStore } from '../../store/prefs.store'
 import { programStore, useProgramStore } from '../../store/program.store'
 import { Button } from '../../ui/Button'
 import { LinkButton } from '../../ui/links'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
-import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames, type BackupError, type ParsedBackup } from './backup'
+import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames, type ParsedBackup } from './backup'
+import { exportMessages } from './messages'
 
 export type ExportDialogProps = { open: boolean; onClose: () => void }
-
-const ERRORS: Record<BackupError, string> = {
-  too_large: 'This file is too large to be a Gym Builder backup.',
-  not_json: 'This file is not a Gym Builder backup.',
-  wrong_file: 'This file is not a Gym Builder backup.',
-  newer_version: 'This backup comes from a newer version of the app. Reload to update, then try again.',
-  invalid: 'This backup could not be read. It may be damaged or edited.',
-}
-
-const dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 
 function makeFile(): File {
   const { programs, activeId } = programStore.getState()
@@ -64,6 +56,8 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
   const [pending, setPending] = useState<Pending | null>(null)
   const [usePrefs, setUsePrefs] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const m = useMessages(exportMessages)
+  const locale = useLocale()
 
   const reset = () => {
     setPending(null)
@@ -83,7 +77,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
     const res = parseBackup(await file.text())
     if (!res.ok) {
       setPending(null)
-      setError(ERRORS[res.error])
+      setError(getMessages(exportMessages).errors[res.error])
       return
     }
     setPending({ name: file.name, backup: res.backup, activeId: res.activeId })
@@ -101,44 +95,42 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
     const next = before ?? restored
     if (next) setActive(next)
     programStore.getState().clearUndo()
-    if (usePrefs && pending.backup.prefs) prefsStore.setState(pending.backup.prefs)
-    const parts = [ids.length ? `Added ${countLabel(ids.length, 'program')}` : null, usePrefs ? 'settings updated' : null]
-    showToast({ message: parts.filter(Boolean).join(', ') || 'Nothing to import' })
+    if (usePrefs && pending.backup.prefs)
+      prefsStore.setState({ ...pending.backup.prefs, locale: pending.backup.prefs.locale ?? prefsStore.getState().locale })
+    showToast({ message: getMessages(exportMessages).imported(ids.length, usePrefs) })
     close()
   }
 
   const shareFile = async () => {
     try {
-      await navigator.share({ files: [makeFile()], title: 'Gym Builder backup' })
+      await navigator.share({ files: [makeFile()], title: getMessages(exportMessages).shareTitle })
     } catch {
       // cancelled
     }
   }
 
   return (
-    <Sheet open={open} onClose={close} title="Export or import" desktop="center">
+    <Sheet open={open} onClose={close} title={m.title} desktop="center">
       <section>
-        <h3 className="font-semibold">Back up</h3>
+        <h3 className="font-semibold">{m.backUp}</h3>
         <p className="mt-1 text-sm text-ink-2">
-          One file with {countLabel(count, 'program')} and your settings
-          {overrides ? `, including ${countLabel(overrides, 'custom mapping')}` : ''}. Keep it somewhere safe: this app
-          stores everything on this device only.
+          {m.backupText(count, overrides)}
         </p>
         <div className="mt-3 flex gap-3">
           <Button variant="primary" className="flex-1" icon={Download} disabled={count === 0} onClick={() => download(makeFile())}>
-            Download backup
+            {m.download}
           </Button>
           {canShareFiles() && (
             <Button variant="secondary" className="flex-1" icon={Share} disabled={count === 0} onClick={() => void shareFile()}>
-              Share file
+              {m.shareFile}
             </Button>
           )}
         </div>
       </section>
 
       <section className="mt-6 border-t border-line pt-5">
-        <h3 className="font-semibold">Import</h3>
-        <p className="mt-1 text-sm text-ink-2">Programs in the file are added as new programs. Nothing you have is overwritten.</p>
+        <h3 className="font-semibold">{m.importHeading}</h3>
+        <p className="mt-1 text-sm text-ink-2">{m.importText}</p>
         <input
           ref={inputRef}
           type="file"
@@ -150,7 +142,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
         />
         {!pending && (
           <Button variant="secondary" className="mt-3 w-full" icon={FileUp} onClick={() => inputRef.current?.click()}>
-            Choose backup file
+            {m.choose}
           </Button>
         )}
         {error && (
@@ -162,12 +154,16 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
           <div className="mt-3 rounded-lg bg-surface-2 p-4">
             <p className="truncate font-medium">{pending.name}</p>
             <p className="mt-0.5 text-sm text-ink-2">
-              {countLabel(pending.backup.programs.length, 'program')}
-              {Number.isNaN(Date.parse(pending.backup.exportedAt)) ? '' : `, saved ${dateFormat.format(new Date(pending.backup.exportedAt))}`}
+              {m.pendingSummary(
+                pending.backup.programs.length,
+                Number.isNaN(Date.parse(pending.backup.exportedAt))
+                  ? null
+                  : dateFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(pending.backup.exportedAt)),
+              )}
             </p>
             {pending.backup.skipped > 0 && (
               <p className="mt-1 text-sm text-ink-2">
-                {countLabel(pending.backup.skipped, 'program')} could not be read and will be skipped.
+                {m.skipped(pending.backup.skipped)}
               </p>
             )}
             {pending.backup.prefs && (
@@ -178,15 +174,15 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
                   onChange={(e) => setUsePrefs(e.target.checked)}
                   className="size-5 accent-[var(--color-ink)]"
                 />
-                Also use the settings from this file (goal, equipment, counting, week start, custom mappings)
+                {m.alsoSettings}
               </label>
             )}
             <div className="mt-3 flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={reset}>
-                Cancel
+                {m.cancel}
               </Button>
               <Button variant="primary" className="flex-1" disabled={!pending.backup.programs.length && !usePrefs} onClick={runImport}>
-                Import
+                {m.importButton}
               </Button>
             </div>
           </div>
@@ -194,10 +190,10 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
       </section>
 
       <section className="mt-6 border-t border-line pt-5">
-        <h3 className="font-semibold">Print</h3>
-        <p className="mt-1 text-sm text-ink-2">A one-page week table with the body map, for paper or PDF.</p>
+        <h3 className="font-semibold">{m.printHeading}</h3>
+        <p className="mt-1 text-sm text-ink-2">{m.printText}</p>
         <LinkButton to="/print" variant="secondary" className="mt-3 w-full" icon={Printer}>
-          Open print view
+          {m.openPrint}
         </LinkButton>
       </section>
     </Sheet>

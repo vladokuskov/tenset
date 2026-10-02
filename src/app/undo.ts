@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { common } from '../i18n/common'
+import { getMessages } from '../i18n/messages'
 import { programStore } from '../store/program.store'
 import { showToast } from '../ui/toast'
 
@@ -7,9 +9,9 @@ export function toastWithUndo(message: string): void {
   showToast({
     message,
     action: {
-      label: 'Undo',
+      label: getMessages(common).undo,
       onAction: () => {
-        if (programStore.getState().undo()) showToast({ message: 'Undone' })
+        if (programStore.getState().undo()) showToast({ message: getMessages(common).undone })
       },
     },
   })
@@ -25,7 +27,7 @@ export function useUndoShortcut(): void {
       if (e.key.toLowerCase() !== 'z' || !(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || isTyping(e.target)) return
       if (programStore.getState().undo()) {
         e.preventDefault()
-        showToast({ message: 'Undone' })
+        showToast({ message: getMessages(common).undone })
       }
     }
     window.addEventListener('keydown', onKey)

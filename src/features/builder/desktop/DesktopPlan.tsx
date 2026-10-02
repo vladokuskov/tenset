@@ -1,9 +1,10 @@
 import { PersonStanding } from 'lucide-react'
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
-import { dayName, type DayIndex } from '../../../app/days'
+import type { DayIndex } from '../../../app/days'
 import { useCatalog } from '../../../app/useCatalog'
 import type { WeekView } from '../../../app/useWeek'
 import { resolveExercise, type ResolveContext } from '../../../domain/resolve'
+import { useMessages } from '../../../i18n/messages'
 import { usePrefsStore } from '../../../store/prefs.store'
 import { useProgramStore } from '../../../store/program.store'
 import { InstallNudge } from '../../../sw'
@@ -15,6 +16,7 @@ import { WeekBoard, type BoardHighlight } from '../WeekBoard'
 import { CatalogDrawer, DrawerStrip } from './CatalogDrawer'
 import { entriesTraining, type Focus } from './coupling'
 import { DeskMapPanel } from './DeskMapPanel'
+import { desktopMessages } from './messages'
 
 /** From here up the Plan is the week board; below it the phone layout. */
 export const BOARD_QUERY = '(min-width: 64rem)'
@@ -57,6 +59,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
   const addEntries = useProgramStore((s) => s.addEntries)
   const change = useChange()
   const map = useSheet('map')
+  const m = useMessages(desktopMessages)
 
   const [drawerPref, setDrawerPref] = useState(readDrawer)
   const [focus, setFocus] = useState<Focus | null>(null)
@@ -87,7 +90,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
   const onEntryHover = (groups: string[] | null) => setFocus(groups ? { kind: 'entry', groups } : null)
   const onFocusGroup = (group: string | null) => setFocus(group ? { kind: 'group', group } : null)
   const add = (e: AnyExercise, day: DayIndex) =>
-    change(`Added ${e.name} to ${dayName(day, 'long')}`, () => addEntries(day, [e.id], defaultSets(e), defaultReps(e, goal)))
+    change(m.addedTo(e.name, day), () => addEntries(day, [e.id], defaultSets(e), defaultReps(e, goal)))
   const onDragExercise = (e: AnyExercise | null) => {
     setFocus(null)
     setDragGroups(
@@ -109,7 +112,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
           {!wide && (
             <IconButton
               icon={PersonStanding}
-              label="Week map"
+              label={m.weekMap}
               aria-haspopup="dialog"
               aria-expanded={map.open}
               onClick={() => map.show()}
@@ -129,7 +132,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
           <InstallNudge className="mb-4" />
           <WeekBoard view={view} onAdd={onAdd} onHover={onEntryHover} highlight={highlight} />
         </PageBody>
-        <Sheet open={map.open} onClose={map.close} title="This week" className="backdrop:bg-scrim/40">
+        <Sheet open={map.open} onClose={map.close} title={m.thisWeek} className="backdrop:bg-scrim/40">
           {panel}
         </Sheet>
         {children}
@@ -168,7 +171,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
               onDragExercise={onDragExercise}
             />
             <aside
-              aria-label="Week map"
+              aria-label={m.weekMap}
               className={`${STICKY} max-h-[calc(100dvh-var(--safe-top)-5rem)] overflow-y-auto overscroll-contain`}
             >
               {panel}

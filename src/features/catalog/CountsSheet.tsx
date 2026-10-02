@@ -1,33 +1,32 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { groupName } from '../../data/localize'
 import type { Exercise, Role } from '../../domain/schema'
-import { getGroup, groups } from '../../domain/taxonomy'
+import { groups } from '../../domain/taxonomy'
+import { common } from '../../i18n/common'
+import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { Button } from '../../ui/Button'
 import { Pill } from '../../ui/Pill'
 import { SegmentedControl } from '../../ui/SegmentedControl'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
+import { catalogMessages } from './messages'
 import { applyOverride, isCustomized } from './roles'
 
 type Choice = Role | 'none'
 
-const CHOICES = [
-  { value: 'primary', label: 'Primary' },
-  { value: 'secondary', label: 'Secondary' },
-  { value: 'none', label: 'None' },
-] as const
-
-const AREAS = [
-  { id: 'upper', label: 'Upper body' },
-  { id: 'core', label: 'Core' },
-  { id: 'lower', label: 'Lower body' },
-] as const
-
-const roleWord = (r: Choice) => (r === 'none' ? 'not counted' : r)
+const CHOICES = ['primary', 'secondary', 'none'] as const
+const AREAS = ['upper', 'core', 'lower'] as const
 
 /** Per-exercise group roles, stored in prefs.overrides and applied in every program. */
 export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; open: boolean; onClose: () => void }) {
   const key = String(exercise.id)
+  const locale = useLocale()
+  const m = catalogMessages[locale]
+  const choices = useMemo(
+    () => CHOICES.map((value) => ({ value, label: catalogMessages[locale].choice[value] })),
+    [locale],
+  )
   const override = usePrefsStore((s) => s.overrides[key])
   const setOverride = usePrefsStore((s) => s.setOverride)
   const resetOverrides = usePrefsStore((s) => s.resetOverrides)
@@ -52,9 +51,9 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
     <Sheet
       open={open}
       onClose={onClose}
-      title="Edit how this counts"
-      description={`Changes how ${exercise.name} counts toward weekly sets in all your programs, on this device only.`}
-      headerEnd={customized ? <Pill variant="soft" className="mt-3.5">custom</Pill> : undefined}
+      title={m.editCounts}
+      description={m.countsDescription(exercise.name)}
+      headerEnd={customized ? <Pill variant="soft" className="mt-3.5">{m.custom}</Pill> : undefined}
       footer={
         <div className="flex gap-3">
           <Button
@@ -64,13 +63,13 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
             onClick={() => {
               resetOverrides(exercise.id)
               setAdded([])
-              showToast({ message: `${exercise.name} counts as default again` })
+              showToast({ message: m.countsReset(exercise.name) })
             }}
           >
-            Reset to default
+            {m.resetDefault}
           </Button>
           <Button variant="primary" className="flex-1" onClick={onClose}>
-            Done
+            {common[locale].done}
           </Button>
         </div>
       }
@@ -79,17 +78,17 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
         {rows.map((g) => {
           const value: Choice = roles[g] ?? 'none'
           const base: Choice = exercise.groups[g] ?? 'none'
-          const name = getGroup(g)?.name ?? g
+          const name = groupName(g, locale)
           return (
             <li key={g} className="py-3">
               <div className="mb-2 flex items-baseline justify-between gap-3">
                 <span className="font-medium">{name}</span>
-                <span className="text-sm text-ink-3">{value === base ? 'default' : `default: ${roleWord(base)}`}</span>
+                <span className="text-sm text-ink-3">{value === base ? m.isDefault : m.defaultWas(base)}</span>
               </div>
               <SegmentedControl
-                label={`${name} role`}
+                label={m.roleOf(name)}
                 block
-                options={CHOICES}
+                options={choices}
                 value={value}
                 onChange={(v) => change(g, v)}
               />
@@ -100,7 +99,7 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
 
       {remaining.length > 0 && (
         <label className="mt-4 block">
-          <span className="mb-1.5 block text-sm font-medium text-ink-2">Add a muscle</span>
+          <span className="mb-1.5 block text-sm font-medium text-ink-2">{m.addMuscle}</span>
           <select
             value=""
             onChange={(e) => {
@@ -111,14 +110,14 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
             }}
             className="h-11 w-full rounded-md border border-line-strong bg-raised px-3 text-ink"
           >
-            <option value="">Choose a muscle group</option>
+            <option value="">{m.chooseGroup}</option>
             {AREAS.map((area) => (
-              <optgroup key={area.id} label={area.label}>
+              <optgroup key={area} label={m.area[area]}>
                 {remaining
-                  .filter((g) => g.area === area.id)
+                  .filter((g) => g.area === area)
                   .map((g) => (
                     <option key={g.id} value={g.id}>
-                      {g.name}
+                      {groupName(g.id, locale)}
                     </option>
                   ))}
               </optgroup>
@@ -127,10 +126,7 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
         </label>
       )}
 
-      <p className="mt-5 text-sm text-ink-2">
-        Primary muscles count each set as 1, secondary as 0.5. Only the muscle groups change here; which heads light up
-        inside a group stays as mapped.
-      </p>
+      <p className="mt-5 text-sm text-ink-2">{m.countsNote}</p>
     </Sheet>
   )
 }

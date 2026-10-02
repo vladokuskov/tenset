@@ -1,9 +1,11 @@
 import { Share, SquarePlus, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useMessages } from '../i18n/messages'
 import { programStore } from '../store/program.store'
 import { cx } from '../ui/cx'
 import { IconButton } from '../ui/IconButton'
 import { currentInstallEnv, NOT_AN_EDIT, safariTabPlatform, type InstallPlatform } from './install'
+import { swMessages } from './messages'
 
 const EDITED_KEY = 'gb:edited'
 const DISMISSED_KEY = 'gb:install-nudge'
@@ -40,6 +42,7 @@ export function InstallNudge({ className }: { className?: string }) {
   })
   const [edited, setEdited] = useState(() => read(EDITED_KEY) === '1' || isEdit())
   const [dismissed, setDismissed] = useState(() => read(DISMISSED_KEY) === 'dismissed')
+  const m = useMessages(swMessages)
 
   useEffect(() => {
     if (!platform || dismissed) return
@@ -56,31 +59,24 @@ export function InstallNudge({ className }: { className?: string }) {
 
   return (
     <aside
-      aria-label="Add to Home Screen"
+      aria-label={m.installLabel}
       className={cx('relative flex gap-3 rounded-xl bg-surface p-4 pr-12 print:hidden', className)}
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-2">
         <SquarePlus size={20} strokeWidth={1.75} aria-hidden />
       </span>
       <div className="min-w-0 text-sm text-ink-2">
-        <p className="text-base font-semibold text-ink">{platform === 'ios' ? 'Add to your Home Screen' : 'Add to your Dock'}</p>
-        <p className="mt-1">
-          Safari may clear data for sites you have not opened in 7 days. Installed, your programs stay put and the app
-          works offline.
-        </p>
+        <p className="text-base font-semibold text-ink">{platform === 'ios' ? m.installTitleIos : m.installTitleMac}</p>
+        <p className="mt-1">{m.installBody}</p>
         <p className="mt-2 flex flex-wrap items-center gap-1 text-ink">
-          {platform === 'ios' ? (
-            <>
-              Tap <Share size={16} strokeWidth={1.75} aria-label="Share" className="inline" />, then Add to Home Screen.
-            </>
-          ) : (
-            <>In the menu bar choose File, then Add to Dock.</>
-          )}
+          {platform === 'ios'
+            ? m.installStepsIos(<Share key="share" size={16} strokeWidth={1.75} aria-label={m.share} className="inline" />)
+            : m.installStepsMac}
         </p>
       </div>
       <IconButton
         icon={X}
-        label="Dismiss"
+        label={m.dismiss}
         size={36}
         className="absolute right-2 top-2"
         onClick={() => {

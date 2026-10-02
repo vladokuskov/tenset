@@ -8,6 +8,17 @@ describe('cue rules', () => {
     expect(normalize("Don't  lock-out; Café KNEES!")).toBe('dont lock out cafe knees')
   })
 
+  it('keeps Cyrillic words', () => {
+    expect(normalize('Зведіть лопатки, тримайте мʼязи!')).toBe(normalize('зведіть лопатки тримайте мязи'))
+    expect(ngrams('раз два три чотири пʼять шість сім')).toHaveLength(1)
+  })
+
+  it('flags Ukrainian boilerplate', () => {
+    expect(checkCue('Повільно поверніться у вихідне положення', new Map())).toEqual([
+      { kind: 'boilerplate', phrase: 'поверніться у вихідне положення' },
+    ])
+  })
+
   it('strips tags and decodes entities', () => {
     expect(normalize(stripHtml('<p>Keep&nbsp;it <b>slow</b> &amp; steady&#46;</p>'))).toBe('keep it slow steady')
   })

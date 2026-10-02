@@ -1,24 +1,27 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useProgramStore } from '../../store/program.store'
 import { BodyMini } from '../bodymap'
+import { useMessages } from '../../i18n/messages'
 import { Button, EmptyState, LinkButton, Page, PageBody, PageHeader } from '../../ui'
+import { builderMessages } from './messages'
 
 /** Shown when every program was deleted (the store's Undo toast can still bring one back). */
 export function NoProgram() {
   const createBlank = useProgramStore((s) => s.createBlank)
   const navigate = useNavigate()
+  const m = useMessages(builderMessages)
   return (
     <Page>
-      <PageHeader title="Plan" />
+      <PageHeader title={m.plan} />
       <PageBody>
         <div className="rounded-xl bg-surface">
           <EmptyState
             art={<BodyMini view="both" height={120} className="mb-4" />}
-            title="No program yet"
+            title={m.noProgram}
             actions={
               <>
                 <LinkButton to="/welcome" variant="primary">
-                  Use a template
+                  {m.useTemplate}
                 </LinkButton>
                 <Button
                   onClick={() => {
@@ -26,12 +29,12 @@ export function NoProgram() {
                     void navigate({ to: '/' })
                   }}
                 >
-                  Start blank
+                  {m.startBlank}
                 </Button>
               </>
             }
           >
-            Start from a split template or seven empty days.
+            {m.noProgramBody}
           </EmptyState>
         </div>
       </PageBody>

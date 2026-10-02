@@ -1,29 +1,21 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { ChevronRight, Plus } from 'lucide-react'
 import { dayName } from '../../app/days'
-import { countLabel, joinMeta } from '../../app/format'
+import { joinMeta } from '../../app/format'
 import { MAX_CUSTOM } from '../../domain/program'
+import { useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useActiveProgram } from '../../store/program.store'
-import { Button, Page, PageBody, PageHeader, Section, SegmentedControl, Sheet, useSheet } from '../../ui'
+import { Button, LanguageToggle, Page, PageBody, PageHeader, Section, SegmentedControl, Sheet, useSheet } from '../../ui'
+import { LANGUAGE_LABEL } from '../../ui/LanguageToggle'
 import { groupName } from '../builder/labels'
 import { CustomExerciseSheet } from './CustomExerciseSheet'
 import { EquipmentPicker } from './EquipmentPicker'
 import { equipmentSummary } from './equipmentSummary'
+import { settingsMessages } from './messages'
 import { OverridesSheet } from './OverridesSheet'
 
 const route = getRouteApi('/settings')
-
-const GOAL_HINT = {
-  hypertrophy: 'Bands follow the weekly set ranges used in muscle growth research.',
-  strength: 'Also shows main lifts trained on fewer than 2 days a week.',
-  general: '4 to 10 weekly sets reads as good for general fitness.',
-} as const
-
-const COUNTING_HINT = {
-  fractional: 'Primary muscles count each set as 1, secondary muscles as 0.5.',
-  primary: 'Only primary muscles count. Secondary muscles show 0.',
-} as const
 
 const rowButton = 'flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left'
 
@@ -36,60 +28,66 @@ export function SettingsScreen() {
   const customSheet = useSheet('custom', ['id'])
   const overrideCount = Object.keys(s.overrides).length
   const custom = program?.custom ?? []
+  const m = useMessages(settingsMessages)
+  const locale = useLocale()
 
   return (
     <Page>
-      <PageHeader title="Settings" back={{ to: '/', label: 'Plan' }} />
+      <PageHeader title={m.title} back={{ to: '/', label: m.plan }} />
       <PageBody>
-        <Section title="Goal" description={GOAL_HINT[s.goal]}>
+        <Section title={LANGUAGE_LABEL}>
+          <LanguageToggle size="md" block />
+        </Section>
+
+        <Section title={m.goal} description={m.goalHint[s.goal]}>
           <SegmentedControl
-            label="Goal"
+            label={m.goal}
             block
             options={[
-              { value: 'hypertrophy', label: 'Muscle' },
-              { value: 'strength', label: 'Strength' },
-              { value: 'general', label: 'General' },
+              { value: 'hypertrophy', label: m.goalOption.hypertrophy },
+              { value: 'strength', label: m.goalOption.strength },
+              { value: 'general', label: m.goalOption.general },
             ]}
             value={s.goal}
             onChange={s.setGoal}
           />
         </Section>
 
-        <Section title="Equipment">
+        <Section title={m.equipment}>
           <div className="flex min-h-14 items-center gap-3 rounded-xl bg-surface px-4 py-2">
-            <span className="num min-w-0 flex-1 text-base">{equipmentSummary(s.equipment)}</span>
+            <span className="num min-w-0 flex-1 text-base">{equipmentSummary(s.equipment, locale)}</span>
             <Button variant="secondary" size="sm" onClick={() => equipmentSheet.show()}>
-              Edit
+              {m.edit}
             </Button>
           </div>
         </Section>
 
-        <Section title="Counting" description={COUNTING_HINT[s.countingMode]}>
+        <Section title={m.counting} description={m.countingHint[s.countingMode]}>
           <SegmentedControl
-            label="Counting mode"
+            label={m.countingMode}
             block
             options={[
-              { value: 'fractional', label: 'Fractional (0.5)' },
-              { value: 'primary', label: 'Primary only' },
+              { value: 'fractional', label: m.fractional },
+              { value: 'primary', label: m.primaryOnly },
             ]}
             value={s.countingMode}
             onChange={s.setCountingMode}
           />
         </Section>
 
-        <Section title="Week starts on">
+        <Section title={m.weekStartsOn}>
           <SegmentedControl
-            label="Week starts on"
+            label={m.weekStartsOn}
             block
-            options={[...new Set([0, 5, 6, s.weekStart])].map((d) => ({ value: String(d), label: dayName(d, 'long') }))}
+            options={[...new Set([0, 5, 6, s.weekStart])].map((d) => ({ value: String(d), label: dayName(d, 'long', locale) }))}
             value={String(s.weekStart)}
             onChange={(v) => s.setWeekStart(Number(v))}
           />
         </Section>
 
         <Section
-          title="Custom exercises"
-          description={program ? `Saved with ${program.name}. Share links include them.` : 'Create a program first.'}
+          title={m.customExercises}
+          description={program ? m.savedWith(program.name) : m.createProgramFirst}
         >
           <div className="rounded-xl bg-surface">
             {custom.length > 0 && (
@@ -103,9 +101,9 @@ export function SettingsScreen() {
                           {joinMeta([
                             Object.entries(c.groups)
                               .filter(([, r]) => r === 'primary')
-                              .map(([g]) => groupName(g))
+                              .map(([g]) => groupName(g, locale))
                               .join(', '),
-                            c.equipment.length ? countLabel(c.equipment.length, 'item') : 'Bodyweight',
+                            c.equipment.length ? m.items(c.equipment.length) : m.bodyweight,
                           ])}
                         </span>
                       </span>
@@ -122,26 +120,26 @@ export function SettingsScreen() {
                 disabled={!program || custom.length >= MAX_CUSTOM}
                 onClick={() => customSheet.show({ id: 'new' })}
               >
-                Add custom exercise
+                {m.addCustom}
               </Button>
               <p className="num mt-2 text-xs text-ink-3">
-                {custom.length} of {MAX_CUSTOM} used
+                {m.used(custom.length, MAX_CUSTOM)}
               </p>
             </div>
           </div>
         </Section>
 
-        <Section title="Custom mappings" description='Changes made with "Edit how this counts" on an exercise.'>
+        <Section title={m.customMappings} description={m.customMappingsHint}>
           <div className="flex items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3">
-            <span className="text-ink-2">{overrideCount ? `${countLabel(overrideCount, 'exercise')} changed` : 'No exercises changed'}</span>
+            <span className="text-ink-2">{overrideCount ? m.exercisesChanged(overrideCount) : m.noExercisesChanged}</span>
             <Button variant="secondary" size="sm" onClick={() => overridesSheet.show()} disabled={!overrideCount}>
-              Review
+              {m.review}
             </Button>
           </div>
         </Section>
       </PageBody>
 
-      <Sheet open={equipmentSheet.open} onClose={equipmentSheet.close} title="Equipment" description="Exercises that need something unchecked are left out of suggestions.">
+      <Sheet open={equipmentSheet.open} onClose={equipmentSheet.close} title={m.equipment} description={m.equipmentSheetHint}>
         <EquipmentPicker value={s.equipment} onChange={s.setEquipment} />
       </Sheet>
       <OverridesSheet open={overridesSheet.open} onClose={overridesSheet.close} />

@@ -3,9 +3,12 @@ import { useState } from 'react'
 import { dayName, type DayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
 import { LABEL_MAX, NOTE_MAX } from '../../domain/program'
+import { common } from '../../i18n/common'
+import { useLocale } from '../../i18n/messages'
 import { programStore, useProgramStore } from '../../store/program.store'
 import { Button, ChipGroup, Sheet } from '../../ui'
 import { ChangeBar } from './ChangeBar'
+import { builderMessages } from './messages'
 import { undoLastChange, useChange } from './useChange'
 
 const field = 'w-full rounded-md bg-surface-2 px-3 text-base text-ink placeholder:text-ink-3'
@@ -14,6 +17,9 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
   const view = useWeek()
   const store = useProgramStore((s) => s)
   const change = useChange()
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  const c = common[locale]
   const d = view?.program.days[day]
   const [label, setLabel] = useState(d?.label ?? '')
   const [note, setNote] = useState(d?.note ?? '')
@@ -29,22 +35,22 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
       setStatus(null)
     }
   }
-  if (!view || !d) return <Sheet open={false} onClose={onClose} title="Day" />
+  if (!view || !d) return <Sheet open={false} onClose={onClose} title={m.day} />
 
-  const name = dayName(day, 'long')
+  const name = dayName(day, 'long', locale)
   const run = (message: string, action: () => void) => {
     const res = change(message, action, { toast: false })
     if (res) setStatus(res.message)
   }
   const saveLabel = () => {
-    if (label.trim() !== (d.label ?? '')) run(label.trim() ? `${name} is now "${label.trim()}"` : 'Label removed', () => store.setLabel(day, label))
+    if (label.trim() !== (d.label ?? '')) run(label.trim() ? m.labelNow(day, label.trim()) : m.labelRemoved, () => store.setLabel(day, label))
   }
   const saveNote = () => {
-    if (note.trim() !== (d.note ?? '')) run(note.trim() ? 'Note saved' : 'Note removed', () => store.setNote(day, note))
+    if (note.trim() !== (d.note ?? '')) run(note.trim() ? m.noteSaved : m.noteRemoved, () => store.setNote(day, note))
   }
   const undo = () => {
     if (!undoLastChange()) return
-    setStatus('Undone')
+    setStatus(c.undone)
     const { programs, activeId } = programStore.getState()
     const restored = activeId ? programs[activeId]?.days[day] : undefined
     setLabel(restored?.label ?? '')
@@ -60,35 +66,35 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
         onClose()
       }}
       title={name}
-      description="Day options"
-      footer={<ChangeBar message={status} onUndo={status && status !== 'Undone' ? undo : undefined} />}
+      description={m.dayOptions}
+      footer={<ChangeBar message={status} onUndo={status && status !== c.undone ? undo : undefined} />}
     >
       <label className="block">
-        <span className="text-sm font-semibold">Label</span>
+        <span className="text-sm font-semibold">{m.label}</span>
         <input
           value={label}
           maxLength={LABEL_MAX}
           onChange={(e) => setLabel(e.target.value)}
           onBlur={saveLabel}
           onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget.blur(), e.preventDefault())}
-          placeholder="e.g. Push, Legs, Upper A"
+          placeholder={m.labelPlaceholder}
           className={`${field} mt-1.5 h-11`}
         />
       </label>
 
       <label className="mt-4 block">
-        <span className="text-sm font-semibold">Note</span>
+        <span className="text-sm font-semibold">{m.note}</span>
         <textarea
           value={note}
           maxLength={NOTE_MAX}
           rows={2}
           onChange={(e) => setNote(e.target.value)}
           onBlur={saveNote}
-          placeholder="e.g. Warm up the shoulders first"
+          placeholder={m.notePlaceholder}
           className={`${field} mt-1.5 resize-none py-2.5`}
         />
         <span className="mt-1 flex justify-between text-xs text-ink-3">
-          <span>Notes never count toward sets.</span>
+          <span>{m.noteHint}</span>
           <span className="num">
             {note.length}/{NOTE_MAX}
           </span>
@@ -96,14 +102,14 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
       </label>
 
       <div className="mt-5">
-        <h3 className="text-sm font-semibold">Duplicate to</h3>
-        <p className="mt-0.5 text-sm text-ink-2">Replaces everything on the day you pick.</p>
+        <h3 className="text-sm font-semibold">{m.duplicateTo}</h3>
+        <p className="mt-0.5 text-sm text-ink-2">{m.duplicateHint}</p>
         <ChipGroup
-          label="Duplicate to"
+          label={m.duplicateTo}
           className="mt-2"
           size="sm"
           allowEmpty
-          options={view.order.filter((x) => x !== day).map((x) => ({ value: x, label: dayName(x) }))}
+          options={view.order.filter((x) => x !== day).map((x) => ({ value: x, label: dayName(x, 'short', locale) }))}
           value={target}
           onChange={setTarget}
         />
@@ -112,11 +118,11 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
           disabled={target === null}
           onClick={() => {
             if (target === null) return
-            run(`Duplicated ${name} to ${dayName(target, 'long')}`, () => store.duplicateDay(day, target))
+            run(m.duplicated(day, target), () => store.duplicateDay(day, target))
             setTarget(null)
           }}
         >
-          Duplicate {name}
+          {m.duplicate(day)}
         </Button>
       </div>
 
@@ -127,8 +133,8 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
             className="flex min-h-12 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-2"
             onClick={() =>
               d.kind === 'rest'
-                ? run(`${name} is a training day`, () => store.setTrain(day))
-                : run(`${name} is a rest day`, () => store.setRest(day))
+                ? run(m.isTrainingDay(day), () => store.setTrain(day))
+                : run(m.isRestDay(day), () => store.setRest(day))
             }
           >
             {d.kind === 'rest' ? (
@@ -136,7 +142,7 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
             ) : (
               <BedDouble size={20} strokeWidth={1.75} className="text-ink-2" aria-hidden />
             )}
-            {d.kind === 'rest' ? 'Make it a training day' : 'Make it a rest day'}
+            {d.kind === 'rest' ? m.makeTraining : m.makeRest}
           </button>
         </li>
         <li>
@@ -144,10 +150,10 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
             type="button"
             disabled={d.entries.length === 0}
             className="flex min-h-12 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-2 disabled:opacity-45"
-            onClick={() => run(`Cleared ${name}`, () => store.clearDay(day))}
+            onClick={() => run(m.cleared(day), () => store.clearDay(day))}
           >
             <Eraser size={20} strokeWidth={1.75} className="text-ink-2" aria-hidden />
-            Clear all exercises
+            {m.clearAll}
           </button>
         </li>
       </ul>

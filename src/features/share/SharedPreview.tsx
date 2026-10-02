@@ -2,23 +2,18 @@ import { useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { Link2Off } from 'lucide-react'
 import { useMemo } from 'react'
 import { dayName } from '../../app/days'
-import { countLabel, formatDaySummary, formatSets, setsLabel } from '../../app/format'
+import { formatDaySummary, setsLabel } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
-import { decodeProgram, type DecodeError } from '../../domain/codec'
-import { getGroup } from '../../domain/taxonomy'
+import { groupName } from '../../data/localize'
+import { decodeProgram } from '../../domain/codec'
+import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
 import { Button, EmptyState, LinkButton, Page, PageBody, PageHeader, Panel, Section, StickyActions, showToast } from '../../ui'
 import { BodyMini } from '../bodymap'
+import { shareMessages } from './messages'
 import { uniqueName } from './names'
 import { exerciseName, isKnown } from './resolveNames'
-
-const ERRORS: Record<DecodeError, string> = {
-  empty: 'This link has no program in it.',
-  malformed: 'This link is incomplete or was changed. Ask for a new one.',
-  unsupported_version: 'This link was made by a newer version of the app. Reload to update, then try again.',
-  invalid: 'This link holds a program this app cannot read.',
-}
 
 /** Read-only preview of a program from a share link. Saving always creates a new program. */
 export function SharedPreview() {
@@ -31,6 +26,8 @@ export function SharedPreview() {
   const programs = useProgramStore((s) => s.programs)
   const navigate = useNavigate()
   const router = useRouter()
+  const m = useMessages(shareMessages)
+  const locale = useLocale()
 
   const close = () => {
     if (router.history.canGoBack()) router.history.back()
@@ -40,17 +37,17 @@ export function SharedPreview() {
   if (!result.ok || !view) {
     return (
       <Page>
-        <PageHeader title="Shared program" back={{ to: '/', label: 'Plan' }} />
+        <PageHeader title={m.sharedProgram} back={{ to: '/', label: m.plan }} />
         <EmptyState
           icon={Link2Off}
-          title="Could not open this link"
+          title={m.couldNotOpen}
           actions={
             <LinkButton to="/" variant="primary">
-              Go to Plan
+              {m.goToPlan}
             </LinkButton>
           }
         >
-          {result.ok ? ERRORS.invalid : ERRORS[result.error]}
+          {result.ok ? m.errors.invalid : m.errors[result.error]}
         </EmptyState>
       </Page>
     )
@@ -66,38 +63,38 @@ export function SharedPreview() {
     const name = uniqueName(shared.name, Object.values(programs).map((p) => p.name))
     const id = importProgram({ ...shared, name })
     if (!id) {
-      showToast({ message: 'This program could not be saved.' })
+      showToast({ message: getMessages(shareMessages).saveFailed })
       return
     }
-    showToast({ message: `Saved "${name}" as a new program` })
+    showToast({ message: getMessages(shareMessages).savedAs(name) })
     void navigate({ to: '/', replace: true })
   }
 
   return (
     <Page>
-      <PageHeader title={shared.name} subtitle="Shared with you. Read only until you save it." back={{ to: '/', label: 'Plan' }} />
+      <PageHeader title={shared.name} subtitle={m.subtitle} back={{ to: '/', label: m.plan }} />
       <PageBody>
         <Panel className="flex items-center gap-4 p-4">
-          <BodyMini view="both" groups={week.weekly} height={112} label="Week coverage of the shared program, front and back" />
+          <BodyMini view="both" groups={week.weekly} height={112} label={m.mapLabel} />
           <div className="min-w-0">
             <p className="text-display font-light num">
               {coverage.trainedBanded}
-              <span className="text-lg font-normal text-ink-3"> of {coverage.totalBanded}</span>
+              <span className="text-lg font-normal text-ink-3">{m.ofTotal(coverage.totalBanded)}</span>
             </p>
-            <p className="mt-1 text-sm text-ink-2">groups trained</p>
+            <p className="mt-1 text-sm text-ink-2">{m.groupsTrained}</p>
             <p className="mt-3 text-sm text-ink-2 num">
-              {countLabel(trainingDays, 'training day')} · {formatSets(totalSets)} hard sets
+              {m.summary(trainingDays, totalSets)}
             </p>
           </div>
         </Panel>
         {coverage.untrained.required.length > 0 && (
           <p className="mt-3 px-1 text-sm text-ink-2">
-            Not trained: {coverage.untrained.required.map((u) => getGroup(u.group)?.name ?? u.group).join(', ')}
+            {m.notTrained(coverage.untrained.required.map((u) => groupName(u.group, locale)).join(', '))}
           </p>
         )}
-        <p className="mt-2 px-1 text-sm text-ink-3">Numbers use your settings, so they can differ from what the sender sees.</p>
+        <p className="mt-2 px-1 text-sm text-ink-3">{m.differs}</p>
 
-        <Section title="Week" className="mt-6">
+        <Section title={m.week} className="mt-6">
           <Panel as="ul" className="divide-y divide-line">
             {order.map((d) => {
               const s = days[d]
@@ -105,19 +102,19 @@ export function SharedPreview() {
               return (
                 <li key={d} className="px-4 py-3">
                   <div className="flex items-baseline gap-3">
-                    <span className="w-10 shrink-0 font-semibold">{dayName(d)}</span>
-                    <span className="min-w-0 flex-1 truncate">{s.kind === 'rest' ? 'Rest' : (s.label ?? 'Training')}</span>
+                    <span className="w-10 shrink-0 font-semibold">{dayName(d, 'short', locale)}</span>
+                    <span className="min-w-0 flex-1 truncate">{s.kind === 'rest' ? m.rest : (s.label ?? m.training)}</span>
                     {s.kind === 'train' && (
-                      <span className="shrink-0 text-sm text-ink-2 num">{formatDaySummary(s.exercises, s.hardSets)}</span>
+                      <span className="shrink-0 text-sm text-ink-2 num">{formatDaySummary(s.exercises, s.hardSets, locale)}</span>
                     )}
                   </div>
                   {s.kind === 'train' && entries.length > 0 && (
                     <ul className="mt-2 space-y-1 pl-[3.25rem] text-sm">
                       {entries.map((e) => (
                         <li key={e.id} className="flex gap-3">
-                          <span className="min-w-0 flex-1 text-ink">{exerciseName(e.exerciseId, catalog, shared.custom)}</span>
+                          <span className="min-w-0 flex-1 text-ink">{exerciseName(e.exerciseId, catalog, shared.custom, locale)}</span>
                           <span className="shrink-0 text-ink-2 num">
-                            {e.reps ? `${e.sets} × ${e.reps}` : setsLabel(e.sets)}
+                            {e.reps ? `${e.sets} × ${e.reps}` : setsLabel(e.sets, locale)}
                           </span>
                         </li>
                       ))}
@@ -131,16 +128,16 @@ export function SharedPreview() {
         </Section>
         {unknown > 0 && (
           <p className="mt-3 px-1 text-sm text-ink-2">
-            {countLabel(unknown, 'exercise')} came from a newer catalog and will not count until the app updates.
+            {m.unknown(unknown)}
           </p>
         )}
       </PageBody>
       <StickyActions>
         <Button variant="secondary" size="lg" onClick={close}>
-          Close
+          {m.close}
         </Button>
         <Button variant="primary" size="lg" block onClick={save}>
-          Save to my programs
+          {m.save}
         </Button>
       </StickyActions>
     </Page>

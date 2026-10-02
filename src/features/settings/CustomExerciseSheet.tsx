@@ -1,22 +1,21 @@
 import { useState } from 'react'
+import { equipmentName } from '../../data/localize'
 import { equipment } from '../../domain/equipment'
 import { MAX_CUSTOM, NAME_MAX } from '../../domain/program'
 import type { CustomExercise, Role } from '../../domain/schema'
 import { groups as allGroups } from '../../domain/taxonomy'
+import { useLocale, useMessages } from '../../i18n/messages'
 import { useActiveProgram, useProgramStore } from '../../store/program.store'
 import { BodyMap } from '../bodymap'
 import { Button, ChipGroup, SegmentedControl, Sheet } from '../../ui'
 import { groupName } from '../builder/labels'
 import { useChange } from '../builder/useChange'
+import { settingsMessages } from './messages'
 
 type Laterality = CustomExercise['laterality']
 type RoleChoice = Role | 'off'
 
-const AREAS = [
-  { id: 'upper', label: 'Upper body' },
-  { id: 'core', label: 'Core' },
-  { id: 'lower', label: 'Lower body' },
-] as const
+const AREAS = ['upper', 'core', 'lower'] as const
 
 const NEXT: Record<RoleChoice, RoleChoice> = { off: 'primary', primary: 'secondary', secondary: 'off' }
 
@@ -39,6 +38,8 @@ export function CustomExerciseSheet({
   const program = useActiveProgram()
   const store = useProgramStore((s) => s)
   const change = useChange()
+  const m = useMessages(settingsMessages)
+  const locale = useLocale()
   const existing = id && id !== 'new' ? program?.custom.find((c) => c.id === id) : undefined
 
   const [name, setName] = useState('')
@@ -73,8 +74,8 @@ export function CustomExerciseSheet({
     if (!canSave) return
     const input = { name: name.trim(), equipment: equip, laterality, groups: roles }
     onClose()
-    if (existing) change(`Saved ${input.name}`, () => store.updateCustomExercise(existing.id, input))
-    else change(`Created ${input.name}`, () => store.addCustomExercise(input))
+    if (existing) change(m.saved(input.name), () => store.updateCustomExercise(existing.id, input))
+    else change(m.created(input.name), () => store.addCustomExercise(input))
   }
 
   const mapValues = Object.fromEntries(Object.entries(roles).map(([g, r]) => [g, MAP_SETS[r]]))
@@ -83,48 +84,48 @@ export function CustomExerciseSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={existing ? 'Edit custom exercise' : 'New custom exercise'}
-      description="Your own mapping. It counts like any other exercise."
+      title={existing ? m.editCustom : m.newCustom}
+      description={m.customHint}
       footer={
         <div className="flex gap-2">
           {existing && (
             <Button
               onClick={() => {
                 onClose()
-                change(`Deleted ${existing.name}`, () => store.removeCustomExercise(existing.id))
+                change(m.deleted(existing.name), () => store.removeCustomExercise(existing.id))
               }}
             >
-              Delete
+              {m.delete}
             </Button>
           )}
           <Button variant="primary" block disabled={!canSave} onClick={save}>
-            {existing ? 'Save' : 'Create'}
+            {existing ? m.save : m.create}
           </Button>
         </div>
       }
     >
-      {full && <p className="mb-4 rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-ink-2">This program already has {MAX_CUSTOM} custom exercises, the maximum.</p>}
+      {full && <p className="mb-4 rounded-lg bg-surface-2 px-3 py-2.5 text-sm text-ink-2">{m.customFull(MAX_CUSTOM)}</p>}
       <label className="block">
-        <span className="text-sm font-semibold">Name</span>
+        <span className="text-sm font-semibold">{m.name}</span>
         <input
           value={name}
           maxLength={NAME_MAX}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Landmine press"
+          placeholder={m.namePlaceholder}
           className="mt-1.5 h-11 w-full rounded-md bg-surface-2 px-3 text-base placeholder:text-ink-3"
         />
       </label>
 
-      <h3 className="mt-5 text-sm font-semibold">Muscles</h3>
-      <p className="mt-0.5 text-sm text-ink-2">Tap the map to cycle primary, secondary, off, or use the list. At least one primary.</p>
+      <h3 className="mt-5 text-sm font-semibold">{m.muscles}</h3>
+      <p className="mt-0.5 text-sm text-ink-2">{m.musclesHint}</p>
       <div className="mt-3 rounded-xl bg-surface p-3">
         <SegmentedControl
-          label="Map side"
+          label={m.mapSide}
           size="sm"
           block
           options={[
-            { value: 'front', label: 'Front' },
-            { value: 'back', label: 'Back' },
+            { value: 'front', label: m.front },
+            { value: 'back', label: m.back },
           ]}
           value={mapView}
           onChange={setMapView}
@@ -136,28 +137,28 @@ export function CustomExerciseSheet({
           scale="week"
           highlight={Object.keys(roles).filter((g) => roles[g] === 'primary')}
           onSelectGroup={(g) => setRole(g, NEXT[roles[g] ?? 'off'])}
-          label="Muscle map for this exercise"
+          label={m.mapLabel}
         />
-        <p className="mt-2 text-center text-xs text-ink-3">Outlined and darker: primary. Lighter: secondary.</p>
+        <p className="mt-2 text-center text-xs text-ink-3">{m.mapLegend}</p>
       </div>
 
       {AREAS.map((area) => (
-        <section key={area.id} className="mt-5">
-          <h4 className="text-xs font-medium text-ink-3">{area.label}</h4>
+        <section key={area} className="mt-5">
+          <h4 className="text-xs font-medium text-ink-3">{m.area[area]}</h4>
           <ul className="mt-1 divide-y divide-line">
             {allGroups
-              .filter((g) => g.area === area.id)
+              .filter((g) => g.area === area)
               .map((g) => (
                 <li key={g.id} className="flex items-center justify-between gap-3 py-1.5">
-                  <span className="min-w-0 truncate text-base">{groupName(g.id)}</span>
+                  <span className="min-w-0 truncate text-base">{groupName(g.id, locale)}</span>
                   <SegmentedControl
-                    label={`${groupName(g.id)} role`}
+                    label={m.roleOf(groupName(g.id, locale))}
                     size="sm"
                     className="w-56 shrink-0"
                     options={[
-                      { value: 'off', label: 'Off' },
-                      { value: 'secondary', label: 'Secondary' },
-                      { value: 'primary', label: 'Primary' },
+                      { value: 'off', label: m.off },
+                      { value: 'secondary', label: m.secondary },
+                      { value: 'primary', label: m.primary },
                     ]}
                     value={roles[g.id] ?? 'off'}
                     onChange={(v) => setRole(g.id, v)}
@@ -167,29 +168,29 @@ export function CustomExerciseSheet({
           </ul>
         </section>
       ))}
-      <h3 className="mt-6 text-sm font-semibold">Sides</h3>
+      <h3 className="mt-6 text-sm font-semibold">{m.sides}</h3>
       <SegmentedControl
-        label="Sides"
+        label={m.sides}
         className="mt-1.5"
         block
         size="sm"
         options={[
-          { value: 'bilateral', label: 'Both at once' },
-          { value: 'unilateral', label: 'One side' },
-          { value: 'alternating', label: 'Alternating' },
+          { value: 'bilateral', label: m.laterality.bilateral },
+          { value: 'unilateral', label: m.laterality.unilateral },
+          { value: 'alternating', label: m.laterality.alternating },
         ]}
         value={laterality}
         onChange={setLaterality}
       />
 
-      <h3 className="mt-5 text-sm font-semibold">Equipment</h3>
-      <p className="mt-0.5 text-sm text-ink-2">Leave empty for bodyweight.</p>
+      <h3 className="mt-5 text-sm font-semibold">{m.equipment}</h3>
+      <p className="mt-0.5 text-sm text-ink-2">{m.leaveEmpty}</p>
       <ChipGroup
-        label="Equipment"
+        label={m.equipment}
         className="mt-2"
         size="sm"
         multiple
-        options={equipment.map((e) => ({ value: e.id, label: e.name }))}
+        options={equipment.map((e) => ({ value: e.id, label: equipmentName(e.id, locale) }))}
         value={equip}
         onChange={setEquip}
       />

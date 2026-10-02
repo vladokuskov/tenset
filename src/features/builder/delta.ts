@@ -3,6 +3,8 @@ import { resolveExercise, type Catalog, type ResolveContext } from '../../domain
 import type { ExerciseRef, Prefs, Program } from '../../domain/schema'
 import { groupIds, isBanded } from '../../domain/taxonomy'
 import { computeWeek, type WeekResult } from '../../domain/volume'
+import type { Locale } from '../../i18n/locale'
+import { getLocale } from '../../i18n/messages'
 import { groupName } from './labels'
 
 export type GroupDelta = { group: string; from: number; to: number }
@@ -41,10 +43,10 @@ export function dayChanges(before: WeekResult | null, after: WeekResult | null):
 }
 
 /** "Chest 8 → 11, Triceps 4 → 5.5" */
-export function deltaText(deltas: readonly GroupDelta[], max = 2): string {
+export function deltaText(deltas: readonly GroupDelta[], max = 2, locale: Locale = getLocale()): string {
   return deltas
     .slice(0, max)
-    .map((d) => `${groupName(d.group)} ${formatDelta(d.from, d.to)}`)
+    .map((d) => `${groupName(d.group, locale)} ${formatDelta(d.from, d.to, locale)}`)
     .join(', ')
 }
 

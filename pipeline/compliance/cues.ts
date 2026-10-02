@@ -1,5 +1,5 @@
-// Cue originality gate: fails when an exercise cue shares a word 7-gram with free-exercise-db or wger instruction
-// text, or uses known third-party boilerplate. Both corpora are pinned repository files (wger's robots.txt disallows
+// Cue originality gate: fails when an exercise cue (English or a translation in data/i18n) shares a word 7-gram with
+// free-exercise-db or wger instruction text (English and Ukrainian), or uses known third-party boilerplate. Both corpora are pinned repository files (wger's robots.txt disallows
 // its API), cached in pipeline/.cache/compliance (gitignored), and must never be committed, printed or pasted into
 // prompts.
 // node pipeline/compliance/cues.ts
@@ -17,7 +17,7 @@ const WGER_COMMIT = '62161689c756ee36308e20133ab722833e121654'
 const WGER_SHA256 = 'e76dc38796fa4e002855832209772535aac819043c348a88a98fe3949596c207'
 const WGER_URL = `https://raw.githubusercontent.com/wger-project/wger/${WGER_COMMIT}/wger/exercises/fixtures/translations.json`
 // wger/core/fixtures/languages.json
-const WGER_ENGLISH = 2
+const WGER_LANGUAGES = new Set([2, 15]) // English, Ukrainian
 const USER_AGENT = 'gym-builder-compliance/1.0 (build-time cue originality check, cached)'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -61,18 +61,18 @@ async function freeExerciseDb(): Promise<string[]> {
 
 type WgerRow = { model: string; pk: number; fields: Record<string, unknown> }
 
-/** English exercise descriptions and their comments from wger's translation fixture. */
+/** English and Ukrainian exercise descriptions and their comments from wger's translation fixture. */
 async function wger(): Promise<string[]> {
   const rows = JSON.parse(await pinned('wger-translations', WGER_COMMIT, WGER_URL, WGER_SHA256)) as WgerRow[]
-  const english = new Set<number>()
+  const kept = new Set<number>()
   const texts: string[] = []
   for (const r of rows) {
-    if (r.model !== 'exercises.translation' || r.fields.language !== WGER_ENGLISH) continue
-    english.add(r.pk)
+    if (r.model !== 'exercises.translation' || !WGER_LANGUAGES.has(Number(r.fields.language))) continue
+    kept.add(r.pk)
     if (typeof r.fields.description === 'string' && r.fields.description) texts.push(r.fields.description)
   }
   for (const r of rows) {
-    if (r.model !== 'exercises.exercisecomment' || !english.has(Number(r.fields.translation))) continue
+    if (r.model !== 'exercises.exercisecomment' || !kept.has(Number(r.fields.translation))) continue
     if (typeof r.fields.comment === 'string' && r.fields.comment) texts.push(r.fields.comment)
   }
   return texts
@@ -87,21 +87,37 @@ add(await freeExerciseDb(), 'free-exercise-db')
 add((await wger()).map(stripHtml), 'wger')
 
 const allow = parseAllowlist(fs.readFileSync(path.join(import.meta.dirname, 'cue-allowlist.txt'), 'utf8'))
-const files = fs.readdirSync(path.join(DATA, 'exercises')).filter((f) => f.endsWith('.json')).sort()
-let cues = 0
-let failures = 0
+const jsonFiles = (dir: string) => (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort() : [])
+
+// [label, cues] for English records and for every translation file (keyed by exercise id).
+const sets: [string, string[]][] = []
+const files = jsonFiles(path.join(DATA, 'exercises'))
 for (const f of files) {
   const record = JSON.parse(fs.readFileSync(path.join(DATA, 'exercises', f), 'utf8')) as { cues?: string[] }
-  for (const [i, cue] of (record.cues ?? []).entries()) {
+  sets.push([f, record.cues ?? []])
+}
+const i18nDir = path.join(DATA, 'i18n')
+for (const locale of fs.existsSync(i18nDir) ? fs.readdirSync(i18nDir).sort() : []) {
+  const dir = path.join(i18nDir, locale, 'exercises')
+  for (const f of jsonFiles(dir)) {
+    const map = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) as Record<string, { cues?: string[] }>
+    for (const [id, t] of Object.entries(map)) sets.push([`${locale}/${f} ${id}`, t.cues ?? []])
+  }
+}
+
+let cues = 0
+let failures = 0
+for (const [label, list] of sets) {
+  for (const [i, cue] of list.entries()) {
     cues++
     const found = checkCue(cue, corpus, allow)
     if (!found.length) continue
     failures++
-    console.log(`FAIL ${f} cue ${i + 1}: "${cue}"`)
+    console.log(`FAIL ${label} cue ${i + 1}: "${cue}"`)
     for (const x of found) {
       console.log(x.kind === 'ngram' ? `  shared 7-gram with ${x.source}: "${x.phrase}"` : `  boilerplate: "${x.phrase}"`)
     }
   }
 }
-console.log(`${cues} cues in ${files.length} exercises checked against ${corpus.size} third-party 7-grams: ${failures} failing`)
+console.log(`${cues} cues in ${sets.length} records checked against ${corpus.size} third-party 7-grams: ${failures} failing`)
 if (failures) process.exit(1)

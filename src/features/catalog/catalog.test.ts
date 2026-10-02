@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { activeExercises } from '../../data/catalog'
+import { groupName, localizeExercise } from '../../data/localize'
 import { presetEquipment } from '../../domain/equipment'
 import { blankProgram } from '../../domain/program'
 import { alternativesFor } from './alternatives'
 import { lightestTrainingDay, shortCite } from './detail'
-import { PATTERN_GROUPS, PATTERN_LABEL } from './patterns'
+import { catalogMessages } from './messages'
+import { PATTERN_GROUPS, patternLabel } from './patterns'
 import { applyOverride, isCustomized } from './roles'
 import { buildIndex, filterExercises, tokenize } from './search'
 
@@ -46,6 +48,39 @@ describe('catalog search', () => {
     expect(before).not.toContain(bench)
     const after = filterExercises(activeExercises, index, { muscle: 'triceps' }, { [bench.id]: { triceps: 'primary' } })
     expect(after).toContain(bench)
+  })
+})
+
+describe('catalog search in Ukrainian', () => {
+  const uk = activeExercises.map((e) => localizeExercise(e, 'uk'))
+  const ukIndex = buildIndex(uk, 'uk')
+
+  it('folds every apostrophe form', () => {
+    expect(tokenize('Мʼяз')).toEqual(['мяз'])
+    expect(tokenize("м'яз")).toEqual(['мяз'])
+    expect(tokenize('м’яз')).toEqual(['мяз'])
+  })
+
+  it('finds a hand-made localized record by name, alias and English name', () => {
+    const base = activeExercises.find((e) => e.slug === 'barbell-bench-press')!
+    const record = { ...base, name: 'Жим штанги лежачи', aliases: ['мʼязовий жим', base.name, ...base.aliases] }
+    const index = buildIndex([record], 'uk')
+    for (const q of ['жим', 'штанги', "м'язовий", 'bench']) expect(filterExercises([record], index, { q }), q).toEqual([record])
+  })
+
+  it('finds translated exercises and Ukrainian group names', () => {
+    if (uk.some((e) => /[а-яіїєґ]/i.test(e.name))) {
+      expect(filterExercises(uk, ukIndex, { q: 'жим' }).length).toBeGreaterThan(0)
+    }
+    const chest = filterExercises(uk, ukIndex, { q: groupName('chest', 'uk') })
+    expect(chest.length).toBeGreaterThan(5)
+    expect(chest[0].groups.chest).toBe('primary')
+    expect(slugs(filterExercises(uk, ukIndex, { q: 'RDL' }))).toContain('barbell-romanian-deadlift')
+  })
+
+  it('indexes localized pattern labels', () => {
+    const hits = filterExercises(uk, ukIndex, { q: patternLabel('squat', 'uk') })
+    expect(hits.some((e) => e.pattern === 'squat')).toBe(true)
   })
 })
 
@@ -91,6 +126,7 @@ describe('detail helpers', () => {
   it('labels every pattern and groups each once', () => {
     const grouped = PATTERN_GROUPS.flatMap((g) => g.patterns)
     expect(new Set(grouped).size).toBe(grouped.length)
-    expect(grouped.sort()).toEqual(Object.keys(PATTERN_LABEL).sort())
+    expect(grouped.sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
+    expect(Object.keys(catalogMessages.uk.pattern).sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
   })
 })

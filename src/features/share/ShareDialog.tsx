@@ -1,10 +1,12 @@
 import { Check, Copy, Share } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { getMessages, useMessages } from '../../i18n/messages'
 import { useActiveProgram } from '../../store/program.store'
 import { Button } from '../../ui/Button'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
 import { qrModules, shareUrl } from './link'
+import { shareMessages } from './messages'
 
 export type ShareDialogProps = { open: boolean; onClose: () => void }
 
@@ -31,6 +33,7 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
   const program = useActiveProgram()
   const inputRef = useRef<HTMLInputElement>(null)
   const [copied, setCopied] = useState(false)
+  const m = useMessages(shareMessages)
   const url = useMemo(
     () => (program && open ? shareUrl(program, window.location.origin, import.meta.env.BASE_URL) : ''),
     [program, open],
@@ -47,15 +50,15 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
   const copy = async () => {
     if (await copyText(url, inputRef.current)) {
       setCopied(true)
-      showToast({ message: 'Link copied' })
+      showToast({ message: getMessages(shareMessages).linkCopied })
     } else {
-      showToast({ message: 'Could not copy. Select the link and copy it manually.' })
+      showToast({ message: getMessages(shareMessages).copyFailed })
     }
   }
 
   const share = async () => {
     try {
-      await navigator.share({ title: program?.name, text: `${program?.name}: a weekly gym program`, url })
+      await navigator.share({ title: program?.name, text: program ? m.shareText(program.name) : undefined, url })
     } catch {
       // cancelled or unavailable; the copy button remains
     }
@@ -65,12 +68,12 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      title="Share program"
+      title={m.title}
       description={program ? program.name : undefined}
       desktop="center"
     >
       {!program ? (
-        <p className="text-ink-2">There is no program to share yet.</p>
+        <p className="text-ink-2">{m.noProgram}</p>
       ) : (
         <>
           <div className="flex justify-center">
@@ -82,7 +85,7 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
                   height={208}
                   shapeRendering="crispEdges"
                   role="img"
-                  aria-label="QR code for the share link"
+                  aria-label={m.qrLabel}
                   data-qr-version={qr.version}
                 >
                   <path d={qr.path} fill="#000" />
@@ -90,16 +93,16 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
               </figure>
             ) : (
               <p className="rounded-xl bg-surface-2 px-4 py-6 text-center text-sm text-ink-2">
-                This program is too long for a QR code. The link below still works.
+                {m.tooLong}
               </p>
             )}
           </div>
           {qr && qr.version > DENSE_VERSION && (
-            <p className="mt-2 text-center text-sm text-ink-2">Long program, so the code is dense. Hold the camera close.</p>
+            <p className="mt-2 text-center text-sm text-ink-2">{m.dense}</p>
           )}
 
           <label className="mt-5 block">
-            <span className="sr-only">Share link</span>
+            <span className="sr-only">{m.shareLink}</span>
             <input
               ref={inputRef}
               readOnly
@@ -110,21 +113,19 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
           </label>
           <div className="mt-3 flex gap-3">
             <Button variant="primary" className="flex-1" icon={copied ? Check : Copy} onClick={() => void copy()}>
-              {copied ? 'Copied' : 'Copy link'}
+              {copied ? m.copied : m.copyLink}
             </Button>
             {canShare && (
               <Button variant="secondary" className="flex-1" icon={Share} onClick={() => void share()}>
-                Share
+                {m.share}
               </Button>
             )}
           </div>
 
           <ul className="mt-5 list-disc space-y-1.5 pl-5 text-sm text-ink-2 marker:text-ink-3">
-            <li>
-              Numbers follow the recipient's settings: their goal, counting mode and any "Edit how this counts" changes.
-            </li>
-            <li>Opening the link shows a preview. It never changes the recipient's programs.</li>
-            <li>The program lives in the link itself. Nothing is uploaded.</li>
+            <li>{m.noteSettings}</li>
+            <li>{m.notePreview}</li>
+            <li>{m.noteLocal}</li>
           </ul>
         </>
       )}

@@ -1,6 +1,8 @@
 import raw from '../../data/known-gaps.json' with { type: 'json' }
 import { availableSet, presets } from '../domain/equipment'
-import { getGroup } from '../domain/taxonomy'
+import type { Locale } from '../i18n/locale'
+import { getLocale } from '../i18n/messages'
+import { appMessages } from './messages'
 
 type Gap = { preset: string; groups: string[] }
 
@@ -21,8 +23,8 @@ export function equipmentGaps(equipment: readonly string[]): string[] {
 }
 
 /** Neutral note: "Your equipment can't load: side delts, rear delts." Null when nothing is out of reach. */
-export function gapNote(equipment: readonly string[]): string | null {
+export function gapNote(equipment: readonly string[], locale: Locale = getLocale()): string | null {
   const groups = equipmentGaps(equipment)
   if (!groups.length) return null
-  return `Your equipment can't load: ${groups.map((g) => (getGroup(g)?.name ?? g).toLowerCase()).join(', ')}.`
+  return appMessages[locale].gapNote(groups)
 }

@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useCatalog } from '../../app/useCatalog'
+import { useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore, prefsStore } from '../../store/prefs.store'
 import { useActiveProgram } from '../../store/program.store'
 import { Button, Sheet } from '../../ui'
 import { ChangeBar } from '../builder/ChangeBar'
 import { groupName } from '../builder/labels'
+import { settingsMessages } from './messages'
 
 type OverrideRole = 'primary' | 'secondary' | 'none'
-
-const roleText = (r: OverrideRole) => (r === 'none' ? 'not counted' : r)
 
 /** Exercises whose muscle roles the user changed, each with a reset (Undo instead of a confirm). */
 export function OverridesSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -16,6 +16,8 @@ export function OverridesSheet({ open, onClose }: { open: boolean; onClose: () =
   const resetOverrides = usePrefsStore((s) => s.resetOverrides)
   const program = useActiveProgram()
   const { catalog } = useCatalog()
+  const m = useMessages(settingsMessages)
+  const locale = useLocale()
   const [status, setStatus] = useState<{ message: string; restore: typeof overrides } | null>(null)
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
@@ -29,7 +31,7 @@ export function OverridesSheet({ open, onClose }: { open: boolean; onClose: () =
     const base: Record<string, string> = catalogEx?.groups ?? custom?.groups ?? {}
     return {
       id,
-      name: catalogEx?.name ?? custom?.name ?? 'Exercise no longer available',
+      name: catalogEx?.name ?? custom?.name ?? m.noLongerAvailable,
       changes: Object.entries(ov).map(([g, r]) => ({ group: g, role: r, was: (base[g] ?? 'none') as OverrideRole })),
     }
   })
@@ -38,15 +40,15 @@ export function OverridesSheet({ open, onClose }: { open: boolean; onClose: () =
     const before = prefsStore.getState().overrides
     resetOverrides(id)
     const name = id ? rows.find((r) => r.id === id)?.name : undefined
-    setStatus({ message: name ? `Reset ${name}` : 'Reset every mapping', restore: before })
+    setStatus({ message: name ? m.resetDone(name) : m.resetAllDone, restore: before })
   }
 
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title="Custom mappings"
-      description="Exercises where you changed how muscles count."
+      title={m.customMappings}
+      description={m.overridesHint}
       footer={
         status ? (
           <ChangeBar
@@ -60,7 +62,7 @@ export function OverridesSheet({ open, onClose }: { open: boolean; onClose: () =
       }
     >
       {rows.length === 0 ? (
-        <p className="py-6 text-center text-base text-ink-2">No changed mappings. Use "Edit how this counts" on an exercise to change one.</p>
+        <p className="py-6 text-center text-base text-ink-2">{m.noOverrides}</p>
       ) : (
         <>
           <ul className="divide-y divide-line">
@@ -71,20 +73,20 @@ export function OverridesSheet({ open, onClose }: { open: boolean; onClose: () =
                   <ul className="mt-1 space-y-0.5 text-sm text-ink-2">
                     {r.changes.map((c) => (
                       <li key={c.group}>
-                        {groupName(c.group)}: {roleText(c.role)} (was {roleText(c.was)})
+                        {m.changeLine(groupName(c.group, locale), m.role[c.role], m.role[c.was])}
                       </li>
                     ))}
                   </ul>
                 </div>
                 <Button size="sm" onClick={() => reset(r.id)}>
-                  Reset
+                  {m.reset}
                 </Button>
               </li>
             ))}
           </ul>
           {rows.length > 1 && (
             <Button className="mt-4" block onClick={() => reset()}>
-              Reset all
+              {m.resetAll}
             </Button>
           )}
         </>

@@ -68,6 +68,31 @@ test.describe('axe: no serious or critical violations', () => {
     })
   }
 
+  test.describe('in Ukrainian', () => {
+    test.use({ locale: 'uk-UA' })
+
+    test('welcome, plan, body, exercises, detail and settings', async ({ page }) => {
+      const found: Record<string, string[]> = {}
+      const check = async (name: string) => {
+        await page.waitForTimeout(400)
+        const v = await seriousViolations(page)
+        if (v.length) found[name] = v
+      }
+      await page.goto('/welcome')
+      await expect(page.locator('html')).toHaveAttribute('lang', 'uk')
+      await check('welcome')
+      await page.getByRole('button', { name: 'Пропустити' }).click()
+      await expect(page).toHaveURL(/\/$/)
+      await check('plan')
+      for (const url of ['/body', '/exercises', '/exercise/barbell-bench-press', '/settings']) {
+        await page.goto(url)
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+        await check(url)
+      }
+      expect(found).toEqual({})
+    })
+  })
+
   test('welcome and shared preview', async ({ page }) => {
     await page.goto('/welcome')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()

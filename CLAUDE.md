@@ -16,6 +16,7 @@ Vite 8, React 19, TypeScript 6, Tailwind 4, TanStack Router (file routes in `src
 - Never use or copy: free-exercise-db (images, text or muscle tags), ExerciseDB / Gym visual GIFs, wger content, Z-Anatomy / fitmitwith, Mixamo, SMPL/AMASS/Fit3D, HY-Motion, ExRx / MuscleWiki / Liftosaur mappings, mannequin.js, blwsk/exercise-animations code, 3D marketplace models, brand names or logos.
 - Allowed third-party assets: MakeHuman/MPFB2 CC0 assets (pinned commit), BodyParts3D CC BY 4.0 (with credit). Code deps must be MIT/ISC/BSD/Apache/OFL.
 - Exercise cues are original, 3-5 short imperative lines. Never paste third-party instruction text into prompts or files.
+- Every string has English and Ukrainian. UI copy lives in `messages.ts` next to each feature; content translations in `data/i18n/uk/` keyed by source ids (cues: same count as English, translated from our own cues only). Rules and glossary: `docs/I18N.md`.
 - Muscle roles: `groups` (primary 1.0 / secondary 0.5) drive bands; `heads` is emphasis inside listed groups. Every exercise cites `basis` ids from `data/sources.json`; use `confidence: low` when no study backs a call.
 - Copy tone: neutral. Recovery is information only: no warning colors, no "risk", "too soon", "overtrained".
 - No runtime requests to third-party origins (no CDN fonts, drei presets, matcaps, Draco CDN).

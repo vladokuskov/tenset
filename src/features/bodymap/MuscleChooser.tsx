@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { formatSets } from '../../app/format'
 import { groupShade, VOLUME_COLOR, type MapScale } from '../../app/volumeScale'
-import { getGroup } from '../../domain/taxonomy'
+import { groupName } from '../../data/localize'
+import { useLocale } from '../../i18n/messages'
 import { TAP_RADIUS_PX, type AnatomyView } from './anatomy'
 import type { BodyValues } from './fills'
+import { bodymapMessages } from './messages'
 
 export type ChooserState = {
   view: AnatomyView
@@ -37,6 +39,8 @@ export function MuscleChooser({
   onPick: (group: string) => void
   onClose: () => void
 }) {
+  const locale = useLocale()
+  const m = bodymapMessages[locale]
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
 
@@ -92,11 +96,11 @@ export function MuscleChooser({
       <div
         ref={ref}
         role="dialog"
-        aria-label="Which muscle?"
+        aria-label={m.whichMuscle}
         className="absolute z-20 rounded-lg border border-line bg-raised p-1 shadow-float transition-opacity duration-150"
         style={{ width: WIDTH, left: pos?.left ?? 0, top: pos?.top ?? 0, opacity: pos ? 1 : 0 }}
       >
-        <p className="px-3 pb-1 pt-2 text-xs font-medium text-ink-2">Which muscle?</p>
+        <p className="px-3 pb-1 pt-2 text-xs font-medium text-ink-2">{m.whichMuscle}</p>
         <ul>
           {state.groups.map((g) => {
             const known = values.groups[g] !== undefined
@@ -113,8 +117,8 @@ export function MuscleChooser({
                     style={{ background: VOLUME_COLOR[groupShade(g, sets, scale)] }}
                     aria-hidden
                   />
-                  <span className="min-w-0 flex-1 truncate font-medium">{getGroup(g)?.name ?? g}</span>
-                  {known && <span className="num text-sm text-ink-2">{formatSets(sets)}</span>}
+                  <span className="min-w-0 flex-1 truncate font-medium">{groupName(g, locale)}</span>
+                  {known && <span className="num text-sm text-ink-2">{formatSets(sets, locale)}</span>}
                 </button>
               </li>
             )

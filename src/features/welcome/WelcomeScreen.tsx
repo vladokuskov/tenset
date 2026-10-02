@@ -1,9 +1,9 @@
 import { getRouteApi, useNavigate, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { APP_NAME, NOT_MEDICAL_ADVICE } from '../../app/brand'
+import { NotMedicalAdvice } from '../../app/brand'
 import { BrandMark } from '../../app/BrandMark'
 import { sortDays, type DayIndex } from '../../app/days'
-import { countLabel, joinMeta, plural } from '../../app/format'
+import { joinMeta } from '../../app/format'
 import { gapNote } from '../../app/knownGaps'
 import { useCatalog } from '../../app/useCatalog'
 import { computeCoverage } from '../../domain/coverage'
@@ -11,12 +11,13 @@ import { sequentialIds } from '../../domain/ids'
 import { applyTemplate } from '../../domain/program'
 import type { SplitTemplate } from '../../domain/schema'
 import { computeWeek } from '../../domain/volume'
+import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { DayPicker } from '../builder'
-import { LEVEL_LABEL } from '../catalog'
 import { EquipmentPicker } from '../settings/EquipmentPicker'
-import { Button, Page, PageBody, StickyActions, cx, showToast } from '../../ui'
+import { Button, LanguageToggle, Page, PageBody, StickyActions, cx, showToast } from '../../ui'
+import { welcomeMessages } from './messages'
 import { TemplateCard } from './TemplateCard'
 
 const route = getRouteApi('/welcome')
@@ -48,10 +49,12 @@ export function WelcomeScreen() {
   const [choice, setChoice] = useState<string>(() => splits[0]?.id ?? BLANK)
   const [days, setDays] = useState<DayIndex[] | null>(null)
   const [equip, setEquip] = useState<string[]>(() => [...prefs.equipment])
+  const m = useMessages(welcomeMessages)
+  const locale = useLocale()
 
   const template = choice === BLANK ? undefined : splitById.get(choice)
   const trainingDays = days ?? template?.defaultDays ?? [0, 2, 4]
-  const gaps = gapNote(equip)
+  const gaps = gapNote(equip, locale)
 
   const previews = useMemo(() => {
     const out = new Map<string, { weekly: Record<string, number>; trained: number; total: number; sets: number }>()
@@ -77,30 +80,28 @@ export function WelcomeScreen() {
     if (template) {
       const { notes } = createFromTemplate(template, trainingDays, equip, catalog)
       const dropped = notes.filter((n) => n.kind === 'dropped_slot').length
-      if (dropped) showToast({ message: `${countLabel(dropped, 'slot')} left out for your equipment. You can add others on each day.` })
+      if (dropped) showToast({ message: getMessages(welcomeMessages).dropped(dropped) })
     } else {
       createBlank(undefined, trainingDays)
     }
     void navigate({ to: '/', replace: true })
   }
 
-  const heading =
-    step === 1 ? `Plan your week with ${APP_NAME}` : step === 2 ? 'Which days do you train?' : 'What can you use?'
-  const sub =
-    step === 1
-      ? 'Start from a split and adjust it, or fill seven empty days yourself. The map shows how much each muscle gets.'
-      : step === 2
-        ? 'Pick the days you plan to train. The others become rest days.'
-        : 'Exercises that need equipment you do not have are left out.'
+  const stepKey = step === 1 ? 1 : step === 2 ? 2 : 3
+  const heading = m.heading[stepKey]
+  const sub = m.sub[stepKey]
 
   return (
     <Page>
       <div className="pt-safe">
         <PageBody className="flex h-16 items-center justify-between">
           <BrandMark size={32} />
-          <Button variant="ghost" size="sm" onClick={skip}>
-            Skip
-          </Button>
+          <div className="flex items-center gap-2">
+            {step === 1 && <LanguageToggle />}
+            <Button variant="ghost" size="sm" onClick={skip}>
+              {m.skip}
+            </Button>
+          </div>
         </PageBody>
       </div>
       <PageBody className="pt-2">
@@ -110,7 +111,7 @@ export function WelcomeScreen() {
           ))}
         </div>
         <p className="num mt-4 text-sm text-ink-2">
-          Step {step} of {STEPS}
+          {m.step(step, STEPS)}
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-[-0.022em]">{heading}</h1>
         <p className="mt-2 text-base text-ink-2">{sub}</p>
@@ -125,9 +126,9 @@ export function WelcomeScreen() {
                   <li key={s.id}>
                     <TemplateCard
                       title={s.name}
-                      meta={joinMeta([`${s.daysPerWeek} days a week`, LEVEL_LABEL[s.level]])}
+                      meta={joinMeta([m.daysAWeek(s.daysPerWeek), m.level[s.level]])}
                       description={s.description}
-                      footnote={p && joinMeta([`${p.trained} of ${p.total} groups`, `${p.sets} sets a week`])}
+                      footnote={p && joinMeta([m.groupsOf(p.trained, p.total), m.setsAWeek(p.sets)])}
                       weekly={p?.weekly}
                       selected={choice === s.id}
                       onSelect={() => {
@@ -140,9 +141,9 @@ export function WelcomeScreen() {
               })}
               <li>
                 <TemplateCard
-                  title="Start blank"
-                  meta="Seven empty days"
-                  description="Add exercises day by day and watch the map fill in."
+                  title={m.startBlank}
+                  meta={m.sevenEmpty}
+                  description={m.blankDescription}
                   selected={choice === BLANK}
                   onSelect={() => {
                     setChoice(BLANK)
@@ -155,13 +156,13 @@ export function WelcomeScreen() {
 
           {step === 2 && (
             <>
-              <DayPicker label="Training days" value={trainingDays} onChange={setDays} hints={sessionHints(template, trainingDays)} />
+              <DayPicker label={m.trainingDays} value={trainingDays} onChange={setDays} hints={sessionHints(template, trainingDays)} />
               <p className="mt-4 text-sm text-ink-2">
                 {trainingDays.length === 0
-                  ? 'Pick at least one day.'
+                  ? m.pickOne
                   : template && trainingDays.length !== template.daysPerWeek
-                    ? `${template.name} is built for ${template.daysPerWeek} days a week. On ${trainingDays.length} ${plural(trainingDays.length, 'day')} its sessions repeat in order.`
-                    : `${countLabel(trainingDays.length, 'training day')}, ${countLabel(7 - trainingDays.length, 'rest day')}.`}
+                    ? m.repeats(template.name, template.daysPerWeek, trainingDays.length)
+                    : m.daySplit(trainingDays.length, 7 - trainingDays.length)}
               </p>
             </>
           )}
@@ -169,22 +170,22 @@ export function WelcomeScreen() {
           {step === 3 && <EquipmentPicker value={equip} onChange={setEquip} />}
         </div>
 
-        <p className="mt-8 text-xs text-ink-3">{NOT_MEDICAL_ADVICE}</p>
+        <p className="mt-8 text-xs text-ink-3"><NotMedicalAdvice /></p>
       </PageBody>
 
       <StickyActions>
         {step > 1 && (
           <Button size="lg" onClick={() => (router.history.canGoBack() ? router.history.back() : go(step - 1))}>
-            Back
+            {m.back}
           </Button>
         )}
         {step < STEPS ? (
           <Button variant="primary" size="lg" block disabled={step === 2 && trainingDays.length === 0} onClick={() => go(step + 1)}>
-            Continue
+            {m.continue}
           </Button>
         ) : (
           <Button variant="primary" size="lg" block onClick={finish}>
-            Show my week
+            {m.showWeek}
           </Button>
         )}
       </StickyActions>

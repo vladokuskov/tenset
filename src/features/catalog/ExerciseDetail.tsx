@@ -1,11 +1,13 @@
 import { Link, getRouteApi, useNavigate, useRouter } from '@tanstack/react-router'
 import { CalendarDays, CalendarPlus, SearchX, SlidersHorizontal } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
-import { NOT_MEDICAL_ADVICE } from '../../app/brand'
+import { NotMedicalAdvice } from '../../app/brand'
 import { dayFromSlug, dayName, daySlug, type DayIndex } from '../../app/days'
 import { useCatalog } from '../../app/useCatalog'
-import { equipment as equipmentList } from '../../domain/equipment'
+import { equipmentName } from '../../data/localize'
 import type { Exercise } from '../../domain/schema'
+import type { Locale } from '../../i18n/locale'
+import { useLocale, useMessages } from '../../i18n/messages'
 import { useActiveProgram } from '../../store/program.store'
 import { usePrefsStore } from '../../store/prefs.store'
 import { Button, EmptyState, IconButton, LinkButton, Page, PageBody, PageHeader, Panel, Pill, Section, StickyActions, useSheet } from '../../ui'
@@ -16,39 +18,34 @@ import { CountsSheet } from './CountsSheet'
 import { shortCite } from './detail'
 import { ExerciseMedia } from './ExerciseMotion'
 import { showsMotion } from './media'
+import { catalogMessages } from './messages'
 import { ExerciseRow } from './ExerciseRow'
 import { MuscleSection } from './MuscleSection'
-import { LEVEL_LABEL, PATTERN_LABEL } from './patterns'
+import { levelLabel, patternLabel } from './patterns'
 import { useIsCustomized, useRoles } from './useRoles'
 
 const route = getRouteApi('/exercise/$slug')
-const equipmentName = new Map(equipmentList.map((e) => [e.id, e.name]))
-const listEquipment = (ids: readonly string[]) => ids.map((e) => equipmentName.get(e) ?? e).join(', ')
-
-const SIDES: Record<Exercise['laterality'], string | null> = {
-  bilateral: null,
-  unilateral: 'One side at a time. Sets count once, not per side.',
-  alternating: 'Alternating sides. Sets count once, not per side.',
-}
+const listEquipment = (ids: readonly string[], locale: Locale) => ids.map((e) => equipmentName(e, locale)).join(', ')
 
 export function ExercisePage() {
   const { slug } = route.useParams()
   const { exerciseBySlug } = useCatalog()
   const exercise = exerciseBySlug.get(slug)
+  const m = useMessages(catalogMessages)
   if (!exercise) {
     return (
       <Page>
-        <PageHeader title="Exercise" back={{ to: '/exercises', label: 'Exercises' }} />
+        <PageHeader title={m.exercise} back={{ to: '/exercises', label: m.exercises }} />
         <EmptyState
           icon={SearchX}
-          title="Exercise not found"
+          title={m.notFound}
           actions={
             <LinkButton to="/exercises" variant="primary">
-              Browse exercises
+              {m.browse}
             </LinkButton>
           }
         >
-          It may have been renamed or removed from the catalog.
+          {m.notFoundBody}
         </EmptyState>
       </Page>
     )
@@ -75,6 +72,8 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
   const goal = usePrefsStore((s) => s.goal)
   const weekStart = usePrefsStore((s) => s.weekStart)
   const countingMode = usePrefsStore((s) => s.countingMode)
+  const locale = useLocale()
+  const m = catalogMessages[locale]
   const roles = useRoles(exercise)
   const customized = useIsCustomized(exercise)
   const days = useSheet('days')
@@ -101,56 +100,61 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
     <Page>
       <PageHeader
         title={exercise.name}
-        back={addTo !== undefined ? { to: '/', label: dayName(addTo, 'long') } : { to: '/exercises', label: 'Exercises' }}
+        back={addTo !== undefined ? { to: '/', label: dayName(addTo, 'long', locale) } : { to: '/exercises', label: m.exercises }}
       />
       <PageBody>
         <ExerciseMedia exercise={exercise} />
         {!showsMotion(exercise) && (
-          <p className="mt-2 text-center text-sm text-ink-3">Demo coming. Until then the map shows the muscles worked.</p>
+          <p className="mt-2 text-center text-sm text-ink-3">{m.demoComing}</p>
         )}
 
         <Section
           title={
             <span className="flex items-center gap-2">
-              Muscles
-              {customized && <Pill variant="soft">custom</Pill>}
+              {m.muscles}
+              {customized && <Pill variant="soft">{m.custom}</Pill>}
             </span>
           }
           className="mt-6"
           action={
             <Button variant="link" size="sm" icon={SlidersHorizontal} onClick={() => counts.show()}>
-              Edit how this counts
+              {m.editCounts}
             </Button>
           }
         >
           <Panel className="p-4">
             <MuscleSection roles={roles} countingMode={countingMode} />
             <p className="mt-4 text-sm text-ink-2">
-              Mapping confidence: {exercise.confidence}.{' '}
-              {exercise.basis.length > 0 && <>Based on {exercise.basis.map(shortCite).join(', ')}. </>}
+              {m.mappingConfidence(exercise.confidence)}{' '}
+              {exercise.basis.length > 0 && <>{m.basedOn(exercise.basis.map(shortCite).join(', '))} </>}
               <Link to="/about" hash="sources" className="text-accent underline underline-offset-2">
-                Sources
+                {m.sources}
               </Link>
             </p>
           </Panel>
         </Section>
 
-        <Section title="Details">
+        <Section title={m.details}>
           <Panel className="px-4">
             <dl className="divide-y divide-line">
-              <Fact label="Equipment">{exercise.equipment.length ? listEquipment(exercise.equipment) : 'None, bodyweight'}</Fact>
-              <Fact label="Pattern">{PATTERN_LABEL[exercise.pattern]}</Fact>
-              <Fact label="Level">{LEVEL_LABEL[exercise.level]}</Fact>
-              <Fact label="Default">
-                {exercise.defaults.sets} sets of {goal === 'strength' && exercise.defaults.strengthReps ? exercise.defaults.strengthReps : exercise.defaults.reps}
-                {exercise.unit === 'seconds' ? ' s' : ''}
+              <Fact label={m.equipment}>
+                {exercise.equipment.length ? listEquipment(exercise.equipment, locale) : m.noneBodyweight}
               </Fact>
-              {SIDES[exercise.laterality] && <Fact label="Sides">{SIDES[exercise.laterality]}</Fact>}
+              <Fact label={m.patternFact}>{patternLabel(exercise.pattern, locale)}</Fact>
+              <Fact label={m.levelFilter}>{levelLabel(exercise.level, locale)}</Fact>
+              <Fact label={m.defaultFact}>
+                {m.dose(
+                  exercise.defaults.sets,
+                  goal === 'strength' && exercise.defaults.strengthReps ? exercise.defaults.strengthReps : exercise.defaults.reps,
+                  exercise.unit === 'seconds',
+                )}
+              </Fact>
+              {exercise.laterality !== 'bilateral' && <Fact label={m.sidesFact}>{m.sides[exercise.laterality]}</Fact>}
             </dl>
           </Panel>
         </Section>
 
-        <Section title="How to do it">
+        <Section title={m.howTo}>
           <Panel className="px-4 py-1">
             <ol className="divide-y divide-line">
               {exercise.cues.map((c, i) => (
@@ -165,7 +169,7 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
           </Panel>
         </Section>
 
-        <Section title="Alternatives" description="Same movement pattern, your equipment first.">
+        <Section title={m.alternatives} description={m.alternativesDescription}>
           {alternatives.length ? (
             <Panel as="ul" className="divide-y divide-line px-3">
               {alternatives.map(({ exercise: alt, available: ok }) => (
@@ -173,30 +177,30 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
                   <ExerciseRow
                     exercise={alt}
                     link
-                    meta={ok ? undefined : `Needs ${listEquipment(missing(alt)).toLowerCase()}`}
+                    meta={ok ? undefined : m.needs(listEquipment(missing(alt), locale))}
                   />
                 </li>
               ))}
             </Panel>
           ) : (
-            <p className="px-1 text-sm text-ink-2">No close alternatives in the catalog yet.</p>
+            <p className="px-1 text-sm text-ink-2">{m.noAlternatives}</p>
           )}
         </Section>
 
-        <p className="mt-8 px-1 text-xs text-ink-3">{NOT_MEDICAL_ADVICE}</p>
+        <p className="mt-8 px-1 text-xs text-ink-3"><NotMedicalAdvice /></p>
       </PageBody>
 
       <StickyActions>
         {addTo !== undefined ? (
           <>
             <Button variant="primary" size="lg" block icon={CalendarPlus} onClick={() => addDirect(addTo)}>
-              Add to {dayName(addTo, 'long')}
+              {m.addToDay(addTo)}
             </Button>
-            <IconButton icon={CalendarDays} label="Choose other days" variant="tonal" onClick={() => days.show()} />
+            <IconButton icon={CalendarDays} label={m.otherDays} variant="tonal" onClick={() => days.show()} />
           </>
         ) : (
           <Button variant="primary" size="lg" block icon={CalendarPlus} onClick={() => days.show()}>
-            Add to plan
+            {m.addToPlan}
           </Button>
         )}
       </StickyActions>

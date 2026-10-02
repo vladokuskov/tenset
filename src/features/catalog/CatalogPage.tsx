@@ -1,16 +1,18 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { ChevronDown, Search, SearchX, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { countLabel } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
+import { groupName } from '../../data/localize'
 import type { Pattern } from '../../domain/schema'
-import { getGroup } from '../../domain/taxonomy'
+import { common } from '../../i18n/common'
+import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { Button, Chip, EmptyState, Page, PageBody, PageHeader, useSheet } from '../../ui'
 import { ExerciseGrid } from './ExerciseGrid'
 import { FilterSelect } from './FilterSelect'
 import { MuscleFilterSheet } from './MuscleFilterSheet'
-import { LEVEL_LABEL, PATTERN_GROUPS, PATTERN_LABEL } from './patterns'
+import { catalogMessages } from './messages'
+import { levelLabel, PATTERN_GROUPS, patternGroupLabel, patternLabel } from './patterns'
 import { applyOverride } from './roles'
 import { buildIndex, filterExercises } from './search'
 
@@ -27,8 +29,6 @@ type Patch = Partial<{
 
 type ActiveFilter = { key: keyof Patch; label: string; clear: Patch }
 
-const LEVELS = [{ label: '', options: [1, 2, 3].map((l) => ({ value: String(l), label: LEVEL_LABEL[l] })) }]
-
 export function CatalogPage() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
@@ -36,7 +36,9 @@ export function CatalogPage() {
   const equipment = usePrefsStore((s) => s.equipment)
   const overrides = usePrefsStore((s) => s.overrides)
   const muscleSheet = useSheet('muscle')
-  const index = useMemo(() => buildIndex(activeExercises), [activeExercises])
+  const locale = useLocale()
+  const m = catalogMessages[locale]
+  const index = useMemo(() => buildIndex(activeExercises, locale), [activeExercises, locale])
 
   const equip = search.equip ?? 'mine'
   const [text, setText] = useState(search.q ?? '')
@@ -74,27 +76,31 @@ export function CatalogPage() {
   const patternGroups = useMemo(() => {
     const present = new Set(activeExercises.map((e) => e.pattern))
     return PATTERN_GROUPS.map((g) => ({
-      label: g.label,
-      options: g.patterns.filter((p) => present.has(p)).map((p) => ({ value: p, label: PATTERN_LABEL[p] })),
+      label: patternGroupLabel(g.id, locale),
+      options: g.patterns.filter((p) => present.has(p)).map((p) => ({ value: p, label: patternLabel(p, locale) })),
     })).filter((g) => g.options.length)
-  }, [activeExercises])
+  }, [activeExercises, locale])
+  const levels = useMemo(
+    () => [{ label: '', options: [1, 2, 3].map((l) => ({ value: String(l), label: levelLabel(l, locale) })) }],
+    [locale],
+  )
 
-  const muscleName = search.muscle ? (getGroup(search.muscle)?.name ?? search.muscle) : undefined
+  const muscleName = search.muscle ? groupName(search.muscle, locale) : undefined
   const narrowed = Boolean(search.q || search.muscle || search.pattern || search.level)
   const active: ActiveFilter[] = []
-  if (search.q) active.push({ key: 'q', label: `"${search.q}"`, clear: { q: undefined } })
+  if (search.q) active.push({ key: 'q', label: m.quoted(search.q), clear: { q: undefined } })
   if (muscleName) active.push({ key: 'muscle', label: muscleName, clear: { muscle: undefined } })
-  if (equip === 'mine') active.push({ key: 'equip', label: 'My equipment', clear: { equip: 'all' } })
-  if (search.pattern) active.push({ key: 'pattern', label: PATTERN_LABEL[search.pattern], clear: { pattern: undefined } })
-  if (search.level) active.push({ key: 'level', label: LEVEL_LABEL[search.level], clear: { level: undefined } })
+  if (equip === 'mine') active.push({ key: 'equip', label: m.myEquipment, clear: { equip: 'all' } })
+  if (search.pattern) active.push({ key: 'pattern', label: patternLabel(search.pattern, locale), clear: { pattern: undefined } })
+  if (search.level) active.push({ key: 'level', label: levelLabel(search.level, locale), clear: { level: undefined } })
 
   return (
     <Page>
-      <PageHeader title="Exercises" subtitle={countLabel(list.length, 'exercise')}>
+      <PageHeader title={m.exercises} subtitle={common[locale].exercises(list.length)} language>
         <div className="space-y-3">
           <label className="flex h-11 items-center gap-2 rounded-md bg-surface-2 px-3 text-ink-2 focus-within:outline-2 focus-within:outline-accent">
             <Search size={18} strokeWidth={1.75} aria-hidden />
-            <span className="sr-only">Search exercises</span>
+            <span className="sr-only">{m.searchExercises}</span>
             <input
               type="search"
               value={text}
@@ -104,7 +110,7 @@ export function CatalogPage() {
                 setSyncedQ(q)
                 set({ q })
               }}
-              placeholder="Search, e.g. RDL or OHP"
+              placeholder={m.searchPlaceholder}
               className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-ink-3 [&::-webkit-search-cancel-button]:hidden"
               enterKeyHint="search"
               autoComplete="off"
@@ -114,7 +120,7 @@ export function CatalogPage() {
             {text && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={m.clearSearch}
                 className="hit -mr-1 flex size-7 items-center justify-center rounded-full text-ink-3 hover:text-ink"
                 onClick={() => {
                   setText('')
@@ -126,31 +132,33 @@ export function CatalogPage() {
               </button>
             )}
           </label>
-          <div role="group" aria-label="Filters" className="scrollbar-none -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1">
+          <div role="group" aria-label={m.filters} className="scrollbar-none -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1">
             <Chip
               size="sm"
               selected={Boolean(search.muscle)}
               aria-haspopup="dialog"
               onClick={() => muscleSheet.show()}
             >
-              {muscleName ?? 'Muscle'}
+              {muscleName ?? m.muscle}
               <ChevronDown size={14} strokeWidth={2} aria-hidden className={search.muscle ? 'text-on-ink/70' : 'text-ink-3'} />
             </Chip>
             <Chip size="sm" selected={equip === 'mine'} onClick={() => set({ equip: equip === 'mine' ? 'all' : undefined })}>
-              My equipment
+              {m.myEquipment}
             </Chip>
             <FilterSelect
-              label="Movement pattern"
-              placeholder="Pattern"
+              label={m.movementPattern}
+              placeholder={m.patternPlaceholder}
+              anyLabel={m.anyPattern}
               value={search.pattern}
               groups={patternGroups}
               onChange={(v) => set({ pattern: v as Pattern | undefined })}
             />
             <FilterSelect
-              label="Level"
-              placeholder="Level"
+              label={m.levelFilter}
+              placeholder={m.levelFilter}
+              anyLabel={m.anyLevel}
               value={search.level ? String(search.level) : undefined}
-              groups={LEVELS}
+              groups={levels}
               onChange={(v) => set({ level: v ? Number(v) : undefined })}
             />
             {narrowed && (
@@ -163,7 +171,7 @@ export function CatalogPage() {
                   set({ q: undefined, muscle: undefined, pattern: undefined, level: undefined })
                 }}
               >
-                Clear
+                {m.clear}
               </Button>
             )}
           </div>
@@ -174,12 +182,12 @@ export function CatalogPage() {
         {list.length === 0 ? (
           <EmptyState
             icon={SearchX}
-            title="No exercises match"
+            title={m.noMatch}
             actions={
               <>
                 {equip === 'mine' && anyEquipment > 0 && (
                   <Button variant="secondary" onClick={() => set({ equip: 'all' })}>
-                    Show {countLabel(anyEquipment, 'match', 'matches')} for any equipment
+                    {m.showForAny(anyEquipment)}
                   </Button>
                 )}
                 <Button
@@ -189,18 +197,18 @@ export function CatalogPage() {
                     set({ q: undefined, muscle: undefined, pattern: undefined, level: undefined, equip: 'all' })
                   }}
                 >
-                  Clear all filters
+                  {m.clearAll}
                 </Button>
               </>
             }
           >
-            <p>Active filters. Tap one to remove it.</p>
+            <p>{m.activeFilters}</p>
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               {active.map((f) => (
                 <Chip
                   key={f.key}
                   size="sm"
-                  aria-label={`Remove filter ${f.label}`}
+                  aria-label={m.removeFilter(f.label)}
                   onRemove={() => {
                     if (f.key === 'q') setText('')
                     set(f.clear)
@@ -213,16 +221,15 @@ export function CatalogPage() {
           </EmptyState>
         ) : (
           <>
-            <ExerciseGrid exercises={list} label="Exercises" />
+            <ExerciseGrid exercises={list} label={m.exercises} />
             {(search.muscle || (equip === 'mine' && anyEquipment > list.length)) && (
               <div className="mt-2 space-y-1 px-1 text-sm text-ink-2">
-                {muscleName && <p>Exercises where {muscleName.toLowerCase()} is a primary muscle.</p>}
+                {muscleName && <p>{m.primaryNote(muscleName)}</p>}
                 {equip === 'mine' && anyEquipment > list.length && (
                   <p>
-                    {countLabel(anyEquipment - list.length, 'more exercise')} {anyEquipment - list.length === 1 ? 'needs' : 'need'} other
-                    equipment.{' '}
+                    {m.moreNeedOther(anyEquipment - list.length)}{' '}
                     <Button variant="link" size="sm" onClick={() => set({ equip: 'all' })}>
-                      Show all
+                      {m.showAll}
                     </Button>
                   </p>
                 )}

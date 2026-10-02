@@ -203,7 +203,7 @@ describe('applyTemplate', () => {
       [0, 'lats', 'vertical_pull'],
       [3, 'hamstrings', 'knee_flexion'],
     ])
-    expect(notes[0].message).toBe('Mon: no option for your equipment, so the upper back slot was left out.')
+    expect(notes[0]).toEqual({ kind: 'dropped_slot', day: 0, session: 'Upper', slot: 1, pattern: 'horizontal_pull', group: 'upper_back' })
   })
 
   it('reaches the bodyweight option', () => {
@@ -216,7 +216,7 @@ describe('applyTemplate', () => {
     const { program, notes } = ops.applyTemplate(TEMPLATE, [1, 3, 5], ['*'], CATALOG, opts())
     expect(program.days.map((d) => d.label ?? null)).toEqual([null, 'Upper', null, 'Lower', null, 'Upper', null])
     expect(notes).toEqual([
-      { kind: 'day_count', expected: 2, got: 3, message: 'This template is built for 2 days a week; it was placed on 3.' },
+      { kind: 'day_count', expected: 2, got: 3 },
     ])
   })
 

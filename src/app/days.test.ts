@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dayFromSlug, daySlug, displayPosition, formatDayList, isDaySlug, sortDays, todayIndex, weekOrder } from './days'
+import { dayFromSlug, dayName, daySlug, displayPosition, formatDayList, isDaySlug, sortDays, todayIndex, weekOrder } from './days'
 
 describe('days', () => {
   it('maps slugs', () => {
@@ -21,5 +21,14 @@ describe('days', () => {
   it('uses Monday = 0 for today', () => {
     expect(todayIndex(new Date(2026, 8, 28))).toBe(0)
     expect(todayIndex(new Date(2026, 8, 27))).toBe(6)
+  })
+})
+
+describe('localized day names', () => {
+  it('names days in Ukrainian with sentence forms', () => {
+    expect(dayName(4, 'long', 'uk')).toBe('Пʼятниця')
+    expect(dayName(2, 'on', 'uk')).toBe('у середу')
+    expect(dayName(0, 'from', 'uk')).toBe('з понеділка')
+    expect(formatDayList([3, 0], 0, 'short', 'uk')).toBe('Пн, Чт')
   })
 })

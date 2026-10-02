@@ -2,23 +2,28 @@ import { Link } from '@tanstack/react-router'
 import { Check, Plus, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { bandLabelFor } from '../../app/bands'
-import { dayName, type DayIndex } from '../../app/days'
-import { formatDelta, formatSets, joinMeta, plural } from '../../app/format'
+import type { DayIndex } from '../../app/days'
+import { formatDelta, joinMeta } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
+import { equipmentName } from '../../data/localize'
 import { suggestions } from '../../domain/coverage'
 import { availableSet, equipment as equipmentItems, hasEquipment } from '../../domain/equipment'
 import { resolveExercise } from '../../domain/resolve'
 import type { Pattern } from '../../domain/schema'
 import { bandedGroupIds, groupIds, isOptional } from '../../domain/taxonomy'
 import { bandFor, type WeekResult } from '../../domain/volume'
+import { common } from '../../i18n/common'
+import { compareText } from '../../i18n/format'
+import type { Locale } from '../../i18n/locale'
+import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { BodyMini } from '../bodymap'
 import { Button, ChipGroup, IconButton, SegmentedControl, Sheet, cx } from '../../ui'
 import { ChangeBar } from './ChangeBar'
 import { addPreview } from './delta'
-import { PATTERN_GROUPS, PATTERN_LABEL, buildIndex, filterExercises } from '../catalog'
+import { PATTERN_GROUPS, buildIndex, filterExercises, patternLabel } from '../catalog'
 import {
   defaultReps,
   defaultSets,
@@ -29,6 +34,7 @@ import {
   unitOf,
   type AnyExercise,
 } from './labels'
+import { builderMessages } from './messages'
 import { PickRow } from './PickRow'
 import { undoLastChange, useChange } from './useChange'
 
@@ -48,14 +54,9 @@ export type AddSheetProps = {
 
 type Section = { key: string; title: string; note?: string; items: AnyExercise[] }
 
-const TABS: { value: AddTab; label: string }[] = [
-  { value: 'suggested', label: 'Suggested' },
-  { value: 'muscle', label: 'Muscle' },
-  { value: 'equipment', label: 'Equipment' },
-  { value: 'pattern', label: 'Pattern' },
-]
+const TABS: readonly AddTab[] = ['suggested', 'muscle', 'equipment', 'pattern']
 
-const byName = (a: AnyExercise, b: AnyExercise) => a.name.localeCompare(b.name)
+const byNameIn = (locale: Locale) => (a: AnyExercise, b: AnyExercise) => compareText(locale, a.name, b.name)
 const PATTERN_ORDER: readonly Pattern[] = PATTERN_GROUPS.flatMap((g) => g.patterns)
 const keyOf = (e: AnyExercise) => String(e.id)
 
@@ -65,6 +66,9 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
   const prefs = usePrefsStore((s) => s)
   const addEntries = useProgramStore((s) => s.addEntries)
   const change = useChange()
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  const byName = byNameIn(locale)
 
   const [query, setQuery] = useState('')
   const [equipMode, setEquipMode] = useState<'mine' | 'all'>('mine')
@@ -112,21 +116,21 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
         .filter((e) => !shown.has(e.id) && !openDay.has(e.id))
         .slice(0, limit)
       items.forEach((e) => shown.add(e.id))
-      if (items.length) out.push({ key: g, title: groupName(g), note, items })
+      if (items.length) out.push({ key: g, title: groupName(g, locale), note, items })
     }
     const untrained = bandedGroupIds.filter((g) => (week.weekly[g] ?? 0) <= 0)
-    for (const g of untrained.filter((x) => !isOptional(x))) push(g, 'not trained', 3)
+    for (const g of untrained.filter((x) => !isOptional(x))) push(g, m.notTrained, 3)
     const below = bandedGroupIds
       .filter((g) => !isOptional(g) && (week.weekly[g] ?? 0) > 0)
       .filter((g) => ['light', 'moderate'].includes(week.bands[g]?.band ?? ''))
       .sort((a, b) => week.weekly[a] - week.weekly[b])
     for (const g of below) {
       const band = week.bands[g]
-      push(g, joinMeta([`${formatSets(week.weekly[g])} sets`, band && bandLabelFor(band, prefs.goal)]), 2)
+      push(g, joinMeta([m.weeklySets(week.weekly[g]), band && bandLabelFor(band, prefs.goal, locale)]), 2)
     }
-    for (const g of untrained.filter((x) => isOptional(x))) push(g, 'not trained, optional', 2)
+    for (const g of untrained.filter((x) => isOptional(x))) push(g, m.notTrainedOptional, 2)
     return out
-  }, [openWeek, openDay, view?.week, program, catalog, equipMode, prefs.equipment, prefs.overrides, prefs.goal])
+  }, [openWeek, openDay, view?.week, program, catalog, equipMode, prefs.equipment, prefs.overrides, prefs.goal, m, locale])
 
   const muscleGroup = group ?? suggested[0]?.key ?? 'chest'
   const muscleChips = useRef<HTMLDivElement>(null)
@@ -135,7 +139,8 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
     muscleChips.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' })
   }, [open, tab, muscleGroup])
   const q = query.trim()
-  const index = useMemo(() => buildIndex(activeExercises), [activeExercises])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- pattern labels in the index follow the locale
+  const index = useMemo(() => buildIndex(activeExercises), [activeExercises, locale])
 
   const build = (): { sections: Section[]; hidden: number } => {
     let sections: Section[] = []
@@ -148,22 +153,22 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
     if (q) {
       const custom = (program?.custom ?? []).filter((e) => matchesQuery(e, q))
       const items = collect([...custom, ...filterExercises(activeExercises, index, { q }, prefs.overrides)])
-      sections = [{ key: 'search', title: `${items.length} ${plural(items.length, 'result')}`, items }]
+      sections = [{ key: 'search', title: m.results(items.length), items }]
     } else if (tab === 'suggested') {
       const custom = program?.custom ?? []
-      sections = [...(custom.length ? [{ key: 'custom', title: 'Your exercises', items: [...custom].sort(byName) }] : []), ...suggested]
+      sections = [...(custom.length ? [{ key: 'custom', title: m.yourExercises, items: [...custom].sort(byName) }] : []), ...suggested]
     } else if (tab === 'muscle') {
       const primary = collect(pool.filter((e) => rolesOf(e)[muscleGroup]?.role === 'primary')).sort(byName)
       const secondary = collect(pool.filter((e) => rolesOf(e)[muscleGroup]?.role === 'secondary')).sort(byName)
       sections = [
-        { key: 'primary', title: `Works ${groupName(muscleGroup).toLowerCase()} directly`, items: primary },
-        { key: 'secondary', title: 'Also works it', items: secondary },
+        { key: 'primary', title: m.worksDirectly(groupName(muscleGroup, locale)), items: primary },
+        { key: 'secondary', title: m.alsoWorks, items: secondary },
       ].filter((s) => s.items.length)
     } else if (tab === 'equipment') {
       const matches = (e: AnyExercise) =>
         !equipItem || (equipItem === 'bodyweight' ? e.equipment.length === 0 : e.equipment.includes(equipItem))
       const items = collect(pool.filter(matches)).sort(byName)
-      sections = [{ key: 'equipment', title: `${items.length} ${plural(items.length, 'exercise')}`, items }]
+      sections = [{ key: 'equipment', title: common[locale].exercises(items.length), items }]
     } else {
       const list = collect(pool.filter((e) => !isCustom(e) && (!pattern || e.pattern === pattern)))
       const byPattern = new Map<Pattern, AnyExercise[]>()
@@ -172,23 +177,23 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
         byPattern.set(e.pattern, [...(byPattern.get(e.pattern) ?? []), e])
       }
       sections = PATTERN_ORDER.filter((p) => byPattern.has(p))
-        .map((p) => ({ key: p, title: PATTERN_LABEL[p], items: (byPattern.get(p) ?? []).sort(byName) }))
+        .map((p) => ({ key: p, title: patternLabel(p, locale), items: (byPattern.get(p) ?? []).sort(byName) }))
     }
     return { sections, hidden }
   }
   const { sections, hidden } = build()
 
   const equipOptions = [
-    { value: 'bodyweight', label: 'Bodyweight' },
+    { value: 'bodyweight', label: common[locale].bodyweight },
     ...equipmentItems
       .filter((e) => equipMode === 'all' || avail.has(e.id))
-      .map((e) => ({ value: e.id, label: e.name })),
+      .map((e) => ({ value: e.id, label: equipmentName(e.id, locale) })),
   ]
   const patternsInPool = PATTERN_ORDER.filter((p) => activeExercises.some((e) => e.pattern === p))
 
   const add = (e: AnyExercise) => {
     const res = change(
-      `Added ${e.name}`,
+      m.added(e.name),
       () => addEntries(day, [e.id], defaultSets(e), defaultReps(e, prefs.goal)),
       { toast: false },
     )
@@ -200,11 +205,11 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
   const undo = () => {
     if (!undoLastChange()) return
     setAdded((a) => a.slice(0, -1))
-    setStatus('Undone')
+    setStatus(common[locale].undone)
   }
 
   const week = view?.week
-  const title = `Add to ${dayName(day, 'long')}`
+  const title = m.addTo(day)
 
   return (
     <Sheet
@@ -214,26 +219,26 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
       headerEnd={
         added.length > 0 ? (
           <Button variant="primary" size="sm" onClick={onClose} className="mt-1.5">
-            Done ({added.length})
+            {m.doneCount(added.length)}
           </Button>
         ) : undefined
       }
       footer={
         <ChangeBar
-          message={status ?? 'Tap a row to see how it changes your week.'}
-          onUndo={status && status !== 'Undone' && added.length ? undo : undefined}
+          message={status ?? m.addHint}
+          onUndo={status && status !== common[locale].undone && added.length ? undo : undefined}
         />
       }
     >
       <div className="sticky top-0 z-10 -mx-5 bg-raised px-5 pb-2 pt-1">
         <label className="relative block">
-          <span className="sr-only">Search exercises</span>
+          <span className="sr-only">{m.searchExercises}</span>
           <Search size={18} strokeWidth={1.75} aria-hidden className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search, e.g. RDL or bench"
+            placeholder={m.searchPlaceholder}
             enterKeyHint="search"
             autoComplete="off"
             className="h-11 w-full rounded-md bg-surface-2 pl-10 pr-10 text-base text-ink placeholder:text-ink-3 focus-visible:outline-2 [&::-webkit-search-cancel-button]:hidden"
@@ -242,7 +247,7 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
             <button
               type="button"
               onClick={() => setQuery('')}
-              aria-label="Clear search"
+              aria-label={m.clearSearch}
               className="hit absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-ink-2 hover:bg-line"
             >
               <X size={16} strokeWidth={2} aria-hidden />
@@ -252,19 +257,19 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
         {!q && (
           <div className="mt-3 space-y-2.5">
             <ChipGroup
-              label="Browse by"
+              label={m.browseBy}
               scroll
-              options={TABS}
+              options={TABS.map((t) => ({ value: t, label: m.tabs[t] }))}
               value={tab}
               onChange={(v) => v && onParams({ tab: v === 'suggested' ? undefined : v, group })}
             />
             {tab === 'muscle' && (
               <div ref={muscleChips}>
                 <ChipGroup
-                  label="Muscle"
+                  label={m.muscle}
                   scroll
                   size="sm"
-                  options={groupIds.map((g) => ({ value: g, label: groupName(g) }))}
+                  options={groupIds.map((g) => ({ value: g, label: groupName(g, locale) }))}
                   value={muscleGroup}
                   onChange={(v) => v && onParams({ tab, group: v })}
                 />
@@ -273,12 +278,12 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
             {tab === 'equipment' && (
               <>
                 <SegmentedControl
-                  label="Equipment"
+                  label={m.equipment}
                   size="sm"
                   block
                   options={[
-                    { value: 'mine', label: 'Mine' },
-                    { value: 'all', label: 'All equipment' },
+                    { value: 'mine', label: m.mine },
+                    { value: 'all', label: m.allEquipment },
                   ]}
                   value={equipMode}
                   onChange={(v) => {
@@ -286,16 +291,16 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
                     setEquipItem(null)
                   }}
                 />
-                <ChipGroup label="Equipment item" scroll size="sm" allowEmpty options={equipOptions} value={equipItem} onChange={setEquipItem} />
+                <ChipGroup label={m.equipmentItem} scroll size="sm" allowEmpty options={equipOptions} value={equipItem} onChange={setEquipItem} />
               </>
             )}
             {tab === 'pattern' && (
               <ChipGroup
-                label="Pattern"
+                label={m.pattern}
                 scroll
                 size="sm"
                 allowEmpty
-                options={patternsInPool.map((p) => ({ value: p, label: PATTERN_LABEL[p] }))}
+                options={patternsInPool.map((p) => ({ value: p, label: patternLabel(p, locale) }))}
                 value={pattern}
                 onChange={setPattern}
               />
@@ -306,7 +311,7 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
 
       {sections.length === 0 && (
         <p className="py-8 text-center text-base text-ink-2">
-          {q ? `No exercise matches "${q}".` : tab === 'suggested' ? 'Every group already has sets this week.' : 'Nothing here yet.'}
+          {q ? m.noMatch(q) : tab === 'suggested' ? m.allHaveSets : m.nothingHere}
         </p>
       )}
 
@@ -332,12 +337,12 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
                     trailing={
                       <>
                         {count > 0 && (
-                          <span className="num flex items-center gap-0.5 text-sm text-ink-2" aria-label={`Added ${count} ${plural(count, 'time')}`}>
+                          <span className="num flex items-center gap-0.5 text-sm text-ink-2" aria-label={m.addedTimes(count)}>
                             <Check size={14} strokeWidth={2.25} aria-hidden />
                             {count > 1 ? count : null}
                           </span>
                         )}
-                        <IconButton icon={Plus} variant="tonal" label={`Add ${e.name}`} onClick={() => add(e)} />
+                        <IconButton icon={Plus} variant="tonal" label={m.addNamed(e.name)} onClick={() => add(e)} />
                       </>
                     }
                   >
@@ -362,9 +367,9 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
 
       {q && onCreateCustom && (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-surface-2 px-4 py-3">
-          <p className="text-sm text-ink-2">{sections[0]?.items.length ? 'Not listed?' : 'Not in the catalog yet?'}</p>
+          <p className="text-sm text-ink-2">{sections[0]?.items.length ? m.notListed : m.notInCatalog}</p>
           <Button variant="link" size="sm" onClick={() => onCreateCustom(q)}>
-            Create a custom exercise
+            {m.createCustom}
           </Button>
         </div>
       )}
@@ -372,17 +377,17 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
       {hidden > 0 && equipMode === 'mine' && (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-surface-2 px-4 py-3">
           <p className="text-sm text-ink-2">
-            {hidden} more {plural(hidden, 'needs', 'need')} equipment you have not selected.
+            {m.hiddenNotSelected(hidden)}
           </p>
           <Button variant="link" size="sm" onClick={() => setEquipMode('all')}>
-            Show all
+            {m.showAll}
           </Button>
         </div>
       )}
       {equipMode === 'all' && (
         <div className="mt-4 flex justify-center">
           <Button variant="link" size="sm" onClick={() => setEquipMode('mine')}>
-            Only my equipment
+            {m.onlyMine}
           </Button>
         </div>
       )}
@@ -407,26 +412,27 @@ function AddPreview({
   deltas: ReturnType<typeof addPreview>
   goal: 'hypertrophy' | 'strength' | 'general'
 }) {
+  const locale = useLocale()
+  const m = builderMessages[locale]
   return (
     <div className="mb-3 flex gap-4 rounded-lg bg-surface-2/60 p-3">
       <BodyMini view="both" roles={roles} height={88} />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-ink-2">
-          {sets} {plural(sets, 'set')}
-          {reps ? ` of ${repsText(reps, unitOf(exercise))}` : ''} on {dayName(day, 'long')}
+          {m.previewLine(sets, reps ? repsText(reps, unitOf(exercise), locale) : undefined, day)}
         </p>
         <ul className="mt-2 space-y-1">
           {deltas.map((d) => {
             const band = bandFor(d.group, d.to)
             return (
               <li key={d.group} className="num text-sm">
-                <span className="font-medium text-ink">{groupName(d.group)}</span>{' '}
-                <span className="text-ink">{formatDelta(d.from, d.to)}</span>
-                {band && <span className="text-ink-2">, {bandLabelFor(band, goal)}</span>}
+                <span className="font-medium text-ink">{groupName(d.group, locale)}</span>{' '}
+                <span className="text-ink">{formatDelta(d.from, d.to, locale)}</span>
+                {band && <span className="text-ink-2">, {bandLabelFor(band, goal, locale)}</span>}
               </li>
             )
           })}
-          {deltas.length === 0 && <li className="text-sm text-ink-2">No counted muscles.</li>}
+          {deltas.length === 0 && <li className="text-sm text-ink-2">{m.noCounted}</li>}
         </ul>
         {!isCustom(exercise) && (
           <Link
@@ -434,7 +440,7 @@ function AddPreview({
             params={{ slug: exercise.slug }}
             className={cx('mt-2 inline-block text-sm font-medium text-accent underline-offset-4 hover:underline')}
           >
-            Details
+            {m.details}
           </Link>
         )}
       </div>

@@ -6,7 +6,29 @@ import { memoryStorage } from './storage.ts'
 describe('prefs store', () => {
   it('has the planned defaults', () => {
     const p = defaultPrefs('pl-PL')
-    expect(p).toEqual({ goal: 'hypertrophy', equipment: [...equipmentIds], countingMode: 'fractional', weekStart: 0, overrides: {} })
+    expect(p).toEqual({ locale: 'en', goal: 'hypertrophy', equipment: [...equipmentIds], countingMode: 'fractional', weekStart: 0, overrides: {} })
+  })
+
+  it('picks the language from the browser and keeps the choice', () => {
+    expect(defaultPrefs('uk-UA').locale).toBe('uk')
+    expect(defaultPrefs('ru-UA').locale).toBe('en')
+    const storage = memoryStorage()
+    const store = createPrefsStore({ storage, locale: 'en-GB' })
+    store.getState().setLocale('uk')
+    store.getState().reset()
+    expect(store.getState().locale).toBe('uk')
+    expect(createPrefsStore({ storage, locale: 'en-GB' }).getState().locale).toBe('uk')
+  })
+
+  it('fills the language for prefs saved before it existed', () => {
+    const storage = memoryStorage()
+    storage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ state: { goal: 'strength', equipment: [], countingMode: 'primary', weekStart: 0, overrides: {} }, version: 1 }),
+    )
+    const s = createPrefsStore({ storage, locale: 'uk-UA' }).getState()
+    expect(s.goal).toBe('strength')
+    expect(s.locale).toBe('uk')
   })
 
   it('reads week start from the locale', () => {
@@ -51,7 +73,7 @@ describe('prefs store', () => {
     const raw = JSON.parse(storage.getItem(PREFS_KEY)!)
     expect(raw.version).toBe(1)
     expect(raw.state.goal).toBe('strength')
-    expect(Object.keys(raw.state).sort()).toEqual(['countingMode', 'equipment', 'goal', 'overrides', 'weekStart'])
+    expect(Object.keys(raw.state).sort()).toEqual(['countingMode', 'equipment', 'goal', 'locale', 'overrides', 'weekStart'])
   })
 
   it('rehydrates valid prefs and rejects corrupt ones', () => {

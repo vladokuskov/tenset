@@ -1,7 +1,11 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Fragment, type ReactNode } from 'react'
 import attribution from '../../ATTRIBUTION.md?raw'
+import type { Locale } from '../i18n/locale'
+import { useLocale, useMessages } from '../i18n/messages'
 import { Page, PageBody, PageHeader } from '../ui'
+import attributionUk from './-credits.uk.md?raw'
+import { creditsMessages, rootMessages } from './-messages'
 
 export const Route = createFileRoute('/credits')({
   component: CreditsPage,
@@ -63,12 +67,15 @@ function parse(md: string): Block[] {
   return blocks
 }
 
-const blocks = parse(attribution)
+const BLOCKS: Record<Locale, Block[]> = { en: parse(attribution), uk: parse(attributionUk) }
 
 function CreditsPage() {
+  const blocks = BLOCKS[useLocale()]
+  const m = useMessages(creditsMessages)
+  const plan = useMessages(rootMessages).plan
   return (
     <Page>
-      <PageHeader title="Credits" back={{ to: '/', label: 'Plan' }} />
+      <PageHeader title={m.title} back={{ to: '/', label: plan }} />
       <PageBody className="text-base leading-relaxed">
         {blocks.map((b, i) =>
           b.kind === 'h2' ? (
@@ -88,19 +95,17 @@ function CreditsPage() {
           ),
         )}
         <p className="mt-8 border-t border-line pt-4 text-sm text-ink-2">
-          Full license texts of bundled libraries:{' '}
-          <a href={`${import.meta.env.BASE_URL}${NOTICES}`} className={linkClass}>
-            {NOTICES}
-          </a>
-          . See also{' '}
-          <Link to="/privacy" className={linkClass}>
-            privacy
-          </Link>{' '}
-          and{' '}
-          <Link to="/about" className={linkClass}>
-            about
-          </Link>
-          .
+          {m.footer(
+            <a key="notices" href={`${import.meta.env.BASE_URL}${NOTICES}`} className={linkClass}>
+              {NOTICES}
+            </a>,
+            <Link key="privacy" to="/privacy" className={linkClass}>
+              {m.privacy}
+            </Link>,
+            <Link key="about" to="/about" className={linkClass}>
+              {m.about}
+            </Link>,
+          )}
         </p>
       </PageBody>
     </Page>

@@ -2,11 +2,12 @@ import { PointerSensor, useDraggable } from '@dnd-kit/react'
 import { ChevronDown, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from 'lucide-react'
 import { useId, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { dayName, type DayIndex } from '../../../app/days'
-import { countLabel, plural } from '../../../app/format'
 import { useCatalog } from '../../../app/useCatalog'
 import { availableSet, hasEquipment } from '../../../domain/equipment'
 import type { CustomExercise, Role } from '../../../domain/schema'
 import { groupIds } from '../../../domain/taxonomy'
+import { common } from '../../../i18n/common'
+import { useLocale } from '../../../i18n/messages'
 import { usePrefsStore } from '../../../store/prefs.store'
 import { Button, IconButton, cx } from '../../../ui'
 import { ExerciseCardMedia, buildIndex, filterExercises, primaryGroupNames, useRoles } from '../../catalog'
@@ -14,6 +15,7 @@ import { FilterSelect } from '../../catalog/FilterSelect'
 import { groupName, matchesQuery, rowMeta, type AnyExercise } from '../labels'
 import { SORT_LABEL } from '../dnd'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './board'
+import { desktopMessages } from './messages'
 
 const STRIP = 'sticky top-[calc(var(--safe-top)+4rem)] h-[calc(100dvh-var(--safe-top)-5rem)] rounded-xl bg-surface'
 
@@ -29,13 +31,15 @@ const primariesOf = (roles: Record<string, Role>) =>
 
 function DaySelect({ value, order, onChange }: { value: DayIndex; order: readonly DayIndex[]; onChange: (d: DayIndex) => void }) {
   const id = useId()
+  const locale = useLocale()
+  const m = desktopMessages[locale]
   return (
     <span className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-line-strong px-3 text-sm font-medium text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
       <label htmlFor={id} className="sr-only">
-        Add to day
+        {m.addToDay}
       </label>
       <span aria-hidden>
-        <span className="text-ink-2">Add to</span> {dayName(value)}
+        <span className="text-ink-2">{m.addToPrefix}</span> {dayName(value, 'short', locale)}
       </span>
       <ChevronDown size={14} strokeWidth={2} aria-hidden className="text-ink-3" />
       <select
@@ -46,7 +50,7 @@ function DaySelect({ value, order, onChange }: { value: DayIndex; order: readonl
       >
         {order.map((d) => (
           <option key={d} value={d}>
-            {dayName(d, 'long')}
+            {dayName(d, 'long', locale)}
           </option>
         ))}
       </select>
@@ -71,6 +75,8 @@ function DrawerRow({
   onFocusAdd: () => void
 }) {
   const roles = useRoles(exercise)
+  const locale = useLocale()
+  const m = desktopMessages[locale]
   const primaries = primariesOf(roles)
   const data: DrawerDragData = { exercise }
   const { ref, handleRef, isDragSource } = useDraggable({ id: `drawer:${exercise.id}`, type: DRAWER_ITEM, data, sensors })
@@ -91,13 +97,13 @@ function DrawerRow({
       <ExerciseCardMedia exercise={exercise} size="sm" />
       <span className="min-w-0 flex-1">
         <span className="line-clamp-2 text-sm font-medium leading-snug text-ink">{exercise.name}</span>
-        <span className="mt-0.5 block truncate text-xs text-ink-2">{rowMeta(exercise, primaryGroupNames(roles))}</span>
+        <span className="mt-0.5 block truncate text-xs text-ink-2">{rowMeta(exercise, primaryGroupNames(roles), locale)}</span>
       </span>
       <IconButton
         icon={Plus}
         size={36}
         variant="tonal"
-        label={`Add ${exercise.name} to ${dayName(day, 'long')}`}
+        label={m.addTo(exercise.name, day)}
         tabIndex={tabbable ? 0 : -1}
         {...{ [ADD_ATTR]: '' }}
         onClick={() => onAdd(exercise, day)}
@@ -150,7 +156,10 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
   const [muscle, setMuscle] = useState<string | undefined>()
   const [all, setAll] = useState(false)
   const [focused, setFocused] = useState<string | null>(null)
-  const index = useMemo(() => buildIndex(activeExercises), [activeExercises])
+  const locale = useLocale()
+  const m = desktopMessages[locale]
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- pattern labels in the index follow the locale
+  const index = useMemo(() => buildIndex(activeExercises), [activeExercises, locale])
   const avail = useMemo(() => availableSet(equipment), [equipment])
 
   const q = query.trim()
@@ -161,24 +170,24 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
   const rover = shown.some((e) => String(e.id) === focused) ? focused : shown[0] ? String(shown[0].id) : null
 
   return (
-    <aside aria-label="Exercises" className={cx(STRIP, 'flex w-60 flex-col')}>
+    <aside aria-label={m.exercises} className={cx(STRIP, 'flex w-60 flex-col')}>
       <div className="shrink-0 px-3 pt-2.5">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-md font-semibold">Exercises</h2>
-          <IconButton icon={PanelLeftClose} size={36} label="Hide exercises" onClick={onCollapse} className="-mr-1" />
+          <h2 className="text-md font-semibold">{m.exercises}</h2>
+          <IconButton icon={PanelLeftClose} size={36} label={m.hideExercises} onClick={onCollapse} className="-mr-1" />
         </div>
         <p className="text-xs text-ink-3">
-          Drag onto a day, or press + to add to the day below.
-          <span className="sr-only"> Arrow keys move between the + buttons.</span>
+          {m.drawerHint}
+          <span className="sr-only">{m.drawerHintSr}</span>
         </p>
         <label className="relative mt-3 block">
-          <span className="sr-only">Search exercises</span>
+          <span className="sr-only">{m.searchExercises}</span>
           <Search size={16} strokeWidth={1.75} aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search"
+            placeholder={m.search}
             autoComplete="off"
             className="h-10 w-full rounded-md bg-surface-2 pl-8 pr-9 text-sm text-ink placeholder:text-ink-3 focus-visible:outline-2 [&::-webkit-search-cancel-button]:hidden"
           />
@@ -186,7 +195,7 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
             <button
               type="button"
               onClick={() => setQuery('')}
-              aria-label="Clear search"
+              aria-label={m.clearSearch}
               className="hit absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-ink-2 hover:bg-line"
             >
               <X size={14} strokeWidth={2} aria-hidden />
@@ -196,15 +205,15 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           <DaySelect value={day} order={order} onChange={onDay} />
           <FilterSelect
-            label="Muscle"
-            placeholder="Muscle"
+            label={m.muscle}
+            placeholder={m.muscle}
             value={muscle}
-            groups={[{ label: '', options: groupIds.map((g) => ({ value: g, label: groupName(g) })) }]}
+            groups={[{ label: '', options: groupIds.map((g) => ({ value: g, label: groupName(g, locale) })) }]}
             onChange={setMuscle}
           />
         </div>
         <p className="num mt-2.5 text-xs text-ink-3" aria-live="polite">
-          {countLabel(shown.length, 'exercise')}
+          {common[locale].exercises(shown.length)}
         </p>
       </div>
       <a
@@ -212,11 +221,11 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
         onClick={skipToBoard}
         className="sr-only focus:not-sr-only focus:mx-3 focus:mt-2 focus:block focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-on-ink"
       >
-        Skip to week board
+        {m.skipToBoard}
       </a>
       <ul
         className="scrollbar-none mt-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-2"
-        aria-label="Exercise list"
+        aria-label={m.exerciseList}
         onKeyDown={roveAdd}
       >
         {shown.map((e) => (
@@ -230,19 +239,19 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
             onFocusAdd={() => setFocused(String(e.id))}
           />
         ))}
-        {shown.length === 0 && <li className="px-2 py-6 text-center text-sm text-ink-2">No exercise matches.</li>}
+        {shown.length === 0 && <li className="px-2 py-6 text-center text-sm text-ink-2">{m.noMatch}</li>}
       </ul>
       {(hidden > 0 || all) && (
         <div className="shrink-0 border-t border-line px-3 py-2 text-xs text-ink-2">
           {all ? (
             <Button variant="link" size="sm" onClick={() => setAll(false)}>
-              Only my equipment
+              {m.onlyMine}
             </Button>
           ) : (
             <>
-              {hidden} more {plural(hidden, 'needs', 'need')} other equipment.{' '}
+              {m.hiddenOther(hidden)}{' '}
               <Button variant="link" size="sm" onClick={() => setAll(true)}>
-                Show all
+                {m.showAll}
               </Button>
             </>
           )}
@@ -254,15 +263,16 @@ export function CatalogDrawer({ custom, order, day, onDay, onAdd, onPreview, onC
 
 /** Collapsed drawer: a slim strip that brings the list back. */
 export function DrawerStrip({ onExpand }: { onExpand: () => void }) {
+  const m = desktopMessages[useLocale()]
   return (
     <button
       type="button"
       onClick={onExpand}
-      aria-label="Show exercises"
+      aria-label={m.showExercises}
       className={cx(STRIP, 'flex w-11 flex-col items-center gap-3 pt-3 text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink')}
     >
       <PanelLeftOpen size={20} strokeWidth={1.75} aria-hidden />
-      <span className="text-sm font-medium [writing-mode:vertical-rl]">Exercises</span>
+      <span className="text-sm font-medium [writing-mode:vertical-rl]">{m.exercises}</span>
     </button>
   )
 }

@@ -148,3 +148,4 @@ DayPicker(props: {
 - Volume is the only data color. Bands are text pills. "High" is described as diminishing returns, never as danger.
 - An empty training day is not a rest day. Destructive actions use an Undo toast, not a confirm dialog.
 - Not-medical-advice line (`NOT_MEDICAL_ADVICE`) on first run, exercise detail footer, coverage footer and print.
+- Every string ships in English and Ukrainian (`docs/I18N.md`). Ukrainian follows the same rules: no «ризик», «зарано», «перетренованість», «відновлення», «оптимальний»; apostrophe `ʼ`; polite plural imperative. The language switch (`LanguageToggle`, bilingual label «Мова / Language») sits in the Plan, Body and Exercises headers, the desktop rail, Settings and the first welcome step.

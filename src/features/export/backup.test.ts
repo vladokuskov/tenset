@@ -16,7 +16,9 @@ describe('backup', () => {
     expect(res.ok).toBe(true)
     if (!res.ok) return
     expect(res.backup.programs).toEqual([a, b])
-    expect(res.backup.prefs).toEqual(prefs)
+    // Language stays with the device, so backups leave it out.
+    const { locale: _locale, ...portable } = prefs
+    expect(res.backup.prefs).toEqual(portable)
     expect(res.backup.skipped).toBe(0)
     expect(res.backup.exportedAt).toBe('2026-09-26T10:00:00.000Z')
   })

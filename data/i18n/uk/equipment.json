@@ -1,0 +1,44 @@
+{
+  "groups": {
+    "free_weights": "Вільні ваги",
+    "benches_racks": "Лавки і стійки",
+    "bars_stations": "Турніки та станції",
+    "upper_machines": "Блоки й тренажери для верху",
+    "leg_machines": "Тренажери для ніг"
+  },
+  "equipment": {
+    "barbell": "Штанга",
+    "dumbbell": "Гантелі",
+    "ez_bar": "EZ-гриф",
+    "plate": "Млинець",
+    "flat_bench": "Горизонтальна лавка",
+    "adjustable_bench": "Регульована лавка",
+    "rack": "Стійки для присідань",
+    "smith": "Тренажер Сміта",
+    "back_extension": "Лавка для гіперекстензії 45°",
+    "step": "Ящик або степ",
+    "pullup_bar": "Турнік",
+    "dip_station": "Бруси",
+    "assisted_pullup": "Тренажер підтягувань з противагою",
+    "cable": "Блоковий тренажер",
+    "lat_pulldown": "Тренажер верхньої тяги",
+    "chest_press_machine": "Тренажер жиму від грудей",
+    "shoulder_press_machine": "Тренажер жиму на плечі",
+    "pec_deck": "Батерфляй / задні дельти",
+    "leg_press": "Тренажер жиму ногами",
+    "leg_extension": "Тренажер розгинання ніг",
+    "leg_curl_seated": "Згинання ніг сидячи",
+    "leg_curl_lying": "Згинання ніг лежачи",
+    "hip_abduction": "Тренажер відведення ніг",
+    "hip_adduction": "Тренажер зведення ніг",
+    "calf_machine": "Тренажер литок стоячи",
+    "seated_calf": "Тренажер литок сидячи"
+  },
+  "presets": {
+    "full_gym": "Повний зал",
+    "basic_gym": "Базовий зал",
+    "home_gym": "Домашній зал",
+    "dumbbells_bench": "Гантелі + лавка",
+    "bodyweight": "Власна вага + турнік"
+  }
+}

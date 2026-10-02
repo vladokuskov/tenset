@@ -1,5 +1,8 @@
 import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit/react'
 import { useRef, useState, type ComponentProps, type ReactNode } from 'react'
+import type { Locale } from '../../i18n/locale'
+import { useLocale } from '../../i18n/messages'
+import { builderMessages } from './messages'
 import { ITEM, LIST_PREFIX } from './useSortable'
 
 // Thin adapter over @dnd-kit/react (pre-1.0, pinned). Screens only see lists of ids and moves.
@@ -34,20 +37,21 @@ const isAccessibilityPlugin = (p: unknown) =>
 /** Sortable elements and list drop zones carry their spoken name in this attribute. */
 export const SORT_LABEL = 'data-sort-label'
 
-function announcementPlugins() {
-  const label = (x: Named) => x?.element?.getAttribute(SORT_LABEL) ?? 'item'
+function announcementPlugins(locale: Locale) {
+  const m = builderMessages[locale].dnd
+  const label = (x: Named) => x?.element?.getAttribute(SORT_LABEL) ?? m.item
   const options = {
     screenReaderInstructions: {
-      draggable: 'To reorder, press Space, move with the arrow keys, then press Space again to drop. Escape cancels.',
+      draggable: m.instructions,
     },
     announcements: {
-      dragstart: ({ operation }: { operation: { source: Named } }) => (operation.source ? `Picked up ${label(operation.source)}.` : undefined),
+      dragstart: ({ operation }: { operation: { source: Named } }) => (operation.source ? m.pickedUp(label(operation.source)) : undefined),
       dragover: ({ operation }: { operation: { source: Named; target: Named } }) =>
         operation.source && operation.target && operation.source.id !== operation.target.id
-          ? `${label(operation.source)} is over ${label(operation.target)}.`
+          ? m.over(label(operation.source), label(operation.target))
           : undefined,
       dragend: ({ operation, canceled }: { operation: { source: Named }; canceled: boolean }) =>
-        operation.source ? (canceled ? `Cancelled. ${label(operation.source)} is back in place.` : `Dropped ${label(operation.source)}.`) : undefined,
+        operation.source ? (canceled ? m.cancelled(label(operation.source)) : m.dropped(label(operation.source))) : undefined,
     },
   }
   return (defaults: PluginList): PluginList =>
@@ -56,7 +60,13 @@ function announcementPlugins() {
     ) as PluginList
 }
 
-const plugins = announcementPlugins()
+const pluginsByLocale = new Map<Locale, ReturnType<typeof announcementPlugins>>()
+
+function pluginsFor(locale: Locale) {
+  let p = pluginsByLocale.get(locale)
+  if (!p) pluginsByLocale.set(locale, (p = announcementPlugins(locale)))
+  return p
+}
 
 type Point = { x: number; y: number }
 type TargetLike = { id: string | number; shape?: { center: Point } } | null | undefined
@@ -115,6 +125,7 @@ const otherDrag = (source: Source): OtherDrag | null =>
 export function SortableLists({ lists, onMove, children, onOtherDragStart, onOtherDragEnd }: SortableListsProps) {
   const [draft, setDraft] = useState<SortLists | null>(null)
   const draftRef = useRef<SortLists | null>(null)
+  const plugins = pluginsFor(useLocale())
   const put = (next: SortLists | null) => {
     draftRef.current = next
     setDraft(next)

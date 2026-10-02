@@ -1,0 +1,103 @@
+import { formatSets } from '../../app/format'
+import type { DecodeError } from '../../domain/codec'
+import { common } from '../../i18n/common'
+import { defineMessages } from '../../i18n/messages'
+import { plural } from '../../i18n/plural'
+
+export const shareMessages = defineMessages({
+  en: {
+    sharedProgram: 'Shared program',
+    customExercise: 'Custom exercise',
+    exerciseNumber: (ref: number) => `Exercise #${ref}`,
+
+    // ShareDialog
+    linkCopied: 'Link copied',
+    copyFailed: 'Could not copy. Select the link and copy it manually.',
+    shareText: (name: string) => `${name}: a weekly gym program`,
+    title: 'Share program',
+    noProgram: 'There is no program to share yet.',
+    qrLabel: 'QR code for the share link',
+    tooLong: 'This program is too long for a QR code. The link below still works.',
+    dense: 'Long program, so the code is dense. Hold the camera close.',
+    shareLink: 'Share link',
+    copied: 'Copied',
+    copyLink: 'Copy link',
+    share: 'Share',
+    noteSettings: 'Numbers follow the recipient\'s settings: their goal, counting mode and any "Edit how this counts" changes.',
+    notePreview: 'Opening the link shows a preview. It never changes the recipient\'s programs.',
+    noteLocal: 'The program lives in the link itself. Nothing is uploaded.',
+
+    // SharedPreview
+    errors: {
+      empty: 'This link has no program in it.',
+      malformed: 'This link is incomplete or was changed. Ask for a new one.',
+      unsupported_version: 'This link was made by a newer version of the app. Reload to update, then try again.',
+      invalid: 'This link holds a program this app cannot read.',
+    } satisfies Record<DecodeError, string>,
+    plan: 'Plan',
+    couldNotOpen: 'Could not open this link',
+    goToPlan: 'Go to Plan',
+    saveFailed: 'This program could not be saved.',
+    savedAs: (name: string) => `Saved "${name}" as a new program`,
+    subtitle: 'Shared with you. Read only until you save it.',
+    mapLabel: 'Week coverage of the shared program, front and back',
+    ofTotal: (total: number) => ` of ${total}`,
+    groupsTrained: 'groups trained',
+    summary: (days: number, sets: number) => `${common.en.trainingDays(days)} · ${formatSets(sets, 'en')} hard sets`,
+    notTrained: (list: string) => `Not trained: ${list}`,
+    differs: 'Numbers use your settings, so they can differ from what the sender sees.',
+    week: 'Week',
+    rest: 'Rest',
+    training: 'Training',
+    unknown: (n: number) => `${common.en.exercises(n)} came from a newer catalog and will not count until the app updates.`,
+    close: common.en.close,
+    save: 'Save to my programs',
+  },
+  uk: {
+    sharedProgram: 'Програма за посиланням',
+    customExercise: 'Власна вправа',
+    exerciseNumber: (ref) => `Вправа №${ref}`,
+
+    linkCopied: 'Посилання скопійовано',
+    copyFailed: 'Не вдалося скопіювати. Виділіть посилання й скопіюйте вручну.',
+    shareText: (name) => `${name}: тижнева програма тренувань`,
+    title: 'Поділитися програмою',
+    noProgram: 'Поки немає програми, якою можна поділитися.',
+    qrLabel: 'QR-код посилання',
+    tooLong: 'Програма задовга для QR-коду. Посилання нижче все одно працює.',
+    dense: 'Програма довга, тому код щільний. Тримайте камеру ближче.',
+    shareLink: 'Посилання',
+    copied: 'Скопійовано',
+    copyLink: 'Копіювати посилання',
+    share: 'Поділитися',
+    noteSettings: 'Числа залежать від налаштувань отримувача: його мети, режиму підрахунку та змін через «Змінити підрахунок».',
+    notePreview: 'Посилання відкриває попередній перегляд. Програми отримувача воно не змінює.',
+    noteLocal: 'Програма зберігається в самому посиланні. Нічого не завантажується.',
+
+    errors: {
+      empty: 'У цьому посиланні немає програми.',
+      malformed: 'Посилання неповне або змінене. Попросіть нове.',
+      unsupported_version: 'Посилання створено новішою версією застосунку. Перезавантажте сторінку, щоб оновити, і спробуйте ще раз.',
+      invalid: 'У посиланні програма, яку цей застосунок не може прочитати.',
+    },
+    plan: 'План',
+    couldNotOpen: 'Не вдалося відкрити посилання',
+    goToPlan: 'Перейти до плану',
+    saveFailed: 'Не вдалося зберегти програму.',
+    savedAs: (name) => `«${name}» збережено як нову програму`,
+    subtitle: 'Надіслано вам. Лише перегляд, доки не збережете.',
+    mapLabel: 'Тижневе охоплення отриманої програми, спереду і ззаду',
+    ofTotal: (total) => ` з ${total}`,
+    groupsTrained: 'груп мʼязів у роботі',
+    summary: (days, sets) => `${common.uk.trainingDays(days)} · ${common.uk.hardSets(sets)}`,
+    notTrained: (list) => `Не тренуються: ${list}`,
+    differs: 'Числа розраховано за вашими налаштуваннями, тому вони можуть відрізнятися від того, що бачить відправник.',
+    week: 'Тиждень',
+    rest: 'Відпочинок',
+    training: 'Тренування',
+    unknown: (n) =>
+      `${common.uk.exercises(n)} з новішого каталогу ${plural('uk', n, { one: 'не рахуватиметься', other: 'не рахуватимуться' })}, доки застосунок не оновиться.`,
+    close: common.uk.close,
+    save: 'Зберегти до моїх програм',
+  },
+})

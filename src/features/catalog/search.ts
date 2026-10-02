@@ -1,11 +1,12 @@
 import MiniSearch from 'minisearch'
-import { equipment as equipmentList, hasEquipment } from '../../domain/equipment'
+import { equipmentName, groupName } from '../../data/localize'
+import { hasEquipment } from '../../domain/equipment'
 import type { Exercise, Pattern, Prefs, Role } from '../../domain/schema'
-import { getGroup } from '../../domain/taxonomy'
-import { PATTERN_LABEL } from './patterns'
+import { common } from '../../i18n/common'
+import type { Locale } from '../../i18n/locale'
+import { getLocale } from '../../i18n/messages'
+import { patternLabel } from './patterns'
 import { applyOverride } from './roles'
-
-const equipmentName = new Map(equipmentList.map((e) => [e.id, e.name]))
 
 type Doc = {
   id: number
@@ -17,17 +18,17 @@ type Doc = {
   pattern: string
 }
 
-const groupNames = (groups: Readonly<Record<string, Role>>, role: Role) =>
+const groupNames = (groups: Readonly<Record<string, Role>>, role: Role, locale: Locale) =>
   Object.entries(groups)
     .filter(([, r]) => r === role)
-    .map(([g]) => getGroup(g)?.name ?? g)
+    .map(([g]) => groupName(g, locale))
     .join(' ')
 
-// "Pull-up" also indexes as "pullup", so both spellings match.
+// "Pull-up" also indexes as "pullup", so both spellings match. Apostrophes fold away: мʼяз, м'яз, м’яз.
 export function tokenize(text: string): string[] {
   const out: string[] = []
-  for (const word of text.toLowerCase().split(/[\s,()+]+/)) {
-    const clean = word.replace(/['’.]/g, '')
+  for (const word of text.toLowerCase().split(/[\s,()+«»"]+/)) {
+    const clean = word.replace(/['’ʼ`.]/g, '')
     if (!clean) continue
     const parts = clean.split(/[-/]+/).filter(Boolean)
     out.push(...parts)
@@ -38,7 +39,8 @@ export function tokenize(text: string): string[] {
 
 export type CatalogIndex = MiniSearch<Doc>
 
-export function buildIndex(exercises: readonly Exercise[]): CatalogIndex {
+/** Pass already localized exercises (useCatalog); groups, equipment and patterns index in the same language. */
+export function buildIndex(exercises: readonly Exercise[], locale: Locale = getLocale()): CatalogIndex {
   const index = new MiniSearch<Doc>({
     fields: ['name', 'aliases', 'equipment', 'primary', 'secondary', 'pattern'],
     tokenize,
@@ -54,10 +56,12 @@ export function buildIndex(exercises: readonly Exercise[]): CatalogIndex {
       id: e.id,
       name: e.name,
       aliases: e.aliases.join(' , '),
-      equipment: e.equipment.length ? e.equipment.map((id) => equipmentName.get(id) ?? id).join(' , ') : 'bodyweight',
-      primary: groupNames(e.groups, 'primary'),
-      secondary: groupNames(e.groups, 'secondary'),
-      pattern: PATTERN_LABEL[e.pattern],
+      equipment: e.equipment.length
+        ? e.equipment.map((id) => equipmentName(id, locale)).join(' , ')
+        : common[locale].bodyweight,
+      primary: groupNames(e.groups, 'primary', locale),
+      secondary: groupNames(e.groups, 'secondary', locale),
+      pattern: patternLabel(e.pattern, locale),
     })),
   )
   return index

@@ -4,7 +4,9 @@ import { useCatalog } from '../../app/useCatalog'
 import { dismissToast } from '../../ui/toast'
 import { prefsStore } from '../../store/prefs.store'
 import { programStore, type ProgramState } from '../../store/program.store'
+import { getLocale } from '../../i18n/messages'
 import { dayChanges, deltaText, weekDeltas, weekFor, type GroupDelta } from './delta'
+import { builderMessages } from './messages'
 import { triggerPulse } from './pulse'
 
 export type ChangeResult = { message: string; deltas: GroupDelta[] }
@@ -45,8 +47,9 @@ export function useChange() {
         )
       }
       const base = typeof describe === 'function' ? describe(deltas) : describe
-      const detail = deltaText(deltas)
-      const message = detail ? `${base} · ${detail}` : base
+      const locale = getLocale()
+      const detail = deltaText(deltas, 2, locale)
+      const message = detail ? builderMessages[locale].withDelta(base, detail) : base
       // A visible toast's Undo would now revert this change instead of the one it names.
       if (options.toast !== false) toastWithUndo(message)
       else dismissToast()

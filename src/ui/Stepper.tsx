@@ -1,6 +1,8 @@
 import { Minus, Plus } from 'lucide-react'
 import type { KeyboardEvent } from 'react'
+import { useMessages } from '../i18n/messages'
 import { cx } from './cx'
+import { uiMessages } from './messages'
 
 export type StepperProps = {
   value: number
@@ -29,11 +31,12 @@ export function Stepper({
   step = 1,
   unit,
   valueText,
-  decrementLabel = 'Decrease',
-  incrementLabel = 'Increase',
+  decrementLabel,
+  incrementLabel,
   disabled,
   className,
 }: StepperProps) {
+  const m = useMessages(uiMessages)
   const set = (v: number) => {
     const next = Math.min(max, Math.max(min, v))
     if (next !== value) onChange(next)
@@ -63,7 +66,7 @@ export function Stepper({
       <button
         type="button"
         className={btn}
-        aria-label={decrementLabel}
+        aria-label={decrementLabel ?? m.decrease}
         disabled={disabled || value <= min}
         onClick={() => set(value - step)}
       >
@@ -87,7 +90,7 @@ export function Stepper({
       <button
         type="button"
         className={btn}
-        aria-label={incrementLabel}
+        aria-label={incrementLabel ?? m.increase}
         disabled={disabled || value >= max}
         onClick={() => set(value + step)}
       >

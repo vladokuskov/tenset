@@ -65,7 +65,7 @@ export function MappingCard({ exercise }: { exercise: Exercise }) {
       <dl className="mt-4 space-y-1 border-t border-line pt-3 text-sm">
         <div className="flex gap-2">
           <dt className="shrink-0 text-ink-3">Stabilizers</dt>
-          <dd className="min-w-0 text-ink-2">{exercise.stabilizers.length ? exercise.stabilizers.map(groupName).join(', ') : 'None'}</dd>
+          <dd className="min-w-0 text-ink-2">{exercise.stabilizers.length ? exercise.stabilizers.map((g) => groupName(g)).join(', ') : 'None'}</dd>
         </div>
         <div className="flex gap-2">
           <dt className="shrink-0 text-ink-3">Basis</dt>

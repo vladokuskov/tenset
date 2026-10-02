@@ -1,4 +1,5 @@
 import { dayName, sortDays, weekOrder, type DayIndex } from '../../app/days'
+import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { cx } from '../../ui/cx'
 
@@ -20,6 +21,7 @@ export type DayPickerProps = {
 export function DayPicker({ value, onChange, label, weekStart, hints, disabled, className }: DayPickerProps) {
   const prefStart = usePrefsStore((s) => s.weekStart)
   const start = weekStart ?? prefStart
+  const locale = useLocale()
   const toggle = (d: DayIndex) => {
     const next = value.includes(d) ? value.filter((x) => x !== d) : [...value, d]
     onChange(sortDays(next, 0))
@@ -34,7 +36,7 @@ export function DayPicker({ value, onChange, label, weekStart, hints, disabled, 
             key={d}
             type="button"
             aria-pressed={selected}
-            aria-label={hint ? `${dayName(d, 'long')}, ${hint}` : dayName(d, 'long')}
+            aria-label={hint ? `${dayName(d, 'long', locale)}, ${hint}` : dayName(d, 'long', locale)}
             disabled={disabled?.includes(d)}
             onClick={() => toggle(d)}
             className={cx(
@@ -42,7 +44,7 @@ export function DayPicker({ value, onChange, label, weekStart, hints, disabled, 
               selected ? 'border-ink bg-ink text-on-ink' : 'border-line-strong text-ink hover:bg-surface-2',
             )}
           >
-            <span>{dayName(d)}</span>
+            <span>{dayName(d, 'short', locale)}</span>
             {hint && (
               <span
                 className={cx('mt-0.5 max-w-full truncate px-0.5 text-[0.6875rem] font-normal', selected ? 'text-on-ink/70' : 'text-ink-3')}

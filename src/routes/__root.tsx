@@ -4,8 +4,11 @@ import { BrandMark } from '../app/BrandMark'
 import { needsWelcome } from '../app/firstRun'
 import { AppProviders } from '../app/providers'
 import { useUndoShortcut } from '../app/undo'
+import { useDocumentLocale } from '../i18n/document'
+import { useMessages } from '../i18n/messages'
 import { UpdatePrompt } from '../sw'
 import { Button, EmptyState, LinkButton, NavRail, Page, PageHeader, TabBar, ToastHost } from '../ui'
+import { rootMessages } from './-messages'
 
 export const Route = createRootRoute({
   beforeLoad: ({ location }) => {
@@ -22,6 +25,9 @@ function RootLayout() {
   const pathname = useLocation({ select: (l) => l.pathname })
   const bare = BARE.test(pathname)
   useUndoShortcut()
+  // Subscribing here re-renders the whole tree when the language changes.
+  useDocumentLocale()
+  const m = useMessages(rootMessages)
 
   return (
     <AppProviders>
@@ -29,12 +35,12 @@ function RootLayout() {
         href="#content"
         className="sr-only z-50 rounded-md bg-ink px-4 py-3 text-on-ink focus:not-sr-only focus:fixed focus:left-3 focus:top-[calc(var(--safe-top)+0.75rem)]"
       >
-        Skip to content
+        {m.skip}
       </a>
       {!bare && (
         <NavRail
           brand={
-            <Link to="/" aria-label="Plan" className="block rounded-[10px]">
+            <Link to="/" aria-label={m.plan} className="block rounded-[10px]">
               <BrandMark size={40} />
             </Link>
           }
@@ -51,19 +57,20 @@ function RootLayout() {
 }
 
 function NotFound() {
+  const m = useMessages(rootMessages)
   return (
     <Page>
-      <PageHeader title="Not found" back={{ to: '/', label: 'Plan' }} />
+      <PageHeader title={m.notFound.title} back={{ to: '/', label: m.plan }} />
       <EmptyState
         icon={Compass}
-        title="This page does not exist"
+        title={m.notFound.heading}
         actions={
           <LinkButton to="/" variant="primary">
-            Go to Plan
+            {m.notFound.action}
           </LinkButton>
         }
       >
-        The link may be old or mistyped.
+        {m.notFound.body}
       </EmptyState>
     </Page>
   )
@@ -71,19 +78,20 @@ function NotFound() {
 
 function RouteError({ error }: ErrorComponentProps) {
   const router = useRouter()
+  const m = useMessages(rootMessages)
   return (
     <Page>
-      <PageHeader title="Something broke" back={{ to: '/', label: 'Plan' }} />
+      <PageHeader title={m.error.title} back={{ to: '/', label: m.plan }} />
       <EmptyState
         icon={RotateCcw}
-        title="This screen failed to load"
+        title={m.error.heading}
         actions={
           <Button variant="primary" onClick={() => void router.invalidate()}>
-            Try again
+            {m.error.action}
           </Button>
         }
       >
-        Your programs are saved on this device and are not affected.
+        {m.error.body}
         {import.meta.env.DEV && error instanceof Error && (
           <pre className="mt-4 whitespace-pre-wrap text-left text-xs text-ink-3">{error.message}</pre>
         )}

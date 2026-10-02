@@ -28,6 +28,20 @@ export const BOILERPLATE = [
   'after a second pause',
   'slowly begin to',
   'upper arms stationary',
+  // Ukrainian
+  'це ваше вихідне положення',
+  'поверніться у вихідне положення',
+  'поверніться в вихідне положення',
+  'поверніться до вихідного положення',
+  'повернутися у вихідне положення',
+  'рекомендовану кількість повторень',
+  'рекомендовану кількість разів',
+  'видихніть під час',
+  'вдихніть під час',
+  'на видиху виконайте',
+  'на вдиху опустіть',
+  'затримайтеся у верхній точці на секунду',
+  'після короткої паузи',
 ]
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
@@ -45,8 +59,8 @@ export function normalize(text: string): string {
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
-    .replace(/['‘’`]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/['‘’`ʼ]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
 }
 

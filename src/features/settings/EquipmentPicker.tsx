@@ -1,8 +1,8 @@
 import { Check, ChevronDown, Minus } from 'lucide-react'
 import { useState } from 'react'
-import { countLabel, plural } from '../../app/format'
 import { gapNote } from '../../app/knownGaps'
 import { useCatalog } from '../../app/useCatalog'
+import { equipmentGroupName, equipmentName, presetName } from '../../data/localize'
 import {
   equipment,
   equipmentGroups,
@@ -13,9 +13,11 @@ import {
   presets,
   type EquipmentGroup,
 } from '../../domain/equipment'
+import { useLocale, useMessages } from '../../i18n/messages'
 import { useActiveProgram } from '../../store/program.store'
 import { cx } from '../../ui'
 import { equipmentSummary } from './equipmentSummary'
+import { settingsMessages } from './messages'
 
 const box = (on: boolean) =>
   cx(
@@ -34,6 +36,8 @@ export function EquipmentPicker({
   className?: string
 }) {
   const { catalog } = useCatalog()
+  const m = useMessages(settingsMessages)
+  const locale = useLocale()
   const program = useActiveProgram()
   const selected = new Set(value)
   const preset = matchPreset(value)
@@ -68,7 +72,7 @@ export function EquipmentPicker({
 
   return (
     <div className={className}>
-      <ul className="space-y-2" role="radiogroup" aria-label="Equipment preset">
+      <ul className="space-y-2" role="radiogroup" aria-label={m.presetGroup}>
         {presets.map((p) => {
           const on = preset === p.id
           return (
@@ -84,9 +88,9 @@ export function EquipmentPicker({
                 )}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-base font-medium">{p.name}</span>
+                  <span className="block text-base font-medium">{presetName(p.id, locale)}</span>
                   <span className="num block text-sm text-ink-2">
-                    {p.equipment.length === 0 ? 'No equipment' : `${p.equipment.length} of ${equipment.length} items`}
+                    {p.equipment.length === 0 ? m.noEquipment : m.itemsOf(p.equipment.length, equipment.length)}
                   </span>
                 </span>
                 <span
@@ -100,14 +104,14 @@ export function EquipmentPicker({
       </ul>
 
       <div className="mt-6 flex items-baseline justify-between gap-3">
-        <h3 className="text-base font-medium">Adjust items</h3>
+        <h3 className="text-base font-medium">{m.adjustItems}</h3>
         <p className="num text-sm text-ink-2" aria-live="polite">
-          {preset ? `${value.length} of ${equipment.length} items` : equipmentSummary(value)}
+          {preset ? m.itemsOf(value.length, equipment.length) : equipmentSummary(value, locale)}
         </p>
       </div>
 
       <fieldset className="mt-2">
-        <legend className="sr-only">Equipment you can use</legend>
+        <legend className="sr-only">{m.equipmentYouCanUse}</legend>
         <ul className="divide-y divide-line rounded-xl bg-surface">
           {equipmentGroups.map((g) => {
             const state = groupState(g, selected)
@@ -124,7 +128,7 @@ export function EquipmentPicker({
                         if (el) el.indeterminate = state === 'some'
                       }}
                       onChange={() => toggleGroup(g)}
-                      aria-label={`All ${g.name.toLowerCase()}`}
+                      aria-label={m.allOf(equipmentGroupName(g.id, locale))}
                       className="peer sr-only"
                     />
                     <span aria-hidden className={box(state !== 'none')}>
@@ -139,9 +143,9 @@ export function EquipmentPicker({
                     onClick={() => toggleOpen(g.id)}
                     className="flex min-h-14 flex-1 items-center gap-3 py-2 pr-4 pl-1 text-left"
                   >
-                    <span className="min-w-0 flex-1 text-base font-medium">{g.name}</span>
+                    <span className="min-w-0 flex-1 text-base font-medium">{equipmentGroupName(g.id, locale)}</span>
                     <span className="num text-sm text-ink-2">
-                      {count} of {g.items.length}
+                      {m.countOf(count, g.items.length)}
                     </span>
                     <ChevronDown aria-hidden size={18} className={cx('shrink-0 text-ink-3 transition-transform', expanded && 'rotate-180')} />
                   </button>
@@ -157,7 +161,7 @@ export function EquipmentPicker({
                             <span aria-hidden className={box(on)}>
                               {on && <Check size={14} strokeWidth={2.5} />}
                             </span>
-                            <span className="text-base">{e.name}</span>
+                            <span className="text-base">{equipmentName(e.id, locale)}</span>
                           </label>
                         </li>
                       )
@@ -170,11 +174,11 @@ export function EquipmentPicker({
         </ul>
       </fieldset>
 
-      {value.length === 0 && <p className="mt-4 text-sm text-ink-2">Nothing selected. Only bodyweight exercises are suggested.</p>}
+      {value.length === 0 && <p className="mt-4 text-sm text-ink-2">{m.nothingSelected}</p>}
       {gaps && <p className="mt-4 text-sm text-ink-2">{gaps}</p>}
       {needOther > 0 && (
         <p className="mt-4 text-sm text-ink-2">
-          {countLabel(needOther, 'exercise')} in your week {plural(needOther, 'needs', 'need')} items you have not selected.
+          {m.needOther(needOther)}
         </p>
       )}
     </div>

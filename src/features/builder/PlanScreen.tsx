@@ -1,17 +1,19 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { ChevronDown, Ellipsis } from 'lucide-react'
 import { useEffect } from 'react'
-import { NOT_MEDICAL_ADVICE } from '../../app/brand'
+import { NotMedicalAdvice } from '../../app/brand'
 import { dayFromSlug, daySlug, todayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
 import { ExportDialog } from '../export'
 import { ProgramsSheet } from '../programs'
 import { ShareDialog } from '../share'
+import { useMessages } from '../../i18n/messages'
 import { InstallNudge } from '../../sw'
 import { Button, IconButton, Page, PageBody, PageHeader, Section, useSheet } from '../../ui'
 import { AddSheet } from './AddSheet'
 import { CoverageCard } from './CoverageCard'
 import { NoProgram } from './NoProgram'
+import { builderMessages } from './messages'
 import { PlanMenu } from './PlanMenu'
 import { BOARD_QUERY, DesktopPlan } from './desktop/DesktopPlan'
 import { DESKTOP_QUERY, useMediaQuery } from './useMediaQuery'
@@ -21,6 +23,7 @@ const route = getRouteApi('/')
 
 export function PlanScreen() {
   const view = useWeek()
+  const m = useMessages(builderMessages)
   const search = route.useSearch()
   const desktop = useMediaQuery(BOARD_QUERY)
   const wide = useMediaQuery(DESKTOP_QUERY)
@@ -81,11 +84,11 @@ export function PlanScreen() {
     >
       <span className="truncate">{view.program.name}</span>
       <ChevronDown size={22} strokeWidth={2} className="shrink-0 text-ink-3" aria-hidden />
-      <span className="sr-only">, switch program</span>
+      <span className="sr-only">{m.switchProgram}</span>
     </button>
   )
-  const more = <IconButton icon={Ellipsis} label="More" onClick={() => menu.show()} />
-  const header = <PageHeader title={title} actions={more} />
+  const more = <IconButton icon={Ellipsis} label={m.more} onClick={() => menu.show()} />
+  const header = <PageHeader title={title} actions={more} language />
 
   if (desktop) {
     return (
@@ -103,16 +106,16 @@ export function PlanScreen() {
         <InstallNudge className="mt-3" />
         {view.week.entries.length === 0 && (
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3">
-            <p className="text-sm text-ink-2">Start faster from a split template.</p>
+            <p className="text-sm text-ink-2">{m.templateNudge}</p>
             <Button size="sm" variant="primary" onClick={() => programs.show()}>
-              Use a template
+              {m.useTemplate}
             </Button>
           </div>
         )}
-        <Section title="Week" className="mt-6">
+        <Section title={m.week} className="mt-6">
           <WeekList view={view} />
         </Section>
-        <p className="mt-6 px-1 text-xs text-ink-3">{NOT_MEDICAL_ADVICE}</p>
+        <p className="mt-6 px-1 text-xs text-ink-3"><NotMedicalAdvice /></p>
       </PageBody>
       {sheets}
     </Page>

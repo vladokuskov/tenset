@@ -1,7 +1,10 @@
 import { useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useMessages } from '../i18n/messages'
 import { cx } from './cx'
+import { LanguageToggle } from './LanguageToggle'
+import { uiMessages } from './messages'
 
 export type BackTarget = {
   /** Where back goes when there is no in-app history (deep link, Home Screen launch). */
@@ -13,6 +16,7 @@ export type BackTarget = {
 export function BackButton({ to, label, iconOnly, className }: BackTarget & { iconOnly?: boolean; className?: string }) {
   const router = useRouter()
   const navigate = useNavigate()
+  const m = useMessages(uiMessages)
   return (
     <button
       type="button"
@@ -27,7 +31,7 @@ export function BackButton({ to, label, iconOnly, className }: BackTarget & { ic
     >
       <ChevronLeft size={24} strokeWidth={1.75} aria-hidden className="shrink-0" />
       <span className={iconOnly ? 'sr-only' : 'truncate'}>{label}</span>
-      <span className="sr-only">, back</span>
+      <span className="sr-only">{m.back}</span>
     </button>
   )
 }
@@ -41,6 +45,8 @@ export type PageHeaderProps = {
   actions?: ReactNode
   /** Rendered under the title, e.g. day chips or a segmented control. */
   children?: ReactNode
+  /** Top-level screens show the language switch in the toolbar (the desktop rail has its own). */
+  language?: boolean
   className?: string
 }
 
@@ -48,7 +54,7 @@ export type PageHeaderProps = {
  * Sticky translucent toolbar plus a large title that scrolls away; the title moves into the
  * toolbar once it is out of view so context is never lost.
  */
-export function PageHeader({ title, subtitle, back, actions, children, className }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, back, actions, children, language, className }: PageHeaderProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [compact, setCompact] = useState(false)
 
@@ -66,7 +72,13 @@ export function PageHeader({ title, subtitle, back, actions, children, className
     <>
       <div className="glass sticky top-0 z-30 pt-safe" data-compact={compact || undefined}>
         <div className="relative mx-auto flex h-13 w-full max-w-[var(--page-max)] items-center gap-2 px-gutter">
-          <div className="flex min-w-0 flex-1 items-center">{back && <BackButton {...back} iconOnly={compact} />}</div>
+          <div className="flex min-w-0 flex-1 items-center">
+            {back && <BackButton {...back} iconOnly={compact} />}
+            {language && !back && (
+              // Fades out while the compact title takes the middle of the toolbar.
+              <LanguageToggle className={cx('transition-opacity duration-200 desktop:hidden', compact && 'invisible opacity-0')} />
+            )}
+          </div>
           <div className="flex shrink-0 items-center justify-end gap-1">{actions}</div>
           <p
             aria-hidden

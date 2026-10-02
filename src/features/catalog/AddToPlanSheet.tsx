@@ -1,7 +1,8 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { formatDayList, type DayIndex } from '../../app/days'
+import type { DayIndex } from '../../app/days'
 import type { Exercise } from '../../domain/schema'
+import { useMessages } from '../../i18n/messages'
 import { useActiveProgram } from '../../store/program.store'
 import { usePrefsStore } from '../../store/prefs.store'
 import { Button } from '../../ui/Button'
@@ -9,6 +10,7 @@ import { Sheet } from '../../ui/Sheet'
 import { DayPicker } from '../builder'
 import { addToDays } from './addToPlan'
 import { daySets, lightestTrainingDay } from './detail'
+import { catalogMessages } from './messages'
 
 export type AddToPlanSheetProps = {
   exercise: Exercise
@@ -24,12 +26,13 @@ export function AddToPlanSheet({ exercise, open, onClose, initial }: AddToPlanSh
   const weekStart = usePrefsStore((s) => s.weekStart)
   const goal = usePrefsStore((s) => s.goal)
   const navigate = useNavigate()
+  const m = useMessages(catalogMessages)
   const [picked, setPicked] = useState<DayIndex[] | null>(null)
 
   const lightest = program ? lightestTrainingDay(program, weekStart) : null
   const value = picked ?? (initial?.length ? [...initial] : lightest !== null ? [lightest] : [])
   const hints = program
-    ? Object.fromEntries(program.days.map((d, i) => [i, d.kind === 'rest' ? 'Rest' : String(daySets(program, i))]))
+    ? Object.fromEntries(program.days.map((d, i) => [i, d.kind === 'rest' ? m.rest : String(daySets(program, i))]))
     : undefined
 
   const close = () => {
@@ -50,24 +53,24 @@ export function AddToPlanSheet({ exercise, open, onClose, initial }: AddToPlanSh
     <Sheet
       open={open}
       onClose={close}
-      title="Add to plan"
+      title={m.addToPlan}
       description={
         program
-          ? `${exercise.name}, ${exercise.defaults.sets} sets per day. Numbers show sets already planned.`
-          : 'Create a plan first, then add exercises to its days.'
+          ? m.addDescription(exercise.name, exercise.defaults.sets)
+          : m.noPlanDescription
       }
       desktop="center"
       footer={
         <Button variant="primary" size="lg" block disabled={program ? value.length === 0 : false} onClick={confirm}>
-          {!program ? 'Create a plan' : value.length ? `Add to ${formatDayList(value, weekStart, value.length === 1 ? 'long' : 'short')}` : 'Pick one or more days'}
+          {!program ? m.createPlan : value.length ? m.addToDays(value, weekStart) : m.pickDays}
         </Button>
       }
     >
       {program && (
         <>
-          <DayPicker label="Days to add to" value={value} onChange={setPicked} hints={hints} />
+          <DayPicker label={m.daysToAddTo} value={value} onChange={setPicked} hints={hints} />
           {!picked && lightest !== null && !initial?.length && (
-            <p className="mt-3 text-sm text-ink-2">Preselected your lightest training day.</p>
+            <p className="mt-3 text-sm text-ink-2">{m.preselected}</p>
           )}
         </>
       )}

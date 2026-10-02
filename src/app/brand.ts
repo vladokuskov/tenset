@@ -1,5 +1,12 @@
+import { useMessages } from '../i18n/messages'
+import { appMessages } from './messages'
+
 /** Working product name; change here only. */
 export const APP_NAME = 'Gym Builder'
 
-export const NOT_MEDICAL_ADVICE =
-  'General information for planning training. Not medical advice.'
+export { notMedicalAdvice } from './messages'
+
+/** The disclaimer line in the current language, for use inside JSX. */
+export function NotMedicalAdvice() {
+  return useMessages(appMessages).notMedicalAdvice
+}

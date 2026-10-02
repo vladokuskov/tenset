@@ -3,10 +3,12 @@ import { Link } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { dayName, daySlug, todayIndex, type DayIndex } from '../../app/days'
-import { countLabel, formatDaySummary, plural, setsLabel } from '../../app/format'
+import { formatDaySummary, setsLabel } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import type { WeekView } from '../../app/useWeek'
 import type { Entry, Role } from '../../domain/schema'
+import { common } from '../../i18n/common'
+import { useLocale } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
 import { useRoles } from '../catalog'
 import { cx } from '../../ui'
@@ -15,6 +17,7 @@ import { SORT_LABEL, SortableLists, type OtherDrag, type SortMove } from './dnd'
 import { useSortableItem, useSortableList } from './useSortable'
 import { defaultSets, repsText, unitOf, type AnyExercise } from './labels'
 import { exerciseFor } from './lookup'
+import { builderMessages } from './messages'
 import { PulseMini } from './PulseMini'
 import { useChange } from './useChange'
 
@@ -25,7 +28,7 @@ export type BoardHighlight = Readonly<Record<string, Role>>
 
 // Catalog names need up to four lines below 1920px. Columns under 120px (1280-1439 beside the map panel) use a
 // smaller size; the cramped drawer-open columns drop the clamp so no name is ever cut.
-const NAME = 'line-clamp-4 text-sm font-medium leading-snug text-ink break-words @max-[7.5rem]:text-xs @max-[6.5rem]:line-clamp-none'
+const NAME = 'line-clamp-4 text-sm font-medium leading-snug text-ink break-words hyphens-auto @max-[7.5rem]:text-xs @max-[6.5rem]:line-clamp-none'
 
 function BoardCard({
   entry,
@@ -47,6 +50,8 @@ function BoardCard({
 }) {
   const { ref, isDragging } = useSortableItem(entry.id, index, String(day))
   const roles = useRoles(exercise)
+  const locale = useLocale()
+  const m = builderMessages[locale]
   const primaries = Object.entries(roles)
     .filter(([, r]) => r === 'primary')
     .map(([g]) => g)
@@ -60,7 +65,7 @@ function BoardCard({
         search={{ sheet: 'entry', entry: entry.id }}
         draggable={false}
         title={exercise.name}
-        {...{ [SORT_LABEL]: `${exercise.name} on ${dayName(day, 'long')}, position ${index + 1}` }}
+        {...{ [SORT_LABEL]: m.boardSortLabel(exercise.name, day, index + 1) }}
         onFocus={() => onHover(primaries)}
         onBlur={() => onHover(null)}
         className={cx(
@@ -73,7 +78,7 @@ function BoardCard({
       >
         <span className={NAME}>{exercise.name}</span>
         <span className="num mt-0.5 block text-xs text-ink-2">
-          {entry.reps ? `${entry.sets} × ${repsText(entry.reps, unitOf(exercise))}` : `${entry.sets} ${plural(entry.sets, 'set')}`}
+          {entry.reps ? `${entry.sets} × ${repsText(entry.reps, unitOf(exercise), locale)}` : common[locale].sets(entry.sets)}
         </span>
       </Link>
     </li>
@@ -99,6 +104,9 @@ function BoardColumn({
   onHover: Hover
 }) {
   const { catalog } = useCatalog()
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  const c = common[locale]
   const { ref, isDropTarget } = useSortableList(String(day), drops ? DRAWER_ITEM : undefined)
   const { program, week, days } = view
   const d = program.days[day]
@@ -110,9 +118,9 @@ function BoardColumn({
   return (
     <section
       ref={ref}
-      aria-label={dayName(day, 'long')}
+      aria-label={dayName(day, 'long', locale)}
       data-drop-target={isDropTarget || undefined}
-      {...{ [SORT_LABEL]: dayName(day, 'long') }}
+      {...{ [SORT_LABEL]: dayName(day, 'long', locale) }}
       className={cx(
         '@container flex min-h-[30rem] min-w-0 flex-col rounded-xl bg-surface transition-shadow',
         isDropTarget && 'ring-2 ring-accent',
@@ -120,18 +128,18 @@ function BoardColumn({
     >
       <Link to="/day/$dow" params={{ dow: daySlug(day) }} className="block rounded-t-xl px-3 pb-1 pt-3 hover:bg-surface-2/60">
         <span className="flex items-baseline justify-between gap-1">
-          <span className={cx('text-base font-semibold', rest && 'text-ink-3')}>{dayName(day)}</span>
-          {day === todayIndex() && <span className="text-[0.6875rem] text-ink-3">Today</span>}
+          <span className={cx('text-base font-semibold', rest && 'text-ink-3')}>{dayName(day, 'short', locale)}</span>
+          {day === todayIndex() && <span className="text-[0.6875rem] text-ink-3">{m.today}</span>}
         </span>
-        <span className={cx('block truncate text-sm', rest ? 'text-ink-3' : 'text-ink')}>{rest ? 'Rest' : (d.label ?? 'Training')}</span>
+        <span className={cx('block truncate text-sm', rest ? 'text-ink-3' : 'text-ink')}>{rest ? m.rest : (d.label ?? m.training)}</span>
         {!rest && (
           <span className="num block text-xs text-ink-2">
             {s.exercises === 0 ? (
-              formatDaySummary(0, 0)
+              formatDaySummary(0, 0, locale)
             ) : (
               <>
-                <span className="whitespace-nowrap">{countLabel(s.exercises, 'exercise')}</span> ·{' '}
-                <span className="whitespace-nowrap">{setsLabel(s.hardSets)}</span>
+                <span className="whitespace-nowrap">{c.exercises(s.exercises)}</span> ·{' '}
+                <span className="whitespace-nowrap">{setsLabel(s.hardSets, locale)}</span>
               </>
             )}
           </span>
@@ -150,7 +158,7 @@ function BoardColumn({
         })}
         {ids.length === 0 && (
           <li className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-line-strong px-2 py-6 text-center text-xs text-ink-3">
-            {rest ? 'Drop here to train' : 'Drop exercises here'}
+            {rest ? m.dropToTrain : m.dropHere}
           </li>
         )}
       </ul>
@@ -160,7 +168,8 @@ function BoardColumn({
         className="mx-2 mb-2 flex h-10 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-ink-2 hover:bg-surface-2 hover:text-ink"
       >
         <Plus size={16} strokeWidth={2} aria-hidden />
-        Add<span className="sr-only"> to {dayName(day, 'long')}</span>
+        {m.add}
+        <span className="sr-only">{m.addSr(day)}</span>
       </button>
     </section>
   )
@@ -168,11 +177,12 @@ function BoardColumn({
 
 function DragCard({ exercise }: { exercise: AnyExercise }) {
   const sets = defaultSets(exercise)
+  const c = common[useLocale()]
   return (
     <div className="flex h-full w-full flex-col justify-center rounded-lg border border-line-strong bg-raised px-3 py-2 shadow-float">
       <span className="line-clamp-2 text-sm font-medium leading-snug text-ink">{exercise.name}</span>
       <span className="num mt-0.5 block text-xs text-ink-2">
-        {sets} {plural(sets, 'set')}
+        {c.sets(sets)}
       </span>
     </div>
   )
@@ -200,18 +210,19 @@ export function WeekBoard({ view, onAdd, onHover, highlight = null, drawer, onDr
   const reorder = useProgramStore((s) => s.reorder)
   const moveEntry = useProgramStore((s) => s.moveEntry)
   const change = useChange()
+  const m = builderMessages[useLocale()]
   const { program, order } = view
   const lists = Object.fromEntries(order.map((d) => [String(d), program.days[d].entries.map((e) => e.id)]))
   const drops = Boolean(drawer && onDropExercise)
 
-  const onMove = (m: SortMove) => {
-    const from = Number(m.fromList)
-    const to = Number(m.toList)
-    const entry = program.days[from]?.entries[m.fromIndex]
-    const name = (entry && exerciseFor(entry.exerciseId, catalog, program)?.name) ?? 'Exercise'
+  const onMove = (mv: SortMove) => {
+    const from = Number(mv.fromList)
+    const to = Number(mv.toList)
+    const entry = program.days[from]?.entries[mv.fromIndex]
+    const name = (entry && exerciseFor(entry.exerciseId, catalog, program)?.name) ?? m.someExerciseBoard
     onHover(null)
-    if (from === to) change(`Moved ${name} to position ${m.toIndex + 1}`, () => reorder(from, m.fromIndex, m.toIndex))
-    else change(`Moved ${name} to ${dayName(to, 'long')}`, () => moveEntry(m.id, to, m.toIndex))
+    if (from === to) change(m.movedToPosition(name, mv.toIndex + 1), () => reorder(from, mv.fromIndex, mv.toIndex))
+    else change(m.movedTo(name, to), () => moveEntry(mv.id, to, mv.toIndex))
   }
 
   return (
@@ -232,7 +243,7 @@ export function WeekBoard({ view, onAdd, onHover, highlight = null, drawer, onDr
             id={WEEK_BOARD_ID}
             tabIndex={-1}
             role="group"
-            aria-label="Week board"
+            aria-label={m.weekBoard}
             className="min-w-0 rounded-xl focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
           >
             <div className="grid grid-cols-7 gap-2">

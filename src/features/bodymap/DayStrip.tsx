@@ -1,7 +1,9 @@
 import { dayName, type DayIndex } from '../../app/days'
 import { formatSets } from '../../app/format'
 import { groupShade, VOLUME_COLOR } from '../../app/volumeScale'
+import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
+import { bodymapMessages } from './messages'
 
 const BAR_PX = 56
 
@@ -19,17 +21,18 @@ export function DayStrip({
   selectedDay?: DayIndex | null
   caption: string
 }) {
+  const locale = useLocale()
   const max = Math.max(4, ...daily)
-  const summary = order.map((d) => `${dayName(d, 'long')} ${formatSets(daily[d] ?? 0)}`).join(', ')
+  const summary = order.map((d) => `${dayName(d, 'long', locale)} ${formatSets(daily[d] ?? 0, locale)}`).join(', ')
   return (
     <div>
-      <div role="img" aria-label={`Sets per day: ${summary}`} className="grid grid-cols-7 gap-1.5">
+      <div role="img" aria-label={bodymapMessages[locale].setsPerDay(summary)} className="grid grid-cols-7 gap-1.5">
         {order.map((d) => {
           const v = daily[d] ?? 0
           const selected = selectedDay === d
           return (
             <div key={d} className="flex min-w-0 flex-col items-center">
-              <span className="num mb-1 h-4 text-xs leading-4 text-ink-2">{v > 0 ? formatSets(v) : ''}</span>
+              <span className="num mb-1 h-4 text-xs leading-4 text-ink-2">{v > 0 ? formatSets(v, locale) : ''}</span>
               <div className="flex w-full items-end justify-center" style={{ height: BAR_PX }}>
                 {v > 0 ? (
                   <span
@@ -49,7 +52,7 @@ export function DayStrip({
                   selected ? 'bg-ink font-semibold text-on-ink' : v > 0 ? 'font-medium text-ink' : 'text-ink-3',
                 )}
               >
-                {dayName(d)}
+                {dayName(d, 'short', locale)}
               </span>
             </div>
           )

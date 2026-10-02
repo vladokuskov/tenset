@@ -44,5 +44,11 @@ describe('known equipment gaps', () => {
 
   it('keeps the note neutral', () => {
     expect(gapNote(['step'])).not.toMatch(/—|risk|warning|missing|fail/i)
+    expect(gapNote(['step'], 'uk')).not.toMatch(/—|оптимальн|недостатньо|підтримуюч|ризик|зарано|перетрен|відновл|бракує|не вистачає/i)
+  })
+
+  it('writes the note in Ukrainian', () => {
+    expect(gapNote(presetEquipment('bodyweight'), 'uk')).toMatch(/^Ваше обладнання не навантажує: .+\.$/)
+    expect(gapNote(presetEquipment('dumbbells_bench'), 'uk')).toBeNull()
   })
 })

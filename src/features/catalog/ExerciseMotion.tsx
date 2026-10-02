@@ -1,6 +1,7 @@
 import { Pause, Play } from 'lucide-react'
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import type { Exercise } from '../../domain/schema'
+import { useMessages } from '../../i18n/messages'
 import { MotionClock } from '../figure/motion/clock'
 import type { MotionExercise, MotionScene, ViewPreset } from '../figure/motion/compose'
 import { loadMotionFile, type MotionFile } from '../figure/motion/library'
@@ -8,6 +9,7 @@ import { IconButton, SegmentedControl } from '../../ui'
 import { cx } from '../../ui/cx'
 import { ExerciseCardMedia } from './ExerciseCardMedia'
 import { showsMotion } from './media'
+import { catalogMessages } from './messages'
 import { useRoles } from './useRoles'
 
 const MotionStage = lazy(() => import('../figure/motion/MotionStage'))
@@ -15,12 +17,7 @@ const MotionStage = lazy(() => import('../figure/motion/MotionStage'))
 /** one fixed well colour in both themes, as the baked loops will use */
 const WELL = '#f6f6f4'
 
-const VIEWS: { value: ViewPreset; label: string }[] = [
-  { value: 'hero', label: 'Default' },
-  { value: 'front', label: 'Front' },
-  { value: 'side', label: 'Side' },
-  { value: 'back', label: 'Back' },
-]
+const VIEWS: readonly ViewPreset[] = ['hero', 'front', 'side', 'back']
 
 /** A 3D failure (no WebGL, model offline) leaves the card in place instead of breaking the page. */
 class Fallback extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
@@ -55,6 +52,8 @@ export function ExerciseMedia({ exercise }: { exercise: Exercise }) {
  * pan-y, no orbit controls). Reduced motion starts paused in the middle of the lift.
  */
 export function ExerciseMotion({ exercise }: { exercise: Exercise }) {
+  const m = useMessages(catalogMessages)
+  const views = useMemo(() => VIEWS.map((value) => ({ value, label: m.views[value] })), [m])
   const roles = useRoles(exercise)
   const reduced = useMemo(() => prefersReducedMotion(), [])
   const clock = useMemo(() => new MotionClock(0, !reduced, !reduced), [reduced])
@@ -137,7 +136,7 @@ export function ExerciseMotion({ exercise }: { exercise: Exercise }) {
     drag.current = null
   }
 
-  const name = `${exercise.name}: animated figure with the worked muscles highlighted, primary in red, secondary in orange.`
+  const name = m.motionAlt(exercise.name)
   return (
     <div>
       <div className="relative aspect-[5/4] overflow-hidden rounded-xl" style={{ background: WELL }}>
@@ -165,7 +164,7 @@ export function ExerciseMotion({ exercise }: { exercise: Exercise }) {
       {!failed && (
         <div className="mt-2 flex flex-col gap-1">
           <div className="flex items-center gap-1">
-            <IconButton icon={playing ? Pause : Play} label={playing ? 'Pause' : 'Play'} onClick={togglePlay} disabled={!ready} />
+            <IconButton icon={playing ? Pause : Play} label={playing ? m.pause : m.play} onClick={togglePlay} disabled={!ready} />
             <input
               type="range"
               min={0}
@@ -173,20 +172,20 @@ export function ExerciseMotion({ exercise }: { exercise: Exercise }) {
               value={Math.round(phase * 1000)}
               onChange={(e) => scrub(Number(e.target.value) / 1000)}
               disabled={!ready}
-              aria-label="Position in the rep"
+              aria-label={m.position}
               className="h-11 min-w-0 flex-1 cursor-pointer accent-ink disabled:opacity-40"
             />
             <button
               type="button"
               onClick={toggleSpeed}
               disabled={!ready}
-              aria-label={slow ? 'Playing at half speed, switch to normal speed' : 'Playing at normal speed, switch to half speed'}
+              aria-label={slow ? m.toNormal : m.toHalf}
               className="hit num h-9 w-12 shrink-0 rounded-md bg-surface-2 text-sm font-medium text-ink disabled:opacity-40"
             >
-              {slow ? '0.5x' : '1x'}
+              {slow ? m.half : m.normal}
             </button>
           </div>
-          <SegmentedControl label="Camera" options={VIEWS} value={view} onChange={pickView} size="sm" block />
+          <SegmentedControl label={m.camera} options={views} value={view} onChange={pickView} size="sm" block />
         </div>
       )}
     </div>

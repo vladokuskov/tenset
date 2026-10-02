@@ -1,7 +1,9 @@
-import { formatDayList, type DayIndex } from '../../app/days'
+import type { DayIndex } from '../../app/days'
 import { toastWithUndo } from '../../app/undo'
 import type { Exercise, Prefs } from '../../domain/schema'
+import { getMessages } from '../../i18n/messages'
 import { programStore } from '../../store/program.store'
+import { catalogMessages } from './messages'
 
 export function defaultReps(exercise: Exercise, goal: Prefs['goal']): string {
   return goal === 'strength' && exercise.defaults.strengthReps ? exercise.defaults.strengthReps : exercise.defaults.reps
@@ -16,5 +18,5 @@ export function addToDays(exercise: Exercise, days: readonly DayIndex[], goal: P
   if (days.length > 1) {
     programStore.setState({ lastChange: { action: 'addEntries', programs: before.programs, activeId: before.activeId } })
   }
-  toastWithUndo(`Added ${exercise.name} to ${formatDayList(days, weekStart, days.length === 1 ? 'long' : 'short')}`)
+  toastWithUndo(getMessages(catalogMessages).added(exercise.name, days, weekStart))
 }

@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+// Set before any schema is used: otherwise zod probes `new Function` once, which a strict CSP reports.
+// Lives here because data modules parse at import time, possibly in a chunk that runs before main.tsx.
+z.config({ jitless: true })
+
 // Shared data contracts. Integrity rules that need cross-file context
 // (ids exist in taxonomy, alternatives share a pattern, ...) live in data tests.
 
@@ -115,6 +119,27 @@ export const SplitTemplate = z.object({
   sessions: z.array(z.object({ label: z.string(), slots: z.array(SplitSlot).min(1) })),
 })
 
+// Translations (data/i18n/<locale>/), keyed by the ids of the source records
+
+export const LabelMap = z.record(z.string(), z.string().min(1))
+
+export const ExerciseText = z.object({
+  name: z.string().min(2),
+  aliases: z.array(z.string()),
+  cues: z.array(z.string()).min(3).max(5),
+})
+
+export const ExerciseTextMap = z.record(z.string().regex(/^\d+$/), ExerciseText)
+
+export const TaxonomyText = z.object({ groups: LabelMap, heads: LabelMap, deepHeads: LabelMap, untracked: LabelMap })
+
+export const EquipmentText = z.object({ groups: LabelMap, equipment: LabelMap, presets: LabelMap })
+
+export const SplitText = z.record(
+  z.string(),
+  z.object({ name: z.string().min(1), description: z.string().min(1), sessions: z.array(z.string().min(1)) }),
+)
+
 // Persisted user state
 
 export const CustomExerciseId = z.string().regex(/^c([1-9]|[1-5][0-9]|6[0-3])$/)
@@ -153,7 +178,11 @@ export const Program = z.object({
 export const Goal = z.enum(['hypertrophy', 'strength', 'general'])
 export const CountingMode = z.enum(['fractional', 'primary'])
 
+export const Locale = z.enum(['en', 'uk'])
+
 export const Prefs = z.object({
+  /** Missing in prefs saved before languages existed; the store fills it from the browser. */
+  locale: Locale.optional(),
   goal: Goal,
   equipment: z.array(z.string()),
   countingMode: CountingMode,
@@ -173,6 +202,10 @@ export type Entry = z.infer<typeof Entry>
 export type Day = z.infer<typeof Day>
 export type CustomExercise = z.infer<typeof CustomExercise>
 export type Program = z.infer<typeof Program>
+export type ExerciseText = z.infer<typeof ExerciseText>
+export type TaxonomyText = z.infer<typeof TaxonomyText>
+export type EquipmentText = z.infer<typeof EquipmentText>
+export type SplitText = z.infer<typeof SplitText>
 export type Prefs = z.infer<typeof Prefs>
 export type Role = z.infer<typeof Role>
 export type ExerciseRef = z.infer<typeof ExerciseRef>

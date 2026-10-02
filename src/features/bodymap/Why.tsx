@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
+import { bodymapMessages } from './messages'
 import { citation } from './sources'
 
 export type WhyProps = {
@@ -17,6 +19,8 @@ const EDGE = 8
 /** "why?" link that opens a small popover with the reasoning and its citations. */
 export function Why({ topic, children, sources, className }: WhyProps) {
   const id = useId()
+  const locale = useLocale()
+  const m = bodymapMessages[locale]
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
 
@@ -65,13 +69,13 @@ export function Why({ topic, children, sources, className }: WhyProps) {
         ref={buttonRef}
         type="button"
         popoverTarget={id}
-        aria-label={`Why? ${topic}`}
+        aria-label={m.whyLabel(topic)}
         className={cx(
           'hit inline-flex h-6 shrink-0 items-center rounded-full px-1.5 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent',
           className,
         )}
       >
-        why?
+        {m.why}
       </button>
       <div
         ref={popRef}
@@ -84,7 +88,7 @@ export function Why({ topic, children, sources, className }: WhyProps) {
         {sources.length > 0 && (
           <ul className={cx('space-y-2', children ? 'mt-3 border-t border-line pt-3' : '')}>
             {[...new Set(sources)].map((s) => {
-              const c = citation(s)
+              const c = citation(s, locale)
               return (
                 <li key={s} className="text-xs leading-relaxed text-ink-2">
                   {c.note && <span className="mr-1 font-semibold text-ink">{c.note}:</span>}

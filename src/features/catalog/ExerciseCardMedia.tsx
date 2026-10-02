@@ -1,10 +1,13 @@
 import { useMemo, type CSSProperties } from 'react'
-import { equipment as equipmentList } from '../../domain/equipment'
+import { equipmentName } from '../../data/localize'
+import type { Locale } from '../../i18n/locale'
+import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
 import { cropViewBox, MAP_HEIGHT, MAP_WIDTH, regionBounds, useAnatomy, type AnatomyView } from '../bodymap/anatomy'
 import { AnatomyFigure, type FigureVars } from '../bodymap/AnatomyFigure'
 import { tintVars } from '../bodymap/fills'
 import { cardView, equipmentGlyph, isCatalogExercise, showsMotion, type CardExercise } from './media'
+import { catalogMessages } from './messages'
 import { posterUrl } from './posters'
 import { useRoles } from './useRoles'
 
@@ -18,35 +21,18 @@ export type ExerciseCardMediaProps = {
 // Implements first; supports (benches, racks, steps) only name the card when nothing else does.
 const IMPLEMENT_ORDER = ['barbell', 'ez_bar', 'dumbbell', 'cable', 'smith', 'plate']
 const SUPPORTS = new Set(['flat_bench', 'adjustable_bench', 'rack', 'step'])
-const SHORT: Record<string, string> = {
-  cable: 'Cable',
-  smith: 'Smith',
-  pec_deck: 'Pec deck',
-  calf_machine: 'Calf machine',
-  seated_calf: 'Seated calf',
-  back_extension: 'Back extension',
-  leg_curl_seated: 'Leg curl',
-  leg_curl_lying: 'Leg curl',
-  leg_extension: 'Leg extension',
-  chest_press_machine: 'Chest press',
-  shoulder_press_machine: 'Shoulder press',
-  hip_abduction: 'Abduction',
-  hip_adduction: 'Adduction',
-  assisted_pullup: 'Assisted',
-  lat_pulldown: 'Pulldown',
-}
 // Crops end mid-body; a short fade makes the cut read as intentional.
 const FADE: CSSProperties = {
   maskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
   WebkitMaskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
 }
-const nameOf = new Map(equipmentList.map((e) => [e.id, e.name]))
 
-function equipmentLabel(items: readonly string[]): string {
-  if (!items.length) return 'Bodyweight'
+function equipmentLabel(items: readonly string[], locale: Locale): string {
+  const m = catalogMessages[locale]
+  if (!items.length) return m.glyph.bodyweight
   const pick =
     IMPLEMENT_ORDER.find((id) => items.includes(id)) ?? items.find((id) => !SUPPORTS.has(id)) ?? items[0]
-  return SHORT[pick] ?? nameOf.get(pick) ?? pick
+  return m.equipmentShort[pick] ?? equipmentName(pick, locale)
 }
 
 // Card look: pale silhouette, untinted muscles a step darker, hairline separations; tints come from tintVars.
@@ -100,8 +86,9 @@ export function ExerciseCardMedia(props: ExerciseCardMediaProps) {
 }
 
 function PosterMedia({ exercise, size, className, src }: ExerciseCardMediaProps & { src: string }) {
+  const locale = useLocale()
   const { icon: Glyph } = equipmentGlyph(exercise.equipment)
-  const label = equipmentLabel(exercise.equipment)
+  const label = equipmentLabel(exercise.equipment, locale)
   if (size === 'sm') {
     return (
       <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-md bg-white', className)} aria-hidden>
@@ -113,7 +100,7 @@ function PosterMedia({ exercise, size, className, src }: ExerciseCardMediaProps 
     <div className={cx('relative aspect-[4/5] overflow-hidden rounded-lg bg-white', className)}>
       <img
         src={src}
-        alt={`${exercise.name} demonstration, worked muscles highlighted. ${label}.`}
+        alt={catalogMessages[locale].posterAlt(exercise.name, label)}
         width={480}
         height={480}
         loading="lazy"
@@ -132,8 +119,9 @@ function MapCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
   const roles = useRoles(exercise)
   const heads = isCatalogExercise(exercise) ? exercise.heads : undefined
   const view = cardView(exercise, roles)
+  const locale = useLocale()
   const { icon: Glyph } = equipmentGlyph(exercise.equipment)
-  const label = equipmentLabel(exercise.equipment)
+  const label = equipmentLabel(exercise.equipment, locale)
   const primaries = Object.keys(roles).filter((g) => roles[g] === 'primary').join(',')
   const tinted = Object.keys(roles).join(',')
   const vars = useMemo(
@@ -154,7 +142,7 @@ function MapCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
   }
 
   const lineVars = { '--gb-line': 'var(--color-raised)', '--gb-line-w': size === 'lg' ? '0.75px' : '0.6px' } as CSSProperties
-  const name = `Muscles worked by ${exercise.name}: primary in the darker tint, secondary in the lighter tint. ${label}.`
+  const name = catalogMessages[locale].cardAlt(exercise.name, label)
   return (
     <div
       role="img"
