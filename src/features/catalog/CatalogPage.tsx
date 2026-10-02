@@ -1,5 +1,5 @@
 import { getRouteApi } from '@tanstack/react-router'
-import { ChevronDown, Search, SearchX, X } from 'lucide-react'
+import { ChevronDown, LayoutGrid, List, Search, SearchX, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useCatalog } from '../../app/useCatalog'
 import { groupName } from '../../data/localize'
@@ -7,9 +7,11 @@ import type { Pattern } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
-import { Button, Chip, EmptyState, Page, PageBody, PageHeader, useSheet } from '../../ui'
+import { readFlag, writeFlag } from '../builder/useMediaQuery'
+import { Button, Chip, EmptyState, IconButton, Page, PageBody, PageHeader, useSheet } from '../../ui'
 import { ExerciseGrid } from './ExerciseGrid'
-import { FilterSelect } from './FilterSelect'
+import { ExerciseList } from './ExerciseList'
+import { FilterSheet } from './FilterSheet'
 import { MuscleFilterSheet } from './MuscleFilterSheet'
 import { catalogMessages } from './messages'
 import { levelLabel, PATTERN_GROUPS, patternGroupLabel, patternLabel } from './patterns'
@@ -18,13 +20,17 @@ import { buildIndex, filterExercises } from './search'
 
 const route = getRouteApi('/exercises')
 
+const GRID_KEY = 'gb:ui:catalog-grid'
+// Phones start on the compact list; wider screens have room for the picture grid.
+const gridByDefault = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 64rem)').matches
+
 type Patch = Partial<{
   q: string
   muscle: string
   equip: 'mine' | 'all'
   pattern: Pattern
   level: number
-  sheet: 'muscle'
+  sheet: 'muscle' | 'pattern' | 'level'
 }>
 
 type ActiveFilter = { key: keyof Patch; label: string; clear: Patch }
@@ -41,6 +47,11 @@ export function CatalogPage() {
   const index = useMemo(() => buildIndex(activeExercises, locale), [activeExercises, locale])
 
   const equip = search.equip ?? 'mine'
+  const [grid, setGrid] = useState(() => readFlag(GRID_KEY, gridByDefault()))
+  const toggleGrid = () => {
+    setGrid(!grid)
+    writeFlag(GRID_KEY, !grid)
+  }
   const [text, setText] = useState(search.q ?? '')
   const [syncedQ, setSyncedQ] = useState(search.q)
   if (search.q !== syncedQ) {
@@ -96,7 +107,12 @@ export function CatalogPage() {
 
   return (
     <Page>
-      <PageHeader title={m.exercises} subtitle={common[locale].exercises(list.length)} language>
+      <PageHeader
+        title={m.exercises}
+        subtitle={common[locale].exercises(list.length)}
+        settings
+        actions={<IconButton icon={grid ? List : LayoutGrid} label={grid ? m.showList : m.showGrid} onClick={toggleGrid} />}
+      >
         <div className="space-y-3">
           <label className="flex h-11 items-center gap-2 rounded-md bg-surface-2 px-3 text-ink-2 focus-within:outline-2 focus-within:outline-accent">
             <Search size={18} strokeWidth={1.75} aria-hidden />
@@ -145,21 +161,23 @@ export function CatalogPage() {
             <Chip size="sm" selected={equip === 'mine'} onClick={() => set({ equip: equip === 'mine' ? 'all' : undefined })}>
               {m.myEquipment}
             </Chip>
-            <FilterSelect
+            <FilterSheet
+              sheet="pattern"
               label={m.movementPattern}
               placeholder={m.patternPlaceholder}
               anyLabel={m.anyPattern}
               value={search.pattern}
               groups={patternGroups}
-              onChange={(v) => set({ pattern: v as Pattern | undefined })}
+              onChange={(v) => set({ pattern: v as Pattern | undefined, sheet: undefined })}
             />
-            <FilterSelect
+            <FilterSheet
+              sheet="level"
               label={m.levelFilter}
               placeholder={m.levelFilter}
               anyLabel={m.anyLevel}
               value={search.level ? String(search.level) : undefined}
               groups={levels}
-              onChange={(v) => set({ level: v ? Number(v) : undefined })}
+              onChange={(v) => set({ level: v ? Number(v) : undefined, sheet: undefined })}
             />
             {narrowed && (
               <Button
@@ -221,7 +239,7 @@ export function CatalogPage() {
           </EmptyState>
         ) : (
           <>
-            <ExerciseGrid exercises={list} label={m.exercises} />
+            {grid ? <ExerciseGrid exercises={list} label={m.exercises} /> : <ExerciseList exercises={list} label={m.exercises} />}
             {(search.muscle || (equip === 'mine' && anyEquipment > list.length)) && (
               <div className="mt-2 space-y-1 px-1 text-sm text-ink-2">
                 {muscleName && <p>{m.primaryNote(muscleName)}</p>}

@@ -10,7 +10,7 @@ const ExercisesSearch = z.object({
   equip: optionalEnum(['mine', 'all']),
   pattern: patternParam,
   level: z.number().int().min(1).max(3).optional().catch(undefined),
-  sheet: sheetParam(['muscle']),
+  sheet: sheetParam(['muscle', 'pattern', 'level']),
 })
 
 export const Route = createFileRoute('/exercises')({

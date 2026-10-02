@@ -7,7 +7,8 @@ import { groupParam, headParam, optionalEnum, sheetParam } from '../app/search'
 import { useWeek } from '../app/useWeek'
 import { BodyMap, CoverageList, Insights, MuscleSheet, VolumeLegend } from '../features/bodymap'
 import { useMessages } from '../i18n/messages'
-import { ChipGroup, Page, PageBody, PageHeader, Panel, SegmentedControl, useSheet } from '../ui'
+import { SlidersHorizontal } from 'lucide-react'
+import { ChipGroup, IconButton, Page, PageBody, PageHeader, Panel, SegmentedControl, Sheet, cx, useSheet } from '../ui'
 import { bodyMessages } from './-messages'
 
 // URL contract: /body?scope=week|mon..sun&shade=groups|heads&view=front|back|both
@@ -16,7 +17,7 @@ const BodySearch = z.object({
   scope: optionalEnum(['week', ...DAY_SLUGS]),
   shade: optionalEnum(['groups', 'heads']),
   view: optionalEnum(['front', 'back', 'both']),
-  sheet: sheetParam(['muscle']),
+  sheet: sheetParam(['muscle', 'view']),
   group: groupParam,
   head: headParam,
 })
@@ -32,6 +33,7 @@ function BodyPage() {
   const view = useWeek()
   const m = useMessages(bodyMessages)
   const muscle = useSheet('muscle', ['group', 'head'])
+  const options = useSheet('view')
   const scope = search.scope ?? 'week'
   const shade = search.shade ?? 'groups'
   const mapView = search.view ?? 'both'
@@ -54,11 +56,31 @@ function BodyPage() {
     muscle.open ? muscle.update({ group, head: undefined }) : muscle.show({ group })
   const selected = muscle.open ? search.group : undefined
   const scale = day === null ? 'week' : 'day'
+  const customized = mapView !== 'both' || shade !== 'groups'
+  const toggles = {
+    mapView,
+    shade,
+    onView: (v: 'both' | 'front' | 'back') => set({ view: v === 'both' ? undefined : v }),
+    onShade: (v: 'groups' | 'heads') => set({ shade: v === 'groups' ? undefined : v }),
+  }
 
   return (
     <Page>
       <div className="desktop:[--page-max:72rem]">
-        <PageHeader title={m.title} language>
+        <PageHeader
+          title={m.title}
+          settings
+          actions={
+            <IconButton
+              icon={SlidersHorizontal}
+              variant={customized ? 'tonal' : 'ghost'}
+              label={m.mapOptions}
+              aria-pressed={customized}
+              className="desktop:hidden"
+              onClick={() => options.show()}
+            />
+          }
+        >
           <div className="space-y-3">
             <ChipGroup
               label={m.scope}
@@ -68,31 +90,7 @@ function BodyPage() {
               value={scope}
               onChange={(v) => set({ scope: v === 'week' ? undefined : (v ?? undefined) })}
             />
-            <div className="flex gap-2 desktop:max-w-[34rem]">
-              <SegmentedControl
-                label={m.views}
-                size="sm"
-                className="flex-[3]"
-                options={[
-                  { value: 'both', label: m.both },
-                  { value: 'front', label: m.front },
-                  { value: 'back', label: m.back },
-                ]}
-                value={mapView}
-                onChange={(v) => set({ view: v === 'both' ? undefined : v })}
-              />
-              <SegmentedControl
-                label={m.shading}
-                size="sm"
-                className="flex-[2]"
-                options={[
-                  { value: 'groups', label: m.groups },
-                  { value: 'heads', label: m.heads },
-                ]}
-                value={shade}
-                onChange={(v) => set({ shade: v === 'groups' ? undefined : v })}
-              />
-            </div>
+            <MapToggles className="hidden desktop:flex desktop:max-w-[34rem]" {...toggles} />
           </div>
         </PageHeader>
 
@@ -129,6 +127,10 @@ function BodyPage() {
         </PageBody>
       </div>
 
+      <Sheet open={options.open} onClose={options.close} title={m.mapOptions} desktop="center">
+        <MapToggles className="flex" {...toggles} />
+        <p className="mt-3 text-sm text-ink-2">{m.mapOptionsHint}</p>
+      </Sheet>
       <MuscleSheet
         open={muscle.open}
         onClose={muscle.close}
@@ -139,5 +141,48 @@ function BodyPage() {
         day={day}
       />
     </Page>
+  )
+}
+
+function MapToggles({
+  mapView,
+  shade,
+  onView,
+  onShade,
+  className,
+}: {
+  mapView: 'both' | 'front' | 'back'
+  shade: 'groups' | 'heads'
+  onView: (v: 'both' | 'front' | 'back') => void
+  onShade: (v: 'groups' | 'heads') => void
+  className?: string
+}) {
+  const m = useMessages(bodyMessages)
+  return (
+    <div className={cx('gap-2', className)}>
+      <SegmentedControl
+        label={m.views}
+        size="sm"
+        className="flex-[3]"
+        options={[
+          { value: 'both', label: m.both },
+          { value: 'front', label: m.front },
+          { value: 'back', label: m.back },
+        ]}
+        value={mapView}
+        onChange={onView}
+      />
+      <SegmentedControl
+        label={m.shading}
+        size="sm"
+        className="flex-[2]"
+        options={[
+          { value: 'groups', label: m.groups },
+          { value: 'heads', label: m.heads },
+        ]}
+        value={shade}
+        onChange={onShade}
+      />
+    </div>
   )
 }

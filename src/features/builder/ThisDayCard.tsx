@@ -12,12 +12,12 @@ import { PulseMini } from './PulseMini'
 import { readFlag, writeFlag } from './useMediaQuery'
 
 const OPEN_KEY = 'gb:ui:this-day-open'
-// One recovery line by default keeps the entry list above the fold on a phone.
+// Closed by default and one recovery line when open keep the entry list above the fold on a phone.
 const FACTS_SHOWN = 1
 
 /** Collapsible summary of one day: day-scale map, top groups and plain recovery facts. */
 export function ThisDayCard({ view, day }: { view: WeekView; day: DayIndex }) {
-  const [open, setOpen] = useState(() => readFlag(OPEN_KEY, true))
+  const [open, setOpen] = useState(() => readFlag(OPEN_KEY, false))
   const [allFacts, setAllFacts] = useState(false)
   const bodyId = useId()
   const locale = useLocale()
@@ -47,7 +47,9 @@ export function ThisDayCard({ view, day }: { view: WeekView; day: DayIndex }) {
       >
         <span className="flex-1 text-base font-semibold">{m.thisDay}</span>
         {!open && top.length > 0 && (
-          <span className="num truncate text-sm text-ink-2">{top.slice(0, 2).map(([g]) => groupName(g, locale)).join(', ')}</span>
+          <span className="num min-w-0 truncate text-sm text-ink-2">
+            {m.mostSetsOn(top.slice(0, 2).map(([g]) => groupName(g, locale)).join(', '))}
+          </span>
         )}
         <ChevronDown size={18} strokeWidth={1.75} aria-hidden className={cx('shrink-0 text-ink-3 transition-transform', open && 'rotate-180')} />
       </button>

@@ -1,6 +1,6 @@
 import { ZoomIn, ZoomOut } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
-import { hitTest, pickGroup, viewBoxToRaster } from '../../domain/idRaster'
+import { groupAt, hitTest, pickGroup, viewBoxToRaster } from '../../domain/idRaster'
 import type { MapScale } from '../../app/volumeScale'
 import { useMessages } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
@@ -200,7 +200,7 @@ export function BodyMap({
     const y = ((e.clientY - rect.top) / rect.height) * MAP_HEIGHT
     const [cx, cy] = viewBoxToRaster(raster, x, y)
     const hits = hitTest(raster, cx, cy, (TAP_RADIUS_PX * raster.height) / rect.height)
-    const pick = pickGroup(hits)
+    const pick = pickGroup(hits, groupAt(raster, cx, cy))
     if (pick || !hits.length) {
       setChooser(null)
       if (pick) onSelectGroup(pick)

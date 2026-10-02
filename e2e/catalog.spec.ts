@@ -1,14 +1,15 @@
-import { expect, test } from './fixtures'
+import { expect, openSheet, test } from './fixtures'
 
 test('catalog filter chips open their pickers on tap', async ({ page }) => {
   await page.goto('/exercises')
-  const pattern = page.getByRole('combobox', { name: 'Movement pattern' })
+  const pattern = page.getByRole('button', { name: 'Movement', exact: true })
   await expect(pattern).toBeVisible()
-  // A real click fails when an overlay intercepts the pointer, which selectOption alone would not catch.
+  // A real click fails when an overlay intercepts the pointer.
   await pattern.click()
-  await page.keyboard.press('Escape')
-  await pattern.selectOption({ index: 1 })
-  await expect(page).toHaveURL(/pattern=/)
-  const box = await pattern.boundingBox()
-  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
+  const sheet = openSheet(page, 'Movement')
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole('button', { name: 'Squat', exact: true }).click()
+  await expect(page).toHaveURL(/pattern=squat/)
+  await expect(openSheet(page)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Movement: Squat' })).toBeVisible()
 })

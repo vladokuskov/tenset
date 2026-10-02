@@ -60,12 +60,16 @@ test('coverage list is the accessible path to the same sheet', async ({ page }) 
 })
 
 test('view and shading toggles respond to taps', async ({ page }) => {
+  // Phones keep these in a sheet; desktop shows them inline.
+  if (!isDesktop(page)) await page.getByRole('button', { name: 'Map options' }).click()
   // A real pointer click: it fails if anything sits over the segment.
-  await page.getByRole('radiogroup', { name: 'Views' }).getByRole('radio', { name: 'Front' }).click()
+  const views = page.getByRole('radiogroup', { name: 'Views' }).filter({ visible: true })
+  const show = page.getByRole('radiogroup', { name: 'Show' }).filter({ visible: true })
+  await views.getByRole('radio', { name: 'Front' }).click()
   await expect(page).toHaveURL(/view=front/)
-  await page.getByRole('radiogroup', { name: 'Shading' }).getByRole('radio', { name: 'Heads' }).click()
+  await show.getByRole('radio', { name: 'Detail' }).click()
   await expect(page).toHaveURL(/shade=heads/)
-  await expect(page.getByRole('radiogroup', { name: 'Shading' }).getByRole('radio', { name: 'Heads' })).toHaveAttribute('aria-checked', 'true')
+  await expect(show.getByRole('radio', { name: 'Detail' })).toHaveAttribute('aria-checked', 'true')
 })
 
 test('optional groups under their range read "some sets", not light or moderate', async ({ page }) => {

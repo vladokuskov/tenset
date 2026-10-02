@@ -74,6 +74,8 @@ export const catalogMessages = defineMessages({
 
     // shared
     exercises: 'Exercises',
+    showList: 'Show as list',
+    showGrid: 'Show as grid',
     custom: 'custom',
     noMuscles: 'No muscles mapped',
     addToPlan: 'Add to plan',
@@ -115,7 +117,7 @@ export const catalogMessages = defineMessages({
     filters: 'Filters',
     muscle: 'Muscle',
     myEquipment: 'My equipment',
-    movementPattern: 'Movement pattern',
+    movementPattern: 'Movement',
     patternPlaceholder: 'Movement',
     anyPattern: 'Any movement',
     levelFilter: 'Level',
@@ -254,6 +256,8 @@ export const catalogMessages = defineMessages({
     views: { hero: 'Типово', front: 'Спереду', side: 'Збоку', back: 'Ззаду' },
 
     exercises: 'Вправи',
+    showList: 'Показати списком',
+    showGrid: 'Показати сіткою',
     custom: 'власна',
     noMuscles: 'Мʼязи не вказано',
     addToPlan: 'Додати в план',

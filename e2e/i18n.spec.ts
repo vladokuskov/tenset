@@ -25,12 +25,13 @@ test('switches to Ukrainian on first run and keeps it after a reload', async ({ 
   await expect(page.getByRole('link', { name: 'Вправи' }).first()).toBeVisible()
 })
 
-test('switches back to English from the header', async ({ page }) => {
+test('switches back to English from Settings', async ({ page }) => {
   await startInUkrainian(page)
   await page.getByRole('link', { name: 'Вправи' }).first().click()
+  await page.getByRole('link', { name: 'Налаштування' }).filter({ visible: true }).first().click()
   await page.getByRole('radiogroup', { name: 'Мова / Language' }).filter({ visible: true }).first().getByRole('radio', { name: 'EN' }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByRole('heading', { level: 1, name: 'Exercises' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Settings' })).toBeVisible()
 })
 
 test('searches the catalog in Ukrainian and English', async ({ page }) => {

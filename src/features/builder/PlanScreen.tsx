@@ -88,7 +88,7 @@ export function PlanScreen() {
     </button>
   )
   const more = <IconButton icon={Ellipsis} label={m.more} onClick={() => menu.show()} />
-  const header = <PageHeader title={title} actions={more} language />
+  const header = <PageHeader title={title} actions={more} settings />
 
   if (desktop) {
     return (

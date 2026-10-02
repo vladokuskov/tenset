@@ -84,6 +84,7 @@ export const builderMessages = defineMessages({
     musclesOn: (day: number) => `Muscles trained ${dayName(day, 'on', 'en')}`,
     noSetsToday: 'No sets counted on this day yet.',
     mostSets: 'Most sets',
+    mostSetsOn: (groups: string) => `Most sets: ${groups}`,
     earlierSessions: 'Earlier sessions',
     fact: (group: string, day: number, daysEarlier: number, sets: number) =>
       `${group}: ${en.sets(sets)} ${dayName(day, 'on', 'en')}, ${en.days(daysEarlier)} before`,
@@ -285,6 +286,7 @@ export const builderMessages = defineMessages({
     musclesOn: (day) => `Мʼязи, які тренуються ${dayName(day, 'on', 'uk')}`,
     noSetsToday: 'У цей день підходів поки не враховано.',
     mostSets: 'Найбільше підходів',
+    mostSetsOn: (groups) => `Найбільше: ${groups}`,
     earlierSessions: 'Попередні тренування',
     fact: (group, day, daysEarlier, sets) =>
       `${group}: ${uk.sets(sets)} ${dayName(day, 'on', 'uk')}, за ${uk.days(daysEarlier)} до цього`,

@@ -126,7 +126,21 @@ export function hitTest(r: IdRaster, x: number, y: number, radiusPx: number): Hi
     .sort((a, b) => b.pixels - a.pixels || a.group.localeCompare(b.group))
 }
 
-// The group a tap opens directly, or null when the UI should show a chooser.
-export function pickGroup(candidates: HitCandidate[], threshold = 0.7): string | null {
-  return candidates.length && candidates[0].share >= threshold ? candidates[0].group : null
+// The group whose cell is exactly at (x, y) in raster coordinates, if any.
+export function groupAt(r: IdRaster, x: number, y: number): string | null {
+  const cx = Math.floor(x), cy = Math.floor(y)
+  if (cx < 0 || cy < 0 || cx >= r.width || cy >= r.height) return null
+  const v = r.data[cy * r.width + cx]
+  return v ? r.groups[v - 1] : null
 }
+
+// The group a tap opens directly, or null when the UI should show a chooser. A clear majority
+// wins; otherwise the group right under the finger wins when it still covers a fair share.
+export function pickGroup(candidates: HitCandidate[], center: string | null = null, threshold = 0.7): string | null {
+  if (!candidates.length) return null
+  if (candidates[0].share >= threshold) return candidates[0].group
+  const under = center ? candidates.find((c) => c.group === center) : undefined
+  return under && under.share >= CENTER_SHARE ? under.group : null
+}
+
+const CENTER_SHARE = 0.35
