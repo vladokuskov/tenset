@@ -2,6 +2,7 @@ import { Printer } from 'lucide-react'
 import { Fragment, useEffect } from 'react'
 import { notMedicalAdvice } from '../../app/brand'
 import { dayName } from '../../app/days'
+import { formatRest } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
@@ -9,6 +10,7 @@ import { dateFormat } from '../../i18n/format'
 import { useLocale, useMessages } from '../../i18n/messages'
 import { BackButton, Button, EmptyState, LinkButton } from '../../ui'
 import { BodyMap, VolumeLegend } from '../bodymap'
+import { supersetLabels } from '../builder/labels'
 import { exerciseName } from '../share/resolveNames'
 import { exportMessages } from './messages'
 
@@ -105,12 +107,15 @@ export function PrintPage() {
                 <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.day}</th>
                 <th scope="col" className="py-1.5 pr-2 font-semibold">{m.exercise}</th>
                 <th scope="col" className="w-10 py-1.5 pr-2 text-right font-semibold">{m.sets}</th>
-                <th scope="col" className="w-14 py-1.5 font-semibold">{m.reps}</th>
+                <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.reps}</th>
+                <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.restCol}</th>
+                <th scope="col" className="w-10 py-1.5 font-semibold">{m.rirCol}</th>
               </tr>
             </thead>
             {order.map((d) => {
               const s = days[d]
               const entries = s.kind === 'train' ? program.days[d].entries : []
+              const pairs = supersetLabels(entries)
               const span = Math.max(1, entries.length + (entries.length && s.note ? 1 : 0))
               const dayCell = (
                 <th scope="rowgroup" rowSpan={span} className="py-1.5 pr-2 align-top font-semibold">
@@ -123,7 +128,7 @@ export function PrintPage() {
                   {entries.length === 0 ? (
                     <tr>
                       {dayCell}
-                      <td colSpan={3} className="py-1.5 text-ink-3">
+                      <td colSpan={5} className="py-1.5 text-ink-3">
                         {s.kind === 'rest' ? m.rest : m.noExercisesYet}
                         {s.note && <span className="ml-2 text-ink-2">{s.note}</span>}
                       </td>
@@ -133,13 +138,18 @@ export function PrintPage() {
                       <Fragment key={e.id}>
                         <tr>
                           {i === 0 && dayCell}
-                          <td className="py-1 pr-2">{exerciseName(e.exerciseId, catalog, program.custom, locale)}</td>
+                          <td className="py-1 pr-2">
+                            {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
+                            {exerciseName(e.exerciseId, catalog, program.custom, locale)}
+                          </td>
                           <td className="py-1 pr-2 text-right num">{e.sets}</td>
-                          <td className="py-1 num">{e.reps ?? ''}</td>
+                          <td className="py-1 pr-2 num">{e.reps ?? ''}</td>
+                          <td className="py-1 pr-2 num">{e.restSec === undefined ? '' : formatRest(e.restSec, locale)}</td>
+                          <td className="py-1 num">{e.rir ?? ''}</td>
                         </tr>
                         {i === entries.length - 1 && s.note && (
                           <tr>
-                            <td colSpan={3} className="pb-1.5 text-xs text-ink-2">
+                            <td colSpan={5} className="pb-1.5 text-xs text-ink-2">
                               {m.note(s.note)}
                             </td>
                           </tr>

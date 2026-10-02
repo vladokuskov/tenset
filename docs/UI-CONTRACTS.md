@@ -51,10 +51,10 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 ## App layer (`src/app`)
 
 - `useCatalog()`: exercises, active exercises, catalog map, by-slug map, replacements, splits. Overridable through `AppProviders catalog={...}`.
-- `useWeek(program?)`: memoized `computeWeek` + `computeCoverage` + recovery schedule for the active program (or a passed one, e.g. a decoded share link) under current prefs. Returns `{ program, week, coverage, schedule, order, days, dayFacts(day), prefs }`. `days[d]` has `kind`, `label`, `exercises`, `hardSets`, `topGroups`. `order` is display order from `weekStart`.
+- `useWeek(program?)`: memoized `computeWeek` + `computeCoverage` + recovery schedule for the active program (or a passed one, e.g. a decoded share link) under current prefs. Returns `{ program, week, coverage, schedule, order, days, dayFacts(day), prefs }`. `days[d]` has `kind`, `label`, `exercises`, `hardSets`, `topGroups`, `estMinutes` (planned session length rounded to 5 minutes, 0 for rest or empty days, from `src/domain/session.ts`). `order` is display order from `weekStart`.
 - `days.ts`: `DayIndex` (0 = Monday), slugs `mon..sun`, `dayName(d, 'short'|'long'|'letter')`, `weekOrder(weekStart)`, `sortDays`, `formatDayList`, `todayIndex`.
 - `bands.ts`: `bandLabel(band, { goal, optional })` gives not trained / light / moderate / target range / high / very high; optional groups never read "light"; the general goal reads moderate as "good for general fitness". Also `targetText(edges)` ("target 10-20"), `bandRange`, `bandExplanation` (neutral one-liners for "why?").
-- `format.ts`: `formatSets(7.5)` "7.5", `setsLabel`, `countLabel`, `formatMath(3, 0.5)` "3 × 0.5 = 1.5", `formatDelta(8, 11)` "8 → 11", `joinMeta`, `formatDaySummary(5, 17)` "5 exercises · 17 sets".
+- `format.ts`: `formatSets(7.5)` "7.5", `setsLabel`, `countLabel`, `formatMath(3, 0.5)` "3 × 0.5 = 1.5", `formatDelta(8, 11)` "8 → 11", `joinMeta`, `formatDaySummary(5, 17, locale, 55)` "5 exercises · 17 sets · about 55 min" (minutes only when above 0), `formatRest(90)` "90 s" / `formatRest(120)` "2 min", `formatRir(2)` "RIR 2".
 - `volumeScale.ts`: `VOLUME_COLOR[band]`, `ROLE_COLOR[role]`, `groupShade(group, sets, scale)`, `headShade(head, sets, scale)`, `dayEdges(edges)` (weekly edges times 10/30 for the day scale).
 - `search.ts`: zod building blocks for search params (every param optional, invalid values become `undefined`).
 - `firstRun.ts`: `/`, `/day/*` and `/body` redirect to `/welcome` while no program exists. Catalog, detail, settings, legal pages and `/shared` stay reachable. Skipping the welcome creates a blank program.
@@ -79,6 +79,10 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 | `/settings` | `sheet` | `equipment`, `overrides`, `custom` |
 | `/credits`, `/privacy`, `/about` | none | none |
 | `/dev/figure` | unchanged, dev only | none |
+
+## Entry fields
+
+`Entry` (`src/domain/schema.ts`): `id`, `exerciseId`, `sets`, optional `reps`, `restSec` (0-600, step 15; absent means the exercise default in the estimate), `rir` (0-5), `withPrev: true` (superset with the entry above; pairs only). Change them only through the program store (`setRestSec`, `setRir`, `linkWithPrev`), which keeps pairs consistent and undoable. Rows and cards label pairs with `supersetLabels(entries)` from `src/features/builder/labels.ts` (A1/A2, B1/B2; null for solo entries). Swap candidates are ranked by `rankAlternatives` in `src/features/catalog/alternatives.ts` (equipment, curated list, head overlap, level, id).
 
 ## Shared component contracts
 

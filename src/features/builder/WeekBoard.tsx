@@ -16,7 +16,7 @@ import { cx } from '../../ui'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './desktop/board'
 import { SORT_LABEL, SortableLists, type OtherDrag, type SortMove } from './dnd'
 import { useSortableItem, useSortableList } from './useSortable'
-import { defaultSets, repsText, unitOf, type AnyExercise } from './labels'
+import { defaultSets, repsText, supersetLabels, unitOf, type AnyExercise, type SupersetLabel } from './labels'
 import { exerciseFor } from './lookup'
 import { builderMessages } from './messages'
 import { PulseMini } from './PulseMini'
@@ -38,6 +38,7 @@ function BoardCard({
   exercise,
   dim,
   lit,
+  superset,
   onHover,
 }: {
   entry: Entry
@@ -47,6 +48,7 @@ function BoardCard({
   dim: boolean
   /** Undefined when nothing is highlighted, null when this entry is not part of the highlight. */
   lit: Role | null | undefined
+  superset: SupersetLabel | null
   onHover: Hover
 }) {
   const { ref, isDragging } = useSortableItem(entry.id, index, String(day))
@@ -79,6 +81,13 @@ function BoardCard({
       >
         <span className={NAME}>{exercise.name}</span>
         <span className="num mt-0.5 block text-xs text-ink-2">
+          {superset && (
+            <>
+              <span aria-hidden className="font-semibold text-ink">{superset.label}</span>
+              <span className="sr-only">{m.supersetMarker(superset.letter, superset.position)}</span>
+              {' · '}
+            </>
+          )}
           {entry.reps ? `${entry.sets} × ${repsText(entry.reps, unitOf(exercise), locale)}` : common[locale].sets(entry.sets)}
         </span>
       </Link>
@@ -115,6 +124,8 @@ function BoardColumn({
   const rest = d.kind === 'rest'
   const byId = new Map(program.days.flatMap((x) => x.entries).map((e) => [e.id, e]))
   const groups = Object.fromEntries(Object.entries(week.daily).map(([g, v]) => [g, v[day]]))
+  const labels = supersetLabels(d.entries)
+  const supersetOf = new Map(d.entries.map((e, i) => [e.id, labels[i]]))
 
   return (
     <section
@@ -141,6 +152,12 @@ function BoardColumn({
               <>
                 <span className="whitespace-nowrap">{c.exercises(s.exercises)}</span> ·{' '}
                 <span className="whitespace-nowrap">{setsLabel(s.hardSets, locale)}</span>
+                {s.estMinutes > 0 && (
+                  <>
+                    {' '}
+                    · <span className="whitespace-nowrap">{c.aboutMinutes(s.estMinutes)}</span>
+                  </>
+                )}
               </>
             )}
           </span>
@@ -155,7 +172,7 @@ function BoardColumn({
           const ex = entry ? exerciseFor(entry.exerciseId, catalog, program) : null
           if (!entry || !ex) return null
           const lit = highlight ? (highlight[id] ?? null) : undefined
-          return <BoardCard key={id} entry={entry} index={index} day={day} exercise={ex} dim={rest} lit={lit} onHover={onHover} />
+          return <BoardCard key={id} entry={entry} index={index} day={day} exercise={ex} dim={rest} lit={lit} superset={supersetOf.get(id) ?? null} onHover={onHover} />
         })}
         {ids.length === 0 && (
           <li className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-line-strong px-2 py-6 text-center text-xs text-ink-3">
@@ -222,8 +239,8 @@ export function WeekBoard({ view, onAdd, onHover, highlight = null, drawer, onDr
     const entry = program.days[from]?.entries[mv.fromIndex]
     const name = (entry && exerciseFor(entry.exerciseId, catalog, program)?.name) ?? m.someExerciseBoard
     onHover(null)
-    if (from === to) change(m.movedToPosition(name, mv.toIndex + 1), () => reorder(from, mv.fromIndex, mv.toIndex))
-    else change(m.movedTo(name, to), () => moveEntry(mv.id, to, mv.toIndex))
+    if (from === to) change(m.movedToPosition(name, mv.toIndex + 1), () => reorder(from, mv.fromIndex, mv.toIndex), { noteSplit: true })
+    else change(m.movedTo(name, to), () => moveEntry(mv.id, to, mv.toIndex), { noteSplit: true })
   }
 
   return (

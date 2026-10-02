@@ -34,8 +34,20 @@ export function joinMeta(parts: readonly (string | false | null | undefined)[]):
   return parts.filter(Boolean).join(' · ')
 }
 
-export function formatDaySummary(exercises: number, hardSets: number, locale: Locale = getLocale()): string {
+/** "5 exercises · 17 sets · about 55 min"; minutes only when there is an estimate. */
+export function formatDaySummary(exercises: number, hardSets: number, locale: Locale = getLocale(), minutes = 0): string {
   const m = common[locale]
   if (exercises === 0) return m.noExercisesYet
-  return joinMeta([m.exercises(exercises), m.sets(hardSets)])
+  return joinMeta([m.exercises(exercises), m.sets(hardSets), minutes > 0 && m.aboutMinutes(minutes)])
+}
+
+/** Rest between sets: "45 s", "90 s", "2 min". */
+export function formatRest(sec: number, locale: Locale = getLocale()): string {
+  const m = common[locale]
+  return sec >= 60 && sec % 60 === 0 ? m.minutesShort(sec / 60) : m.secondsShort(sec)
+}
+
+/** "RIR 2". */
+export function formatRir(rir: number, locale: Locale = getLocale()): string {
+  return common[locale].rir(rir)
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDaySummary, formatDelta, formatMath, formatSets, joinMeta, setsLabel } from './format'
+import { formatDaySummary, formatDelta, formatMath, formatRest, formatRir, formatSets, joinMeta, setsLabel } from './format'
 
 describe('format', () => {
   it('formats fractional sets', () => {
@@ -33,5 +33,15 @@ describe('format', () => {
     expect(joinMeta(['a', false, '', null, 'b'])).toBe('a · b')
     expect(formatDaySummary(5, 17)).toBe('5 exercises · 17 sets')
     expect(formatDaySummary(0, 0)).toBe('No exercises yet')
+    expect(formatDaySummary(5, 17, 'en', 55)).toBe('5 exercises · 17 sets · about 55 min')
+    expect(formatDaySummary(5, 17, 'uk', 55)).toBe('5 вправ · 17 підходів · близько 55 хв')
+  })
+
+  it('formats rest and RIR', () => {
+    expect(formatRest(90, 'en')).toBe('90 s')
+    expect(formatRest(120, 'en')).toBe('2 min')
+    expect(formatRest(45, 'uk')).toBe('45 с')
+    expect(formatRest(180, 'uk')).toBe('3 хв')
+    expect(formatRir(2, 'en')).toBe('RIR 2')
   })
 })

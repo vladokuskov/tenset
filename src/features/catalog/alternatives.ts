@@ -1,39 +1,95 @@
-import { hasEquipment } from '../../domain/equipment'
-import type { Exercise } from '../../domain/schema'
+import { availableSet, hasEquipment } from '../../domain/equipment'
+import { resolveExercise, type ResolveContext } from '../../domain/resolve'
+import type { CustomExercise, Exercise } from '../../domain/schema'
+import { allHeadsOfGroup } from '../../domain/taxonomy'
+
+type AnyExercise = Exercise | CustomExercise
 
 export type Alternative = { exercise: Exercise; available: boolean }
+export type Ranked<T extends AnyExercise> = { exercise: T; available: boolean; overlap: number }
 
-const primaries = (e: Exercise) => Object.keys(e.groups).filter((g) => e.groups[g] === 'primary')
+const isCatalog = (e: AnyExercise): e is Exercise => typeof e.id === 'number'
+
+/** Head emphasis weighted by the role of its group, after the user's overrides and counting mode. */
+export function headVector(e: AnyExercise, ctx: ResolveContext): Map<string, number> {
+  const v = new Map<string, number>()
+  const r = resolveExercise(e.id, ctx)
+  if (!r) return v
+  for (const [group, { weight }] of Object.entries(r.groups)) {
+    if (weight <= 0) continue
+    const heads = allHeadsOfGroup(group)
+    if (heads.length === 0) v.set(`group:${group}`, weight)
+    for (const h of heads) v.set(h, (r.heads[h] ?? 1) * weight)
+  }
+  return v
+}
+
+/** Cosine similarity of two head vectors, 0 to 1. */
+export function headOverlap(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, number>): number {
+  let dot = 0
+  let na = 0
+  let nb = 0
+  for (const [k, x] of a) {
+    na += x * x
+    dot += x * (b.get(k) ?? 0)
+  }
+  for (const x of b.values()) nb += x * x
+  return na && nb ? dot / Math.sqrt(na * nb) : 0
+}
+
+const levelOf = (e: AnyExercise) => (isCatalog(e) ? e.level : null)
 
 /**
- * Same movement pattern and at least one shared primary group (plus the record's own list).
- * Exercises your equipment allows come first, then the curated list order, then closer matches.
+ * Ranks swap candidates: equipment you have first, then the curated list order, then head overlap,
+ * then closer level, then id. Filtering which candidates qualify is up to the caller.
  */
-export function alternativesFor(
-  exercise: Exercise,
-  exercises: readonly Exercise[],
+export function rankAlternatives<T extends AnyExercise>(
+  target: AnyExercise,
+  candidates: readonly T[],
+  ctx: ResolveContext,
   available: Iterable<string>,
-  limit = 6,
-): Alternative[] {
-  const avail = new Set(available)
-  const own = new Set(primaries(exercise))
-  const listed = new Map(exercise.alternatives.map((id, i) => [id, i]))
-  const scored = exercises
-    .filter((e) => e.id !== exercise.id && e.status === 'active')
-    .map((e) => {
-      const shared = primaries(e).filter((g) => own.has(g)).length
-      return { e, shared, rank: listed.get(e.id) ?? Infinity }
-    })
-    .filter(({ e, shared, rank }) => rank !== Infinity || (e.pattern === exercise.pattern && shared > 0))
-    .map((s) => ({ ...s, available: hasEquipment(s.e, avail) }))
-
+): Ranked<T>[] {
+  const avail = availableSet(available)
+  const curated = new Map((isCatalog(target) ? target.alternatives : []).map((id, i) => [id, i]))
+  const own = headVector(target, ctx)
+  const level = levelOf(target)
+  const scored = candidates.map((e) => ({
+    exercise: e,
+    available: hasEquipment(e, avail),
+    overlap: headOverlap(own, headVector(e, ctx)),
+    rank: isCatalog(e) ? (curated.get(e.id) ?? Infinity) : Infinity,
+    distance: level === null ? 0 : Math.abs((levelOf(e) ?? level) - level),
+  }))
   scored.sort(
     (a, b) =>
       Number(b.available) - Number(a.available) ||
       a.rank - b.rank ||
-      b.shared - a.shared ||
-      Math.abs(a.e.level - exercise.level) - Math.abs(b.e.level - exercise.level) ||
-      a.e.id - b.e.id,
+      b.overlap - a.overlap ||
+      a.distance - b.distance ||
+      String(a.exercise.id).localeCompare(String(b.exercise.id), 'en', { numeric: true }),
   )
-  return scored.slice(0, limit).map(({ e, available }) => ({ exercise: e, available }))
+  return scored.map(({ exercise, available, overlap }) => ({ exercise, available, overlap }))
+}
+
+const primaries = (e: Exercise) => Object.keys(e.groups).filter((g) => e.groups[g] === 'primary')
+
+/** Same movement pattern and at least one shared primary group, plus the record's own list. */
+export function alternativesFor(
+  exercise: Exercise,
+  exercises: readonly Exercise[],
+  available: Iterable<string>,
+  ctx: ResolveContext,
+  limit = 6,
+): Alternative[] {
+  const own = new Set(primaries(exercise))
+  const listed = new Set(exercise.alternatives)
+  const candidates = exercises.filter(
+    (e) =>
+      e.id !== exercise.id &&
+      e.status === 'active' &&
+      (listed.has(e.id) || (e.pattern === exercise.pattern && primaries(e).some((g) => own.has(g)))),
+  )
+  return rankAlternatives(exercise, candidates, ctx, available)
+    .slice(0, limit)
+    .map(({ exercise, available }) => ({ exercise, available }))
 }

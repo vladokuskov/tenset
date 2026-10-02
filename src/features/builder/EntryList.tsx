@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronDown, Ellipsis, GripVertical, Trash2 } from 'lucide-react'
 import { daySlug, type DayIndex } from '../../app/days'
+import { formatRest, formatRir } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import type { Entry, Program } from '../../domain/schema'
 import { useLocale } from '../../i18n/messages'
@@ -10,7 +11,7 @@ import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
 import { IconButton, Stepper, cx } from '../../ui'
 import { SORT_LABEL, SortableLists, type SortMove } from './dnd'
 import { useSortableItem } from './useSortable'
-import { defaultReps, isCustom, repsText, rowMeta, unitOf, type AnyExercise } from './labels'
+import { defaultReps, isCustom, repsText, rowMeta, supersetLabels, unitOf, type AnyExercise, type SupersetLabel } from './labels'
 import { exerciseFor } from './lookup'
 import { builderMessages } from './messages'
 import { useChange } from './useChange'
@@ -25,9 +26,12 @@ type RowProps = {
   sortable: boolean
   onOpen: Open
   onOpenReps: Open
+  superset: SupersetLabel | null
 }
 
 type RefFn = (el: Element | null) => void
+
+const TAG = 'num inline-flex h-8 items-center rounded-full bg-surface-2 px-3 text-sm text-ink-2'
 
 // A disabled dnd-kit sortable still stamps role="button" and aria-disabled on the row, which
 // disables every control inside it for assistive tech, so single rows skip the hook entirely.
@@ -48,6 +52,7 @@ function EntryRowView({
   sortable,
   onOpen,
   onOpenReps,
+  superset,
   rowRef,
   handleRef,
   isDragging = false,
@@ -79,8 +84,15 @@ function EntryRowView({
       ref={rowRef}
       className={cx('relative px-1 py-2', isDragging && 'z-10 rounded-lg bg-raised shadow-float')}
       data-entry={entry.id}
+      data-superset={superset?.label}
       {...{ [SORT_LABEL]: m.sortLabel(exercise.name, index + 1) }}
     >
+      {superset && !isDragging && (
+        <span
+          aria-hidden
+          className={cx('absolute -left-1 w-0.5 rounded-full bg-ink-3', superset.position === 1 ? 'bottom-0 top-4' : 'bottom-4 top-0')}
+        />
+      )}
       <div className="flex items-center gap-1">
         {sortable && (
           <button
@@ -102,6 +114,12 @@ function EntryRowView({
         <IconButton icon={Ellipsis} size={36} label={m.optionsFor(exercise.name)} onClick={() => onOpen(entry.id)} />
       </div>
       <div className={cx('mt-1 flex flex-wrap items-center gap-x-3 gap-y-2', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]')}>
+        {superset && (
+          <span className="num inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-ink-3 px-1.5 text-sm font-semibold text-ink">
+            <span aria-hidden>{superset.label}</span>
+            <span className="sr-only">{m.supersetMarker(superset.letter, superset.position)}</span>
+          </span>
+        )}
         <Stepper
           value={entry.sets}
           onChange={(v) => change(m.setsChanged(exercise.name, v), () => setSets(entry.id, v))}
@@ -122,6 +140,13 @@ function EntryRowView({
           <span className="num">{repsText(reps, unit, locale)}</span>
           <ChevronDown size={14} strokeWidth={2} aria-hidden className="text-ink-3" />
         </button>
+        {entry.restSec !== undefined && (
+          <span className={TAG}>
+            <span aria-hidden>{formatRest(entry.restSec, locale)}</span>
+            <span className="sr-only">{m.restChip(formatRest(entry.restSec, locale))}</span>
+          </span>
+        )}
+        {entry.rir !== undefined && <span className={TAG}>{formatRir(entry.rir, locale)}</span>}
       </div>
     </li>
   )
@@ -138,11 +163,13 @@ export function EntryList({ program, day, onOpen, onOpenReps }: { program: Progr
   const byId = new Map(d.entries.map((e) => [e.id, e]))
   const key = String(day)
   const sortable = d.kind === 'train' && d.entries.length > 1
+  const labels = supersetLabels(d.entries)
+  const supersetOf = new Map(d.entries.map((e, i) => [e.id, labels[i]]))
 
   const onMove = (mv: SortMove) => {
     const entry = byId.get(mv.id)
     const ex = entry ? exerciseFor(entry.exerciseId, catalog, program) : null
-    change(m.movedToPosition(ex?.name ?? m.someExercise, mv.toIndex + 1), () => reorder(day, mv.fromIndex, mv.toIndex))
+    change(m.movedToPosition(ex?.name ?? m.someExercise, mv.toIndex + 1), () => reorder(day, mv.fromIndex, mv.toIndex), { noteSplit: true })
   }
 
   return (
@@ -166,7 +193,7 @@ export function EntryList({ program, day, onOpen, onOpenReps }: { program: Progr
                 </li>
               )
             }
-            return <EntryRow key={id} entry={entry} index={index} day={day} exercise={ex} sortable={sortable} onOpen={onOpen} onOpenReps={onOpenReps} />
+            return <EntryRow key={id} entry={entry} index={index} day={day} exercise={ex} sortable={sortable} onOpen={onOpen} onOpenReps={onOpenReps} superset={supersetOf.get(id) ?? null} />
           })}
         </ul>
       )}

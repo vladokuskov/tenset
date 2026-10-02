@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fixtureExercise } from '../../domain/test-fixtures'
-import { matchesQuery, normalize, repsText, rowMeta } from './labels'
+import { matchesQuery, normalize, repsText, rowMeta, supersetLabels } from './labels'
 
 const press = fixtureExercise(1, {
   name: 'Жим лежачи',
@@ -35,5 +35,18 @@ describe('copy', () => {
     expect(repsText(undefined, 'seconds', 'en')).toBe('Time')
     expect(rowMeta(press, [], 'en')).toBe('No muscles mapped')
     expect(rowMeta(press, ['Груди'], 'uk')).toBe('Груди')
+  })
+})
+
+describe('supersetLabels', () => {
+  it('letters pairs in order and leaves solo entries blank', () => {
+    const labels = supersetLabels([{}, { withPrev: true }, {}, {}, { withPrev: true }, {}])
+    expect(labels.map((l) => l?.label ?? null)).toEqual(['A1', 'A2', null, 'B1', 'B2', null])
+    expect(labels[4]?.position).toBe(2)
+  })
+
+  it('ignores a stray flag on the first entry or after a pair', () => {
+    expect(supersetLabels([{ withPrev: true }, {}]).every((l) => l === null)).toBe(true)
+    expect(supersetLabels([{}, { withPrev: true }, { withPrev: true }]).map((l) => l?.label ?? null)).toEqual(['A1', 'A2', null])
   })
 })

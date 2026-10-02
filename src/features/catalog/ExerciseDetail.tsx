@@ -66,19 +66,24 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
   const search = route.useSearch()
   const router = useRouter()
   const navigate = useNavigate()
-  const { activeExercises } = useCatalog()
+  const { activeExercises, catalog } = useCatalog()
   const program = useActiveProgram()
   const available = usePrefsStore((s) => s.equipment)
   const goal = usePrefsStore((s) => s.goal)
   const weekStart = usePrefsStore((s) => s.weekStart)
   const countingMode = usePrefsStore((s) => s.countingMode)
+  const overrides = usePrefsStore((s) => s.overrides)
   const locale = useLocale()
   const m = catalogMessages[locale]
   const roles = useRoles(exercise)
   const customized = useIsCustomized(exercise)
   const days = useSheet('days')
   const counts = useSheet('counts')
-  const alternatives = useMemo(() => alternativesFor(exercise, activeExercises, available), [exercise, activeExercises, available])
+  const custom = program?.custom
+  const alternatives = useMemo(
+    () => alternativesFor(exercise, activeExercises, available, { catalog, custom: custom ?? [], countingMode, overrides }),
+    [exercise, activeExercises, available, catalog, custom, countingMode, overrides],
+  )
 
   const addTo: DayIndex | undefined =
     search.addTo === undefined ? undefined : typeof search.addTo === 'number' ? search.addTo : dayFromSlug(search.addTo)

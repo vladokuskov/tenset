@@ -38,7 +38,7 @@ export function WeekList({ view }: { view: WeekView }) {
                 ) : (
                   <>
                     <span className="block truncate text-base">{s.label ?? m.training}</span>
-                    <span className="num block truncate text-sm text-ink-2">{formatDaySummary(s.exercises, s.hardSets, locale)}</span>
+                    <span className="num block truncate text-sm text-ink-2">{formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes)}</span>
                     {s.topGroups.length > 0 && (
                       <span className="block truncate text-xs text-ink-3">{s.topGroups.map((g) => groupName(g, locale)).join(', ')}</span>
                     )}
