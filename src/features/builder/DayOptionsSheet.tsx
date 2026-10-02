@@ -2,6 +2,7 @@ import { BedDouble, Dumbbell, Eraser } from 'lucide-react'
 import { useState } from 'react'
 import { dayName, type DayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
+import { sessionLabel } from '../../data/localize'
 import { LABEL_MAX, NOTE_MAX } from '../../domain/program'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
@@ -21,7 +22,7 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
   const m = builderMessages[locale]
   const c = common[locale]
   const d = view?.program.days[day]
-  const [label, setLabel] = useState(d?.label ?? '')
+  const [label, setLabel] = useState(sessionLabel(d?.label, locale) ?? '')
   const [note, setNote] = useState(d?.note ?? '')
   const [target, setTarget] = useState<DayIndex | null>(null)
   const [status, setStatus] = useState<string | null>(null)
@@ -29,7 +30,7 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
   if (open !== wasOpen) {
     setWasOpen(open)
     if (open) {
-      setLabel(d?.label ?? '')
+      setLabel(sessionLabel(d?.label, locale) ?? '')
       setNote(d?.note ?? '')
       setTarget(null)
       setStatus(null)
@@ -43,7 +44,7 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
     if (res) setStatus(res.message)
   }
   const saveLabel = () => {
-    if (label.trim() !== (d.label ?? '')) run(label.trim() ? m.labelNow(day, label.trim()) : m.labelRemoved, () => store.setLabel(day, label))
+    if (label.trim() !== (sessionLabel(d.label, locale) ?? '')) run(label.trim() ? m.labelNow(day, label.trim()) : m.labelRemoved, () => store.setLabel(day, label))
   }
   const saveNote = () => {
     if (note.trim() !== (d.note ?? '')) run(note.trim() ? m.noteSaved : m.noteRemoved, () => store.setNote(day, note))
@@ -53,7 +54,7 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
     setStatus(c.undone)
     const { programs, activeId } = programStore.getState()
     const restored = activeId ? programs[activeId]?.days[day] : undefined
-    setLabel(restored?.label ?? '')
+    setLabel(sessionLabel(restored?.label, locale) ?? '')
     setNote(restored?.note ?? '')
   }
 

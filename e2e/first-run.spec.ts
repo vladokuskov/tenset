@@ -13,7 +13,7 @@ test('first run: template to a filled, colored Plan', async ({ page }) => {
   } else {
     const coverage = page.getByRole('region', { name: 'Week coverage' })
     await expect(coverage).toContainText(/\d+ of 19/)
-    await expect(coverage).toContainText('groups trained')
+    await expect(coverage).toContainText('muscle groups')
     const week = page.getByRole('list', { name: 'Week' })
     await expect(week.getByRole('listitem')).toHaveCount(7)
     // The current weekday's row also reads "Today".

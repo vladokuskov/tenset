@@ -7,6 +7,13 @@ import { plural } from '../../i18n/plural'
 
 type Missing = { label: string; examples: string; why: string }
 
+/** "3" or "3-4": the spread of rest days between sessions. */
+const gapRange = (gaps: readonly number[]) => {
+  const lo = Math.min(...gaps)
+  const hi = Math.max(...gaps)
+  return lo === hi ? String(lo) : `${lo}-${hi}`
+}
+
 // Groups whose parts Ukrainian calls «пучки»; the rest use «частини».
 const BUNDLES = new Set(['biceps', 'triceps', 'front_delt', 'side_delt', 'rear_delt'])
 
@@ -44,7 +51,7 @@ export const bodymapMessages = defineMessages({
     notTrainedThisWeek: 'Not trained this week',
     noDayReaches: (n: number) => `No day reaches ${n} sets`,
     trainedOnce: (days: string) => `Trained ${days} · once a week`,
-    trainedGaps: (days: string, gaps: readonly number[]) => `Trained ${days} · gaps ${gaps.join(', ')} days`,
+    trainedGaps: (days: string, gaps: readonly number[]) => `Trained ${days} · ${gapRange(gaps)} days apart`,
 
     // sources
     heuristic: 'A rule of thumb built into this app, not a study result.',
@@ -65,8 +72,8 @@ export const bodymapMessages = defineMessages({
 
     // legend
     weekCaption: (lo: number, hi: number) =>
-      `Week scale: weekly sets per muscle. Target for most groups: ${formatSets(lo, 'en')} to ${formatSets(hi, 'en')}. Optional groups on the light step read "some sets".`,
-    dayCaption: 'Day scale: sets in one session, shaded on a third of the weekly ranges.',
+      `Sets per muscle each week. Most muscles aim for ${formatSets(lo, 'en')} to ${formatSets(hi, 'en')}.`,
+    dayCaption: 'Sets per muscle in this session.',
     colorScale: (week: boolean) => `Color scale, ${week ? 'week' : 'day'}`,
 
     // day strip
@@ -74,7 +81,7 @@ export const bodymapMessages = defineMessages({
 
     // coverage
     setsOnDay: (sets: number, day: DayIndex) => `${formatSets(sets, 'en')} on ${dayName(day, 'short', 'en')}`,
-    noBand: 'no band',
+    noBand: 'no target',
     optional: 'optional',
     coverage: 'Coverage',
     groupsTrained: (trained: number, total: number) => `${trained} of ${total} groups trained this week`,
@@ -83,17 +90,17 @@ export const bodymapMessages = defineMessages({
       'Each set counts 1.0 for a primary muscle and 0.5 for a secondary one. Weekly totals fall into bands; most groups sit in the target range at 10 to 20 sets. Optional groups use their own range and read "some sets" instead of light below it.',
     notTrained: 'Not trained:',
     optionalNotTrained: 'Optional, not trained',
-    alsoTracked: 'Also tracked, no band',
+    alsoTracked: 'Also tracked',
 
     // insights
     balance: 'Balance',
     balanceDescription: 'Side-by-side counts, not rules.',
-    pushPullTitle: 'Push and pull, hard sets',
+    pushPullTitle: 'Push and pull, working sets',
     push: 'push',
     pull: 'pull',
     pushPullTopic: 'Push and pull',
     pushPullBody:
-      'Hard sets of pressing (flat, incline, overhead, dips) next to pulling (rows, pull-ups, pulldowns). There is no target ratio here, only the two counts.',
+      'Working sets of pressing (flat, incline, overhead, dips) next to pulling (rows, pull-ups, pulldowns). There is no target ratio here, only the two counts.',
     thighTitle: 'Front and back of the thigh, weekly sets',
     quads: 'quads',
     hamstrings: 'hamstrings',
@@ -114,15 +121,17 @@ export const bodymapMessages = defineMessages({
     bandTopic: (group: string) => `${group} band`,
     targetRange: (lo: number, hi: number) =>
       `${formatSets(lo, 'en')} to ${formatSets(hi, 'en')} weekly sets, this group's target range.`,
-    noBandNote: 'Tracked for reference, without a band.',
+    noBandNote: 'Tracked for reference, with no target range.',
     days: 'Days',
-    heads: (_group: string) => 'Heads',
-    lighterEmphasis: (pct: number) => `Lighter emphasis, ${pct}% of group sets`,
+    heads: (_group: string) => 'Parts',
+    lighterEmphasis: (pct: number) => `Less direct work, ${pct}% of the group's sets`,
     emphasisTopic: (head: string) => `${head} emphasis`,
     emphasisBody:
       "Heads shade by how much each exercise emphasizes them. This one gets less than 60% of the group's weekly sets, so it has less direct work than the rest of the group.",
     includes: 'includes: ',
     howSetsCount: 'How sets count',
+    contribution: (sets: number, value: number) =>
+      sets === value ? common.en.sets(sets) : `${common.en.sets(sets)}, counts as ${formatSets(value, 'en')}`,
     howSetsCountBody: 'A set counts 1.0 toward a primary muscle and 0.5 toward a secondary one. The map adds these up per group.',
     fromYourExercises: 'From your exercises',
     unknownExercise: 'Unknown exercise',
@@ -176,7 +185,7 @@ export const bodymapMessages = defineMessages({
     notTrainedThisWeek: 'Цього тижня не тренується',
     noDayReaches: (n) => `Жодного дня не набирається ${common.uk.sets(n)}`,
     trainedOnce: (days) => `Тренується: ${days} · раз на тиждень`,
-    trainedGaps: (days, gaps) => `Тренується: ${days} · перерви ${gaps.join(', ')} дн.`,
+    trainedGaps: (days, gaps) => `Тренується: ${days} · перерви ${gapRange(gaps)} дн.`,
 
     heuristic: 'Емпіричне правило, закладене в застосунок, а не результат дослідження.',
     expertOpinion: 'Думка експертів',
@@ -193,14 +202,14 @@ export const bodymapMessages = defineMessages({
     whichMuscle: 'Який мʼяз?',
 
     weekCaption: (lo, hi) =>
-      `Шкала тижня: підходи на мʼяз за тиждень. Ціль для більшості груп: від ${formatSets(lo, 'uk')} до ${formatSets(hi, 'uk')}. Необовʼязкові групи на кроці «мало» показують «кілька підходів».`,
-    dayCaption: 'Шкала дня: підходи за одне тренування на третині тижневих діапазонів.',
+      `Підходи на мʼяз за тиждень. Ціль для більшості мʼязів: від ${formatSets(lo, 'uk')} до ${formatSets(hi, 'uk')}.`,
+    dayCaption: 'Підходи на мʼяз за це тренування.',
     colorScale: (week) => `Шкала кольору, ${week ? 'тиждень' : 'день'}`,
 
     setsPerDay: (summary) => `Підходи за днями: ${summary}`,
 
     setsOnDay: (sets, day) => `${dayName(day, 'short', 'uk')}: ${formatSets(sets, 'uk')}`,
-    noBand: 'без діапазону',
+    noBand: 'без цілі',
     optional: 'необовʼязкова',
     coverage: 'Охоплення',
     groupsTrained: (trained, total) => `Цього тижня тренується ${trained} з ${total} груп`,
@@ -209,7 +218,7 @@ export const bodymapMessages = defineMessages({
       'Кожен підхід рахується як 1,0 для основного мʼяза і 0,5 для допоміжного. Тижневі суми потрапляють у діапазони; для більшості груп цільовий діапазон становить від 10 до 20 підходів. Необовʼязкові групи мають власний діапазон і нижче нього показують «кілька підходів» замість «мало».',
     notTrained: 'Не тренуються:',
     optionalNotTrained: 'Необовʼязкові, не тренуються',
-    alsoTracked: 'Також відстежуються, без діапазону',
+    alsoTracked: 'Також відстежуються',
 
     balance: 'Баланс',
     balanceDescription: 'Порівняння чисел, а не правила.',
@@ -238,7 +247,7 @@ export const bodymapMessages = defineMessages({
     bandTopic: (group) => `Діапазон: ${group}`,
     targetRange: (lo, hi) =>
       `Від ${formatSets(lo, 'uk')} до ${formatSets(hi, 'uk')} підходів на тиждень, цільовий діапазон цієї групи.`,
-    noBandNote: 'Відстежується для довідки, без діапазону.',
+    noBandNote: 'Відстежується для довідки, без цільового діапазону.',
     days: 'Дні',
     heads: (group) => (BUNDLES.has(group) ? 'Пучки' : 'Частини'),
     lighterEmphasis: (pct) => `Менший акцент, ${pct}% підходів групи`,
@@ -247,6 +256,8 @@ export const bodymapMessages = defineMessages({
       'Зафарбовування показує, наскільки кожна вправа акцентує на цій частині мʼяза. Сюди припадає менше 60% тижневих підходів групи, тож прямої роботи тут менше, ніж на решту групи.',
     includes: 'включає: ',
     howSetsCount: 'Як рахуються підходи',
+    contribution: (sets, value) =>
+      sets === value ? common.uk.sets(sets) : `${common.uk.sets(sets)}, рахується як ${formatSets(value, 'uk')}`,
     howSetsCountBody: 'Підхід рахується як 1,0 для основного мʼяза і 0,5 для допоміжного. Мапа підсумовує це для кожної групи.',
     fromYourExercises: 'З ваших вправ',
     unknownExercise: 'Невідома вправа',

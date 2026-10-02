@@ -27,7 +27,7 @@ export function VolumeLegend({ scale, className }: { scale: MapScale; className?
               style={{ background: VOLUME_COLOR[b] }}
               aria-hidden
             />
-            <span className="mt-1.5 block whitespace-nowrap text-center text-[0.6875rem] leading-tight text-ink-2 @max-[20rem]:text-[0.625rem] @max-[20rem]:tracking-tight">{m.legend[b]}</span>
+            <span className="mt-1.5 block text-balance text-center text-[0.6875rem] leading-tight text-ink-2 @max-[20rem]:text-[0.625rem] @max-[20rem]:tracking-tight">{m.legend[b]}</span>
           </li>
         ))}
       </ul>

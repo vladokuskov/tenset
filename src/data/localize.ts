@@ -86,5 +86,28 @@ export function localizeSplit(s: SplitTemplate, locale: Locale): SplitTemplate {
   }
 }
 
+const splitModules = import.meta.glob<{ id: string; sessions: { label: string }[] }>('../../data/splits/*.json', {
+  eager: true,
+  import: 'default',
+})
+
+// Template session labels in every language, keyed by each spelling, so a day labelled from a
+// template in one language reads in the other. Labels the user typed are left alone.
+const SESSION_LABELS = new Map<string, Record<Locale, string>>()
+for (const s of Object.values(splitModules)) {
+  s.sessions.forEach((session, i) => {
+    const forms = { en: session.label, uk: uk.splits[s.id]?.sessions[i] ?? session.label }
+    for (const form of Object.values(forms)) SESSION_LABELS.set(form.toLowerCase(), forms)
+  })
+}
+
+/** A day label in the given language when it is a template session name, otherwise as typed. */
+export function sessionLabel(label: string, locale?: Locale): string
+export function sessionLabel(label: string | undefined, locale?: Locale): string | undefined
+export function sessionLabel(label: string | undefined, locale: Locale = getLocale()): string | undefined {
+  if (!label) return label
+  return SESSION_LABELS.get(label.trim().toLowerCase())?.[locale] ?? label
+}
+
 /** Raw translation tables, for the data coverage test. */
 export const translations: Readonly<Record<Locale, Text>> = TEXT

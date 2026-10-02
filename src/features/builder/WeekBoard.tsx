@@ -6,6 +6,7 @@ import { dayName, daySlug, todayIndex, type DayIndex } from '../../app/days'
 import { formatDaySummary, setsLabel } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import type { WeekView } from '../../app/useWeek'
+import { sessionLabel } from '../../data/localize'
 import type { Entry, Role } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
@@ -131,7 +132,7 @@ function BoardColumn({
           <span className={cx('text-base font-semibold', rest && 'text-ink-3')}>{dayName(day, 'short', locale)}</span>
           {day === todayIndex() && <span className="text-[0.6875rem] text-ink-3">{m.today}</span>}
         </span>
-        <span className={cx('block truncate text-sm', rest ? 'text-ink-3' : 'text-ink')}>{rest ? m.rest : (d.label ?? m.training)}</span>
+        <span className={cx('block truncate text-sm', rest ? 'text-ink-3' : 'text-ink')}>{rest ? m.rest : (sessionLabel(d.label, locale) ?? m.training)}</span>
         {!rest && (
           <span className="num block text-xs text-ink-2">
             {s.exercises === 0 ? (

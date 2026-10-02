@@ -1,8 +1,11 @@
 import { useMemo } from 'react'
+import { sessionLabel } from '../data/localize'
 import { computeCoverage, type Coverage } from '../domain/coverage'
 import { dayFacts, weekSchedule, type GroupSchedule, type RecoveryFact } from '../domain/recovery'
 import type { Prefs, Program } from '../domain/schema'
 import { computeWeek, type WeekResult } from '../domain/volume'
+import type { Locale } from '../i18n/locale'
+import { useLocale } from '../i18n/messages'
 import { useActiveProgram } from '../store/program.store'
 import { usePrefsStore } from '../store/prefs.store'
 import { weekOrder, type DayIndex } from './days'
@@ -35,7 +38,7 @@ export type WeekView = {
   prefs: Pick<Prefs, 'goal' | 'countingMode' | 'weekStart'>
 }
 
-function summarize(program: Program, week: WeekResult): DaySummary[] {
+function summarize(program: Program, week: WeekResult, locale: Locale): DaySummary[] {
   return program.days.map((d, day) => {
     const topGroups = Object.entries(week.daily)
       .filter(([, days]) => days[day] > 0)
@@ -45,7 +48,7 @@ function summarize(program: Program, week: WeekResult): DaySummary[] {
     return {
       day,
       kind: d.kind,
-      label: d.label,
+      label: sessionLabel(d.label, locale),
       note: d.note,
       exercises: d.kind === 'train' ? d.entries.length : 0,
       hardSets: d.kind === 'train' ? d.entries.reduce((s, e) => s + e.sets, 0) : 0,
@@ -66,6 +69,7 @@ export function useWeek(programOverride?: Program | null): WeekView | null {
   const countingMode = usePrefsStore((s) => s.countingMode)
   const weekStart = usePrefsStore((s) => s.weekStart)
   const overrides = usePrefsStore((s) => s.overrides)
+  const locale = useLocale()
 
   return useMemo(() => {
     if (!program) return null
@@ -76,9 +80,9 @@ export function useWeek(programOverride?: Program | null): WeekView | null {
       coverage: computeCoverage(week, goal),
       schedule: weekSchedule(week.daily, weekStart),
       order: weekOrder(weekStart),
-      days: summarize(program, week),
+      days: summarize(program, week, locale),
       dayFacts: (day: DayIndex) => dayFacts(week.daily, day),
       prefs: { goal, countingMode, weekStart },
     }
-  }, [program, catalog, goal, countingMode, weekStart, overrides])
+  }, [program, catalog, goal, countingMode, weekStart, overrides, locale])
 }

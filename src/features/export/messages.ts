@@ -47,7 +47,7 @@ export const exportMessages = defineMessages({
     plan: 'Plan',
     print: 'Print',
     header: (days: number, sets: number, date: string) =>
-      `Week plan · ${common.en.trainingDays(days)} · ${formatSets(sets, 'en')} hard sets · ${date}`,
+      `Week plan · ${common.en.trainingDays(days)} · ${formatSets(sets, 'en')} working sets · ${date}`,
     day: 'Day',
     exercise: 'Exercise',
     sets: 'Sets',

@@ -43,7 +43,7 @@ export const shareMessages = defineMessages({
     mapLabel: 'Week coverage of the shared program, front and back',
     ofTotal: (total: number) => ` of ${total}`,
     groupsTrained: 'groups trained',
-    summary: (days: number, sets: number) => `${common.en.trainingDays(days)} · ${formatSets(sets, 'en')} hard sets`,
+    summary: (days: number, sets: number) => `${common.en.trainingDays(days)} · ${formatSets(sets, 'en')} working sets`,
     notTrained: (list: string) => `Not trained: ${list}`,
     differs: 'Numbers use your settings, so they can differ from what the sender sees.',
     week: 'Week',

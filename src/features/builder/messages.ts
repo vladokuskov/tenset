@@ -86,21 +86,22 @@ export const builderMessages = defineMessages({
     mostSets: 'Most sets',
     earlierSessions: 'Earlier sessions',
     fact: (group: string, day: number, daysEarlier: number, sets: number) =>
-      `${group}: also ${dayName(day, 'short', 'en')}, ${en.days(daysEarlier)} earlier, ${en.sets(sets)}`,
+      `${group}: ${en.sets(sets)} ${dayName(day, 'on', 'en')}, ${en.days(daysEarlier)} before`,
     showFewer: 'Show fewer',
     showMore: (n: number) => `Show ${n} more`,
 
     // Coverage card
     weekCoverage: 'Week coverage',
     weekCoverageMap: 'Week coverage, front and back',
-    ofTotal: (total: number) => ` of ${total}`,
-    groupsTrained: 'groups trained',
+    allMainTrained: 'Every main muscle gets sets this week',
+    mainUntrained: (n: number) => `${n} main ${plural('en', n, { one: 'muscle has', other: 'muscles have' })} no sets yet`,
+    groupsOf: (trained: number, total: number) => `${trained} of ${total} muscle groups`,
     hardSetsThisWeek: (n: number) => `${en.hardSets(n)} this week`,
     notTrainedYet: 'Not trained yet',
     optionalAtZero: (n: number) => `${n} optional ${plural('en', n, { one: 'group', other: 'groups' })} at 0 sets`,
 
     // Add sheet
-    tabs: { suggested: 'Suggested', muscle: 'Muscle', equipment: 'Equipment', pattern: 'Pattern' },
+    tabs: { suggested: 'Suggested', muscle: 'Muscle', equipment: 'Equipment', pattern: 'Movement' },
     notTrained: 'not trained',
     notTrainedOptional: 'not trained, optional',
     weeklySets: (n: number) => `${formatSets(n, 'en')} sets`,
@@ -113,7 +114,7 @@ export const builderMessages = defineMessages({
     doneCount: (n: number) => `Done (${n})`,
     addHint: 'Tap a row to see how it changes your week.',
     searchExercises: 'Search exercises',
-    searchPlaceholder: 'Search, e.g. RDL or bench',
+    searchPlaceholder: 'Search, e.g. squat or bench',
     clearSearch: 'Clear search',
     browseBy: 'Browse by',
     muscle: 'Muscle',
@@ -121,7 +122,7 @@ export const builderMessages = defineMessages({
     mine: 'Mine',
     allEquipment: 'All equipment',
     equipmentItem: 'Equipment item',
-    pattern: 'Pattern',
+    pattern: 'Movement',
     noMatch: (q: string) => `No exercise matches "${q}".`,
     allHaveSets: 'Every group already has sets this week.',
     nothingHere: 'Nothing here yet.',
@@ -144,7 +145,7 @@ export const builderMessages = defineMessages({
     exercise: 'Exercise',
     repsSetTo: (reps: string) => `Reps set to ${reps}`,
     repsCleared: 'Reps cleared',
-    hardSets: 'Hard sets',
+    hardSets: 'Working sets',
     setsChanged: (name: string, n: number) => `${name}: ${n} ${setWord(n)}`,
     setsFor: (name: string) => `Sets for ${name}`,
     setsUnit: 'sets',
@@ -286,14 +287,21 @@ export const builderMessages = defineMessages({
     mostSets: 'Найбільше підходів',
     earlierSessions: 'Попередні тренування',
     fact: (group, day, daysEarlier, sets) =>
-      `${group}: також ${dayName(day, 'short', 'uk')}, ${uk.days(daysEarlier)} тому, ${uk.sets(sets)}`,
+      `${group}: ${uk.sets(sets)} ${dayName(day, 'on', 'uk')}, за ${uk.days(daysEarlier)} до цього`,
     showFewer: 'Показати менше',
     showMore: (n) => `Показати ще ${n}`,
 
     weekCoverage: 'Охоплення тижня',
     weekCoverageMap: 'Охоплення тижня, спереду і ззаду',
-    ofTotal: (total) => ` з ${total}`,
-    groupsTrained: 'груп тренується',
+    allMainTrained: 'Кожен основний мʼяз отримує підходи цього тижня',
+    mainUntrained: (n) =>
+      `${n} ${plural('uk', n, {
+        one: 'основний мʼяз',
+        few: 'основні мʼязи',
+        many: 'основних мʼязів',
+        other: 'основного мʼяза',
+      })} поки без підходів`,
+    groupsOf: (trained, total) => `${trained} з ${total} груп мʼязів`,
     hardSetsThisWeek: (n) => `${uk.hardSets(n)} цього тижня`,
     notTrainedYet: 'Ще не тренуються',
     optionalAtZero: (n) =>

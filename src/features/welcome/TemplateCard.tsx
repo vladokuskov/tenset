@@ -40,7 +40,7 @@ export function TemplateCard({ title, meta, description, footnote, weekly, selec
           </span>
         </span>
         <span className="num mt-0.5 block text-sm font-medium text-ink-2">{meta}</span>
-        <span className="mt-1.5 line-clamp-3 text-sm text-ink-2">{description}</span>
+        <span className={cx('mt-1.5 text-sm text-ink-2', !selected && 'line-clamp-2')}>{description}</span>
         {footnote && <span className="num mt-2 block text-xs text-ink-3">{footnote}</span>}
       </span>
     </button>

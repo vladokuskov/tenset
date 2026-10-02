@@ -51,7 +51,7 @@ export function DayScreen() {
   return (
     <Page>
       <PageHeader
-        title={d.label ? `${name} · ${d.label}` : name}
+        title={summary.label ? `${name} · ${summary.label}` : name}
         subtitle={rest ? m.restDay : formatDaySummary(summary.exercises, summary.hardSets, locale)}
         back={{ to: '/', label: m.plan }}
         actions={<IconButton icon={Ellipsis} label={m.dayOptionsFor(name)} onClick={() => options.show()} />}

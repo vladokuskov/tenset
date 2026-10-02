@@ -29,14 +29,11 @@ export function CoverageCard({ view, compact }: { view: WeekView; compact?: bool
           <PulseMini view="both" groups={week.weekly} height={112} pulseScope="week" label={m.weekCoverageMap} />
         )}
         <div className="min-w-0">
-          <p className="num">
-            <span className="text-display font-light">{coverage.trainedBanded}</span>
-            <span className="text-lg text-ink-3">{m.ofTotal(coverage.totalBanded)}</span>
+          <p className="text-lg font-medium leading-snug text-ink">
+            {required.length === 0 ? m.allMainTrained : m.mainUntrained(required.length)}
           </p>
-          <p className="mt-1 text-sm text-ink-2">{m.groupsTrained}</p>
-          <p className="num mt-3 text-sm text-ink-2">
-            {m.hardSetsThisWeek(totalSets)}
-          </p>
+          <p className="num mt-2 text-sm text-ink-2">{m.hardSetsThisWeek(totalSets)}</p>
+          <p className="num mt-0.5 text-sm text-ink-3">{m.groupsOf(coverage.trainedBanded, coverage.totalBanded)}</p>
         </div>
       </div>
 

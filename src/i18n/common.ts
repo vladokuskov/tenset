@@ -6,7 +6,7 @@ import { plural } from './plural.ts'
 export const common = defineMessages({
   en: {
     sets: (n: number) => `${formatSets(n, 'en')} ${plural('en', n, { one: 'set', other: 'sets' })}`,
-    hardSets: (n: number) => `${formatSets(n, 'en')} hard ${plural('en', n, { one: 'set', other: 'sets' })}`,
+    hardSets: (n: number) => `${formatSets(n, 'en')} working ${plural('en', n, { one: 'set', other: 'sets' })}`,
     exercises: (n: number) => `${n} ${plural('en', n, { one: 'exercise', other: 'exercises' })}`,
     programs: (n: number) => `${n} ${plural('en', n, { one: 'program', other: 'programs' })}`,
     trainingDays: (n: number) => `${n} ${plural('en', n, { one: 'training day', other: 'training days' })}`,

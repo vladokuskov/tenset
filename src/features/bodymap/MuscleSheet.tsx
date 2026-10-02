@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { bandExplanationFor, bandLabelFor, targetText } from '../../app/bands'
 import { dayName, daySlug, type DayIndex } from '../../app/days'
-import { formatMath, formatSets } from '../../app/format'
+import { formatSets } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import type { WeekView } from '../../app/useWeek'
 import { headShade, VOLUME_COLOR } from '../../app/volumeScale'
@@ -181,7 +181,7 @@ function Body({
                           </span>
                         )}
                       </span>
-                      <span className="num text-base text-ink">{formatSets(value, locale)}</span>
+                      <span className="num text-base text-ink">{formatSets(Math.round(value * 2) / 2, locale)}</span>
                     </button>
                     {hint && (
                       <Why topic={m.emphasisTopic(nameOfHead(h))} sources={[hint.sourceId]}>
@@ -221,7 +221,7 @@ function Body({
                 <>
                   <span className="min-w-0 flex-1 truncate text-base text-ink">{name}</span>
                   <span className="num shrink-0 text-sm text-ink-2">
-                    {dayName(c.day, 'short', locale)} · {formatMath(c.sets, c.weight, c.value, locale)}
+                    {dayName(c.day, 'short', locale)} · {m.contribution(c.sets, c.value)}
                   </span>
                 </>
               )

@@ -57,13 +57,19 @@ export function WelcomeScreen() {
   const gaps = gapNote(equip, locale)
 
   const previews = useMemo(() => {
-    const out = new Map<string, { weekly: Record<string, number>; trained: number; total: number; sets: number }>()
+    const out = new Map<string, { weekly: Record<string, number>; trained: number; total: number; missing: number; sets: number }>()
     for (const s of splits) {
       const { program } = applyTemplate(s, s.defaultDays, equip, catalog, { id: 'preview', makeId: sequentialIds('p') })
       const week = computeWeek(program, { catalog, prefs: { countingMode: prefs.countingMode, overrides: prefs.overrides } })
       const coverage = computeCoverage(week, prefs.goal)
       const sets = program.days.reduce((n, d) => n + d.entries.reduce((a, e) => a + e.sets, 0), 0)
-      out.set(s.id, { weekly: week.weekly, trained: coverage.trainedBanded, total: coverage.totalBanded, sets })
+      out.set(s.id, {
+        weekly: week.weekly,
+        trained: coverage.trainedBanded,
+        total: coverage.totalBanded,
+        missing: coverage.untrained.required.length,
+        sets,
+      })
     }
     return out
   }, [splits, equip, catalog, prefs.countingMode, prefs.overrides, prefs.goal])
@@ -128,7 +134,9 @@ export function WelcomeScreen() {
                       title={s.name}
                       meta={joinMeta([m.daysAWeek(s.daysPerWeek), m.level[s.level]])}
                       description={s.description}
-                      footnote={p && joinMeta([m.groupsOf(p.trained, p.total), m.setsAWeek(p.sets)])}
+                      footnote={
+                        p && joinMeta([p.missing === 0 ? m.allMain : m.groupsOf(p.trained, p.total), m.setsAWeek(p.sets)])
+                      }
                       weekly={p?.weekly}
                       selected={choice === s.id}
                       onSelect={() => {

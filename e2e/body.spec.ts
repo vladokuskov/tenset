@@ -21,8 +21,8 @@ test('muscle tap opens the muscle sheet with contributing exercises', async ({ p
   await expect(sheet).toContainText('weekly sets')
   await expect(sheet.getByRole('heading', { name: 'From your exercises' })).toBeVisible()
   const bench = sheet.getByRole('link', { name: /Barbell Bench Press/ })
-  await expect(bench).toContainText('Mon · 4 × 1.0 = 4')
-  await expect(sheet.getByRole('link', { name: /Incline Dumbbell Press/ })).toContainText('Thu · 3 × 1.0 = 3')
+  await expect(bench).toContainText('Mon · 4 sets')
+  await expect(sheet.getByRole('link', { name: /Incline Dumbbell Press/ })).toContainText('Thu · 3 sets')
   await expect(sheet.getByRole('img', { name: /^Sets per day:/ })).toBeVisible()
 
   // Contributing exercise links to its detail page.
@@ -42,13 +42,13 @@ test('a tap between muscles offers a chooser', async ({ page }) => {
   await chooser.getByRole('button', { name: /Front delts/ }).click()
   const sheet = openSheet(page, 'Front delts')
   await expect(sheet).toBeVisible()
-  await expect(sheet.getByRole('link', { name: /Barbell Overhead Press/ })).toContainText('Mon · 3 × 1.0 = 3')
+  await expect(sheet.getByRole('link', { name: /Barbell Overhead Press/ })).toContainText('Mon · 3 sets')
 })
 
 test('coverage list is the accessible path to the same sheet', async ({ page }) => {
   await page.getByRole('button', { name: /^Hamstrings/ }).first().click()
   const sheet = openSheet(page, 'Hamstrings')
-  await expect(sheet.getByRole('link', { name: /Seated Leg Curl/ })).toContainText('Tue · 3 × 1.0 = 3')
+  await expect(sheet.getByRole('link', { name: /Seated Leg Curl/ })).toContainText('Tue · 3 sets')
 
   await sheet.getByRole('button', { name: 'Add exercise for this muscle' }).click()
   await sheet.getByRole('group', { name: 'Add to which day?' }).getByRole('button', { name: /^Friday/ }).click()
