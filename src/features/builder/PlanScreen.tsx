@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { NotMedicalAdvice } from '../../app/brand'
 import { dayFromSlug, daySlug, todayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
-import { ExportDialog } from '../export'
+import { ExportDialog, PasteSheet } from '../export'
 import { ProgramsSheet } from '../programs'
 import { ShareDialog } from '../share'
 import { useMessages } from '../../i18n/messages'
@@ -31,6 +31,7 @@ export function PlanScreen() {
   const programs = useSheet('programs')
   const share = useSheet('share')
   const transfer = useSheet('export')
+  const paste = useSheet('paste')
   const add = useSheet('add', ['day', 'tab', 'group'])
   const { open: mapOpen, close: closeMap } = useSheet('map')
 
@@ -50,9 +51,11 @@ export function PlanScreen() {
         onClose={menu.close}
         onShare={() => menu.switchTo('share')}
         onExport={() => menu.switchTo('export')}
+        onPaste={() => menu.switchTo('paste')}
       />
       <ShareDialog open={share.open} onClose={share.close} />
-      <ExportDialog open={transfer.open} onClose={transfer.close} />
+      <ExportDialog open={transfer.open} onClose={transfer.close} onPaste={() => transfer.switchTo('paste')} />
+      <PasteSheet open={paste.open} onClose={paste.close} />
       <ProgramsSheet open={programs.open} onClose={programs.close} />
       {view && (
         <AddSheet
