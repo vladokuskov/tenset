@@ -9,6 +9,7 @@ import { LinkButton } from '../../ui/links'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
 import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames, type ParsedBackup } from './backup'
+import { canShareFiles, download } from './files'
 import { exportMessages } from './messages'
 
 export type ExportDialogProps = {
@@ -24,32 +25,7 @@ function makeFile(): File {
   return new File([text], backupFileName(), { type: 'application/json' })
 }
 
-function download(file: File) {
-  const url = URL.createObjectURL(file)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = file.name
-  document.body.append(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
 type Pending = { name: string; backup: ParsedBackup; activeId: string | null }
-
-let shareFilesSupport: boolean | undefined
-function canShareFiles(): boolean {
-  if (shareFilesSupport === undefined) {
-    try {
-      shareFilesSupport =
-        typeof navigator.canShare === 'function' &&
-        navigator.canShare({ files: [new File(['{}'], 'test.json', { type: 'application/json' })] })
-    } catch {
-      shareFilesSupport = false
-    }
-  }
-  return shareFilesSupport
-}
 
 /** Backup file of all programs and settings, and import that only ever adds programs. */
 export function ExportDialog({ open, onClose, onPaste }: ExportDialogProps) {

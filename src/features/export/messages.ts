@@ -112,6 +112,33 @@ export const exportMessages = defineMessages({
     groupsTrained: 'groups trained.',
     notTrained: (list: string) => ` Not trained: ${list}.`,
     footer: (disclaimer: string) => `${disclaimer} Made with ${APP_NAME}.`,
+
+    restPart: (rest: string) => `rest ${rest}`,
+
+    calendar: {
+      title: 'Add to calendar',
+      text: "Adds a weekly event for each training day. Your calendar app keeps them; changes here don't update it.",
+      time: 'Start time',
+      events: (n: number, days: string) => `${n} weekly ${plural('en', n, { one: 'event', other: 'events' })}: ${days}`,
+      none: 'No training days with exercises yet.',
+      download: 'Download .ics',
+      share: 'Share',
+      shareTitle: 'Gym plan calendar',
+      summary: (name: string) => `${name} · Gym plan`,
+      note: (text: string) => `Note: ${text}`,
+    },
+
+    image: {
+      dayTitle: 'Save as image',
+      weekTitle: 'Save week as image',
+      preview: (title: string) => `Image preview: ${title}`,
+      making: 'Making the image',
+      failed: 'Could not make the image. Try again.',
+      download: 'Download image',
+      share: 'Share image',
+      restDay: 'Rest day',
+      mapCaption: 'Sets per muscle group, front and back',
+    },
   },
   uk: {
     errors: {
@@ -216,5 +243,33 @@ export const exportMessages = defineMessages({
     groupsTrained: 'груп мʼязів у роботі.',
     notTrained: (list) => ` Не тренуються: ${list}.`,
     footer: (disclaimer) => `${disclaimer} Створено в ${APP_NAME}.`,
+
+    restPart: (rest) => `відпочинок ${rest}`,
+
+    calendar: {
+      title: 'Додати в календар',
+      text: 'Додає щотижневу подію для кожного тренувального дня. Події залишаються у вашому календарі, а зміни тут їх не оновлюють.',
+      time: 'Час початку',
+      events: (n, days) =>
+        `${n} ${plural('uk', n, { one: 'щотижнева подія', few: 'щотижневі події', many: 'щотижневих подій', other: 'щотижневої події' })}: ${days}`,
+      none: 'Ще немає тренувальних днів із вправами.',
+      download: 'Завантажити .ics',
+      share: 'Поділитися',
+      shareTitle: 'Календар тренувань',
+      summary: (name) => `${name} · План тренувань`,
+      note: (text) => `Нотатка: ${text}`,
+    },
+
+    image: {
+      dayTitle: 'Зберегти як зображення',
+      weekTitle: 'Зберегти тиждень як зображення',
+      preview: (title) => `Попередній перегляд: ${title}`,
+      making: 'Створюємо зображення',
+      failed: 'Не вдалося створити зображення. Спробуйте ще раз.',
+      download: 'Завантажити зображення',
+      share: 'Поділитися зображенням',
+      restDay: 'День відпочинку',
+      mapCaption: 'Підходи за групами мʼязів, спереду і ззаду',
+    },
   },
 })
