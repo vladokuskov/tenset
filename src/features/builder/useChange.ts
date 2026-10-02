@@ -4,6 +4,7 @@ import { useCatalog } from '../../app/useCatalog'
 import { dismissToast } from '../../ui/toast'
 import { prefsStore } from '../../store/prefs.store'
 import { programStore, type ProgramState } from '../../store/program.store'
+import { common } from '../../i18n/common'
 import { getLocale } from '../../i18n/messages'
 import { dayChanges, deltaText, weekDeltas, weekFor, type GroupDelta } from './delta'
 import { builderMessages } from './messages'
@@ -57,6 +58,11 @@ export function useChange() {
     },
     [catalog],
   )
+}
+
+/** When a sheet closes, its last change moves to a toast so Undo stays in reach. */
+export function carryUndo(message: string | null): void {
+  if (message && message !== common[getLocale()].undone && programStore.getState().lastChange) toastWithUndo(message)
 }
 
 export function undoLastChange(): boolean {

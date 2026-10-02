@@ -10,7 +10,7 @@ import { programStore, useProgramStore } from '../../store/program.store'
 import { Button, ChipGroup, Sheet } from '../../ui'
 import { ChangeBar } from './ChangeBar'
 import { builderMessages } from './messages'
-import { undoLastChange, useChange } from './useChange'
+import { carryUndo, undoLastChange, useChange } from './useChange'
 
 const field = 'w-full rounded-md bg-surface-2 px-3 text-base text-ink placeholder:text-ink-3'
 
@@ -42,12 +42,15 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
   const run = (message: string, action: () => void) => {
     const res = change(message, action, { toast: false })
     if (res) setStatus(res.message)
+    return res?.message ?? null
   }
   const saveLabel = () => {
-    if (label.trim() !== (sessionLabel(d.label, locale) ?? '')) run(label.trim() ? m.labelNow(day, label.trim()) : m.labelRemoved, () => store.setLabel(day, label))
+    if (label.trim() !== (sessionLabel(d.label, locale) ?? '')) return run(label.trim() ? m.labelNow(day, label.trim()) : m.labelRemoved, () => store.setLabel(day, label))
+    return null
   }
   const saveNote = () => {
-    if (note.trim() !== (d.note ?? '')) run(note.trim() ? m.noteSaved : m.noteRemoved, () => store.setNote(day, note))
+    if (note.trim() !== (d.note ?? '')) return run(note.trim() ? m.noteSaved : m.noteRemoved, () => store.setNote(day, note))
+    return null
   }
   const undo = () => {
     if (!undoLastChange()) return
@@ -62,8 +65,9 @@ export function DayOptionsSheet({ day, open, onClose }: { day: DayIndex; open: b
     <Sheet
       open={open}
       onClose={() => {
-        saveLabel()
-        saveNote()
+        const labelChange = saveLabel()
+        const noteChange = saveNote()
+        carryUndo(noteChange ?? labelChange ?? status)
         onClose()
       }}
       title={name}

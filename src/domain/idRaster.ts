@@ -135,7 +135,7 @@ export function groupAt(r: IdRaster, x: number, y: number): string | null {
 }
 
 // The group a tap opens directly, or null when the UI should show a chooser. A clear majority
-// wins; otherwise the group right under the finger wins when it still covers a fair share.
+// wins; otherwise the group right under the finger wins when it still leads. Even splits ask.
 export function pickGroup(candidates: HitCandidate[], center: string | null = null, threshold = 0.7): string | null {
   if (!candidates.length) return null
   if (candidates[0].share >= threshold) return candidates[0].group
@@ -143,4 +143,4 @@ export function pickGroup(candidates: HitCandidate[], center: string | null = nu
   return under && under.share >= CENTER_SHARE ? under.group : null
 }
 
-const CENTER_SHARE = 0.35
+const CENTER_SHARE = 0.55

@@ -52,9 +52,10 @@ describe('hitTest', () => {
     expect(pickGroup([{ group: 'A', pixels: 6, share: 0.6 }, { group: 'B', pixels: 4, share: 0.4 }])).toBeNull()
     expect(pickGroup([])).toBeNull()
     const split = [{ group: 'A', pixels: 6, share: 0.6 }, { group: 'B', pixels: 4, share: 0.4 }]
-    expect(pickGroup(split, 'B')).toBe('B')
+    expect(pickGroup(split, 'A')).toBe('A')
+    expect(pickGroup(split, 'B')).toBeNull()
+    expect(pickGroup([{ group: 'A', pixels: 5, share: 0.5 }, { group: 'B', pixels: 5, share: 0.5 }], 'A')).toBeNull()
     expect(pickGroup([{ group: 'A', pixels: 7, share: 0.7 }, { group: 'B', pixels: 3, share: 0.3 }], 'B')).toBe('A')
-    expect(pickGroup([{ group: 'A', pixels: 5, share: 0.5 }, { group: 'B', pixels: 2, share: 0.2 }, { group: 'C', pixels: 3, share: 0.3 }], 'C')).toBeNull()
   })
 
   it('maps viewBox coordinates to cells', () => {

@@ -14,7 +14,7 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, IconButton, Sheet, showToast, cx } from '../../ui'
 import { ChangeBar } from '../builder/ChangeBar'
-import { undoLastChange, useChange } from '../builder/useChange'
+import { carryUndo, undoLastChange, useChange } from '../builder/useChange'
 import { programsMessages } from './messages'
 
 function programMeta(p: Program, locale: Locale): string {
@@ -36,6 +36,7 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
   const { splits, catalog } = useCatalog()
   const change = useChange()
   const [menu, setMenu] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<string | null>(null)
   const [renaming, setRenaming] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [status, setStatus] = useState<string | null>(null)
@@ -44,6 +45,7 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
     setWasOpen(open)
     if (open) {
       setMenu(null)
+      setConfirming(null)
       setRenaming(null)
       setStatus(null)
     }
@@ -54,6 +56,7 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
     const res = change(message, action, { toast: false })
     if (res) setStatus(res.message)
     setMenu(null)
+    setConfirming(null)
   }
 
   const createBlank = () => {
@@ -75,7 +78,10 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        carryUndo(status)
+        onClose()
+      }}
       title={m.title}
       description={m.onDevice(list.length)}
       footer={status ? <ChangeBar message={status} onUndo={status !== undone ? () => undoLastChange() && setStatus(undone) : undefined} /> : undefined}
@@ -143,11 +149,27 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
                     size={36}
                     label={m.options(p.name)}
                     aria-expanded={menu === p.id}
-                    onClick={() => setMenu(menu === p.id ? null : p.id)}
+                    onClick={() => {
+                      setMenu(menu === p.id ? null : p.id)
+                      setConfirming(null)
+                    }}
                   />
                 </div>
               )}
-              {menu === p.id && renaming !== p.id && (
+              {menu === p.id && renaming !== p.id && confirming === p.id && (
+                <div className="pb-3 pl-9">
+                  <p className="text-sm text-ink-2">{m.deleteConfirm(p.name)}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button size="sm" variant="primary" icon={Trash2} onClick={() => run(m.deleted(p.name), () => store.deleteProgram(p.id))}>
+                      {m.delete}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirming(null)}>
+                      {m.cancel}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {menu === p.id && renaming !== p.id && confirming !== p.id && (
                 <div className="flex flex-wrap gap-2 pb-3 pl-9">
                   <Button
                     size="sm"
@@ -163,7 +185,7 @@ export function ProgramsSheet({ open, onClose }: { open: boolean; onClose: () =>
                   <Button size="sm" icon={Copy} onClick={() => run(m.duplicated(p.name), () => store.duplicateProgram(p.id))}>
                     {m.duplicate}
                   </Button>
-                  <Button size="sm" icon={Trash2} onClick={() => run(m.deleted(p.name), () => store.deleteProgram(p.id))}>
+                  <Button size="sm" icon={Trash2} onClick={() => setConfirming(p.id)}>
                     {m.delete}
                   </Button>
                 </div>

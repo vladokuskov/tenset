@@ -23,7 +23,7 @@ test('three adds in one add-sheet session', async ({ page }) => {
     await expect(sheet.getByRole('status')).toContainText(`Added ${name}`)
   }
   // Rows stay in place and show what was added.
-  await expect(sheet.getByLabel('Added 1 time')).toHaveCount(3)
+  await expect(sheet.getByRole('button', { name: /^Added\. Add another / })).toHaveCount(3)
   await sheet.getByRole('button', { name: 'Done (3)' }).click()
 
   await expect(openSheet(page)).toHaveCount(0)
@@ -118,4 +118,27 @@ test('a search can become a custom exercise without leaving the add flow', async
   await page.goBack()
   await expect(openSheet(page)).toHaveCount(0)
   await expect(entryRows(page).filter({ hasText: 'Zercher carry' })).toContainText('Custom, your mapping')
+})
+
+test('deleting a program asks first and stays undoable after the sheet closes', async ({ page }) => {
+  await page.goto('/')
+  const openPrograms = () => page.getByRole('button', { name: /switch program/ }).filter({ visible: true }).first().click()
+  await openPrograms()
+  await openSheet(page, 'Programs').getByRole('button', { name: 'Blank program' }).click()
+  await expect(openSheet(page)).toHaveCount(0)
+
+  await openPrograms()
+  const sheet = openSheet(page, 'Programs')
+  await sheet.getByRole('button', { name: 'Options for Upper/Lower 4x' }).click()
+  await sheet.getByRole('button', { name: 'Delete' }).click()
+  await expect(sheet).toContainText('Delete Upper/Lower 4x? Its days and exercises go with it.')
+  await sheet.getByRole('button', { name: 'Delete' }).click()
+  await expect(sheet.getByRole('button', { name: 'Options for Upper/Lower 4x' })).toHaveCount(0)
+
+  await sheet.getByRole('button', { name: 'Close' }).click()
+  await expect(openSheet(page)).toHaveCount(0)
+  const toast = page.getByRole('status').filter({ hasText: 'Deleted Upper/Lower 4x' })
+  await toast.getByRole('button', { name: 'Undo' }).click()
+  await openPrograms()
+  await expect(openSheet(page, 'Programs').getByRole('button', { name: 'Options for Upper/Lower 4x' })).toBeVisible()
 })
