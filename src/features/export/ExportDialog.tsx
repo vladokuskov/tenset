@@ -1,4 +1,4 @@
-import { Download, FileUp, Printer, Share } from 'lucide-react'
+import { ClipboardPaste, Download, FileUp, Printer, Share } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { dateFormat } from '../../i18n/format'
 import { getMessages, useLocale, useMessages } from '../../i18n/messages'
@@ -11,7 +11,12 @@ import { showToast } from '../../ui/toast'
 import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames, type ParsedBackup } from './backup'
 import { exportMessages } from './messages'
 
-export type ExportDialogProps = { open: boolean; onClose: () => void }
+export type ExportDialogProps = {
+  open: boolean
+  onClose: () => void
+  /** Opens the paste sheet in place of this one. */
+  onPaste?: () => void
+}
 
 function makeFile(): File {
   const { programs, activeId } = programStore.getState()
@@ -47,7 +52,7 @@ function canShareFiles(): boolean {
 }
 
 /** Backup file of all programs and settings, and import that only ever adds programs. */
-export function ExportDialog({ open, onClose }: ExportDialogProps) {
+export function ExportDialog({ open, onClose, onPaste }: ExportDialogProps) {
   const count = useProgramStore((s) => Object.keys(s.programs).length)
   const importProgram = useProgramStore((s) => s.importProgram)
   const setActive = useProgramStore((s) => s.setActive)
@@ -188,6 +193,16 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
           </div>
         )}
       </section>
+
+      {onPaste && (
+        <section className="mt-6 border-t border-line pt-5">
+          <h3 className="font-semibold">{m.paste.heading}</h3>
+          <p className="mt-1 text-sm text-ink-2">{m.paste.text}</p>
+          <Button variant="secondary" className="mt-3 w-full" icon={ClipboardPaste} onClick={onPaste}>
+            {m.paste.open}
+          </Button>
+        </section>
+      )}
 
       <section className="mt-6 border-t border-line pt-5">
         <h3 className="font-semibold">{m.printHeading}</h3>

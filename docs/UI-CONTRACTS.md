@@ -69,7 +69,7 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 
 | Route | Search params | Sheets |
 |---|---|---|
-| `/` | `sheet`, `day` | `menu`, `programs`, `share`, `export`, `add` (`day`) |
+| `/` | `sheet`, `day` | `menu`, `programs`, `share`, `export`, `paste`, `add` (`day`) |
 | `/day/$dow` | `sheet`, `entry`, `tab`, `group` | `add` (`tab`, `group`), `entry`, `move`, `copy`, `swap` (`entry`), `day` |
 | `/body` | `scope` (week or mon..sun), `shade` (groups, heads), `view` (front, back, both), `sheet`, `group`, `head` | `muscle` (`group`, `head`) |
 | `/exercises` | `q`, `muscle`, `equip` (mine, all), `pattern`, `sheet` | `muscle` (filter via map) |
@@ -145,6 +145,14 @@ DayPicker(props: {
   className?: string
 })
 ```
+
+### Paste a program (`src/features/export/PasteSheet.tsx`)
+
+- Sheet `paste` on `/`, opened from the Plan menu ("Paste a program") or the "Paste a program" section of the export dialog (`ExportDialog` `onPaste`, a `switchTo`).
+- Input: free text, CSV with a header row, or a share link (full `/shared#...` URL or the bare fragment). A link that decodes skips the review and saves as is.
+- Text goes through `parseProgramText` and `assignDays` (`src/domain/importText.ts`, pure): weekday headers keep their day; other sessions fill the free days in order when the text lists rest days, otherwise spread like templates (`SPREAD`: 3 sessions on Mon, Wed, Fri). Unreadable lines are warnings, never errors.
+- Names go through `createMatcher` (`importMatch.ts`): exact name or alias, then MiniSearch (OR, fuzzy, prefix) over the localized catalog plus the active program's custom exercises. Weak or missing matches carry a neutral "Check this one" pill until the user picks, skips, or keeps the line as their own exercise (one optional primary group). Lines with no match start skipped.
+- "Create program" always adds a new program (`importProgram`, names deduped with `withUniqueNames`), which becomes active, then a toast. Nothing existing is changed.
 
 ## Copy and color rules (from the plan, enforced in review)
 

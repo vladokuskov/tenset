@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { FileDown, Info, Printer, QrCode, Scale, Settings, Shield, type LucideIcon } from 'lucide-react'
+import { ClipboardPaste, FileDown, Info, Printer, QrCode, Scale, Settings, Shield, type LucideIcon } from 'lucide-react'
 import { useMessages } from '../../i18n/messages'
 import { Sheet } from '../../ui'
 import { builderMessages } from './messages'
@@ -25,17 +25,19 @@ const LINKS = [
   { icon: Info, labelKey: 'about', to: '/about' },
 ] as const
 
-/** Plan overflow menu. Share and export open their sheets in place; the rest are pages. */
+/** Plan overflow menu. Share, export and paste open their sheets in place; the rest are pages. */
 export function PlanMenu({
   open,
   onClose,
   onShare,
   onExport,
+  onPaste,
 }: {
   open: boolean
   onClose: () => void
   onShare: () => void
   onExport: () => void
+  onPaste: () => void
 }) {
   const m = useMessages(builderMessages)
   return (
@@ -43,6 +45,7 @@ export function PlanMenu({
       <ul className="-mx-2">
         <MenuButton icon={QrCode} label={m.menu.share} onClick={onShare} />
         <MenuButton icon={FileDown} label={m.menu.export} onClick={onExport} />
+        <MenuButton icon={ClipboardPaste} label={m.menu.paste} onClick={onPaste} />
         {LINKS.map(({ icon: Icon, labelKey, to }) => (
           <li key={to}>
             <Link to={to} replace className={row}>

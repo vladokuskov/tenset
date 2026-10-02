@@ -40,6 +40,7 @@ export const builderMessages = defineMessages({
     menu: {
       share: 'Share or QR code',
       export: 'Export or import',
+      paste: 'Paste a program',
       print: 'Print',
       settings: 'Settings',
       credits: 'Credits',
@@ -265,6 +266,7 @@ export const builderMessages = defineMessages({
     menu: {
       share: 'Поділитися або QR-код',
       export: 'Експорт або імпорт',
+      paste: 'Вставити програму',
       print: 'Друк',
       settings: 'Налаштування',
       credits: 'Подяки',
