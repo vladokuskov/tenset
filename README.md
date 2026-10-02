@@ -38,6 +38,8 @@ Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js
 - Claude Code: `claude mcp add --transport http gym-builder https://gym-builder-nine.vercel.app/api/mcp`
 - Tools: `get_reference`, `search_exercises`, `list_splits`, `create_program`, `read_program` (turns a share link back into editable input).
 - Local check: `npx @modelcontextprotocol/inspector`, then connect to a preview deploy's `/api/mcp`.
+- Agents without an MCP client: `api/agent/[tool].ts` serves the same tools as plain JSON over GET/POST (`/api/agent/reference`, `splits`, `exercises`, `program`, `read`). Logic is in `api/_lib/http.ts`; MCP and HTTP share the zod inputs in `api/_lib/inputs.ts`.
+- Discovery: `public/llms.txt` (the agent guide, keep it in sync with the tools), `public/robots.txt`, `public/.well-known/mcp.json`, and the `<noscript>` block in `index.html`, which is all a fetch-only agent sees of the shell.
 
 ## Media pipeline (build time only)
 
@@ -57,7 +59,7 @@ An exercise shows its animation in production only when its record has `media.st
 
 - Vercel deploys `main` automatically on every push. The build settings live in the Vercel dashboard (`pnpm build`, output `dist`).
 - `vercel.json` sets the Content-Security-Policy and security headers, a one-year immutable cache for hashed assets, posters and loops, no-cache for the app shell and service worker, and the SPA rewrite to `index.html`. The CSP e2e test reads the policy from it.
-- `api/mcp.ts` is built by Vercel's Node runtime from `api/tsconfig.json` (`rewriteRelativeImportExtensions` turns the `.ts` imports from `src/domain` into `.js`). It reads `data/exercises` and `data/splits` at runtime, so `vercel.json` lists them in `includeFiles`.
+- `api/mcp.ts` is built by Vercel's Node runtime from `api/tsconfig.json` (`rewriteRelativeImportExtensions` turns the `.ts` imports from `src/domain` into `.js`). The same goes for `api/agent/[tool].ts`. Both read `data/exercises` and `data/splits` at runtime, so `vercel.json` lists them in `includeFiles` for each function.
 - After a deploy, check the live headers with `curl -sI https://gym-builder-nine.vercel.app/exercise/chest-dip`.
 - The Vercel Hobby plan is for non-commercial use only.
 

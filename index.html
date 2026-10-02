@@ -16,6 +16,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="alternate" type="text/markdown" href="/llms.txt" title="Guide for AI agents" />
     <style>
       html { background: #ece9e5; }
       @media (prefers-color-scheme: dark) { html { background: #191714; } }
@@ -23,7 +24,10 @@
   </head>
   <body>
     <div id="root"></div>
-    <noscript>Gym Builder needs JavaScript to run.</noscript>
+    <noscript>
+      <p>Gym Builder needs JavaScript to run. It plans a weekly gym program and shows weekly sets per muscle group on a body map.</p>
+      <p>AI agents: read <a href="/llms.txt">/llms.txt</a>. There is an MCP server at https://gym-builder-nine.vercel.app/api/mcp and a plain HTTP API at /api/agent/ that return a share link to the program.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

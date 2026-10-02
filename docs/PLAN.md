@@ -89,7 +89,7 @@ gym-builder/
     domain/                  pure TS: muscles, volume, recovery, coverage, program, codec
     features/                catalog, builder, bodymap, figure, programs, welcome, share, export, settings, review (dev-only)
     store/  routes/  sw/  ui/ (Sheet.tsx ...)  styles/
-  api/                       stateless MCP endpoint for Claude (mcp.ts, _lib/); builds share links, stores nothing
+  api/                       stateless MCP endpoint (mcp.ts) and plain HTTP mirror for agents (agent/[tool].ts), logic in _lib/; builds share links, stores nothing
   public/models/body.glb  public/anatomy/  public/media/{cards,posters,loops}/  vercel.json
   ATTRIBUTION.md  e2e/
 ```

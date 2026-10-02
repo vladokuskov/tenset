@@ -1,0 +1,3 @@
+# AI agents: see /llms.txt for the MCP server and HTTP API.
+User-agent: *
+Allow: /

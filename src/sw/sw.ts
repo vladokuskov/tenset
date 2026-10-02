@@ -12,7 +12,7 @@ precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
 // Client-side routes (including /shared#...) get the cached shell. Paths with a file extension are real files.
-registerRoute(new NavigationRoute(createHandlerBoundToURL(`${import.meta.env.BASE_URL}index.html`), { denylist: [/\/[^/]+\.[a-z0-9]+$/i] }))
+registerRoute(new NavigationRoute(createHandlerBoundToURL(`${import.meta.env.BASE_URL}index.html`), { denylist: [/\/[^/]+\.[a-z0-9]+$/i, /^\/api\//, /^\/\.well-known\//] }))
 
 // Exercise loops are cached on first play; Safari needs range responses for video.
 registerRoute(
