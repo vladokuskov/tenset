@@ -33,6 +33,7 @@ export function DayScreen() {
   const change = useChange()
   const add = useSheet('add', ['tab', 'group'])
   const entry = useSheet('entry', ['entry'])
+  const reps = useSheet('reps', ['entry'])
   const options = useSheet('day')
   const custom = useSheet('custom', ['id'])
   const [customName, setCustomName] = useState('')
@@ -131,7 +132,12 @@ export function DayScreen() {
                 </EmptyState>
               </div>
             ) : (
-              <EntryList program={program} day={day} onOpen={(id) => entry.show({ entry: id })} />
+              <EntryList
+                program={program}
+                day={day}
+                onOpen={(id) => entry.show({ entry: id })}
+                onOpenReps={(id) => reps.show({ entry: id })}
+              />
             )}
           </>
         )}

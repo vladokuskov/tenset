@@ -7,6 +7,7 @@ import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
 import { availableSet, hasEquipment } from '../../domain/equipment'
 import { resolveExercise } from '../../domain/resolve'
+import type { Entry } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { compareText } from '../../i18n/format'
 import { useLocale } from '../../i18n/messages'
@@ -14,7 +15,7 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, Chip, Sheet, Stepper, cx, useSheet } from '../../ui'
 import { ChangeBar } from './ChangeBar'
-import { REPS_PRESETS, SECONDS_PRESETS, isCustom, repsText, unitOf, type AnyExercise } from './labels'
+import { REPS_PRESETS, SECONDS_PRESETS, defaultReps, isCustom, repsText, unitOf, type AnyExercise } from './labels'
 import { exerciseFor, findEntry } from './lookup'
 import { builderMessages } from './messages'
 import { PickRow } from './PickRow'
@@ -33,12 +34,13 @@ function ActionRow({ icon: Icon, label, onClick, tone }: { icon: LucideIcon; lab
   )
 }
 
-/** Hosts the entry menu and its follow-up sheets (swap, move, copy) for the day screen. */
+/** Hosts the entry menu, the reps sheet and the menu's follow-up sheets (swap, move, copy) for the day screen. */
 export function EntrySheets() {
   const entrySheet = useSheet('entry', ['entry'])
   const swapSheet = useSheet('swap', ['entry'])
   const moveSheet = useSheet('move', ['entry'])
   const copySheet = useSheet('copy', ['entry'])
+  const repsSheet = useSheet('reps', ['entry'])
   const view = useWeek()
   const { catalog } = useCatalog()
   const entryId = typeof entrySheet.search.entry === 'string' ? entrySheet.search.entry : undefined
@@ -58,6 +60,7 @@ export function EntrySheets() {
         data={shown}
         onSwitch={(name) => entrySheet.switchTo(name, { entry: entryId })}
       />
+      <RepsSheet open={repsSheet.open && Boolean(found)} onClose={repsSheet.close} data={shown} />
       <SwapSheet open={swapSheet.open && Boolean(found)} onClose={swapSheet.close} data={shown} />
       <DayTargetSheet mode="move" open={moveSheet.open && Boolean(found)} onClose={moveSheet.close} data={shown} />
       <DayTargetSheet mode="copy" open={copySheet.open && Boolean(found)} onClose={copySheet.close} data={shown} />
@@ -65,50 +68,30 @@ export function EntrySheets() {
   )
 }
 
-type EntryData = { found: { day: number; index: number; entry: import('../../domain/schema').Entry }; exercise: AnyExercise } | null
+type EntryData = { found: { day: number; index: number; entry: Entry }; exercise: AnyExercise } | null
 
 function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: () => void; data: EntryData; onSwitch: (name: string) => void }) {
   const setSets = useProgramStore((s) => s.setSets)
-  const setReps = useProgramStore((s) => s.setReps)
   const removeEntry = useProgramStore((s) => s.removeEntry)
   const change = useChange()
   const locale = useLocale()
   const m = builderMessages[locale]
   const c = common[locale]
   const [status, setStatus] = useState<string | null>(null)
-  const [customOpen, setCustomOpen] = useState(false)
-  const [draft, setDraft] = useState('')
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
     setWasOpen(open)
-    if (open) {
-      setStatus(null)
-      setCustomOpen(false)
-    }
+    if (open) setStatus(null)
   }
   if (!data) return <Sheet open={false} onClose={onClose} title={m.exercise} />
 
   const { entry, day } = data.found
   const ex = data.exercise
-  const unit = unitOf(ex)
-  const presets: readonly string[] = unit === 'seconds' ? SECONDS_PRESETS : REPS_PRESETS
-  const isPreset = entry.reps ? presets.includes(entry.reps) : false
-
   const run = (message: string, action: () => void) => {
     const res = change(message, action, { toast: false })
     if (res) setStatus(res.message)
   }
-
-  const applyReps = (reps: string | undefined) => {
-    if ((reps ?? '') === (entry.reps ?? '')) return
-    run(reps ? m.repsSetTo(repsText(reps, unit, locale)) : m.repsCleared, () => setReps(entry.id, reps))
-  }
-
-  const saveCustom = () => {
-    const clean = draft.trim().slice(0, 16)
-    if (clean) applyReps(clean)
-    setCustomOpen(false)
-  }
+  const unit = unitOf(ex)
 
   return (
     <Sheet
@@ -130,22 +113,96 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
         />
       </div>
 
-      <h3 className="mt-5 text-sm font-semibold">{unit === 'seconds' ? m.secondsPerSet : m.repsPerSet}</h3>
-      <div role="group" aria-label={unit === 'seconds' ? m.secondsPerSet : m.repsPerSet} className="mt-2 flex flex-wrap gap-2">
+      <RepsPicker key={String(open)} entry={entry} exercise={ex} onChange={run} className="mt-5" />
+
+      <ul className="-mx-2 mt-5 border-t border-line pt-2">
+        <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => onSwitch('swap')} />
+        <ActionRow icon={CalendarArrowUp} label={m.moveOther} onClick={() => onSwitch('move')} />
+        <ActionRow icon={Copy} label={m.copyOther} onClick={() => onSwitch('copy')} />
+        {!isCustom(ex) && (
+          <li>
+            <Link to="/exercise/$slug" params={{ slug: ex.slug }} className={rowClass}>
+              <Info size={20} strokeWidth={1.75} className="shrink-0 text-ink-2" aria-hidden />
+              <span className="flex-1">{m.exerciseDetails}</span>
+              <ChevronRight size={18} className="text-ink-3" aria-hidden />
+            </Link>
+          </li>
+        )}
+        <ActionRow
+          icon={Trash2}
+          tone="plain"
+          label={m.removeFromDay}
+          onClick={() => {
+            onClose()
+            change(m.removed(ex.name), () => removeEntry(entry.id))
+          }}
+        />
+      </ul>
+    </Sheet>
+  )
+}
+
+/** Reps chips: the exercise's suggested range first, then presets, then a custom field. */
+function RepsPicker({
+  entry,
+  exercise,
+  onChange,
+  className,
+}: {
+  entry: Entry
+  exercise: AnyExercise
+  onChange: (message: string, action: () => void) => void
+  className?: string
+}) {
+  const setReps = useProgramStore((s) => s.setReps)
+  const goal = usePrefsStore((s) => s.goal)
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  const c = common[locale]
+  const [customOpen, setCustomOpen] = useState(false)
+  const [draft, setDraft] = useState('')
+  const unit = unitOf(exercise)
+  const suggested = defaultReps(exercise, goal)
+  const all: readonly string[] = unit === 'seconds' ? SECONDS_PRESETS : REPS_PRESETS
+  const presets = all.filter((p) => p !== suggested)
+  const isKnown = !entry.reps || entry.reps === suggested || presets.includes(entry.reps)
+  const title = unit === 'seconds' ? m.secondsPerSet : m.repsPerSet
+
+  const apply = (reps: string | undefined) => {
+    const next = reps === suggested ? undefined : reps
+    if ((next ?? '') === (entry.reps ?? '')) return
+    onChange(next ? m.repsSetTo(repsText(next, unit, locale)) : m.repsCleared, () => setReps(entry.id, next))
+  }
+
+  const saveCustom = () => {
+    const clean = draft.trim().slice(0, 16)
+    if (clean) apply(clean)
+    setCustomOpen(false)
+  }
+
+  return (
+    <div className={className}>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <div role="group" aria-label={title} className="mt-2 flex flex-wrap gap-2">
+        {suggested && (
+          <Chip selected={!entry.reps || entry.reps === suggested} onClick={() => apply(undefined)}>
+            {m.suggestedReps(suggested)}
+          </Chip>
+        )}
         {presets.map((p) => (
-          <Chip key={p} selected={entry.reps === p} onClick={() => applyReps(entry.reps === p ? undefined : p)}>
+          <Chip key={p} selected={entry.reps === p} onClick={() => apply(entry.reps === p ? undefined : p)}>
             {p}
           </Chip>
         ))}
-        {entry.reps && !isPreset && !customOpen && (
-          <Chip selected onClick={() => applyReps(undefined)}>
+        {!isKnown && !customOpen && (
+          <Chip selected onClick={() => apply(undefined)}>
             {entry.reps}
           </Chip>
         )}
         <Chip
           selected={customOpen}
           onClick={() => {
-            setDraft(entry.reps && !isPreset ? entry.reps : '')
+            setDraft(isKnown ? '' : (entry.reps ?? ''))
             setCustomOpen(!customOpen)
           }}
         >
@@ -176,30 +233,39 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
           </Button>
         </form>
       )}
+    </div>
+  )
+}
 
-      <ul className="-mx-2 mt-5 border-t border-line pt-2">
-        <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => onSwitch('swap')} />
-        <ActionRow icon={CalendarArrowUp} label={m.moveOther} onClick={() => onSwitch('move')} />
-        <ActionRow icon={Copy} label={m.copyOther} onClick={() => onSwitch('copy')} />
-        {!isCustom(ex) && (
-          <li>
-            <Link to="/exercise/$slug" params={{ slug: ex.slug }} className={rowClass}>
-              <Info size={20} strokeWidth={1.75} className="shrink-0 text-ink-2" aria-hidden />
-              <span className="flex-1">{m.exerciseDetails}</span>
-              <ChevronRight size={18} className="text-ink-3" aria-hidden />
-            </Link>
-          </li>
-        )}
-        <ActionRow
-          icon={Trash2}
-          tone="plain"
-          label={m.removeFromDay}
-          onClick={() => {
-            onClose()
-            change(m.removed(ex.name), () => removeEntry(entry.id))
-          }}
-        />
-      </ul>
+/** Reps only, opened from the reps chip on an entry row. */
+function RepsSheet({ open, onClose, data }: { open: boolean; onClose: () => void; data: EntryData }) {
+  const change = useChange()
+  const locale = useLocale()
+  const m = builderMessages[locale]
+  const c = common[locale]
+  const [status, setStatus] = useState<string | null>(null)
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setStatus(null)
+  }
+  if (!data) return <Sheet open={false} onClose={onClose} title={m.repsPerSet} />
+  const { entry, day } = data.found
+  const run = (message: string, action: () => void) => {
+    const res = change(message, action, { toast: false })
+    if (res) setStatus(res.message)
+  }
+
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={data.exercise.name}
+      description={joinMeta([dayName(day, 'long', locale), c.sets(entry.sets)])}
+      desktop="center"
+      footer={<ChangeBar message={status} onUndo={status && status !== c.undone ? () => undoLastChange() && setStatus(c.undone) : undefined} />}
+    >
+      <RepsPicker key={String(open)} entry={entry} exercise={data.exercise} onChange={run} />
     </Sheet>
   )
 }

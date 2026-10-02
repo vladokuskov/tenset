@@ -326,6 +326,7 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
               const key = keyOf(e)
               const rowKey = `${s.key}:${key}`
               const count = added.filter((a) => a === key).length
+              const onDay = count > 0 || openDay.has(e.id)
               const sets = defaultSets(e)
               const reps = defaultReps(e, prefs.goal)
               return (
@@ -336,13 +337,16 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
                     onToggle={() => setExpanded(expanded === rowKey ? null : rowKey)}
                     trailing={
                       <>
-                        {count > 0 && (
-                          <span className="num flex items-center gap-0.5 text-sm text-ink-2" aria-label={m.addedTimes(count)}>
-                            <Check size={14} strokeWidth={2.25} aria-hidden />
-                            {count > 1 ? count : null}
+                        {count > 1 && (
+                          <span className="num text-sm text-ink-2" aria-label={m.addedTimes(count)}>
+                            ×{count}
                           </span>
                         )}
-                        <IconButton icon={Plus} variant="tonal" label={m.addNamed(e.name)} onClick={() => add(e)} />
+                        {onDay ? (
+                          <IconButton icon={Check} variant="solid" label={m.addAnother(e.name)} onClick={() => add(e)} />
+                        ) : (
+                          <IconButton icon={Plus} variant="tonal" label={m.addNamed(e.name)} onClick={() => add(e)} />
+                        )}
                       </>
                     }
                   >
@@ -355,6 +359,7 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
                         roles={Object.fromEntries(Object.entries(rolesOf(e)).map(([g, r]) => [g, r.role]))}
                         deltas={addPreview(e.id, sets, week, ctx)}
                         goal={prefs.goal}
+                        already={onDay}
                       />
                     )}
                   </PickRow>
@@ -403,6 +408,7 @@ function AddPreview({
   roles,
   deltas,
   goal,
+  already,
 }: {
   exercise: AnyExercise
   sets: number
@@ -411,6 +417,7 @@ function AddPreview({
   roles: Record<string, 'primary' | 'secondary'>
   deltas: ReturnType<typeof addPreview>
   goal: 'hypertrophy' | 'strength' | 'general'
+  already: boolean
 }) {
   const locale = useLocale()
   const m = builderMessages[locale]
@@ -418,6 +425,7 @@ function AddPreview({
     <div className="mb-3 flex gap-4 rounded-lg bg-surface-2/60 p-3">
       <BodyMini view="both" roles={roles} height={88} />
       <div className="min-w-0 flex-1">
+        {already && <p className="text-sm font-medium text-ink">{m.alreadyOn(day)}</p>}
         <p className="text-sm text-ink-2">
           {m.previewLine(sets, reps ? repsText(reps, unitOf(exercise), locale) : undefined, day)}
         </p>

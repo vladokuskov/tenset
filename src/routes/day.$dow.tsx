@@ -9,7 +9,7 @@ import { DayScreen } from '../features/builder/DayScreen'
 //               /day/mon?sheet=day (label, note, duplicate, clear, rest)
 //               /day/mon?sheet=custom&id=new (new custom exercise, from the add sheet)
 const DaySearch = z.object({
-  sheet: sheetParam(['add', 'entry', 'move', 'copy', 'swap', 'day', 'custom']),
+  sheet: sheetParam(['add', 'entry', 'reps', 'move', 'copy', 'swap', 'day', 'custom']),
   entry: idParam,
   id: idParam,
   tab: optionalEnum(['suggested', 'muscle', 'equipment', 'pattern']),

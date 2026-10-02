@@ -18,6 +18,7 @@ import { Button } from '../../ui/Button'
 import { cx } from '../../ui/cx'
 import { Pill } from '../../ui/Pill'
 import { Sheet } from '../../ui/Sheet'
+import { sheetState } from '../../ui/useSheet'
 import { DayPicker } from '../builder'
 import { ExerciseRow } from '../catalog'
 import { scheduleText } from './copy'
@@ -271,7 +272,7 @@ function AddFooter({ group, view, day }: { group: string; view: WeekView; day: D
   const locale = useLocale()
   const m = bodymapMessages[locale]
   const go = (d: DayIndex) =>
-    void navigate({ to: '/day/$dow', params: { dow: daySlug(d) }, search: { sheet: 'add', tab: 'muscle', group } })
+    void navigate({ to: '/day/$dow', params: { dow: daySlug(d) }, search: { sheet: 'add', tab: 'muscle', group }, state: sheetState('add') })
 
   if (picking && day === null) {
     const hints: Partial<Record<DayIndex, string>> = {}

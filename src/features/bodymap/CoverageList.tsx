@@ -121,7 +121,6 @@ export function CoverageList({ week, coverage, goal, day, selected, onSelect }: 
                   {untrainedOptional.map((g) => groupName(g, locale)).join(', ')}
                 </span>
               </span>
-              <span className="num text-sm text-ink-3">{untrainedOptional.length}</span>
               <ChevronDown
                 size={18}
                 className={cx('-mr-1 shrink-0 text-ink-3 transition-transform duration-200', showOptional && 'rotate-180')}

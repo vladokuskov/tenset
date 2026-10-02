@@ -24,6 +24,7 @@ type RowProps = {
   exercise: AnyExercise
   sortable: boolean
   onOpen: Open
+  onOpenReps: Open
 }
 
 type RefFn = (el: Element | null) => void
@@ -46,6 +47,7 @@ function EntryRowView({
   exercise,
   sortable,
   onOpen,
+  onOpenReps,
   rowRef,
   handleRef,
   isDragging = false,
@@ -110,7 +112,7 @@ function EntryRowView({
         />
         <button
           type="button"
-          onClick={() => onOpen(entry.id)}
+          onClick={() => onOpenReps(entry.id)}
           aria-label={m.repsButton(repsText(reps, unit, locale), !entry.reps, exercise.name)}
           className={cx(
             'hit inline-flex h-8 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors hover:bg-surface-2',
@@ -126,7 +128,7 @@ function EntryRowView({
 }
 
 /** Entries of one day, reordered with the handle (or the keyboard: focus the handle, Space, arrows). */
-export function EntryList({ program, day, onOpen }: { program: Program; day: DayIndex; onOpen: Open }) {
+export function EntryList({ program, day, onOpen, onOpenReps }: { program: Program; day: DayIndex; onOpen: Open; onOpenReps: Open }) {
   const { catalog } = useCatalog()
   const reorder = useProgramStore((s) => s.reorder)
   const removeEntry = useProgramStore((s) => s.removeEntry)
@@ -164,7 +166,7 @@ export function EntryList({ program, day, onOpen }: { program: Program; day: Day
                 </li>
               )
             }
-            return <EntryRow key={id} entry={entry} index={index} day={day} exercise={ex} sortable={sortable} onOpen={onOpen} />
+            return <EntryRow key={id} entry={entry} index={index} day={day} exercise={ex} sortable={sortable} onOpen={onOpen} onOpenReps={onOpenReps} />
           })}
         </ul>
       )}

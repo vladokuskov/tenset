@@ -5,6 +5,9 @@ const STATE_KEY = 'gbSheet'
 
 type SearchRecord = Record<string, unknown>
 
+/** History state for navigating to another route with a sheet open, so closing it goes back here. */
+export const sheetState = (name: string) => ((prev: HistoryState) => ({ ...prev, [STATE_KEY]: name })) as never
+
 export type SheetControl = {
   open: boolean
   /** Pushes a history entry with ?sheet=<name> plus any extra params, so back closes it. */
@@ -38,7 +41,7 @@ export function useSheet(name: string, params: readonly string[] = []): SheetCon
       void navigate({
         to: '.',
         search: ((prev: SearchRecord) => ({ ...prev, ...extra, sheet: name })) as never,
-        state: ((prev: HistoryState) => ({ ...prev, [STATE_KEY]: name })) as never,
+        state: sheetState(name),
       })
     },
     [navigate, name],
