@@ -22,7 +22,8 @@ export const CODEC_EQUIPMENT_V1 = [
   'barbell', 'dumbbell', 'ez_bar', 'flat_bench', 'adjustable_bench', 'rack', 'pullup_bar', 'dip_station', 'cable',
   'smith', 'leg_press', 'leg_extension', 'leg_curl_seated', 'leg_curl_lying', 'lat_pulldown', 'chest_press_machine',
   'shoulder_press_machine', 'pec_deck', 'hip_abduction', 'hip_adduction', 'back_extension', 'assisted_pullup',
-  'calf_machine', 'seated_calf', 'plate', 'step',
+  'calf_machine', 'seated_calf', 'plate', 'step', 'kettlebell', 'band', 'trap_bar', 'landmine', 'preacher_bench',
+  'rings', 'ab_wheel', 'ghd', 't_bar', 'hack_squat', 'pendulum_squat', 'belt_squat',
 ] as const
 
 const LATERALITY = ['bilateral', 'unilateral', 'alternating'] as const

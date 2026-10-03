@@ -6,7 +6,8 @@ import { getTemplate, parseParams, SCHEMAS, TEMPLATE_IDS, TEMPLATES } from './in
 
 const backlog = readFileSync(new URL('../../../data/backlog.csv', import.meta.url), 'utf8').trim().split('\n')
 const col = backlog[0].split(',').indexOf('template')
-const backlogIds = [...new Set(backlog.slice(1).map((l) => l.split(',')[col]))]
+// rows without a template are catalog cards still waiting for motion
+const backlogIds = [...new Set(backlog.slice(1).map((l) => l.split(',')[col]).filter(Boolean))]
 
 describe('template param schemas', () => {
   it('cover every template id used in data/backlog.csv, and nothing else', () => {

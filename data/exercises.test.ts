@@ -21,7 +21,7 @@ const backlog = readFileSync(path.join(DIR, 'backlog.csv'), 'utf8')
   .slice(1)
   .map((line) => {
     const [id, slug, name, family, template, equipment, priority] = line.split(',')
-    return { id: Number(id), slug, name, family, template, equipment: equipment ? equipment.split(';') : [], priority }
+    return { id: Number(id), slug, name, family, template: template || null, equipment: equipment ? equipment.split(';') : [], priority }
   })
 const backlogById = new Map(backlog.map((b) => [b.id, b]))
 

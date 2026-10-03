@@ -1,4 +1,4 @@
-import { Cable, Cog, Dumbbell, PersonStanding, type LucideIcon } from 'lucide-react'
+import { Cable, Cog, Dumbbell, PersonStanding, Spline, type LucideIcon } from 'lucide-react'
 import type { CustomExercise, Exercise, Role } from '../../domain/schema'
 import { groupName } from '../../data/localize'
 import { getGroup, visibleHeads } from '../../domain/taxonomy'
@@ -21,13 +21,14 @@ export function showsMotion(e: CardExercise, dev: boolean = import.meta.env.DEV)
   return isCatalogExercise(e) && hasMotion(e.id) && (dev || e.media.status === 'loop')
 }
 
-const FREE_WEIGHTS = new Set(['barbell', 'dumbbell', 'ez_bar', 'plate'])
-const BODYWEIGHT = new Set(['pullup_bar', 'dip_station', 'step', 'flat_bench', 'adjustable_bench', 'rack'])
+const FREE_WEIGHTS = new Set(['barbell', 'dumbbell', 'ez_bar', 'plate', 'kettlebell', 'trap_bar', 'landmine'])
+const BODYWEIGHT = new Set(['pullup_bar', 'dip_station', 'step', 'flat_bench', 'adjustable_bench', 'rack', 'rings', 'ab_wheel', 'ghd'])
 
 export function equipmentGlyph(equipment: readonly string[], locale: Locale = getLocale()): { icon: LucideIcon; label: string } {
   const m = catalogMessages[locale].glyph
   if (equipment.includes('cable')) return { icon: Cable, label: m.cable }
   if (equipment.some((e) => FREE_WEIGHTS.has(e))) return { icon: Dumbbell, label: m.free }
+  if (equipment.includes('band')) return { icon: Spline, label: m.band }
   if (equipment.every((e) => BODYWEIGHT.has(e))) return { icon: PersonStanding, label: m.bodyweight }
   return { icon: Cog, label: m.machine }
 }

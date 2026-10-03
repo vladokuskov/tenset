@@ -46,7 +46,7 @@ export const SearchInput = {
     .array(z.string())
     .optional()
     .describe('Equipment the user has; only exercises needing nothing else are returned. [] means bodyweight only'),
-  limit: z.number().int().min(1).max(200).optional(),
+  limit: z.number().int().min(1).max(400).optional(),
 }
 
 export const ReadInput = { link: z.string().describe('Full share link or just the part after #') }

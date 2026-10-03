@@ -7,7 +7,7 @@ import { CacheFirst } from 'workbox-strategies'
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (string | { url: string; revision: string | null })[] }
 
-// App shell, JS/CSS, catalog data (bundled), anatomy maps, models, icons and posters.
+// App shell, JS/CSS, catalog data (bundled), anatomy maps, models and icons.
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
@@ -21,6 +21,12 @@ registerRoute(
     cacheName: 'gb-loops',
     plugins: [new RangeRequestsPlugin(), new ExpirationPlugin({ maxEntries: 400, purgeOnQuotaError: true })],
   }),
+)
+
+// Posters have hashed names, so a cached one never goes stale; offline, an unseen one falls back to the map card.
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith(`${import.meta.env.BASE_URL}media/posters/`),
+  new CacheFirst({ cacheName: 'gb-posters', plugins: [new ExpirationPlugin({ maxEntries: 600, purgeOnQuotaError: true })] }),
 )
 
 // A new version waits until the page asks it to take over (the in-app update prompt).
