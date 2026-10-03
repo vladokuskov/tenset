@@ -1,0 +1,63 @@
+{
+  "id": 531,
+  "slug": "smith-machine-hip-thrust",
+  "name": "Smith Machine Hip Thrust",
+  "aliases": [
+    "Smith hip thrust",
+    "Smith glute thrust"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "smith",
+    "flat_bench"
+  ],
+  "pattern": "hip_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary"
+  },
+  "heads": {
+    "biceps_femoris_short": 0.25
+  },
+  "stabilizers": [
+    "quads",
+    "abs"
+  ],
+  "alternatives": [
+    502,
+    530,
+    529,
+    511
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Place the bench so the bar lands over your hip crease at the bottom",
+    "Pad the bar and set your feet so your shins are vertical at the top",
+    "Unhook the bar and press it up with your hips",
+    "Lock out with your glutes while your ribs stay down"
+  ],
+  "basis": [
+    "plotkin-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

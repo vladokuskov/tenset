@@ -1,0 +1,60 @@
+{
+  "id": 730,
+  "slug": "waiter-curl",
+  "name": "Waiter Curl",
+  "aliases": [
+    "dumbbell waiter curl",
+    "goblet curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    711,
+    701,
+    727
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold one dumbbell upright with both palms under the top plate",
+    "Keep your elbows close to your sides",
+    "Curl the dumbbell toward your chin, keeping it upright",
+    "Lower slowly to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

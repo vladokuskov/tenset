@@ -83,7 +83,7 @@ gym-builder/
     qa/                      numeric gates, contact sheets, report
     render/                  Playwright (Metal) renderAt(t) -> WebP posters, H.264 loops
   data/
-    taxonomy.json  sources.json  backlog.csv  known-gaps.json
+    taxonomy.json  sources.json  backlog.csv
     motion-templates/*.json  exercises/*.json  splits/*.json
   licenses/                  evidence (not shipped): mpfb2/, bodyparts3d/
   src/
@@ -235,7 +235,7 @@ a11y (axe), perf and precache budget, Lighthouse PWA, CSP, license allowlist, tr
 
 ## Verification
 - **Unit** (`pnpm test`): engine band edges at exactly 4/10/20/30 and fractional values; head shading; recovery gaps with cyclic wrap; overrides; primary-only mode; unilateral and duplicate entries; codec round-trip, retired-id decode, custom-exercise encoding; migrations. Taxonomy: each visible head has a path in every view its flag names, each deep head has a visible parent, each head belongs to exactly one group; every map group reachable by the ID-raster hit test.
-- **Data**: every visible head has >= 1 active exercise where its group is primary and emphasis 1; every banded group has a primary exercise per equipment preset or is in `known-gaps.json`; `alternatives` share pattern + primary group; every template x equipment preset fills every slot or drops it with a note.
+- **Data**: every visible head has >= 1 active exercise where its group is primary and emphasis 1; every required banded group has an exercise in every equipment preset (gaps for smaller custom selections are computed from the catalog in `src/app/knownGaps.ts`); `alternatives` share pattern + primary group; every template x equipment preset fills every slot or drops it with a note.
 - **Golden fixtures**: W and band per group for all 5 splits (acceptance: every banded major group >= 4 in every template; chest, lats, upper back, quads, glutes, hamstrings >= 8 in 4+ day templates; nothing > 20 unless intended); frozen v1 share strings that must decode forever.
 - **Motion**: `pnpm qa:motion` gates for every animated exercise (pure Node, runs in CI); stale-media guard fails when data changes leave a baked file out of date.
 - **E2E** (Playwright, desktop + iPhone 13 touch profile): first run > template > filled Plan; 3 adds in one sheet session; move an entry via the menu; back closes a sheet; share link opens `/shared` and leaves existing programs untouched; offline reload in airplane mode (Chromium); print; axe; fails on any non-app network request.

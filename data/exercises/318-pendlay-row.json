@@ -1,0 +1,70 @@
+{
+  "id": 318,
+  "slug": "pendlay-row",
+  "name": "Pendlay Row",
+  "aliases": [
+    "Pendlay",
+    "dead-stop row",
+    "strict barbell row"
+  ],
+  "family": "back",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-8",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "hamstrings",
+    "forearms"
+  ],
+  "alternatives": [
+    304,
+    316,
+    324,
+    319
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set your torso nearly parallel to the floor with the bar over midfoot",
+    "Pull the bar from the floor to your lower chest in one sharp move",
+    "Return the bar to the floor and reset each rep",
+    "Keep your hips at the same height throughout"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

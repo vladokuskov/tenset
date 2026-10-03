@@ -41,7 +41,7 @@ Approved by the owner (2026-10-03). Growing the catalog from 106 to 300 (decisio
 
 - No id, slug or name clashes with the 106 existing records. Every equipment id is in `data/equipment.json`, and every pattern is in the schema enum.
 - Every new equipment id has at least 3 exercises, except pendulum squat and belt squat (1 each). Those are single-purpose machines, and padding them with filler variants would not help anyone.
-- Band exercises close the bodyweight known gaps, so `data/known-gaps.json` can drop to empty in Phase 2:
+- Band exercises close the bodyweight gaps. Gaps are now computed from the catalog (`src/app/knownGaps.ts`), and `data/known-gaps.json` is gone:
   - side delt: 225 Band Lateral Raise
   - rear delt: 228 Band Pull-Apart
   - upper traps: 341 Band Shrug

@@ -1,0 +1,60 @@
+{
+  "id": 723,
+  "slug": "barbell-drag-curl",
+  "name": "Barbell Drag Curl",
+  "aliases": [
+    "drag curl",
+    "BB drag curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "rear_delt"
+  ],
+  "alternatives": [
+    710,
+    701,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Grip the bar palms up at about shoulder width",
+    "Draw your elbows back as the bar rises",
+    "Keep the bar brushing your torso all the way up",
+    "Lower along the same path to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

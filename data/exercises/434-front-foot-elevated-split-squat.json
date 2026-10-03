@@ -1,0 +1,65 @@
+{
+  "id": 434,
+  "slug": "front-foot-elevated-split-squat",
+  "name": "Front-Foot-Elevated Split Squat",
+  "aliases": [
+    "FFE split squat",
+    "deficit split squat",
+    "elevated split squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell",
+    "step"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    403,
+    423,
+    430,
+    409
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set your front foot flat on a low step",
+    "Lower your back knee past the level of the step",
+    "Let your front knee travel forward over your toes",
+    "Drive up through the front foot with the dumbbells at your sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

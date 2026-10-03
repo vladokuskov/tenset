@@ -1,0 +1,66 @@
+{
+  "id": 418,
+  "slug": "double-kettlebell-front-squat",
+  "name": "Double Kettlebell Front Squat",
+  "aliases": [
+    "double KB front squat",
+    "KB front squat",
+    "kettlebell front squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "upper_back",
+    "abs",
+    "lower_back"
+  ],
+  "alternatives": [
+    406,
+    405,
+    417,
+    407
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest both bells on your forearms with your wrists straight",
+    "Keep your elbows tucked close to your ribs",
+    "Stay upright and let your knees travel forward",
+    "Sit as deep as you can keep your chest tall"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

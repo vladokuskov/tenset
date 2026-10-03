@@ -1,0 +1,62 @@
+{
+  "id": 413,
+  "slug": "hack-squat",
+  "name": "Hack Squat",
+  "aliases": [
+    "hack machine squat",
+    "machine hack squat",
+    "hack"
+  ],
+  "family": "squat",
+  "equipment": [
+    "hack_squat"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    407,
+    402,
+    414,
+    401
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set your back and shoulders flat against the pads",
+    "Place your feet mid-platform, about hip width apart",
+    "Let your knees travel forward and sink as deep as your heels stay down",
+    "Drive the platform away through your whole foot"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

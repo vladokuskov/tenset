@@ -1,0 +1,65 @@
+{
+  "id": 835,
+  "slug": "l-sit-hold",
+  "name": "L-Sit Hold",
+  "aliases": [
+    "L-sit",
+    "L sit",
+    "parallel bar L-sit"
+  ],
+  "family": "core",
+  "equipment": [
+    "dip_station"
+  ],
+  "pattern": "hip_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-20"
+  },
+  "groups": {
+    "hip_flexors": "primary",
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "quads",
+    "triceps",
+    "lats",
+    "upper_back"
+  ],
+  "alternatives": [
+    826,
+    802,
+    815
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Support yourself on the bars with locked arms",
+    "Push the bars down so your shoulders drop",
+    "Lift straight legs to hip height",
+    "Point your toes and hold",
+    "Tuck your knees in if straight legs are out of reach"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

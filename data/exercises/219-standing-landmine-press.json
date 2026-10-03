@@ -1,0 +1,66 @@
+{
+  "id": 219,
+  "slug": "standing-landmine-press",
+  "name": "Standing Landmine Press",
+  "aliases": [
+    "landmine press",
+    "standing single-arm landmine press"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "landmine",
+    "barbell"
+  ],
+  "pattern": "vertical_push",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "chest": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 0.25,
+    "pec_minor": 0.25,
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "abs",
+    "obliques"
+  ],
+  "alternatives": [
+    218,
+    217,
+    220,
+    201
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand in a staggered stance facing the landmine",
+    "Hold the end of the bar at your shoulder in one hand",
+    "Press up and forward, reaching through at the top",
+    "Lower back to your shoulder without twisting"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

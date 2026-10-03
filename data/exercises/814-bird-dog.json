@@ -1,0 +1,62 @@
+{
+  "id": 814,
+  "slug": "bird-dog",
+  "name": "Bird Dog",
+  "aliases": [
+    "birddog",
+    "quadruped arm and leg raise",
+    "opposite arm and leg raise"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_rotation",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "lower_back": "primary",
+    "glute_max": "secondary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "glute_med",
+    "front_delt",
+    "upper_back"
+  ],
+  "alternatives": [
+    842,
+    505,
+    527
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set your hands under your shoulders and knees under your hips",
+    "Reach one arm forward and the opposite leg back",
+    "Keep your hips level as if balancing a cup on your lower back",
+    "Pause at full reach, then bring the elbow and knee back under you"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

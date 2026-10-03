@@ -1,0 +1,60 @@
+{
+  "id": 721,
+  "slug": "dumbbell-preacher-curl",
+  "name": "Dumbbell Preacher Curl",
+  "aliases": [
+    "DB preacher curl",
+    "one-arm preacher curl",
+    "single-arm preacher curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "preacher_bench"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    720,
+    724,
+    712
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest the back of one upper arm along the pad",
+    "Hold the dumbbell palm up with your wrist straight",
+    "Lower slowly until your elbow is almost straight",
+    "Curl without lifting your elbow off the pad"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

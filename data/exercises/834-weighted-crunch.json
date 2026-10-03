@@ -1,0 +1,59 @@
+{
+  "id": 834,
+  "slug": "weighted-crunch",
+  "name": "Weighted Crunch",
+  "aliases": [
+    "plate crunch",
+    "loaded crunch",
+    "crunch with plate"
+  ],
+  "family": "core",
+  "equipment": [
+    "plate"
+  ],
+  "pattern": "spinal_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    805,
+    840,
+    801,
+    838
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie face up with knees bent and a plate held on your chest",
+    "Curl your shoulder blades off the floor",
+    "Keep your chin lightly tucked",
+    "Lower slowly until your shoulders touch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

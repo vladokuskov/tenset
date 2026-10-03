@@ -1,0 +1,55 @@
+{
+  "id": 337,
+  "slug": "smith-machine-shrug",
+  "name": "Smith Machine Shrug",
+  "aliases": [
+    "Smith shrug",
+    "Smith machine trap shrug"
+  ],
+  "family": "back",
+  "equipment": [
+    "smith"
+  ],
+  "pattern": "scapular_elevation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "upper_traps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    314,
+    308,
+    335
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bar at mid-thigh height in the Smith machine",
+    "Grip just outside your thighs and unhook the bar",
+    "Shrug straight up toward your ears",
+    "Lower fully and keep your arms relaxed"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

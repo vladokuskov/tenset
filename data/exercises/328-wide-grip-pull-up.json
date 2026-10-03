@@ -1,0 +1,66 @@
+{
+  "id": 328,
+  "slug": "wide-grip-pull-up",
+  "name": "Wide-Grip Pull-Up",
+  "aliases": [
+    "wide pull-up",
+    "wide-grip pullup"
+  ],
+  "family": "back",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-8",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    303,
+    302,
+    334,
+    301
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip the bar about one and a half shoulder widths apart, palms away",
+    "Start from a full hang with your legs still",
+    "Drive your elbows down and out toward your hips",
+    "Pull until your upper chest nears the bar"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": 520,
+  "slug": "kettlebell-sumo-deadlift",
+  "name": "Kettlebell Sumo Deadlift",
+  "aliases": [
+    "KB sumo deadlift",
+    "kettlebell deadlift",
+    "sumo KB deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "primary",
+    "adductors": "primary",
+    "quads": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.75,
+    "rectus_femoris": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back",
+    "lats"
+  ],
+  "alternatives": [
+    521,
+    516,
+    509
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set your feet wide with toes turned out and the bell between your heels",
+    "Hinge and bend your knees to grab the handle with straight arms",
+    "Push your knees out in line with your toes as you stand",
+    "Lower the bell by sending your hips back first"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

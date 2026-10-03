@@ -1,0 +1,60 @@
+{
+  "id": 232,
+  "slug": "band-external-rotation",
+  "name": "Band External Rotation",
+  "aliases": [
+    "band ER",
+    "resistance band external rotation",
+    "band rotator cuff rotation"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "shoulder_external_rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 2,
+    "reps": "15-20"
+  },
+  "groups": {
+    "rotator_cuff": "primary"
+  },
+  "heads": {
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.5,
+    "subscapularis": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    211,
+    215,
+    229
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Anchor the band at elbow height and stand side-on to it",
+    "Hold the band in your far hand, elbow bent to 90 degrees",
+    "Rotate your forearm outward, keeping your elbow at your side",
+    "Return slowly without letting your torso turn"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

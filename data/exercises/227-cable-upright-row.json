@@ -1,0 +1,62 @@
+{
+  "id": 227,
+  "slug": "cable-upright-row",
+  "name": "Cable Upright Row",
+  "aliases": [
+    "upright row",
+    "straight-bar upright row"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "upper_traps": "primary",
+    "front_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    204,
+    203,
+    225,
+    336
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Attach a straight bar to a low pulley and stand close to it",
+    "Grip the bar overhand, hands in line with your shoulders",
+    "Pull the bar up along your body, leading with your elbows",
+    "Stop when your elbows reach shoulder height"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

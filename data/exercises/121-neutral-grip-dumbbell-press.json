@@ -1,0 +1,65 @@
+{
+  "id": 121,
+  "slug": "neutral-grip-dumbbell-press",
+  "name": "Neutral-Grip Dumbbell Press",
+  "aliases": [
+    "hammer-grip dumbbell press",
+    "neutral DB press",
+    "palms-in dumbbell press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    107,
+    118,
+    108
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the dumbbells with palms facing each other",
+    "Keep your elbows close, about 30 degrees from your sides",
+    "Lower until the handles reach the sides of your chest",
+    "Press straight up without letting the dumbbells drift apart"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

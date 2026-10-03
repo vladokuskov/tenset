@@ -1,0 +1,61 @@
+{
+  "id": 533,
+  "slug": "single-leg-glute-bridge",
+  "name": "Single-Leg Glute Bridge",
+  "aliases": [
+    "one-leg glute bridge",
+    "SL glute bridge",
+    "single leg bridge"
+  ],
+  "family": "hinge",
+  "equipment": [],
+  "pattern": "hip_extension",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary"
+  },
+  "heads": {
+    "biceps_femoris_short": 0.25
+  },
+  "stabilizers": [
+    "glute_med",
+    "abs",
+    "quads"
+  ],
+  "alternatives": [
+    511,
+    529,
+    532,
+    502
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on your back with one heel close to your hips",
+    "Straighten the other leg in line with the bent knee",
+    "Push through the planted heel to raise your hips level",
+    "Lower slowly without letting the free side drop first"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

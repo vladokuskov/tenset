@@ -1,0 +1,65 @@
+{
+  "id": 332,
+  "slug": "band-lat-pulldown",
+  "name": "Band Lat Pulldown",
+  "aliases": [
+    "band pulldown",
+    "resistance band pulldown",
+    "kneeling band pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    303,
+    334,
+    330
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Anchor the band high and kneel facing it",
+    "Hold the ends with your arms straight overhead",
+    "Pull your elbows down to your sides",
+    "Let your arms rise slowly against the band"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

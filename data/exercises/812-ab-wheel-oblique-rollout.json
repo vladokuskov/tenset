@@ -1,0 +1,64 @@
+{
+  "id": 812,
+  "slug": "ab-wheel-oblique-rollout",
+  "name": "Ab Wheel Oblique Rollout",
+  "aliases": [
+    "oblique rollout",
+    "diagonal rollout",
+    "angled ab wheel rollout"
+  ],
+  "family": "core",
+  "equipment": [
+    "ab_wheel"
+  ],
+  "pattern": "anti_rotation",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary",
+    "lats": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5,
+    "teres_major": 0.75
+  },
+  "stabilizers": [
+    "serratus",
+    "triceps",
+    "glute_max"
+  ],
+  "alternatives": [
+    828,
+    808,
+    823
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Kneel with the wheel under your shoulders",
+    "Roll out on a diagonal toward one side",
+    "Keep your hips square and your lower back flat",
+    "Pull back to center and switch sides each rep"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

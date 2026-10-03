@@ -33,9 +33,10 @@
     "abs"
   ],
   "alternatives": [
-    503,
+    526,
     504,
-    509
+    503,
+    541
   ],
   "media": {
     "status": "loop",

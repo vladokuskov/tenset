@@ -1,0 +1,64 @@
+{
+  "id": 236,
+  "slug": "dumbbell-scaption-raise",
+  "name": "Dumbbell Scaption Raise",
+  "aliases": [
+    "scaption",
+    "scaption raise",
+    "full can raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "shoulder_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary",
+    "rotator_cuff": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    209,
+    233,
+    234
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand tall with dumbbells at your sides, thumbs pointing up",
+    "Raise your arms at about 30 degrees in front of your sides",
+    "Stop at shoulder height",
+    "Lower slowly without shrugging"
+  ],
+  "basis": [
+    "coratella-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

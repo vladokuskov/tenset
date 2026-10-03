@@ -1,0 +1,70 @@
+{
+  "id": 316,
+  "slug": "t-bar-row",
+  "name": "T-Bar Row",
+  "aliases": [
+    "T-bar",
+    "T bar row",
+    "Tbar row"
+  ],
+  "family": "back",
+  "equipment": [
+    "t_bar"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "hamstrings",
+    "forearms"
+  ],
+  "alternatives": [
+    338,
+    304,
+    305,
+    307
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Straddle the bar and grip the handles next to the plates",
+    "Hinge until your torso is about 45 degrees to the floor",
+    "Row the plates toward your chest, elbows close to your sides",
+    "Keep your back flat and your hips still"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

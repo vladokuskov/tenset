@@ -1,0 +1,59 @@
+{
+  "id": 435,
+  "slug": "single-leg-leg-extension",
+  "name": "Single-Leg Leg Extension",
+  "aliases": [
+    "one-leg leg extension",
+    "unilateral leg extension",
+    "SL leg extension"
+  ],
+  "family": "squat",
+  "equipment": [
+    "leg_extension"
+  ],
+  "pattern": "knee_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.75
+  },
+  "stabilizers": [],
+  "alternatives": [
+    404,
+    412,
+    428,
+    429
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Line your knee up with the machine pivot",
+    "Set the shin pad just above your ankle",
+    "Keep your hips down on the seat",
+    "Straighten one knee fully, then lower slowly"
+  ],
+  "basis": [
+    "larsen-2025-legext",
+    "zabaleta-korta-2021"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

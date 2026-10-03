@@ -1,0 +1,58 @@
+{
+  "id": 436,
+  "slug": "band-spanish-squat",
+  "name": "Band Spanish Squat",
+  "aliases": [
+    "Spanish squat",
+    "band squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    428,
+    408,
+    404,
+    405
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Loop a heavy band behind both knees and anchor it in front of you",
+    "Step back until the band is taut",
+    "Sit your hips back while your shins stay vertical",
+    "Lean back into the band and stand tall at the top"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

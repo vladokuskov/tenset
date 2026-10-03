@@ -1,0 +1,59 @@
+{
+  "id": 133,
+  "slug": "band-fly",
+  "name": "Band Fly",
+  "aliases": [
+    "banded fly",
+    "resistance band fly",
+    "band chest fly"
+  ],
+  "family": "chest",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    129,
+    112,
+    110
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Anchor the band behind you at chest height and hold one end in each hand",
+    "Step forward until the band has light tension with your arms open",
+    "Keep your elbows softly bent and bring your hands together",
+    "Let your arms open slowly against the band"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

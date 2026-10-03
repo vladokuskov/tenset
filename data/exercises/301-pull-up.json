@@ -4,7 +4,6 @@
   "name": "Pull-Up",
   "aliases": [
     "pullup",
-    "wide-grip pull-up",
     "overhand pull-up"
   ],
   "family": "back",
@@ -37,6 +36,7 @@
   ],
   "alternatives": [
     302,
+    334,
     303,
     309
   ],

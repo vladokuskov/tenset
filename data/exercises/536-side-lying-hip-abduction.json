@@ -1,0 +1,56 @@
+{
+  "id": 536,
+  "slug": "side-lying-hip-abduction",
+  "name": "Side-Lying Hip Abduction",
+  "aliases": [
+    "side leg raise",
+    "lying leg abduction",
+    "side-lying leg lift"
+  ],
+  "family": "hinge",
+  "equipment": [],
+  "pattern": "hip_abduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-25"
+  },
+  "groups": {
+    "glute_med": "primary",
+    "glute_max": "secondary"
+  },
+  "stabilizers": [
+    "obliques"
+  ],
+  "alternatives": [
+    514,
+    506,
+    535,
+    537
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on your side with your body in one straight line",
+    "Bend the bottom knee for balance and keep the top leg straight",
+    "Lift the top leg with the heel leading and toes pointing forward",
+    "Keep your hips stacked instead of rolling back"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

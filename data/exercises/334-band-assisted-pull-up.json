@@ -1,0 +1,67 @@
+{
+  "id": 334,
+  "slug": "band-assisted-pull-up",
+  "name": "Band-Assisted Pull-Up",
+  "aliases": [
+    "band pull-up",
+    "banded pull-up",
+    "assisted pull-up with band"
+  ],
+  "family": "back",
+  "equipment": [
+    "pullup_bar",
+    "band"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-12",
+    "strengthReps": "4-6"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    302,
+    301,
+    303
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Loop a band over the bar and set one knee or both feet in it",
+    "Pick a band that lets you finish every rep",
+    "Pull your chest toward the bar from a full hang",
+    "Lower under control until your arms are straight"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

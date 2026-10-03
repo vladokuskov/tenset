@@ -1,0 +1,65 @@
+{
+  "id": 433,
+  "slug": "dumbbell-curtsy-lunge",
+  "name": "Dumbbell Curtsy Lunge",
+  "aliases": [
+    "curtsy lunge",
+    "DB curtsy lunge",
+    "crossover lunge"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "glute_med": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5,
+    "tfl": 0.5
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    409,
+    426,
+    403,
+    430
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Step one foot back and across behind the other",
+    "Keep your hips and chest facing forward",
+    "Lower until your back knee nears the floor",
+    "Push through the front foot to step back in"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

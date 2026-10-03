@@ -1,0 +1,59 @@
+{
+  "id": 836,
+  "slug": "flutter-kick",
+  "name": "Flutter Kick",
+  "aliases": [
+    "flutter kicks",
+    "lying flutter kick",
+    "scissor flutter"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "hip_flexion",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-20"
+  },
+  "groups": {
+    "abs": "primary",
+    "hip_flexors": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "quads"
+  ],
+  "alternatives": [
+    807,
+    816,
+    819
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie face up with your hands beside your hips",
+    "Press your lower back into the floor",
+    "Lift both straight legs a little off the floor",
+    "Kick them up and down in short, quick alternating strokes"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

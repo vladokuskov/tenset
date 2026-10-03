@@ -1,0 +1,56 @@
+{
+  "id": 234,
+  "slug": "plate-front-raise",
+  "name": "Plate Front Raise",
+  "aliases": [
+    "plate raise",
+    "front plate raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "plate"
+  ],
+  "pattern": "shoulder_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    209,
+    233,
+    236
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold a plate by its sides at thigh level",
+    "Raise it forward to eye level with your arms nearly straight",
+    "Keep your torso still and your ribs down",
+    "Lower slowly back to your thighs"
+  ],
+  "basis": [
+    "coratella-2020",
+    "campos-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

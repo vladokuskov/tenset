@@ -38,9 +38,10 @@
     "lats"
   ],
   "alternatives": [
+    519,
     501,
-    513,
-    505
+    517,
+    513
   ],
   "media": {
     "status": "loop",

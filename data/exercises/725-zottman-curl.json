@@ -1,0 +1,60 @@
+{
+  "id": 725,
+  "slug": "zottman-curl",
+  "name": "Zottman Curl",
+  "aliases": [
+    "Zottman",
+    "rotating curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.5
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    714,
+    703,
+    711
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Curl the dumbbells up with your palms facing up",
+    "Turn your palms down at the top",
+    "Lower slowly with your palms facing down",
+    "Turn your palms back up at the bottom"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

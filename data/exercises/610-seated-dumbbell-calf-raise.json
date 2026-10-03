@@ -1,0 +1,61 @@
+{
+  "id": 610,
+  "slug": "seated-dumbbell-calf-raise",
+  "name": "Seated Dumbbell Calf Raise",
+  "aliases": [
+    "seated DB calf raise",
+    "dumbbell soleus raise",
+    "bench calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "heads": {
+    "gastroc_medial": 0.25,
+    "gastroc_lateral": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    602,
+    604,
+    607,
+    606
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Perch on the bench end, feet flat and shins upright",
+    "Stand the dumbbells on your lower thighs, just above the knees",
+    "Lift your heels as high as they go and hold the top",
+    "Lower slowly until your heels touch down again"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

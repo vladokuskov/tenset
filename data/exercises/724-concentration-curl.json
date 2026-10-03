@@ -1,0 +1,59 @@
+{
+  "id": 724,
+  "slug": "concentration-curl",
+  "name": "Concentration Curl",
+  "aliases": [
+    "seated concentration curl",
+    "DB concentration curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    721,
+    711,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Sit at the bench end with your knees wide apart",
+    "Brace the back of your upper arm against your inner thigh",
+    "Curl the dumbbell toward your shoulder",
+    "Lower to a straight arm while your upper arm stays put"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

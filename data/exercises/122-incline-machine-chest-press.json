@@ -1,0 +1,65 @@
+{
+  "id": 122,
+  "slug": "incline-machine-chest-press",
+  "name": "Incline Machine Chest Press",
+  "aliases": [
+    "incline chest press",
+    "incline machine press",
+    "machine incline press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "chest_press_machine"
+  ],
+  "pattern": "incline_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    102,
+    109,
+    115
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the seat so the handles start at upper chest height",
+    "Keep your back and head on the pad",
+    "Press up and forward without shrugging",
+    "Return slowly until you feel a light stretch in your chest"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "albarello-2022",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

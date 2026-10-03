@@ -1,0 +1,61 @@
+{
+  "id": 223,
+  "slug": "pike-push-up",
+  "name": "Pike Push-Up",
+  "aliases": [
+    "pike press-up",
+    "pike pushup",
+    "bodyweight shoulder press"
+  ],
+  "family": "shoulders",
+  "equipment": [],
+  "pattern": "vertical_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-12"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary",
+    "triceps": "secondary",
+    "upper_traps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    222,
+    217,
+    202
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Start in a push-up, then walk your feet in and lift your hips high",
+    "Place your hands slightly wider than your shoulders",
+    "Lower the top of your head to a spot just in front of your hands",
+    "Push back up until your arms are straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

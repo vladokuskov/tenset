@@ -1,0 +1,52 @@
+{
+  "id": 611,
+  "slug": "band-tibialis-raise",
+  "name": "Band Tibialis Raise",
+  "aliases": [
+    "band tib raise",
+    "banded toe pull",
+    "band dorsiflexion"
+  ],
+  "family": "calves",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "dorsiflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 2,
+    "reps": "15-25"
+  },
+  "groups": {
+    "tibialis": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    603
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Sit with your legs out straight and loop the band over the tops of your feet",
+    "Anchor the band low in front of you so it pulls your toes away",
+    "Pull your toes back toward your shins as far as you can",
+    "Let the band draw your feet forward slowly before the next rep"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

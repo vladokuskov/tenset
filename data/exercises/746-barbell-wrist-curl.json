@@ -1,0 +1,59 @@
+{
+  "id": 746,
+  "slug": "barbell-wrist-curl",
+  "name": "Barbell Wrist Curl",
+  "aliases": [
+    "BB wrist curl",
+    "palms-up barbell wrist curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell",
+    "flat_bench"
+  ],
+  "pattern": "wrist_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_flexors": 1,
+    "brachioradialis": 0,
+    "wrist_extensors": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    708,
+    748,
+    749
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Kneel beside the bench with your forearms on it, palms up",
+    "Let the bar hang just past the edge",
+    "Lower the bar by bending your wrists back",
+    "Curl your wrists up while your forearms stay on the bench"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

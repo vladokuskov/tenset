@@ -1,0 +1,64 @@
+{
+  "id": 424,
+  "slug": "barbell-reverse-lunge",
+  "name": "Barbell Reverse Lunge",
+  "aliases": [
+    "BB reverse lunge",
+    "barbell lunge"
+  ],
+  "family": "squat",
+  "equipment": [
+    "barbell",
+    "rack"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "abs"
+  ],
+  "alternatives": [
+    409,
+    431,
+    423,
+    430
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bar across your upper back",
+    "Step back far enough that your front shin stays near vertical",
+    "Lower your back knee toward the floor",
+    "Drive through your front foot to step back in"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

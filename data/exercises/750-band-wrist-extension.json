@@ -1,0 +1,58 @@
+{
+  "id": 750,
+  "slug": "band-wrist-extension",
+  "name": "Band Wrist Extension",
+  "aliases": [
+    "band reverse wrist curl",
+    "resistance band wrist extension"
+  ],
+  "family": "arms",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "wrist_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-25"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_extensors": 1,
+    "brachioradialis": 0,
+    "wrist_flexors": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    709,
+    747,
+    714
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Kneel on one knee and step your front foot onto the band",
+    "Rest that forearm on your front thigh, palm down",
+    "Lift the back of your hand toward the ceiling",
+    "Lower slowly until your wrist bends down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

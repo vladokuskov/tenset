@@ -33,8 +33,10 @@
     "glute_med"
   ],
   "alternatives": [
-    808,
-    803
+    833,
+    822,
+    821,
+    831
   ],
   "media": {
     "status": "loop",

@@ -1,0 +1,62 @@
+{
+  "id": 726,
+  "slug": "cross-body-hammer-curl",
+  "name": "Cross-Body Hammer Curl",
+  "aliases": [
+    "cross-body curl",
+    "pinwheel curl",
+    "cross body hammer"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.75,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    703,
+    719,
+    752
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Let both arms hang with thumbs forward and palms in",
+    "Curl one dumbbell up and across toward the opposite shoulder",
+    "Keep your thumb on top the whole way",
+    "Lower to a straight arm before switching sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

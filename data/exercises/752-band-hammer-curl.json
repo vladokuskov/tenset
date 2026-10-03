@@ -1,0 +1,61 @@
+{
+  "id": 752,
+  "slug": "band-hammer-curl",
+  "name": "Band Hammer Curl",
+  "aliases": [
+    "band neutral-grip curl",
+    "resistance band hammer curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.75,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    703,
+    719,
+    727
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand on the band and hold the ends with palms facing in",
+    "Keep your thumbs pointing up as you curl",
+    "Hold your elbows close to your sides",
+    "Lower slowly until your arms are straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

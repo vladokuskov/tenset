@@ -1,0 +1,60 @@
+{
+  "id": 734,
+  "slug": "single-arm-cable-pushdown",
+  "name": "Single-Arm Cable Pushdown",
+  "aliases": [
+    "one-arm pushdown",
+    "single-arm triceps pushdown",
+    "D-handle pushdown"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    704,
+    717,
+    740
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the pulley high and hold a single handle",
+    "Pin your working elbow against your side",
+    "Push down until your arm is fully straight",
+    "Let your forearm rise to about parallel while your elbow stays still"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

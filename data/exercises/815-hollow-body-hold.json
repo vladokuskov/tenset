@@ -1,0 +1,60 @@
+{
+  "id": 815,
+  "slug": "hollow-body-hold",
+  "name": "Hollow Body Hold",
+  "aliases": [
+    "hollow hold",
+    "hollow body",
+    "dish hold"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "20-40"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary",
+    "hip_flexors": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75
+  },
+  "stabilizers": [
+    "quads",
+    "front_delt"
+  ],
+  "alternatives": [
+    813,
+    829,
+    804
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie face up and press your lower back into the floor",
+    "Lift your shoulders and straight legs off the floor",
+    "Reach your arms past your ears",
+    "Bend your knees or bring your arms in to keep your back down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

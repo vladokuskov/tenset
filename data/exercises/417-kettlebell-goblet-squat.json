@@ -1,0 +1,65 @@
+{
+  "id": 417,
+  "slug": "kettlebell-goblet-squat",
+  "name": "Kettlebell Goblet Squat",
+  "aliases": [
+    "KB goblet squat",
+    "kettlebell squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "upper_back",
+    "lower_back"
+  ],
+  "alternatives": [
+    405,
+    408,
+    418,
+    401
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the kettlebell by the horns against your chest",
+    "Sit straight down between your knees",
+    "Keep your elbows inside your knees at the bottom",
+    "Stay tall and keep your heels down"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

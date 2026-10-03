@@ -1,0 +1,63 @@
+{
+  "id": 342,
+  "slug": "scapular-pull-up",
+  "name": "Scapular Pull-Up",
+  "aliases": [
+    "scap pull-up",
+    "scapular pull",
+    "scap pulls"
+  ],
+  "family": "back",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "trap_middle": 0.5,
+    "rhomboids": 0.5,
+    "teres_major": 0.5
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    301,
+    334,
+    303
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hang from the bar with straight arms and an overhand grip",
+    "Draw your shoulders down and back while your elbows stay straight",
+    "Hold the top for a moment",
+    "Let your shoulders rise back into a full hang"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

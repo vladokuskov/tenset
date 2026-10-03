@@ -1,0 +1,62 @@
+{
+  "id": 134,
+  "slug": "kneeling-push-up",
+  "name": "Kneeling Push-Up",
+  "aliases": [
+    "knee push-up",
+    "modified push-up",
+    "kneeling press-up"
+  ],
+  "family": "chest",
+  "equipment": [],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-20"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    114,
+    113,
+    108
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Kneel and place your hands a little wider than your shoulders",
+    "Brace so your hips stay level with your shoulders",
+    "Lower your chest toward the floor with elbows at about 45 degrees",
+    "Push back up until your arms are straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

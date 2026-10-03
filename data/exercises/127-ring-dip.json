@@ -1,0 +1,64 @@
+{
+  "id": 127,
+  "slug": "ring-dip",
+  "name": "Ring Dip",
+  "aliases": [
+    "ring dips",
+    "rings dip"
+  ],
+  "family": "chest",
+  "equipment": [
+    "rings"
+  ],
+  "pattern": "dip",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10"
+  },
+  "groups": {
+    "chest": "primary",
+    "triceps": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 1,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.5,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "rotator_cuff"
+  ],
+  "alternatives": [
+    104,
+    718,
+    733
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Press up to a support with the rings by your hips",
+    "Keep the rings tight to your body throughout",
+    "Lean slightly forward and lower until your shoulders reach elbow height",
+    "Press back up and turn the rings slightly out at the top"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

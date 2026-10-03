@@ -1,0 +1,67 @@
+{
+  "id": 322,
+  "slug": "ring-row",
+  "name": "Ring Row",
+  "aliases": [
+    "ring inverted row",
+    "rings row",
+    "suspension row"
+  ],
+  "family": "back",
+  "equipment": [
+    "rings"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    313,
+    323,
+    305
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hang the rings at about waist height",
+    "Lean back under them with your body in a straight line",
+    "Pull your chest up between the rings, turning your palms in",
+    "Walk your feet forward to make it harder"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

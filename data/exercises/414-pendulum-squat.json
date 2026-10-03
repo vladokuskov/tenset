@@ -1,0 +1,61 @@
+{
+  "id": 414,
+  "slug": "pendulum-squat",
+  "name": "Pendulum Squat",
+  "aliases": [
+    "pendulum",
+    "pendulum machine squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "pendulum_squat"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    413,
+    407,
+    402,
+    401
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the shoulder pads snug and your back flat on the pad",
+    "Stand with your feet slightly forward of your hips",
+    "Ride the arc down until your hips sit below your knees",
+    "Push through your midfoot and keep your heels down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

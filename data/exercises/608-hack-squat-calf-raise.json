@@ -1,0 +1,56 @@
+{
+  "id": 608,
+  "slug": "hack-squat-calf-raise",
+  "name": "Hack Squat Calf Raise",
+  "aliases": [
+    "hack calf raise",
+    "hack machine calf raise",
+    "sled calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "hack_squat"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    605,
+    607,
+    601,
+    612
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Put your back to the pad and your forefoot on the low edge of the platform",
+    "Keep your legs locked almost straight with the safeties set",
+    "Let your heels drop toward the floor for a long stretch",
+    "Push up through your big toes until your ankles are fully extended"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

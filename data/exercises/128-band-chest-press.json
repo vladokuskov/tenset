@@ -1,0 +1,63 @@
+{
+  "id": 128,
+  "slug": "band-chest-press",
+  "name": "Band Chest Press",
+  "aliases": [
+    "banded chest press",
+    "resistance band press",
+    "band press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    124,
+    125,
+    107
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Anchor the band behind you at chest height",
+    "Step forward until the band is taut at the start",
+    "Press both hands forward until your arms are straight",
+    "Bring your hands back slowly to your chest"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

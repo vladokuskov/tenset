@@ -1,0 +1,62 @@
+{
+  "id": 530,
+  "slug": "dumbbell-hip-thrust",
+  "name": "Dumbbell Hip Thrust",
+  "aliases": [
+    "DB hip thrust",
+    "dumbbell glute thrust"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "hip_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary"
+  },
+  "heads": {
+    "biceps_femoris_short": 0.25
+  },
+  "stabilizers": [
+    "quads",
+    "abs"
+  ],
+  "alternatives": [
+    502,
+    531,
+    511,
+    532
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit against the bench and rest one dumbbell across your hip crease",
+    "Hold the ends so it stays put as you lift",
+    "Drive your heels down until your hips, shoulders and knees line up",
+    "Keep your chin tucked and ribs down at the top"
+  ],
+  "basis": [
+    "plotkin-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

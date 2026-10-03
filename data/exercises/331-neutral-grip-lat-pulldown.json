@@ -1,0 +1,66 @@
+{
+  "id": 331,
+  "slug": "neutral-grip-lat-pulldown",
+  "name": "Neutral-Grip Lat Pulldown",
+  "aliases": [
+    "parallel-grip pulldown",
+    "wide neutral pulldown",
+    "hammer-grip pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "lat_pulldown"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    310,
+    311,
+    303
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Attach a wide bar with parallel handles",
+    "Lock your thighs under the pad and grip with palms facing each other",
+    "Pull the handles to your upper chest, leaning back slightly",
+    "Straighten your arms fully on the way up"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

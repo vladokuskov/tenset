@@ -1,0 +1,62 @@
+{
+  "id": 429,
+  "slug": "single-leg-leg-press",
+  "name": "Single-Leg Leg Press",
+  "aliases": [
+    "one-leg leg press",
+    "unilateral leg press",
+    "SL leg press"
+  ],
+  "family": "squat",
+  "equipment": [
+    "leg_press"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "secondary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    402,
+    403,
+    423,
+    432
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Place one foot in the middle of the platform",
+    "Keep your hips square and your lower back on the pad",
+    "Lower until your hip is about to curl off the seat",
+    "Press through your heel and midfoot"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

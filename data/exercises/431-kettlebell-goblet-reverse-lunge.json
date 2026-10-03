@@ -1,0 +1,64 @@
+{
+  "id": 431,
+  "slug": "kettlebell-goblet-reverse-lunge",
+  "name": "Kettlebell Goblet Reverse Lunge",
+  "aliases": [
+    "KB reverse lunge",
+    "goblet reverse lunge",
+    "goblet lunge"
+  ],
+  "family": "squat",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "abs"
+  ],
+  "alternatives": [
+    409,
+    424,
+    430,
+    411
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the kettlebell by the horns at your chest",
+    "Step straight back and lower your back knee",
+    "Keep your weight in your front heel",
+    "Drive through the front foot to bring your feet together"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

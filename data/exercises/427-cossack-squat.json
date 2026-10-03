@@ -1,0 +1,60 @@
+{
+  "id": 427,
+  "slug": "cossack-squat",
+  "name": "Cossack Squat",
+  "aliases": [
+    "cossack",
+    "side-to-side squat"
+  ],
+  "family": "squat",
+  "equipment": [],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.75
+  },
+  "stabilizers": [
+    "glute_med",
+    "abs"
+  ],
+  "alternatives": [
+    426,
+    408,
+    421
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Take a very wide stance with your toes slightly out",
+    "Sink onto one leg as deep as your heel stays down",
+    "Let the straight leg's toes point up",
+    "Shift across to the other side without standing up fully"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

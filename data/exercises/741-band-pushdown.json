@@ -1,0 +1,60 @@
+{
+  "id": 741,
+  "slug": "band-pushdown",
+  "name": "Band Pushdown",
+  "aliases": [
+    "resistance band pushdown",
+    "band triceps pushdown",
+    "banded pushdown"
+  ],
+  "family": "arms",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    704,
+    715,
+    717
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Anchor the band above head height",
+    "Hold the ends with your elbows tucked at your sides",
+    "Push down until your arms are straight",
+    "Let your hands rise to chest height without moving your elbows"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

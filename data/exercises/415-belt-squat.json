@@ -1,0 +1,62 @@
+{
+  "id": 415,
+  "slug": "belt-squat",
+  "name": "Belt Squat",
+  "aliases": [
+    "hip belt squat",
+    "belt squat machine"
+  ],
+  "family": "squat",
+  "equipment": [
+    "belt_squat"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    402,
+    413,
+    405,
+    401
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Fasten the belt low around your hips",
+    "Hold the handles lightly for balance",
+    "Sit straight down between your heels with your chest tall",
+    "Push your knees out in line with your toes as you stand"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

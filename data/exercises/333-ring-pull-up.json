@@ -1,0 +1,65 @@
+{
+  "id": 333,
+  "slug": "ring-pull-up",
+  "name": "Ring Pull-Up",
+  "aliases": [
+    "rings pull-up",
+    "ring pullup"
+  ],
+  "family": "back",
+  "equipment": [
+    "rings"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    310,
+    301,
+    303
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hang the rings high enough for a full hang with your feet clear",
+    "Start from a full hang with your palms facing forward",
+    "Pull up, letting the rings turn your palms toward each other",
+    "Keep the rings close to your body at the top"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": 825,
+  "slug": "hanging-oblique-knee-raise",
+  "name": "Hanging Oblique Knee Raise",
+  "aliases": [
+    "hanging oblique raise",
+    "side knee raise",
+    "twisting knee raise"
+  ],
+  "family": "core",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "primary",
+    "hip_flexors": "primary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [
+    "forearms",
+    "lats"
+  ],
+  "alternatives": [
+    826,
+    806,
+    820
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hang from the bar with straight arms",
+    "Raise your knees toward one shoulder",
+    "Curl your pelvis up as the knees rise",
+    "Lower slowly and alternate sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

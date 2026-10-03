@@ -1,0 +1,58 @@
+{
+  "id": 739,
+  "slug": "incline-dumbbell-skull-crusher",
+  "name": "Incline Dumbbell Skull Crusher",
+  "aliases": [
+    "incline skull crusher",
+    "incline lying triceps extension",
+    "incline DB extension"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    738,
+    716,
+    705
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bench to a low incline and lie back",
+    "Hold the dumbbells over your head with palms facing in",
+    "Lower them behind your head by bending only at the elbows",
+    "Press back up until your elbows are straight"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": 330,
+  "slug": "single-arm-cable-pulldown",
+  "name": "Single-Arm Cable Pulldown",
+  "aliases": [
+    "one-arm pulldown",
+    "single-arm lat pulldown",
+    "kneeling one-arm pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "obliques"
+  ],
+  "alternatives": [
+    303,
+    332,
+    311
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set a single handle at the top pulley and kneel or sit facing it",
+    "Reach up with one arm straight",
+    "Pull the handle down until your elbow reaches your ribs",
+    "Let the arm rise fully so the lat stretches"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": 230,
+  "slug": "incline-prone-rear-delt-raise",
+  "name": "Incline Prone Rear Delt Raise",
+  "aliases": [
+    "incline rear delt raise",
+    "chest-supported rear delt fly",
+    "incline reverse fly"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "secondary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.5,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    210,
+    205,
+    213,
+    228
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bench to a low incline and lie chest down",
+    "Let the dumbbells hang below your shoulders",
+    "Raise your arms out wide until they line up with your body",
+    "Keep your chest on the pad and lower slowly"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

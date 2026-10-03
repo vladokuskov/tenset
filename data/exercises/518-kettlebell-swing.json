@@ -1,0 +1,67 @@
+{
+  "id": 518,
+  "slug": "kettlebell-swing",
+  "name": "Kettlebell Swing",
+  "aliases": [
+    "KB swing",
+    "Russian swing",
+    "two-hand kettlebell swing"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "abs",
+    "lats"
+  ],
+  "alternatives": [
+    513,
+    509,
+    519,
+    502
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hike the bell back between your thighs, wrists high near your groin",
+    "Snap your hips forward so the bell floats up to chest height",
+    "Let your arms stay loose and guide the bell instead of lifting it",
+    "Stand tall with glutes tight at the top, then hinge as it falls"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

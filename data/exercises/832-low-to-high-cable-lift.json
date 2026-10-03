@@ -1,0 +1,64 @@
+{
+  "id": 832,
+  "slug": "low-to-high-cable-lift",
+  "name": "Low-to-High Cable Lift",
+  "aliases": [
+    "cable lift",
+    "low-to-high woodchop",
+    "reverse woodchop"
+  ],
+  "family": "core",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "front_delt",
+    "glute_med",
+    "lower_back"
+  ],
+  "alternatives": [
+    809,
+    831,
+    833,
+    822
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulley low and stand side-on in a wide stance",
+    "Start with the handle outside your near knee",
+    "Pull up and across to above your far shoulder with long arms",
+    "Turn your hips and chest together as your weight shifts",
+    "Lower back under control"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

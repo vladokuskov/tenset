@@ -1,0 +1,65 @@
+{
+  "id": 229,
+  "slug": "band-face-pull",
+  "name": "Band Face Pull",
+  "aliases": [
+    "face pull with band",
+    "resistance band face pull"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-20"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "primary",
+    "rotator_cuff": "primary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "trap_lower": 1,
+    "rhomboids": 0.75,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.5,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    206,
+    228,
+    213,
+    205
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Anchor the band at face height and hold an end in each hand",
+    "Step back until the band is taut",
+    "Pull toward your face, elbows high and hands apart",
+    "Finish with your hands beside your ears, then return slowly"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

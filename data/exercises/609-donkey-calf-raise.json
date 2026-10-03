@@ -1,0 +1,55 @@
+{
+  "id": 609,
+  "slug": "donkey-calf-raise",
+  "name": "Donkey Calf Raise",
+  "aliases": [
+    "donkey raise",
+    "bent-over calf raise",
+    "hinged calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "step"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    606,
+    601,
+    607,
+    604
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hinge at the hips and rest your forearms on a bench or rack in front of you",
+    "Stand on the step edge with your heels hanging and hips over your feet",
+    "Keep your knees close to straight and your back flat",
+    "Lower your heels as far as they go, then rise up high and pause"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

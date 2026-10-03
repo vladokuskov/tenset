@@ -1,0 +1,60 @@
+{
+  "id": 728,
+  "slug": "ez-bar-reverse-preacher-curl",
+  "name": "EZ-Bar Reverse Preacher Curl",
+  "aliases": [
+    "reverse preacher curl",
+    "overhand preacher curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar",
+    "preacher_bench"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.5,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    714,
+    751,
+    720
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest your upper arms flat on the preacher pad",
+    "Hold the bar palms down on its angled grips",
+    "Keep your wrists in line with your forearms",
+    "Lower until your elbows are almost straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

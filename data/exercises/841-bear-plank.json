@@ -1,0 +1,61 @@
+{
+  "id": 841,
+  "slug": "bear-plank",
+  "name": "Bear Plank",
+  "aliases": [
+    "bear hold",
+    "hovering bear",
+    "bear crawl hold"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "20-40"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75
+  },
+  "stabilizers": [
+    "serratus",
+    "front_delt",
+    "triceps",
+    "quads"
+  ],
+  "alternatives": [
+    804,
+    829,
+    813
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Start on hands and knees with your hands under your shoulders",
+    "Tuck your toes and lift your knees just off the floor",
+    "Keep your back flat and your hips level",
+    "Push the floor away and hold"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

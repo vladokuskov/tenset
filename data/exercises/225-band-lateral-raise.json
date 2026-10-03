@@ -1,0 +1,64 @@
+{
+  "id": 225,
+  "slug": "band-lateral-raise",
+  "name": "Band Lateral Raise",
+  "aliases": [
+    "band side raise",
+    "resistance band lateral raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-25"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "rear_delt": "secondary",
+    "rotator_cuff": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    203,
+    204,
+    224
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand on the middle of the band, holding an end in each hand",
+    "Raise your arms out to your sides with a soft elbow bend",
+    "Stop at shoulder height",
+    "Lower slowly against the band"
+  ],
+  "basis": [
+    "campos-2020",
+    "larsen-2025-lateral",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

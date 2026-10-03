@@ -1,0 +1,65 @@
+{
+  "id": 329,
+  "slug": "underhand-lat-pulldown",
+  "name": "Underhand Lat Pulldown",
+  "aliases": [
+    "reverse-grip pulldown",
+    "supinated pulldown",
+    "chin-up pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "lat_pulldown"
+  ],
+  "pattern": "vertical_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "rhomboids": 1,
+    "trap_middle": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    309,
+    303,
+    311
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lock your thighs under the pad",
+    "Grip the bar at shoulder width, palms facing you",
+    "Pull the bar to your upper chest, elbows travelling down by your sides",
+    "Let your arms straighten fully at the top"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

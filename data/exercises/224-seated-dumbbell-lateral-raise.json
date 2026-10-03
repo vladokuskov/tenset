@@ -1,0 +1,66 @@
+{
+  "id": 224,
+  "slug": "seated-dumbbell-lateral-raise",
+  "name": "Seated Dumbbell Lateral Raise",
+  "aliases": [
+    "seated lateral raise",
+    "seated side raise",
+    "seated DB lateral raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "rear_delt": "secondary",
+    "rotator_cuff": "secondary",
+    "upper_traps": "secondary"
+  },
+  "heads": {
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    203,
+    204,
+    225
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Sit on the end of a bench, feet flat and back tall",
+    "Let the dumbbells hang beside the bench",
+    "Raise them out to your sides to shoulder height",
+    "Lower slowly, keeping your torso still"
+  ],
+  "basis": [
+    "campos-2020",
+    "coratella-2020",
+    "larsen-2025-lateral"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

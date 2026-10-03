@@ -1,0 +1,67 @@
+{
+  "id": 220,
+  "slug": "kettlebell-overhead-press",
+  "name": "Kettlebell Overhead Press",
+  "aliases": [
+    "KB press",
+    "kettlebell press",
+    "single-arm kettlebell press",
+    "KB OHP"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "vertical_push",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary",
+    "triceps": "secondary",
+    "upper_traps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "abs",
+    "obliques"
+  ],
+  "alternatives": [
+    217,
+    222,
+    201,
+    219
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the kettlebell in the rack, resting on your forearm",
+    "Brace your core and squeeze your glutes",
+    "Press straight up, turning your palm forward",
+    "Lock out with your arm beside your ear"
+  ],
+  "basis": [
+    "campos-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

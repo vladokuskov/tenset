@@ -1,0 +1,56 @@
+{
+  "id": 233,
+  "slug": "cable-front-raise",
+  "name": "Cable Front Raise",
+  "aliases": [
+    "cable rope front raise",
+    "low cable front raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "side_delt": "secondary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    209,
+    234,
+    236
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulley low, turn your back to it and hold the rope between your legs",
+    "Raise your arms forward to shoulder height with a soft elbow bend",
+    "Keep your torso upright",
+    "Lower slowly against the cable"
+  ],
+  "basis": [
+    "coratella-2020",
+    "campos-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

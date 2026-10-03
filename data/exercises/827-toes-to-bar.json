@@ -1,0 +1,64 @@
+{
+  "id": 827,
+  "slug": "toes-to-bar",
+  "name": "Toes-to-Bar",
+  "aliases": [
+    "T2B",
+    "toes to bar",
+    "TTB"
+  ],
+  "family": "core",
+  "equipment": [
+    "pullup_bar"
+  ],
+  "pattern": "hip_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "abs": "primary",
+    "hip_flexors": "primary",
+    "obliques": "secondary",
+    "lats": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25,
+    "teres_major": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "quads"
+  ],
+  "alternatives": [
+    802,
+    826,
+    837
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hang with an overhand grip a little wider than your shoulders",
+    "Press the bar down toward your hips with straight arms",
+    "Lift your feet to touch the bar between your hands",
+    "Lower slowly to a still hang before the next rep"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

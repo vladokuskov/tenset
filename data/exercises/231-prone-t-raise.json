@@ -1,0 +1,68 @@
+{
+  "id": 231,
+  "slug": "prone-t-raise",
+  "name": "Prone T-Raise",
+  "aliases": [
+    "T raise",
+    "prone T",
+    "incline T raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "upper_back": "primary",
+    "rear_delt": "primary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.5,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    230,
+    205,
+    228,
+    207
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie chest down on a bench set to a low incline",
+    "Hold light dumbbells with your thumbs pointing up",
+    "Lift both arms wide until they form a T with your body",
+    "Draw your shoulder blades back as the arms rise"
+  ],
+  "basis": [
+    "ekstrom-2003",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

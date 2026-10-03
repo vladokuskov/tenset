@@ -1,0 +1,61 @@
+{
+  "id": 727,
+  "slug": "band-curl",
+  "name": "Band Curl",
+  "aliases": [
+    "resistance band curl",
+    "band biceps curl",
+    "banded curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    711,
+    713,
+    701
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand on the middle of the band with feet about hip width",
+    "Hold the ends palms up with your elbows at your sides",
+    "Curl until your hands reach your shoulders",
+    "Lower under control to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

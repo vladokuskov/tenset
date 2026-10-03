@@ -1,0 +1,69 @@
+{
+  "id": 226,
+  "slug": "cable-y-raise",
+  "name": "Cable Y-Raise",
+  "aliases": [
+    "cable Y",
+    "low cable Y raise",
+    "cross-cable Y raise"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "side_delt": "primary",
+    "front_delt": "secondary",
+    "upper_traps": "secondary",
+    "upper_back": "secondary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_lower": 1,
+    "trap_middle": 0.5,
+    "rhomboids": 0.25,
+    "supraspinatus": 1,
+    "infraspinatus": 0.25,
+    "teres_minor": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    204,
+    203,
+    225,
+    224
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set both pulleys low and cross the cables in front of you",
+    "Hold each handle in the opposite hand",
+    "Raise your arms up and out into a Y, slightly in front of your body",
+    "Stop just above head height and lower with control"
+  ],
+  "basis": [
+    "ekstrom-2003",
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

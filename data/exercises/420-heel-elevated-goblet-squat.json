@@ -1,0 +1,66 @@
+{
+  "id": 420,
+  "slug": "heel-elevated-goblet-squat",
+  "name": "Heel-Elevated Goblet Squat",
+  "aliases": [
+    "heels elevated goblet squat",
+    "cyclist squat",
+    "heel-raised squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell",
+    "plate"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "upper_back",
+    "lower_back"
+  ],
+  "alternatives": [
+    405,
+    417,
+    413,
+    406
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Rest your heels on a plate with your feet close together",
+    "Hold the dumbbell upright against your chest",
+    "Drive your knees forward over your toes as you sink",
+    "Keep your torso upright all the way down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": 428,
+  "slug": "sissy-squat",
+  "name": "Sissy Squat",
+  "aliases": [
+    "sissy",
+    "bodyweight knee extension squat"
+  ],
+  "family": "squat",
+  "equipment": [],
+  "pattern": "knee_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "quads": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 1
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    404,
+    412,
+    436,
+    413
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold a fixed support with one hand",
+    "Rise onto the balls of your feet",
+    "Lean back and let your knees travel forward",
+    "Keep your hips straight so your body forms a line from knees to shoulders"
+  ],
+  "basis": [
+    "larsen-2025-legext",
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

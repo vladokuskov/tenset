@@ -1,0 +1,61 @@
+{
+  "id": 538,
+  "slug": "copenhagen-plank",
+  "name": "Copenhagen Plank",
+  "aliases": [
+    "Copenhagen adduction",
+    "Copenhagen side plank",
+    "adductor side plank"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "flat_bench"
+  ],
+  "pattern": "hip_adduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 3,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "20-40"
+  },
+  "groups": {
+    "adductors": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "adductor_magnus": 0.75
+  },
+  "stabilizers": [
+    "abs",
+    "lower_back",
+    "glute_med"
+  ],
+  "alternatives": [
+    507,
+    515
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set up side-on to the bench and rest your top leg across it",
+    "Place your elbow under your shoulder and let the bottom leg hang",
+    "Press the top leg into the bench to lift your hips in line",
+    "Hold steady without letting your hips drop or rotate"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": 823,
+  "slug": "band-pallof-press",
+  "name": "Band Pallof Press",
+  "aliases": [
+    "banded Pallof press",
+    "band anti-rotation press",
+    "Pallof press with band"
+  ],
+  "family": "core",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "anti_rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "obliques": "primary"
+  },
+  "stabilizers": [
+    "abs",
+    "glute_med",
+    "front_delt"
+  ],
+  "alternatives": [
+    808,
+    828,
+    812
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Anchor the band at chest height and stand side-on to it",
+    "Hold the handle at your sternum with both hands",
+    "Press straight out and keep your torso facing forward",
+    "Hold briefly, then bring your hands back in"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

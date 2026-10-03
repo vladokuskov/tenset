@@ -42,9 +42,10 @@
     "upper_traps"
   ],
   "alternatives": [
+    516,
+    521,
     501,
-    509,
-    513
+    509
   ],
   "media": {
     "status": "loop",

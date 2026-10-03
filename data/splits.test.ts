@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { presetEquipment, presets } from '../src/domain/equipment.ts'
+import { hasEquipment, presetEquipment, presets } from '../src/domain/equipment.ts'
 import { sequentialIds } from '../src/domain/ids.ts'
 import { applyTemplate, LABEL_MAX } from '../src/domain/program.ts'
 import type { Catalog } from '../src/domain/resolve.ts'
@@ -131,8 +131,8 @@ describe('applying templates to equipment presets', () => {
   })
 
   it('bodyweight trains every required group except the known gaps', () => {
-    const gaps: { preset: string; groups: string[] }[] = readJson('known-gaps.json').gaps
-    const known = new Set(gaps.find((g) => g.preset === 'bodyweight')?.groups)
+    const bodyweight = presetEquipment('bodyweight')
+    const known = new Set(bandedGroupIds.filter((g) => !exercises.some((e) => e.groups[g] && hasEquipment(e, bodyweight))))
     for (const { template } of templates) {
       const { week } = fill(template, 'bodyweight')
       for (const g of bandedGroupIds.filter((x) => !isOptional(x) && !known.has(x))) {
@@ -156,35 +156,35 @@ describe('applying templates to equipment presets', () => {
       {
         "bro-5x": {
           "basic_gym": "29/29",
-          "bodyweight": "13/29",
-          "dumbbells_bench": "26/29",
+          "bodyweight": "18/29",
+          "dumbbells_bench": "27/29",
           "full_gym": "29/29",
           "home_gym": "28/29",
         },
         "full-body-3x": {
           "basic_gym": "23/23",
-          "bodyweight": "14/23",
+          "bodyweight": "21/23",
           "dumbbells_bench": "23/23",
           "full_gym": "23/23",
           "home_gym": "23/23",
         },
         "ppl-3x": {
           "basic_gym": "18/18",
-          "bodyweight": "10/18",
+          "bodyweight": "14/18",
           "dumbbells_bench": "17/18",
           "full_gym": "18/18",
           "home_gym": "18/18",
         },
         "ppl-6x": {
           "basic_gym": "36/36",
-          "bodyweight": "20/36",
+          "bodyweight": "29/36",
           "dumbbells_bench": "34/36",
           "full_gym": "36/36",
           "home_gym": "36/36",
         },
         "upper-lower-4x": {
           "basic_gym": "27/27",
-          "bodyweight": "15/27",
+          "bodyweight": "22/27",
           "dumbbells_bench": "27/27",
           "full_gym": "27/27",
           "home_gym": "27/27",

@@ -27,9 +27,10 @@
   },
   "stabilizers": [],
   "alternatives": [
+    838,
+    834,
     801,
-    807,
-    806
+    819
   ],
   "media": {
     "status": "loop",

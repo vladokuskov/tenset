@@ -1,0 +1,62 @@
+{
+  "id": 833,
+  "slug": "band-woodchop",
+  "name": "Band Woodchop",
+  "aliases": [
+    "band chop",
+    "resistance band woodchop",
+    "banded wood chop"
+  ],
+  "family": "core",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "front_delt",
+    "glute_med"
+  ],
+  "alternatives": [
+    809,
+    831,
+    822,
+    821
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Anchor the band high and stand side-on to it",
+    "Hold the band with both hands and long arms",
+    "Pull down and across toward your far hip",
+    "Turn your hips and chest together, then return slowly"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

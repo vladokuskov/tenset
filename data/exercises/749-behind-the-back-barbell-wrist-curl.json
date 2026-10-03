@@ -1,0 +1,61 @@
+{
+  "id": 749,
+  "slug": "behind-the-back-barbell-wrist-curl",
+  "name": "Behind-the-Back Barbell Wrist Curl",
+  "aliases": [
+    "behind the back wrist curl",
+    "standing wrist curl",
+    "behind-back wrist curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "wrist_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_flexors": 1,
+    "brachioradialis": 0,
+    "wrist_extensors": 0
+  },
+  "stabilizers": [
+    "upper_traps"
+  ],
+  "alternatives": [
+    746,
+    708,
+    748
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand holding the bar behind your thighs, palms facing back",
+    "Let your arms hang straight",
+    "Curl your wrists up and back to raise the bar",
+    "Lower slowly to a full wrist stretch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

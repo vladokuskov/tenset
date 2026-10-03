@@ -1,0 +1,61 @@
+{
+  "id": 430,
+  "slug": "bodyweight-split-squat",
+  "name": "Bodyweight Split Squat",
+  "aliases": [
+    "split squat",
+    "static lunge",
+    "BW split squat"
+  ],
+  "family": "squat",
+  "equipment": [],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med"
+  ],
+  "alternatives": [
+    403,
+    423,
+    409,
+    434
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Take a long split stance with your back heel up",
+    "Drop your back knee straight down toward the floor",
+    "Keep your weight over the front foot",
+    "Stand up by pushing through the front heel"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

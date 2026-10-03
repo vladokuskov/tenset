@@ -1,0 +1,62 @@
+{
+  "id": 751,
+  "slug": "reverse-cable-curl",
+  "name": "Reverse Cable Curl",
+  "aliases": [
+    "cable reverse curl",
+    "overhand cable curl",
+    "pronated cable curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "primary"
+  },
+  "heads": {
+    "biceps_brachii": 0.5,
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.5
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    714,
+    728,
+    719
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set a straight bar on a low pulley and grip it palms down",
+    "Stand close enough that the cable is taut at the bottom",
+    "Keep your wrists straight and your elbows at your sides",
+    "Curl to your chest and lower to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

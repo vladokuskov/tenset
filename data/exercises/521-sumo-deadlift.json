@@ -1,0 +1,71 @@
+{
+  "id": 521,
+  "slug": "sumo-deadlift",
+  "name": "Sumo Deadlift",
+  "aliases": [
+    "sumo DL",
+    "sumo",
+    "wide stance deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-8",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "primary",
+    "adductors": "primary",
+    "quads": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.75,
+    "rectus_femoris": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "lats",
+    "upper_back",
+    "upper_traps"
+  ],
+  "alternatives": [
+    508,
+    516,
+    520
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Take a wide stance with toes out and shins close to the bar",
+    "Grip inside your knees with your arms hanging straight down",
+    "Spread the floor with your feet and pull your hips toward the bar",
+    "Keep your chest up and finish by locking your hips and knees together"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

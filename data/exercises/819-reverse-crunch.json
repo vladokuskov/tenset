@@ -1,0 +1,56 @@
+{
+  "id": 819,
+  "slug": "reverse-crunch",
+  "name": "Reverse Crunch",
+  "aliases": [
+    "lying reverse crunch",
+    "floor reverse crunch"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "spinal_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary",
+    "hip_flexors": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    807,
+    806,
+    837
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie face up with hips and knees bent to 90 degrees",
+    "Curl your hips off the floor toward your ribs",
+    "Keep the knee angle fixed so your abs do the lifting",
+    "Lower your hips slowly to the floor"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

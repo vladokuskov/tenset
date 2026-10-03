@@ -1,0 +1,65 @@
+{
+  "id": 811,
+  "slug": "kneeling-ab-wheel-rollout",
+  "name": "Kneeling Ab Wheel Rollout",
+  "aliases": [
+    "kneeling rollout",
+    "ab wheel from knees",
+    "ab rollout"
+  ],
+  "family": "core",
+  "equipment": [
+    "ab_wheel"
+  ],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary",
+    "lats": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75,
+    "teres_major": 0.75
+  },
+  "stabilizers": [
+    "serratus",
+    "triceps",
+    "glute_max"
+  ],
+  "alternatives": [
+    810,
+    829,
+    804,
+    813
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Kneel on a pad with the wheel under your shoulders",
+    "Tuck your pelvis and squeeze your glutes",
+    "Roll forward until your body nearly lines up from knees to hands",
+    "Keep your lower back from sagging as you pull the wheel home"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}
