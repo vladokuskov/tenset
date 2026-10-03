@@ -8,7 +8,7 @@ export type PatternGroupId = keyof (typeof catalogMessages)['en']['patternGroup'
 /** Pattern groups for pickers, in display order. Labels come from patternGroupLabel. */
 export const PATTERN_GROUPS: readonly { id: PatternGroupId; patterns: readonly Pattern[] }[] = [
   { id: 'push', patterns: ['horizontal_push', 'incline_push', 'vertical_push', 'dip', 'shoulder_horizontal_adduction'] },
-  { id: 'pull', patterns: ['horizontal_pull', 'vertical_pull', 'scapular_elevation'] },
+  { id: 'pull', patterns: ['horizontal_pull', 'vertical_pull', 'shoulder_extension', 'scapular_elevation'] },
   {
     id: 'shoulders',
     patterns: ['shoulder_abduction', 'shoulder_flexion', 'shoulder_horizontal_abduction', 'shoulder_external_rotation', 'scapular_upward_rotation'],

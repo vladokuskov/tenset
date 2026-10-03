@@ -51,7 +51,7 @@ export const Taxonomy = z.object({
 
 export const Pattern = z.enum([
   'horizontal_push', 'incline_push', 'vertical_push', 'dip',
-  'horizontal_pull', 'vertical_pull',
+  'horizontal_pull', 'vertical_pull', 'shoulder_extension',
   'squat', 'lunge', 'hinge', 'hip_extension',
   'knee_extension', 'knee_flexion',
   'elbow_flexion', 'elbow_extension',

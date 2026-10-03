@@ -1,6 +1,6 @@
 # Catalog v2: the remaining 194 exercises
 
-Draft for owner approval (2026-10-03). Growing the catalog from 106 to 300 (decision in `docs/PLAN.md`, "Catalog v2"). Nothing below exists as a record yet. Once you approve, Phase 2 writes the records as cards (`media.status: "card"`, `media.template: null`). Ids are permanent once merged, so this is the moment to cut, rename or swap.
+Approved by the owner (2026-10-03). Growing the catalog from 106 to 300 (decision in `docs/PLAN.md`, "Catalog v2"). Nothing below exists as a record yet. Once you approve, Phase 2 writes the records as cards (`media.status: "card"`, `media.template: null`). Ids are permanent once merged, so this is the moment to cut, rename or swap.
 
 ## How to read it
 
@@ -51,7 +51,6 @@ Draft for owner approval (2026-10-03). Growing the catalog from 106 to 300 (deci
 
 ## Things worth a second look
 
-- **No `shoulder_extension` pattern.** Straight-arm pulldowns and pullovers (325-327) use `vertical_pull`. That is close but not exact. Adding a pattern changes the frozen schema enum, so it needs your call.
 - **No lateral-flexion pattern.** Side bends are left out for that reason.
 - **227 Cable Upright Row** is planned on the `shrug` template, but it really needs its own arm path. It might be cheaper to drop it.
 - **The C tier is the long pole:** 54 exercises, and about 15 of them need props. Some can stay as cards long term, with the full mapping and cues but no loop, if the motion work does not pay off.
@@ -121,9 +120,9 @@ Draft for owner approval (2026-10-03). Growing the catalog from 106 to 300 (deci
 | 322 | Ring Row | rings | horizontal_pull | row | C |
 | 323 | Band Seated Row | band | horizontal_pull | row | B |
 | 324 | Smith Machine Row | smith | horizontal_pull | row | A |
-| 325 | Straight-Arm Cable Pulldown | cable | vertical_pull | pullover | C |
-| 326 | Dumbbell Pullover | dumbbell, flat_bench | vertical_pull | pullover | C |
-| 327 | Band Straight-Arm Pulldown | band | vertical_pull | pullover | C |
+| 325 | Straight-Arm Cable Pulldown | cable | shoulder_extension | pullover | C |
+| 326 | Dumbbell Pullover | dumbbell, flat_bench | shoulder_extension | pullover | C |
+| 327 | Band Straight-Arm Pulldown | band | shoulder_extension | pullover | C |
 | 328 | Wide-Grip Pull-Up | pullup_bar | vertical_pull | vertical-pull | A |
 | 329 | Underhand Lat Pulldown | lat_pulldown | vertical_pull | vertical-pull | A |
 | 330 | Single-Arm Cable Pulldown | cable | vertical_pull | vertical-pull | A |
