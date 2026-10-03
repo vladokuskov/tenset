@@ -10,3 +10,9 @@ export function detectLocale(tag?: string): Locale {
 export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && (LOCALES as readonly string[]).includes(value)
 }
+
+/** Each language in its own script, so people can find theirs without reading the current UI language. */
+export const LANGUAGES: Record<Locale, { code: string; name: string }> = {
+  en: { code: 'EN', name: 'English' },
+  uk: { code: 'УКР', name: 'Українська' },
+}

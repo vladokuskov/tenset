@@ -64,3 +64,13 @@ test.describe('Ukrainian browser', () => {
     await expect(page.getByRole('button', { name: 'Пропустити' })).toBeVisible()
   })
 })
+
+test('switches language from the rail menu on desktop', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The rail shows from 1280px up')
+  await startInUkrainian(page)
+  const menu = page.getByRole('navigation', { name: 'Головне' }).getByRole('combobox', { name: 'Мова / Language' })
+  await expect(menu).toHaveValue('uk')
+  await menu.selectOption('en')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('link', { name: 'Exercises' }).first()).toBeVisible()
+})
