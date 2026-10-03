@@ -11,6 +11,8 @@ export type SegmentedControlProps<T extends string> = {
   onChange: (value: T) => void
   size?: 'sm' | 'md'
   block?: boolean
+  /** Equal-width segments regardless of label length. */
+  equal?: boolean
   className?: string
 }
 
@@ -21,6 +23,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   size = 'md',
   block,
+  equal,
   className,
 }: SegmentedControlProps<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([])
@@ -45,10 +48,11 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={label}
       onKeyDown={onKeyDown}
+      style={equal ? { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` } : undefined}
       className={cx(
-        'inline-flex rounded-md bg-surface-2 p-0.5',
+        'rounded-md bg-surface-2 p-0.5',
+        equal ? (block ? 'grid w-full' : 'inline-grid') : block ? 'flex w-full' : 'inline-flex',
         size === 'md' ? 'h-11' : 'h-9',
-        block && 'flex w-full',
         className,
       )}
     >

@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useMessages } from '../i18n/messages'
 import { cx } from './cx'
-import { LanguageToggle } from './LanguageToggle'
+import { LanguageButton } from './LanguageToggle'
 import { uiMessages } from './messages'
 import { NAV_ITEMS } from './nav'
 
@@ -51,7 +51,7 @@ export function NavRail({ brand }: { brand?: ReactNode }) {
         })}
       </ul>
       <div className="mt-auto flex flex-col items-center gap-3">
-        <LanguageToggle className="[&_button]:px-1.5" />
+        <LanguageButton />
         <RailLink
           to="/settings"
           label={m.nav.settings}
