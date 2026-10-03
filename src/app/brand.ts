@@ -2,7 +2,7 @@ import { useMessages } from '../i18n/messages'
 import { appMessages } from './messages'
 
 /** Working product name; change here only. */
-export const APP_NAME = 'Gym Builder'
+export const APP_NAME = 'Tenset'
 
 export { notMedicalAdvice } from './messages'
 

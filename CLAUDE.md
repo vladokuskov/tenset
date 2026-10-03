@@ -1,4 +1,4 @@
-# gym-builder
+# Tenset (repo: gym-builder)
 
 No-backend, phone-first PWA for planning a weekly gym program with a head-level body map. Full plan: `docs/PLAN.md` (source of truth for scope, lanes, gates).
 

@@ -201,7 +201,7 @@ async function main() {
   const report = JSON.parse(readFileSync(REPORT, 'utf8'))
   const doc = await io.read(RAW)
   const asset = doc.getRoot().getAsset()
-  asset.generator = 'gym-builder build-body'
+  asset.generator = 'tenset build-body'
   asset.copyright = 'Base mesh, rig, targets and tights proxy: MakeHuman/MPFB2 assets, CC0 1.0'
   meshNode(doc, 'body').setExtras({ correctives: report.correctives })
   adoptMorphNormals(doc)

@@ -210,7 +210,7 @@ export function reviewPlugin(): Plugin {
   }
 
   return {
-    name: 'gym-builder:review',
+    name: 'tenset:review',
     apply: (_, env) => env.command === 'serve' && env.mode !== 'test',
     enforce: 'pre',
     configResolved(config) {

@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { ProgramInput, ReadInput, SearchInput } from './inputs.ts'
 import { ToolError, createProgram, getReference, listSplits, readProgram, searchExercises } from './tools.ts'
 
-const INSTRUCTIONS = `gym-builder plans a weekly gym program and shows weekly sets per muscle group on a body map.
+const INSTRUCTIONS = `Tenset plans a weekly gym program and shows weekly sets per muscle group on a body map.
 Workflow: call get_reference once for muscle group, equipment and pattern ids. Use list_splits for ready-made templates and search_exercises to find exercise ids (filter by the user's equipment). Then call create_program and give the user the returned url. Opening it shows a preview with a Save button. The app keeps programs only in the user's browser, so the link is the only way in.
 To change a program the user already has, ask them to share its link from the app and pass it to read_program; it returns the same shape create_program takes.
 Entries take optional restSec (rest between sets, 0 to 600, rounded to 15), rir (target reps in reserve, 0 to 5) and supersetWithPrevious (pairs the entry with the one above; pairs only, anything else is ignored and listed in "notes").
@@ -20,7 +20,7 @@ async function run(fn: () => unknown) {
 }
 
 export function createServer(origin: string): McpServer {
-  const server = new McpServer({ name: 'gym-builder', version: '1.0.0' }, { instructions: INSTRUCTIONS })
+  const server = new McpServer({ name: 'tenset', version: '1.0.0' }, { instructions: INSTRUCTIONS })
   const readOnly = { readOnlyHint: true, openWorldHint: false }
 
   server.registerTool(
@@ -66,7 +66,7 @@ export function createServer(origin: string): McpServer {
   server.registerTool(
     'read_program',
     {
-      description: 'Read a gym-builder share link into the shape create_program accepts, so it can be edited.',
+      description: 'Read a Tenset share link into the shape create_program accepts, so it can be edited.',
       inputSchema: ReadInput,
       annotations: readOnly,
     },

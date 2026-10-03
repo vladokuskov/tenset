@@ -1,4 +1,4 @@
-# Gym Builder
+# Tenset
 
 A phone-first, offline web app for planning a weekly gym program. Pick a split template or start blank, add exercises to each day, and a head-level body map shows which muscles each day and the whole week train. Every exercise is animated by our own procedural 3D figure.
 
@@ -35,7 +35,7 @@ Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js
 `api/mcp.ts` is a stateless MCP server (Streamable HTTP, JSON responses) at `https://gym-builder-nine.vercel.app/api/mcp`. It stores nothing. Claude looks up exercise ids, sends a program, and gets back a `/shared#...` link plus weekly sets per muscle group. Opening the link shows the usual preview with a Save button.
 
 - claude.ai (web, then also the mobile app): Settings, Connectors, Add custom connector, paste the URL. No auth.
-- Claude Code: `claude mcp add --transport http gym-builder https://gym-builder-nine.vercel.app/api/mcp`
+- Claude Code: `claude mcp add --transport http tenset https://gym-builder-nine.vercel.app/api/mcp`
 - Tools: `get_reference`, `search_exercises`, `list_splits`, `create_program`, `read_program` (turns a share link back into editable input).
 - Entries take `exerciseId`, `sets` and optional `reps`, `restSec` (0 to 600, rounded to 15), `rir` (0 to 5) and `supersetWithPrevious` (pairs only). `public/llms.txt` has the full rules.
 - Local check: `npx @modelcontextprotocol/inspector`, then connect to a preview deploy's `/api/mcp`.

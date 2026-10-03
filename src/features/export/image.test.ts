@@ -12,7 +12,7 @@ const day = (rows: DayImageContent['rows'], extra: Partial<DayImageContent> = {}
   summary: '5 exercises · 17 sets · about 55 min',
   rows,
   footer: 'General information for planning training. Not medical advice.',
-  app: 'Gym Builder',
+  app: 'Tenset',
   ...extra,
 })
 
@@ -86,7 +86,7 @@ describe('week image', () => {
     legend: (['none', 'light', 'moderate', 'target', 'high', 'very_high'] as const).map((band) => ({ band, label: band })),
     mapCaption: 'Sets per muscle group, front and back',
     footer: 'General information for planning training. Not medical advice.',
-    app: 'Gym Builder',
+    app: 'Tenset',
   })
 
   it('draws seven rows, a legend and the map; rest rows are compact', () => {
