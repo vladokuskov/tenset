@@ -49,8 +49,8 @@ describe('ics', () => {
     expect(text).toMatch(/^BEGIN:VCALENDAR\r\nVERSION:2\.0\r\nPRODID:[^\r]+\r\nCALSCALE:GREGORIAN\r\n/)
     expect(text.match(/BEGIN:VEVENT/g)).toHaveLength(2)
     expect(text.match(/RRULE:FREQ=WEEKLY/g)).toHaveLength(2)
-    expect(text).toContain('UID:p1-mon@gym-builder')
-    expect(text).toContain('UID:p1-wed@gym-builder')
+    expect(text).toContain('UID:p1-mon@tenset')
+    expect(text).toContain('UID:p1-wed@tenset')
     expect(text).toContain('DTSTART:20261005T180000\r\nDTEND:20261005T185500')
     // An empty estimate still gets 15 minutes.
     expect(text).toContain('DTSTART:20261007T180000\r\nDTEND:20261007T181500')

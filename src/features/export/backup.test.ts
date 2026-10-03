@@ -23,6 +23,12 @@ describe('backup', () => {
     expect(res.backup.exportedAt).toBe('2026-09-26T10:00:00.000Z')
   })
 
+  it('still imports backups saved before the rename', () => {
+    const legacy = { ...createBackup({ programs: { a }, activeId: 'a' }, prefs), format: 'gym-builder-backup' }
+    const res = parseBackup(JSON.stringify(legacy))
+    expect(res.ok && res.backup.programs.map((p) => p.id)).toEqual(['a'])
+  })
+
   it('rejects files that are not backups', () => {
     expect(parseBackup('nope')).toEqual({ ok: false, error: 'not_json' })
     expect(parseBackup('{"programs":[]}')).toEqual({ ok: false, error: 'wrong_file' })
@@ -49,6 +55,6 @@ describe('backup', () => {
   })
 
   it('names files by date', () => {
-    expect(backupFileName(new Date(2026, 0, 5))).toBe('gym-builder-2026-01-05.json')
+    expect(backupFileName(new Date(2026, 0, 5))).toBe('tenset-2026-01-05.json')
   })
 })

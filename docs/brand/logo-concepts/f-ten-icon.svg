@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><style>svg{--tile:#3f69d3;--ink:#fff;--c:#fff;--d:#c9d6f7;--e:#6283db;--n:#a9bdee;--s1:#7d9be6;--s2:#a3b9ef;--s3:#c8d5f6;--s4:#e6ecfb;--s5:#fff}.t{fill:var(--tile)}.i{fill:var(--ink)}.c{fill:var(--c)}.d{fill:var(--d)}.e{fill:var(--e)}.n{fill:var(--n)}.s1{fill:var(--s1)}.s2{fill:var(--s2)}.s3{fill:var(--s3)}.s4{fill:var(--s4)}.s5{fill:var(--s5)}</style><rect class="t" width="64" height="64"/><rect class="d" x="9" y="27" width="46" height="10" rx="5" transform="rotate(45 32 32)"/>
+<rect class="t" x="9" y="24" width="46" height="16" rx="8" transform="rotate(-45 32 32)"/>
+<rect class="c" x="9" y="27" width="46" height="10" rx="5" transform="rotate(-45 32 32)"/></svg>

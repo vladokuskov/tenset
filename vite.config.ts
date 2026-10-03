@@ -50,8 +50,8 @@ export default defineConfig({
       includeManifestIcons: false,
       manifest: {
         id: '/',
-        name: 'Gym Builder',
-        short_name: 'Gym Builder',
+        name: 'Tenset',
+        short_name: 'Tenset',
         description: 'Plan a weekly gym program and see which muscles each day and the whole week train.',
         start_url: '/',
         scope: '/',

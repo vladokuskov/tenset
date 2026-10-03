@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><style>svg{--tile:#e4e6ea;--ink:#13161c;--c:#3f69d3;--d:#2a47ac;--e:#c6cad1;--n:#b7bbc1;--s1:#a3b7e2;--s2:#6e91e0;--s3:#3f69d3;--s4:#2a47ac;--s5:#1f2c78}@media (prefers-color-scheme:dark){svg{--tile:#13161c;--ink:#e9ebef;--c:#6d95ee;--d:#3f69d3;--e:#2f343b;--n:#4a5059;--s1:#2c3a63;--s2:#3a56a8;--s3:#5079df;--s4:#7c9ff0;--s5:#b3c8f7}}.t{fill:var(--tile)}.i{fill:var(--ink)}.c{fill:var(--c)}.d{fill:var(--d)}.e{fill:var(--e)}.n{fill:var(--n)}.s1{fill:var(--s1)}.s2{fill:var(--s2)}.s3{fill:var(--s3)}.s4{fill:var(--s4)}.s5{fill:var(--s5)}</style><rect class="t" width="64" height="64" rx="14"/><rect class="s1" x="7.5" y="40" width="7" height="10" rx="2"/>
+<rect class="s2" x="18" y="33" width="7" height="17" rx="2"/>
+<rect class="s3" x="28.5" y="26" width="7" height="24" rx="2"/>
+<rect class="s4" x="39" y="19" width="7" height="31" rx="2"/>
+<rect class="s5" x="49.5" y="12" width="7" height="38" rx="2"/></svg>

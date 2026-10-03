@@ -1,5 +1,5 @@
 {
-  "name": "gym-builder",
+  "name": "tenset",
   "description": "Plan a weekly gym program and get a share link that opens it in the app. Stateless, no auth, nothing stored.",
   "url": "https://gym-builder-nine.vercel.app/api/mcp",
   "transport": "streamable-http",

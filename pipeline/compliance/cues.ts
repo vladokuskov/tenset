@@ -18,7 +18,7 @@ const WGER_SHA256 = 'e76dc38796fa4e002855832209772535aac819043c348a88a98fe394959
 const WGER_URL = `https://raw.githubusercontent.com/wger-project/wger/${WGER_COMMIT}/wger/exercises/fixtures/translations.json`
 // wger/core/fixtures/languages.json
 const WGER_LANGUAGES = new Set([2, 15]) // English, Ukrainian
-const USER_AGENT = 'gym-builder-compliance/1.0 (build-time cue originality check, cached)'
+const USER_AGENT = 'tenset-compliance/1.0 (build-time cue originality check, cached)'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const sha256 = (buf: Buffer) => createHash('sha256').update(buf).digest('hex')

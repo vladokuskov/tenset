@@ -3,7 +3,9 @@ import { Prefs, Program } from '../../domain/schema'
 import { runMigrations, type MigrationChain } from '../../store/migrations'
 import { uniqueName } from '../share/names'
 
-export const BACKUP_FORMAT = 'gym-builder-backup'
+export const BACKUP_FORMAT = 'tenset-backup'
+/** Written before the rename to Tenset; still imported. */
+const LEGACY_BACKUP_FORMAT = 'gym-builder-backup'
 export const BACKUP_VERSION = 1
 const MAX_BYTES = 5_000_000
 
@@ -11,12 +13,12 @@ const MAX_BYTES = 5_000_000
 export const backupMigrations: MigrationChain = {}
 
 const Envelope = z.object({
-  format: z.literal(BACKUP_FORMAT),
+  format: z.enum([BACKUP_FORMAT, LEGACY_BACKUP_FORMAT]),
   version: z.number().int().min(1),
 })
 
 const BackupV1 = z.object({
-  format: z.literal(BACKUP_FORMAT),
+  format: z.enum([BACKUP_FORMAT, LEGACY_BACKUP_FORMAT]),
   version: z.literal(1),
   exportedAt: z.string(),
   activeId: z.string().nullable(),
@@ -74,7 +76,7 @@ export function serializeBackup(backup: Backup): string {
 
 export function backupFileName(now: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `gym-builder-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`
+  return `tenset-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`
 }
 
 /** Names imports the way share links do: "PPL" becomes "PPL 2" when taken, also within one file. */

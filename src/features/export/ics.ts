@@ -81,7 +81,7 @@ export function nextOccurrence(day: DayIndex, time: string, now: Date): Date {
 }
 
 export function eventUid(programId: string, day: DayIndex): string {
-  return `${programId}-${daySlug(day)}@gym-builder`
+  return `${programId}-${daySlug(day)}@tenset`
 }
 
 /** A VCALENDAR with one weekly VEVENT per given day. */

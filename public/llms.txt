@@ -1,4 +1,4 @@
-# Gym Builder
+# Tenset
 
 > Free, no-account web app for planning a weekly gym program. It shows weekly sets per muscle group on a body map. Programs live only in the user's browser; a share link (`/shared#...`) carries the whole program, and opening it shows a preview with a Save button.
 
@@ -7,7 +7,7 @@ AI agents can build a program for the user and hand back that link. Nothing is s
 ## Option 1: MCP server (preferred)
 
 - URL: `https://gym-builder-nine.vercel.app/api/mcp` (Streamable HTTP, stateless, no auth)
-- Claude Code: `claude mcp add --transport http gym-builder https://gym-builder-nine.vercel.app/api/mcp`
+- Claude Code: `claude mcp add --transport http tenset https://gym-builder-nine.vercel.app/api/mcp`
 - claude.ai: Settings, Connectors, Add custom connector, paste the URL.
 - Tools: `get_reference`, `search_exercises`, `list_splits`, `create_program`, `read_program`
 
