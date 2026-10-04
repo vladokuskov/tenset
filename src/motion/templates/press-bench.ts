@@ -44,9 +44,9 @@ export const TOUCH_Y = { flat: -0.05, incline: 0.04, close: -0.1 }
  * wrist extension is solved for a vertical forearm (side view) at the touch, within CLOSE_WRIST
  */
 export const CLOSE_GRIP = 1.1
-const CLOSE_WRIST: [number, number] = [WRIST_EXT, 40]
+const CLOSE_WRIST: [number, number] = [WRIST_EXT, 30]
 /** holdArm: extra weight on the front-view lean, so the elbows stay under the hands mid-press ("elbows tucked") */
-const CLOSE_FRONT = 8
+const CLOSE_FRONT = 2
 /** stackPath hands over to the lockout from this press height fraction */
 const STACK_BLEND = 0.6
 /**
@@ -203,11 +203,14 @@ function stackPath(skel: Skeleton, top: V3, bottom: V3, pose: (center: V3) => FK
   // the bar never drifts towards the feet on the way up: unfolding tucked elbows would carry it there
   const dir = Math.sign(top[2] - bottom[2])
   for (let i = 1; i < zs.length; i++) zs[i] = dir > 0 ? Math.max(zs[i], zs[i - 1]) : Math.min(zs[i], zs[i - 1])
+  // the clamp releasing leaves a kink: a few [1 2 1] passes take it out (the ends stay put)
+  for (let pass = 0; pass < 4; pass++) for (let i = 1, p = zs[0]; i < zs.length - 1; i++) [p, zs[i]] = [zs[i], (p + 2 * zs[i] + zs[i + 1]) / 4]
   zs[0] = bottom[2]
   const z = naturalCubic(hs, zs)
   return (c) => {
     const h = Math.max(0, Math.min(1, c))
-    return [0, lerp(bottom[1], top[1], h), z(h)]
+    // the spline may overshoot the touch by a few mm where the path leaves it
+    return [0, lerp(bottom[1], top[1], h), dir > 0 ? Math.max(z(h), bottom[2]) : Math.min(z(h), bottom[2])]
   }
 }
 
