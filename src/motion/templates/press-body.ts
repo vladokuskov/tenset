@@ -202,20 +202,22 @@ export function armElevation(skel: Skeleton, f: FK, side: 'l' | 'r' = 'l'): numb
  * With a fixed pole the elbow drifts out past the hand as the press starts, and holding the frontal forearm lean
  * alone pins the elbows to the ribs mid-press (upper arm down to ~30 deg from the trunk) while the forearm leans
  * ~30 deg towards the head. Here the pole lean `th` is chosen at knots over contraction to keep the forearm as close
- * to vertical as it gets (3D) without the upper arm closing more than `drop` deg below its angle at the touch;
+ * to vertical as it gets (3D, plus `front` x the front-view lean squared) without the upper arm closing more than `drop` deg
+ * below its angle at the touch;
  * it fades back to `th0` towards lockout, where the forearm lies along the arm and the pole no longer matters.
  * `solve(c, pole)` poses the arm.
  */
-export function holdArm(skel: Skeleton, solve: (c: number, pole: V3) => Float64Array, th0: number, pole: (th: number) => V3, drop = 10, samples = 33): (c: number) => V3 {
+export function holdArm(skel: Skeleton, solve: (c: number, pole: V3) => Float64Array, th0: number, pole: (th: number) => V3, o: { drop?: number; front?: number } = {}, samples = 33): (c: number) => V3 {
+  const drop = o.drop ?? 10, front = o.front ?? 0
   const at = (c: number, th: number) => {
     const q = solve(c, pole(th))
     const f = fk(skel, q)
-    return { lean: forearmLean(skel, f), elev: armElevation(skel, f), flex: q[skel.dof['elbow_l.flex']] }
+    return { lean: forearmLean(skel, f), tilt: front ? forearmTilt(skel, f) : 0, elev: armElevation(skel, f), flex: q[skel.dof['elbow_l.flex']] }
   }
   const floor = at(0, th0).elev - drop
   const cost = (c: number, th: number) => {
     const m = at(c, th)
-    return m.lean ** 2 + 4 * Math.max(0, floor - m.elev) ** 2 + HOLD_REG * (th - th0) ** 2
+    return m.lean ** 2 + front * m.tilt ** 2 + 4 * Math.max(0, floor - m.elev) ** 2 + HOLD_REG * (th - th0) ** 2
   }
   const cs = Array.from({ length: samples }, (_, i) => i / (samples - 1))
   let prev = th0

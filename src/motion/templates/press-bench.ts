@@ -1,6 +1,6 @@
 import { handFrame, implementFromHand, root1d } from '../constraints.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
-import { fk, localToWorld, segPos } from '../fk.ts'
+import { fk, localToWorld, segPos, type FK } from '../fk.ts'
 import { barbell, dumbbell, type ImplementSpec, type Part } from '../implements.ts'
 import { benchRack, pressBench, PRESS_BENCH } from '../implements/press-horizontal.ts'
 import { dls } from '../ik.ts'
@@ -8,7 +8,7 @@ import { add, lerp, norm, qid, scale, type V3 } from '../math.ts'
 import { zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { phaseAt, type Tempo } from '../timing.ts'
 import {
-  armElevation, BACK_CAPS, flareLean, forearmSag, forearmTilt, holdArm, holdFade, minClear, naturalCubic, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, solidOf,
+  armElevation, BACK_CAPS, flareLean, forearmSag, forearmTilt, holdArm, holdFade, minClear, naturalCubic, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, smooth, solidOf,
   solveLeftArm, trunkPose, wristSchedule, type ArmRig, type Posture,
 } from './press-body.ts'
 import type { ParamsOf } from './schemas.ts'
@@ -37,8 +37,18 @@ const CLAVICLE = { prot: -16, elev: -4 }
 export const LOCK_ELBOW = 6
 /** wrist extension with the bar low in the palm, deg */
 const WRIST_EXT = 15
-/** touch point along the torso (thorax2 frame, y up the spine): flat = lower chest, incline = upper chest */
-export const TOUCH_Y = { flat: -0.05, incline: 0.04 }
+/** touch point along the torso (thorax2 frame, y up the spine): flat = lower chest, incline = upper chest, close = low sternum */
+export const TOUCH_Y = { flat: -0.05, incline: 0.04, close: -0.1 }
+/**
+ * Close grip (about shoulder width): the bar touches lower on the sternum and the wrists stack over the elbows, so the
+ * wrist extension is solved for a vertical forearm (side view) at the touch, within CLOSE_WRIST
+ */
+export const CLOSE_GRIP = 1.1
+const CLOSE_WRIST: [number, number] = [WRIST_EXT, 40]
+/** holdArm: extra weight on the front-view lean, so the elbows stay under the hands mid-press ("elbows tucked") */
+const CLOSE_FRONT = 8
+/** stackPath hands over to the lockout from this press height fraction */
+const STACK_BLEND = 0.6
 /**
  * J-curve: fore-aft offset from lockout = full offset x (1 - h)^exp at press height fraction h. The bar comes down
  * on a straight diagonal to the touch and presses back in the J (most of the travel early); a J on the way down
@@ -166,6 +176,41 @@ function holdDumbbells(skel: Skeleton, solve: (c: number, off: V3, th: number) =
   return { offset: (c: number): V3 => [dx(clamp(c)) / 100, 0, dz(clamp(c)) / 100], pole: (c: number) => poleAt(th(clamp(c))) }
 }
 
+/**
+ * Close grip: the bar rises over the elbows (forearms vertical in the side view, the cue "stack your wrists over your
+ * elbows"): at each height the fore-aft position where the forearm is vertical, blended into the lockout over the
+ * shoulders, where the straight arm leaves the forearm direction to the shoulder. `pose(center)` solves the arm.
+ */
+function stackPath(skel: Skeleton, top: V3, bottom: V3, pose: (center: V3) => FK, samples = 17): (c: number) => V3 {
+  const hs = Array.from({ length: samples }, (_, i) => i / (samples - 1))
+  // continuation from the touch: the root nearest the previous height's, so the path stays on one branch
+  let prev = bottom[2]
+  const zs = hs.map((h) => {
+    const y = lerp(bottom[1], top[1], h)
+    const sag = (z: number) => forearmSag(skel, pose([0, y, z]))
+    let z = prev
+    for (let d = 0.005; d <= 0.1; d += 0.005) {
+      const hit = [prev - d, prev + d].find((e) => sag(e) * sag(e > prev ? e - 0.005 : e + 0.005) <= 0)
+      if (hit !== undefined) {
+        const [a, b] = hit > prev ? [hit - 0.005, hit] : [hit, hit + 0.005]
+        z = root1d(sag, a, b, { tol: 1e-5 }).x
+        break
+      }
+    }
+    prev = z
+    return lerp(z, top[2], smooth((h - STACK_BLEND) / (1 - STACK_BLEND)))
+  })
+  // the bar never drifts towards the feet on the way up: unfolding tucked elbows would carry it there
+  const dir = Math.sign(top[2] - bottom[2])
+  for (let i = 1; i < zs.length; i++) zs[i] = dir > 0 ? Math.max(zs[i], zs[i - 1]) : Math.min(zs[i], zs[i - 1])
+  zs[0] = bottom[2]
+  const z = naturalCubic(hs, zs)
+  return (c) => {
+    const h = Math.max(0, Math.min(1, c))
+    return [0, lerp(bottom[1], top[1], h), z(h)]
+  }
+}
+
 function gripOf(ctx: Pick<BenchCtx, 'hold' | 'bar'>, center: V3) {
   return { pos: ctx.hold === 'dumbbell' ? center : add(center, ctx.bar!.sites.l.pos), axis: [1, 0, 0] as V3 }
 }
@@ -176,6 +221,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   const a = p.benchAngle
   const hold = p.implement as Hold
   const incline = a >= 10
+  const close = hold === 'barbell' && !incline && p.gripWidth <= CLOSE_GRIP
   const bench = pressBench({ backAngle: a, seatHeight: SEAT_H })
   const benchPose: ImplementPose = { id: 'bench', pos: [0, SEAT_H, 0], rot: qid() }
   const { hip, s } = placeBody(skel, a, bench, benchPose)
@@ -185,7 +231,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   const legs = plantFeet(skel, base, hip, incline ? KNEE.incline : KNEE.flat, FEET_HALF)
   const f0 = fk(skel, base)
   const gh = scale(add(segPos(skel, f0, 'humerus_l'), segPos(skel, f0, 'humerus_r')), 0.5)
-  const touch = localToWorld(skel, f0, 'thorax2', [0, incline ? TOUCH_Y.incline : TOUCH_Y.flat, 0.1])
+  const touch = localToWorld(skel, f0, 'thorax2', [0, incline ? TOUCH_Y.incline : close ? TOUCH_Y.close : TOUCH_Y.flat, 0.1])
 
   const implements_: ImplementSpec[] = []
   const contacts: Contact[] = [...legs.contacts]
@@ -228,12 +274,24 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
       bottom = [root1d((x) => gap([x, bottom[1], bottom[2]]), 0.2, 0.5, { tol: 1e-5 }).x, bottom[1], bottom[2]]
       rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
     }
+  } else if (close) {
+    // wrist extension and pole lean together: the record's flare with the forearm vertical in the side view
+    const sagAt = (w: number) => {
+      rig.wristBias = w
+      lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))
+      return forearmSag(skel, fk(skel, arm(bottom, poleAt(lean))))
+    }
+    const [lo, hi] = CLOSE_WRIST
+    rig.wristBias = sagAt(hi) > 0 ? hi : sagAt(lo) < 0 ? lo : root1d(sagAt, lo, hi, { tol: 1e-3 }).x
+    sagAt(rig.wristBias)
+    rig.pole = poleAt(lean)
   } else rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
   // lockout over the shoulder joints (the Smith bar stays on its rail over the touch point), elbows soft
   const topZ = hold === 'smith' ? bottom[2] : gh[2]
   const topX = hold === 'dumbbell' ? DB_TOP_X : 0
   const topY = root1d((y) => arm([topX, y, topZ])[skel.dof['elbow_l.flex']] - LOCK_ELBOW, bottom[1], bottom[1] + 0.8, { tol: 1e-6 }).x
   const top: V3 = [topX, topY, topZ]
+  const stack = close ? stackPath(skel, top, bottom, (center) => fk(skel, arm(center))) : undefined
   const strokeOf = (stroke: Stroke) => {
     const r: ArmRig = { ...rig }
     const pose = (center: V3, pole: V3) => {
@@ -241,7 +299,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
       solveLeftArm(skel, q, gripOf({ hold, bar }, center), { ...r, pole })
       return q
     }
-    let path = (c: number) => jCurve(top, bottom, c, stroke)
+    let path = stack ?? ((c: number) => jCurve(top, bottom, c, stroke))
     if (hold === 'dumbbell') {
       const j = path
       const h = holdDumbbells(skel, (c, off, th) => pose(add(j(c), off), poleAt(th)), lean)
@@ -249,7 +307,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
       r.poleOf = h.pole
     } else {
       // the bar's path is set: the forearms stay as close to under it as the elbows allow, without closing onto the ribs
-      r.poleOf = holdArm(skel, (c, pole) => pose(path(c), pole), lean, (th) => poleAt(th))
+      r.poleOf = holdArm(skel, (c, pole) => pose(path(c), pole), lean, (th) => poleAt(th), close ? { front: CLOSE_FRONT } : {})
     }
     r.oblique = wristSchedule((c, o) => {
       const q = Float64Array.from(base)
