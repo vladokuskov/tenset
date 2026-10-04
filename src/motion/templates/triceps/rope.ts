@@ -11,8 +11,9 @@ import { frameY } from './common.ts'
 
 export const ROPE_IDS = { handle: 'handle', strands: ['strand_l', 'strand_r'], ends: ['end_l', 'end_r'] } as const
 
-export function ropeImplements(): ImplementSpec[] {
-  return [ropeFerrule(ROPE_IDS.handle), ...ROPE_IDS.strands.map((id) => ropeStrand(id)), ...ROPE_IDS.ends.map((id) => ropeEnd(id))]
+/** `free`: strand length, m (a longer rope than the default keeps the strands clear of the head when held by the temples) */
+export function ropeImplements(free = ROPE.free): ImplementSpec[] {
+  return [ropeFerrule(ROPE_IDS.handle), ...ROPE_IDS.strands.map((id) => ropeStrand(id, free)), ...ROPE_IDS.ends.map((id) => ropeEnd(id))]
 }
 
 export function ropeContacts(): Contact[] {
@@ -27,13 +28,13 @@ export function ropeContacts(): Contact[] {
  * length) meet on the line towards the pulley. For symmetric fists that is the static equilibrium: the strand
  * tensions' sideways parts cancel and the rest pulls straight against the cable.
  */
-export function ropePoses(skel: Skeleton, f: FK, pulley: V3): ImplementPose[] {
+export function ropePoses(skel: Skeleton, f: FK, pulley: V3, free = ROPE.free, entryAt = ROPE.entry): ImplementPose[] {
   const hands = (['l', 'r'] as const).map((s) => handFrame(skel, f, s))
-  const entry = hands.map((h) => add(h.pos, scale(h.axis, ROPE.entry)))
+  const entry = hands.map((h) => add(h.pos, scale(h.axis, entryAt)))
   const mid = scale(add(entry[0], entry[1]), 0.5)
   const u = norm(sub(pulley, mid))
   const half = dist(entry[0], entry[1]) / 2
-  const t = Math.sqrt(Math.max(ROPE.free * ROPE.free - half * half, 1e-4))
+  const t = Math.sqrt(Math.max(free * free - half * half, 1e-4))
   const cap = add(mid, scale(u, t))
   return [
     { id: ROPE_IDS.handle, pos: add(cap, scale(u, -ROPE.cap.bottom)), rot: frameY(u) },
