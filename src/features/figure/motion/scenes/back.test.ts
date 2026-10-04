@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { PerspectiveCamera, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { frameImplements, frameQ } from '../../../../motion/bake.ts'
-import { fk, sitePos } from '../../../../motion/fk.ts'
+import { fk, segPos, sitePos } from '../../../../motion/fk.ts'
 import { testSkeleton } from '../../../../motion/testing.ts'
 import { RACK } from '../../props/rack.ts'
 import { frameFitMargin } from '../../views'
@@ -49,7 +49,7 @@ describe('back scenes', () => {
     for (const id of [206, 304, 305, 306, 308, 312, 313, 314]) expect(scene(id).highlight.side, `${id}`).toBeUndefined()
   })
 
-  it('inverted row: no rack upright stands between the hero camera and either hand', () => {
+  it('inverted row: no rack upright stands between the hero camera and either hand or the head', () => {
     const s = scene(313)
     const cam = heroCam(s)
     const c = cam.position
@@ -60,8 +60,8 @@ describe('back scenes', () => {
     for (let i = 0; i < b.frames; i += 5) {
       const f = fk(skel, frameQ(b, i))
       const origin = frameImplements(b, i)[rack].pos
-      for (const side of ['l', 'r'] as const) {
-        const h = sitePos(skel, f, `grip_${side}`)
+      // the -50 deg camera had the near front upright across the head for half the loop
+      for (const [what, h] of [['hand l', sitePos(skel, f, 'grip_l')], ['hand r', sitePos(skel, f, 'grip_r')], ['head', segPos(skel, f, 'head')]] as const) {
         for (const ux of [-RACK.x, RACK.x]) {
           for (const uz of [0, -RACK.depth]) {
             const px = origin[0] + ux, pz = origin[2] + uz
@@ -72,7 +72,7 @@ describe('back scenes', () => {
             const y = c.y + (h[1] - c.y) * t
             if (y < 0 || y > RACK.height) continue
             const d = Math.hypot(c.x + dx * t - px, c.z + dz * t - pz)
-            expect(d, `frame ${i} hand ${side} upright ${ux},${uz}`).toBeGreaterThan(clear)
+            expect(d, `frame ${i} ${what} upright ${ux},${uz}`).toBeGreaterThan(clear)
           }
         }
       }
