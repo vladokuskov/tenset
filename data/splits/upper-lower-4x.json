@@ -13,9 +13,9 @@
         { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [304, 305, 306] },
         { "pattern": "vertical_push", "group": "front_delt", "sets": 3, "options": [201, 208, 202] },
         { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [303, 302, 301, 307] },
-        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [203, 204] },
-        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [701, 710, 711] },
-        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [704, 715, 717] }
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [203, 204, 225] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [701, 710, 711, 727] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [704, 715, 717, 732, 741] }
       ]
     },
     {
@@ -36,10 +36,10 @@
         { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [301, 302, 303, 307] },
         { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [306, 312] },
         { "pattern": "dip", "group": "chest", "sets": 3, "options": [104, 108, 107, 113] },
-        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [204, 214, 203] },
-        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 2, "options": [206, 213, 210] },
-        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [702, 713, 711] },
-        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [705, 716] }
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [204, 214, 203, 225] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 2, "options": [206, 213, 210, 228] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [702, 713, 711, 727] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [705, 716, 732, 741] }
       ]
     },
     {

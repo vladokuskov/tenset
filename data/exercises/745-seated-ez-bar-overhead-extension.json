@@ -1,0 +1,59 @@
+{
+  "id": 745,
+  "slug": "seated-ez-bar-overhead-extension",
+  "name": "Seated EZ-Bar Overhead Extension",
+  "aliases": [
+    "EZ-bar French press",
+    "seated EZ overhead extension",
+    "seated French press"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar",
+    "adjustable_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    716,
+    705,
+    742
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit upright with the bench back set vertical",
+    "Hold the bar overhead on its angled grips, hands close",
+    "Lower the bar behind your head with your elbows pointing up",
+    "Straighten your arms while your upper arms stay still"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

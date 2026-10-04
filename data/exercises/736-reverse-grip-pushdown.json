@@ -1,0 +1,60 @@
+{
+  "id": 736,
+  "slug": "reverse-grip-pushdown",
+  "name": "Reverse-Grip Pushdown",
+  "aliases": [
+    "underhand pushdown",
+    "supinated pushdown",
+    "reverse pushdown"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    715,
+    741,
+    717
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip the bar palms up at about shoulder width",
+    "Keep your elbows tight to your sides",
+    "Straighten your arms fully at the bottom",
+    "Hold your wrists flat as you press the bar down"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

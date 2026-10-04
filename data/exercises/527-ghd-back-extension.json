@@ -1,0 +1,65 @@
+{
+  "id": 527,
+  "slug": "ghd-back-extension",
+  "name": "GHD Back Extension",
+  "aliases": [
+    "GHD hyperextension",
+    "horizontal back extension",
+    "90-degree back extension"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "ghd"
+  ],
+  "pattern": "hip_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "lower_back": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [],
+  "alternatives": [
+    505,
+    522,
+    528,
+    513
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the hip pad just below your hip crease with heels hooked",
+    "Lower your torso toward the floor with a long back",
+    "Raise yourself until your body is level with your legs",
+    "Cross your arms or hold a plate at your chest to load it"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

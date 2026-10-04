@@ -1,0 +1,61 @@
+{
+  "id": 753,
+  "slug": "close-grip-ez-bar-curl",
+  "name": "Close-Grip EZ-Bar Curl",
+  "aliases": [
+    "narrow EZ curl",
+    "close grip EZ curl",
+    "inner-grip EZ curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    701,
+    713,
+    711
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the bar on its inner angled grips, hands inside shoulder width",
+    "Keep your elbows at your sides",
+    "Curl the bar up without leaning back",
+    "Lower to fully straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

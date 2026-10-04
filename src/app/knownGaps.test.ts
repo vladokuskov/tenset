@@ -1,33 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import raw from '../../data/known-gaps.json' with { type: 'json' }
 import { activeExercises } from '../data/catalog'
 import { hasEquipment, presetEquipment, presets } from '../domain/equipment'
 import { bandedGroupIds, getGroup, isOptional } from '../domain/taxonomy'
 import { equipmentGaps, gapNote } from './knownGaps'
 
 describe('known equipment gaps', () => {
-  it('lists only banded groups for known presets', () => {
-    for (const gap of raw.gaps) {
-      expect(presets.map((p) => p.id)).toContain(gap.preset)
-      for (const g of gap.groups) expect(getGroup(g)?.banded, g).toBe(true)
+  it('lists only required banded groups', () => {
+    for (const g of equipmentGaps([])) {
+      expect(getGroup(g)?.banded, g).toBe(true)
+      expect(isOptional(g), g).toBe(false)
     }
   })
 
-  it('has no gaps with a full gym or dumbbells', () => {
-    expect(equipmentGaps(presetEquipment('full_gym'))).toEqual([])
-    expect(equipmentGaps(presetEquipment('basic_gym'))).toEqual([])
-    expect(equipmentGaps(presetEquipment('home_gym'))).toEqual([])
-    expect(gapNote(presetEquipment('dumbbells_bench'))).toBeNull()
+  it('has no gaps with any preset', () => {
+    for (const p of presets) expect(equipmentGaps(p.equipment), p.id).toEqual([])
+    expect(gapNote(presetEquipment('bodyweight'))).toBeNull()
   })
 
-  it('names what bodyweight training cannot load', () => {
-    expect(equipmentGaps(presetEquipment('bodyweight'))).toEqual(['side_delt', 'rear_delt', 'upper_traps', 'forearms'])
-    expect(gapNote(presetEquipment('bodyweight'))).toBe("Your equipment can't load: side delts, rear delts, upper traps, forearms.")
+  it('names what a pull-up bar and a step cannot load', () => {
+    expect(equipmentGaps(['pullup_bar', 'step'])).toEqual(['rear_delt'])
+    expect(gapNote(['pullup_bar', 'step'])).toBe("Your equipment can't load: rear delts.")
   })
 
-  it('carries a preset gap over to smaller custom selections only', () => {
-    expect(equipmentGaps(['step'])).toEqual(equipmentGaps(presetEquipment('bodyweight')))
-    expect(equipmentGaps([])).toEqual(equipmentGaps(presetEquipment('bodyweight')))
+  it('closes the gaps as equipment is added', () => {
+    expect(equipmentGaps(['pullup_bar', 'step', 'band'])).toEqual([])
     expect(equipmentGaps(['pullup_bar', 'step', 'dumbbell'])).toEqual([])
   })
 
@@ -48,7 +44,7 @@ describe('known equipment gaps', () => {
   })
 
   it('writes the note in Ukrainian', () => {
-    expect(gapNote(presetEquipment('bodyweight'), 'uk')).toMatch(/^Ваше обладнання не навантажує: .+\.$/)
+    expect(gapNote(['pullup_bar', 'step'], 'uk')).toMatch(/^Ваше обладнання не навантажує: .+\.$/)
     expect(gapNote(presetEquipment('dumbbells_bench'), 'uk')).toBeNull()
   })
 })

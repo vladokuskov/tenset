@@ -1,0 +1,63 @@
+{
+  "id": 731,
+  "slug": "jm-press",
+  "name": "JM Press",
+  "aliases": [
+    "JM bench",
+    "JM bench press"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell",
+    "flat_bench",
+    "rack"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "triceps": "primary",
+    "chest": "secondary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    707,
+    706,
+    738
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Unrack the bar with a shoulder-width grip",
+    "Bend your elbows and let them drift toward your feet",
+    "Lower the bar to about a hand above your chin",
+    "Press back to straight arms over your shoulders"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

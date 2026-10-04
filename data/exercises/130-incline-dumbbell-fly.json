@@ -1,0 +1,62 @@
+{
+  "id": 130,
+  "slug": "incline-dumbbell-fly",
+  "name": "Incline Dumbbell Fly",
+  "aliases": [
+    "incline DB fly",
+    "incline fly",
+    "incline dumbbell flye"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 1,
+    "pec_sternal": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    111,
+    112,
+    110
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bench to about 30 degrees",
+    "Start with the dumbbells over your upper chest, palms facing in",
+    "Open your arms in a wide arc with elbows softly bent",
+    "Stop at a comfortable stretch, then bring the weights back together"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

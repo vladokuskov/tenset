@@ -1,0 +1,55 @@
+{
+  "id": 341,
+  "slug": "band-shrug",
+  "name": "Band Shrug",
+  "aliases": [
+    "banded shrug",
+    "resistance band shrug"
+  ],
+  "family": "back",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "scapular_elevation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-20"
+  },
+  "groups": {
+    "upper_traps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    308,
+    336,
+    314
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand on the middle of the band with feet hip-width apart",
+    "Hold the ends at your sides with straight arms",
+    "Shrug straight up toward your ears",
+    "Lower slowly against the band's pull"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

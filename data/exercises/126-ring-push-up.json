@@ -1,0 +1,64 @@
+{
+  "id": 126,
+  "slug": "ring-push-up",
+  "name": "Ring Push-Up",
+  "aliases": [
+    "ring pushup",
+    "rings push-up"
+  ],
+  "family": "chest",
+  "equipment": [
+    "rings"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "rotator_cuff"
+  ],
+  "alternatives": [
+    113,
+    125,
+    107
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hang the rings just above the floor",
+    "Grip the rings with straight arms and your body in one line",
+    "Keep the rings close to your sides as you lower",
+    "Press up and turn your thumbs slightly out at the top"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

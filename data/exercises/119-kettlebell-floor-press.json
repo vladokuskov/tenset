@@ -1,0 +1,62 @@
+{
+  "id": 119,
+  "slug": "kettlebell-floor-press",
+  "name": "Kettlebell Floor Press",
+  "aliases": [
+    "KB floor press",
+    "kettlebell floor bench"
+  ],
+  "family": "chest",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    118,
+    113,
+    128
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie on the floor with knees bent and the kettlebells at your chest",
+    "Grip the handles so the bells rest on the backs of your forearms",
+    "Lower until your upper arms meet the floor",
+    "Press up with straight wrists and vertical forearms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

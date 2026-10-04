@@ -1,0 +1,56 @@
+{
+  "id": 335,
+  "slug": "trap-bar-shrug",
+  "name": "Trap-Bar Shrug",
+  "aliases": [
+    "hex bar shrug",
+    "hex shrug",
+    "shrugs"
+  ],
+  "family": "back",
+  "equipment": [
+    "trap_bar"
+  ],
+  "pattern": "scapular_elevation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "upper_traps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    314,
+    308,
+    336
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand inside the trap bar and grip the handles at your sides",
+    "Stand tall with your arms straight",
+    "Shrug your shoulders straight up toward your ears",
+    "Lower fully before the next rep"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

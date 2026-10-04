@@ -1,0 +1,61 @@
+{
+  "id": 132,
+  "slug": "single-arm-cable-fly",
+  "name": "Single-Arm Cable Fly",
+  "aliases": [
+    "one-arm cable fly",
+    "single-arm crossover",
+    "unilateral cable fly"
+  ],
+  "family": "chest",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [
+    "obliques"
+  ],
+  "alternatives": [
+    129,
+    110,
+    133
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set one pulley at shoulder height and stand side-on to it",
+    "Brace so your torso stays square as you pull",
+    "Sweep your hand across to the middle of your chest",
+    "Return slowly until your arm lines up with your shoulder"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

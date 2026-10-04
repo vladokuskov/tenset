@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { equipmentName } from '../../data/localize'
 import type { Locale } from '../../i18n/locale'
 import { useLocale } from '../../i18n/messages'
@@ -19,8 +19,8 @@ export type ExerciseCardMediaProps = {
 }
 
 // Implements first; supports (benches, racks, steps) only name the card when nothing else does.
-const IMPLEMENT_ORDER = ['barbell', 'ez_bar', 'dumbbell', 'cable', 'smith', 'plate']
-const SUPPORTS = new Set(['flat_bench', 'adjustable_bench', 'rack', 'step'])
+const IMPLEMENT_ORDER = ['landmine', 'trap_bar', 'barbell', 'ez_bar', 'dumbbell', 'kettlebell', 'cable', 'band', 'smith', 'plate']
+const SUPPORTS = new Set(['flat_bench', 'adjustable_bench', 'rack', 'step', 'preacher_bench'])
 // Crops end mid-body; a short fade makes the cut read as intentional.
 const FADE: CSSProperties = {
   maskImage: 'linear-gradient(to bottom, #000 80%, transparent 99%)',
@@ -79,20 +79,26 @@ function useBand(groups: string, minHeight: number): string | null {
  * List and grid media: the baked poster when the exercise may show its motion (see showsMotion), otherwise the M1
  * card, the exercise's map view with primary muscles in the strong tint and secondary ones in the light tint, plus
  * an equipment glyph. The detail hero (lg) always uses the card; ExerciseMedia swaps in the live figure there.
+ * Posters are cached on first view, so offline an unseen one falls back to the card.
  */
 export function ExerciseCardMedia(props: ExerciseCardMediaProps) {
+  const [failed, setFailed] = useState<string | null>(null)
   const poster = props.size !== 'lg' && showsMotion(props.exercise) ? posterUrl(props.exercise.id) : null
-  return poster ? <PosterMedia {...props} src={poster} /> : <MapCardMedia {...props} />
+  return poster && poster !== failed ? (
+    <PosterMedia {...props} src={poster} onError={() => setFailed(poster)} />
+  ) : (
+    <MapCardMedia {...props} />
+  )
 }
 
-function PosterMedia({ exercise, size, className, src }: ExerciseCardMediaProps & { src: string }) {
+function PosterMedia({ exercise, size, className, src, onError }: ExerciseCardMediaProps & { src: string; onError: () => void }) {
   const locale = useLocale()
   const { icon: Glyph } = equipmentGlyph(exercise.equipment)
   const label = equipmentLabel(exercise.equipment, locale)
   if (size === 'sm') {
     return (
       <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-md bg-white', className)} aria-hidden>
-        <img src={src} alt="" width={480} height={480} loading="lazy" decoding="async" className="block size-full object-cover" />
+        <img src={src} alt="" width={480} height={480} loading="lazy" decoding="async" onError={onError} className="block size-full object-cover" />
       </div>
     )
   }
@@ -105,6 +111,7 @@ function PosterMedia({ exercise, size, className, src }: ExerciseCardMediaProps 
         height={480}
         loading="lazy"
         decoding="async"
+        onError={onError}
         className="absolute inset-0 block size-full object-contain"
       />
       <span className="glass absolute bottom-2 left-2 flex h-6 max-w-[calc(100%-1rem)] items-center gap-1 rounded-full py-0.5 pl-1.5 pr-2 text-[0.6875rem] text-ink-2 shadow-thumb">

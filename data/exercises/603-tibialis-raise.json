@@ -24,7 +24,9 @@
     "tibialis": "primary"
   },
   "stabilizers": [],
-  "alternatives": [],
+  "alternatives": [
+    611
+  ],
   "media": {
     "status": "loop",
     "template": "calf-raise",

@@ -1,0 +1,69 @@
+{
+  "id": 340,
+  "slug": "renegade-row",
+  "name": "Renegade Row",
+  "aliases": [
+    "plank row",
+    "renegade dumbbell row",
+    "push-up position row"
+  ],
+  "family": "back",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "abs",
+    "obliques",
+    "triceps",
+    "forearms"
+  ],
+  "alternatives": [
+    307,
+    321,
+    315
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set up in a high plank with your hands on two dumbbells",
+    "Spread your feet wide for balance",
+    "Row one dumbbell to your hip while the other arm pushes into the floor",
+    "Keep your hips level and switch sides each rep"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

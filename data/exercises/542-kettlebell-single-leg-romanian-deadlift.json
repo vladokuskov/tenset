@@ -1,0 +1,66 @@
+{
+  "id": 542,
+  "slug": "kettlebell-single-leg-romanian-deadlift",
+  "name": "Kettlebell Single-Leg Romanian Deadlift",
+  "aliases": [
+    "KB single-leg RDL",
+    "kettlebell SL RDL",
+    "one-leg kettlebell deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    510,
+    524,
+    519
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the kettlebell in the hand opposite your standing leg",
+    "Reach the free leg back as your torso tips forward in one line",
+    "Lower the bell along the inside of your standing shin",
+    "Press the standing foot down and bring your hips through to stand"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": 735,
+  "slug": "v-bar-pushdown",
+  "name": "V-Bar Pushdown",
+  "aliases": [
+    "V-handle pushdown",
+    "V-bar triceps pushdown"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    715,
+    704,
+    741
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the V-bar with thumbs on top and palms angled in",
+    "Lean forward slightly and tuck your elbows in",
+    "Press the bar down toward your thighs until your elbows lock",
+    "Let it rise to chest height without moving your elbows"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

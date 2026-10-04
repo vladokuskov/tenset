@@ -1,0 +1,60 @@
+{
+  "id": 830,
+  "slug": "side-plank-hip-dip",
+  "name": "Side Plank Hip Dip",
+  "aliases": [
+    "side plank dips",
+    "hip dips",
+    "side plank hip drop"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_lateral_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "obliques": "primary",
+    "lower_back": "secondary",
+    "glute_med": "secondary"
+  },
+  "heads": {
+    "erector_spinae": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "serratus"
+  ],
+  "alternatives": [
+    803,
+    824,
+    808
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set up in a forearm side plank with your feet stacked",
+    "Lower your hip toward the floor without touching it",
+    "Drive the hip up until your body is straight",
+    "Finish the reps on one side, then switch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

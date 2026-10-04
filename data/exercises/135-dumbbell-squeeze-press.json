@@ -1,0 +1,64 @@
+{
+  "id": 135,
+  "slug": "dumbbell-squeeze-press",
+  "name": "Dumbbell Squeeze Press",
+  "aliases": [
+    "squeeze press",
+    "DB squeeze press",
+    "crush press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    121,
+    108,
+    113
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the dumbbells together over your chest, palms facing in",
+    "Press them hard into each other for the whole set",
+    "Lower them as one to your mid chest",
+    "Press back up without letting a gap open"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

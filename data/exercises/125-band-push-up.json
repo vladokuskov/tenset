@@ -1,0 +1,63 @@
+{
+  "id": 125,
+  "slug": "band-push-up",
+  "name": "Band Push-Up",
+  "aliases": [
+    "banded push-up",
+    "resisted push-up"
+  ],
+  "family": "chest",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    113,
+    128,
+    107
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Loop the band across your upper back and pin each end under your hands",
+    "Set your hands a little wider than your shoulders",
+    "Lower your chest toward the floor with your body in one line",
+    "Press against the band until your arms are straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

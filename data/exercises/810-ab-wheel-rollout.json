@@ -1,0 +1,66 @@
+{
+  "id": 810,
+  "slug": "ab-wheel-rollout",
+  "name": "Ab Wheel Rollout",
+  "aliases": [
+    "standing ab wheel rollout",
+    "standing rollout",
+    "ab roller"
+  ],
+  "family": "core",
+  "equipment": [
+    "ab_wheel"
+  ],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary",
+    "lats": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75,
+    "teres_major": 0.75
+  },
+  "stabilizers": [
+    "serratus",
+    "triceps",
+    "glute_max",
+    "hip_flexors"
+  ],
+  "alternatives": [
+    811,
+    839,
+    829,
+    804
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the wheel on the floor under your shoulders with straight legs",
+    "Pull your ribs toward your hips before you roll",
+    "Roll out only as far as your lower back stays flat",
+    "Pull the wheel back with straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

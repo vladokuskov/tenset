@@ -1,0 +1,66 @@
+{
+  "id": 419,
+  "slug": "landmine-squat",
+  "name": "Landmine Squat",
+  "aliases": [
+    "landmine goblet squat",
+    "barbell landmine squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "landmine",
+    "barbell"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "upper_back",
+    "lower_back"
+  ],
+  "alternatives": [
+    405,
+    417,
+    401,
+    407
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Cup the end of the bar at your chest with both hands",
+    "Set your feet slightly in front of you so you lean into the bar",
+    "Sit down between your heels as the bar tracks its arc",
+    "Drive up through your whole foot"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

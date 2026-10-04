@@ -1,0 +1,56 @@
+{
+  "id": 742,
+  "slug": "band-overhead-triceps-extension",
+  "name": "Band Overhead Triceps Extension",
+  "aliases": [
+    "band overhead extension",
+    "band French press"
+  ],
+  "family": "arms",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    705,
+    716,
+    737
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand in a staggered stance with the band under your back foot",
+    "Hold the other end behind your head with your elbows pointing forward",
+    "Straighten your arms overhead",
+    "Let your hands return behind your head while your upper arms stay still"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

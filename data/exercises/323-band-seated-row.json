@@ -1,0 +1,67 @@
+{
+  "id": 323,
+  "slug": "band-seated-row",
+  "name": "Band Seated Row",
+  "aliases": [
+    "band row",
+    "seated band row",
+    "resistance band row"
+  ],
+  "family": "back",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "forearms"
+  ],
+  "alternatives": [
+    305,
+    322,
+    313
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit on the floor with legs straight and loop the band around your feet",
+    "Hold the ends with straight arms and sit tall",
+    "Pull your hands to your stomach, squeezing your shoulder blades",
+    "Let your arms extend slowly against the band"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

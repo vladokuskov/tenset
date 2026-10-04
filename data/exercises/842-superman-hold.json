@@ -1,0 +1,60 @@
+{
+  "id": 842,
+  "slug": "superman-hold",
+  "name": "Superman Hold",
+  "aliases": [
+    "superman",
+    "prone superman",
+    "superman extension"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "spinal_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "20-40"
+  },
+  "groups": {
+    "lower_back": "primary",
+    "glute_max": "secondary"
+  },
+  "heads": {
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "upper_back",
+    "rear_delt",
+    "hamstrings"
+  ],
+  "alternatives": [
+    814,
+    505,
+    527
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie face down with your arms reaching forward",
+    "Squeeze your glutes and lift your chest, arms and legs",
+    "Keep your neck long and your eyes on the floor",
+    "Hold the top with your knees straight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

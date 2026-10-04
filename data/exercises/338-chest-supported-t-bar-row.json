@@ -1,0 +1,68 @@
+{
+  "id": 338,
+  "slug": "chest-supported-t-bar-row",
+  "name": "Chest-Supported T-Bar Row",
+  "aliases": [
+    "supported T-bar row",
+    "chest-supported row machine",
+    "lying T-bar row"
+  ],
+  "family": "back",
+  "equipment": [
+    "t_bar"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    316,
+    306,
+    319,
+    305
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set your chest on the pad and your feet on the platform",
+    "Grip the close handles with palms facing each other",
+    "Row until your elbows pass your torso",
+    "Lower until your arms are straight without lifting off the pad"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

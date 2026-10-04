@@ -1,0 +1,63 @@
+{
+  "id": 732,
+  "slug": "diamond-push-up",
+  "name": "Diamond Push-Up",
+  "aliases": [
+    "diamond pushup",
+    "triangle push-up",
+    "close-grip push-up"
+  ],
+  "family": "arms",
+  "equipment": [],
+  "pattern": "elbow_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-15"
+  },
+  "groups": {
+    "triceps": "primary",
+    "chest": "primary",
+    "front_delt": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.5,
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [
+    "abs"
+  ],
+  "alternatives": [
+    113,
+    733,
+    707,
+    718
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Touch thumbs and index fingers under your chest to form a diamond",
+    "Hold your body in one line from head to heels",
+    "Keep your elbows close to your ribs on the way down",
+    "Lower until your chest nearly touches your hands"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

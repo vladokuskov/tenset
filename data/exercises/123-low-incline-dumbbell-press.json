@@ -1,0 +1,65 @@
+{
+  "id": 123,
+  "slug": "low-incline-dumbbell-press",
+  "name": "Low-Incline Dumbbell Press",
+  "aliases": [
+    "low incline DB press",
+    "15 degree incline press",
+    "slight incline dumbbell press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "incline_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    102,
+    122,
+    115
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Raise the bench one notch, to around 15 degrees",
+    "Pull your shoulder blades back and down into the pad",
+    "Lower the dumbbells to the sides of your mid chest",
+    "Press up with your forearms vertical the whole way"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "chaves-2020"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

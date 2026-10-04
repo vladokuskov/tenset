@@ -1,0 +1,62 @@
+{
+  "id": 541,
+  "slug": "dumbbell-lying-leg-curl",
+  "name": "Dumbbell Lying Leg Curl",
+  "aliases": [
+    "DB leg curl",
+    "dumbbell hamstring curl",
+    "prone dumbbell leg curl"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "knee_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "hamstrings": "primary"
+  },
+  "heads": {
+    "biceps_femoris_long": 0.75,
+    "semitendinosus": 0.75,
+    "semimembranosus": 0.75
+  },
+  "stabilizers": [],
+  "alternatives": [
+    504,
+    539,
+    512,
+    503
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie face down with your knees just past the bench end",
+    "Squeeze one dumbbell vertically between your feet",
+    "Curl it up until your shins are near vertical",
+    "Lower slowly while keeping the dumbbell locked between your feet"
+  ],
+  "basis": [
+    "maeo-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

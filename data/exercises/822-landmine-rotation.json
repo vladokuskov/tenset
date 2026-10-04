@@ -1,0 +1,65 @@
+{
+  "id": 822,
+  "slug": "landmine-rotation",
+  "name": "Landmine Rotation",
+  "aliases": [
+    "landmine twist",
+    "landmine 180",
+    "landmine rainbow"
+  ],
+  "family": "core",
+  "equipment": [
+    "landmine",
+    "barbell"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "front_delt",
+    "serratus",
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    821,
+    831,
+    833,
+    809
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold the end of the bar at chest height with both hands",
+    "Stand tall with feet wider than your hips",
+    "Bring the bar to one hip by turning your torso and pivoting the back foot",
+    "Keep your arms nearly straight and pass through center to the other side"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

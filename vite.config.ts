@@ -70,8 +70,9 @@ export default defineConfig({
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,bin,glb,txt,woff2}', 'models/*.json'],
         // The notices file (~250 KB) is only opened from /credits, so it stays network-only. The figure model and
-        // atlas (~1.1 MB) are precached so the detail demos work offline.
-        globIgnores: ['**/media/loops/**', '**/THIRD_PARTY_NOTICES.txt'],
+        // atlas (~1.1 MB) are precached so the detail demos work offline. Loops and posters are cached on first use
+        // (src/sw/sw.ts) so the precache does not grow with the catalog.
+        globIgnores: ['**/media/loops/**', '**/media/posters/**', '**/THIRD_PARTY_NOTICES.txt'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         manifestTransforms: [precacheBudget],
       },

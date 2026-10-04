@@ -1,0 +1,63 @@
+{
+  "id": 831,
+  "slug": "half-kneeling-cable-chop",
+  "name": "Half-Kneeling Cable Chop",
+  "aliases": [
+    "half-kneeling chop",
+    "kneeling cable chop",
+    "kneeling woodchop"
+  ],
+  "family": "core",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "front_delt",
+    "glute_med",
+    "glute_max"
+  ],
+  "alternatives": [
+    809,
+    833,
+    822,
+    832
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Kneel side-on to a high pulley with the near knee down",
+    "Hold the rope above your near shoulder with both hands",
+    "Pull down and across toward your far hip",
+    "Keep your hips square and still as your torso turns"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

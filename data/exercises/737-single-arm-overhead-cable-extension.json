@@ -1,0 +1,56 @@
+{
+  "id": 737,
+  "slug": "single-arm-overhead-cable-extension",
+  "name": "Single-Arm Overhead Cable Extension",
+  "aliases": [
+    "one-arm overhead cable extension",
+    "single-arm overhead triceps extension"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    705,
+    716,
+    742
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the pulley low and face away holding a single handle",
+    "Raise your elbow beside your head, pointing it forward",
+    "Let the handle draw your hand down behind your head",
+    "Straighten your arm without moving your upper arm"
+  ],
+  "basis": [
+    "maeo-2023"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

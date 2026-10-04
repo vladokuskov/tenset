@@ -53,7 +53,7 @@ const brief = (e: Exercise) => ({
 
 export type SearchInput = { query?: string; group?: string; pattern?: string; equipment?: string[]; limit?: number }
 
-export function searchExercises({ query, group, pattern, equipment: available, limit = 200 }: SearchInput) {
+export function searchExercises({ query, group, pattern, equipment: available, limit = 400 }: SearchInput) {
   const words = query?.toLowerCase().split(/\s+/).filter(Boolean) ?? []
   const matches = exercises.filter((e) => {
     if (e.status !== 'active') return false

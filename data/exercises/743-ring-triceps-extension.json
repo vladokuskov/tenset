@@ -1,0 +1,57 @@
+{
+  "id": 743,
+  "slug": "ring-triceps-extension",
+  "name": "Ring Triceps Extension",
+  "aliases": [
+    "ring skull crusher",
+    "bodyweight triceps extension",
+    "rings triceps extension"
+  ],
+  "family": "arms",
+  "equipment": [
+    "rings"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-12"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "abs",
+    "lats"
+  ],
+  "alternatives": [
+    732,
+    706,
+    742
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the rings around chest height and lean into them on straight arms",
+    "Keep a rigid plank from head to heels",
+    "Bend your elbows to bring your forehead between the rings",
+    "Press back to straight arms by moving only at the elbows"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

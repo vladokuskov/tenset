@@ -1,0 +1,66 @@
+{
+  "id": 228,
+  "slug": "band-pull-apart",
+  "name": "Band Pull-Apart",
+  "aliases": [
+    "pull-apart",
+    "band pull apart",
+    "resistance band pull-apart"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "shoulder_horizontal_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-25"
+  },
+  "groups": {
+    "rear_delt": "primary",
+    "upper_back": "secondary",
+    "rotator_cuff": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.5,
+    "infraspinatus": 1,
+    "teres_minor": 1,
+    "supraspinatus": 0.25,
+    "subscapularis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    213,
+    205,
+    210,
+    229
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the band at shoulder height with your arms straight in front",
+    "Pull the band apart until it touches your chest",
+    "Finish with your shoulder blades pinched back",
+    "Return slowly without letting your shoulders rise"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

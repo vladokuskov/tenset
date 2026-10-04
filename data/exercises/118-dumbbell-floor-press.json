@@ -1,0 +1,64 @@
+{
+  "id": 118,
+  "slug": "dumbbell-floor-press",
+  "name": "Dumbbell Floor Press",
+  "aliases": [
+    "DB floor press",
+    "floor press",
+    "dumbbell floor bench"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    119,
+    107,
+    113
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie on the floor with knees bent and feet flat",
+    "Start with the dumbbells over your chest, palms facing your feet",
+    "Lower until your upper arms touch the floor, elbows at about 45 degrees",
+    "Pause lightly on the floor, then press straight up"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

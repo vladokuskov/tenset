@@ -1,0 +1,65 @@
+{
+  "id": 339,
+  "slug": "wide-grip-chest-supported-t-bar-row",
+  "name": "Wide-Grip Chest-Supported T-Bar Row",
+  "aliases": [
+    "wide T-bar row",
+    "wide-grip supported T-bar row"
+  ],
+  "family": "back",
+  "equipment": [
+    "t_bar"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "upper_back": "primary",
+    "rear_delt": "primary",
+    "lats": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    312,
+    306,
+    338
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie with your chest on the pad and your feet on the platform",
+    "Take the wide handles with your palms facing down",
+    "Row with your elbows flared out to the sides",
+    "Pinch your shoulder blades at the top of each rep"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

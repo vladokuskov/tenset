@@ -1,0 +1,61 @@
+{
+  "id": 740,
+  "slug": "cable-kickback",
+  "name": "Cable Kickback",
+  "aliases": [
+    "cable triceps kickback",
+    "cable tricep kickback"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "heads": {
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "rear_delt",
+    "lats",
+    "forearms"
+  ],
+  "alternatives": [
+    717,
+    734,
+    704
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the pulley low and hold the cable in one hand",
+    "Hinge forward with your upper arm in line with your torso",
+    "Straighten your elbow until your arm points straight back",
+    "Let your forearm swing down to about a right angle"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

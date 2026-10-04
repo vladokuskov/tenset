@@ -1,0 +1,70 @@
+{
+  "id": 523,
+  "slug": "rack-pull",
+  "name": "Rack Pull",
+  "aliases": [
+    "rack deadlift",
+    "block pull",
+    "partial deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "barbell",
+    "rack"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-8",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_traps",
+    "upper_back",
+    "lats"
+  ],
+  "alternatives": [
+    508,
+    516,
+    501
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the safeties so the bar starts just below or at your knees",
+    "Grip just outside your legs and pull your shoulders over the bar",
+    "Brace hard, then lock out by pushing your hips toward the bar",
+    "Stand tall without leaning back, then lower under control to the pins"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

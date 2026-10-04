@@ -1,0 +1,64 @@
+{
+  "id": 426,
+  "slug": "dumbbell-lateral-lunge",
+  "name": "Dumbbell Lateral Lunge",
+  "aliases": [
+    "side lunge",
+    "DB lateral lunge",
+    "lateral lunge"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "lunge",
+  "mechanic": "compound",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.75
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms"
+  ],
+  "alternatives": [
+    427,
+    421,
+    409,
+    405
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Step wide to the side with your toes pointing forward",
+    "Sit your hips back over the stepping leg",
+    "Keep the other leg straight and both feet flat",
+    "Drive through the working leg to bring your hips back to center"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

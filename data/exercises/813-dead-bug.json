@@ -1,0 +1,58 @@
+{
+  "id": 813,
+  "slug": "dead-bug",
+  "name": "Dead Bug",
+  "aliases": [
+    "deadbug",
+    "dead bug exercise"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary",
+    "hip_flexors": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 1,
+    "rectus_abdominis": 0.75
+  },
+  "stabilizers": [],
+  "alternatives": [
+    815,
+    841,
+    804
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie face up with arms toward the ceiling and knees over your hips",
+    "Press your lower back into the floor",
+    "Reach one arm overhead as the opposite leg straightens",
+    "Lower only as far as your back stays down",
+    "Bring both back in and switch sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

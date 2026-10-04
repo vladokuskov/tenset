@@ -1,0 +1,55 @@
+{
+  "id": 336,
+  "slug": "cable-shrug",
+  "name": "Cable Shrug",
+  "aliases": [
+    "low-pulley shrug",
+    "cable trap shrug"
+  ],
+  "family": "back",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "scapular_elevation",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "upper_traps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    308,
+    314,
+    341
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Clip a straight bar to the bottom pulley and stand close to the machine",
+    "Let the bar hang in front of your thighs with straight arms",
+    "Shrug straight up and pause at the top",
+    "Lower slowly until your shoulders sink fully"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

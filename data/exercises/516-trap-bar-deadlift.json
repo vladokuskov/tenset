@@ -1,0 +1,72 @@
+{
+  "id": 516,
+  "slug": "trap-bar-deadlift",
+  "name": "Trap-Bar Deadlift",
+  "aliases": [
+    "hex bar deadlift",
+    "trap bar DL",
+    "hex bar DL"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "trap_bar"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-8",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "quads": "primary",
+    "hamstrings": "secondary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "lats",
+    "upper_back",
+    "upper_traps"
+  ],
+  "alternatives": [
+    508,
+    521,
+    520,
+    509
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Step into the center of the frame and line your ankles up with the handles",
+    "Sit your hips down until your hands reach the handles with your chest up",
+    "Brace and push the floor away with your whole foot",
+    "Finish tall with your hips and knees locked out together"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

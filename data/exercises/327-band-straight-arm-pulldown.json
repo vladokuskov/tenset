@@ -1,0 +1,57 @@
+{
+  "id": 327,
+  "slug": "band-straight-arm-pulldown",
+  "name": "Band Straight-Arm Pulldown",
+  "aliases": [
+    "band pullover",
+    "banded straight-arm pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "shoulder_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "lats": "primary"
+  },
+  "stabilizers": [
+    "triceps",
+    "abs",
+    "forearms"
+  ],
+  "alternatives": [
+    325,
+    326,
+    332
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Anchor the band above head height",
+    "Step back and hold the ends with straight arms reaching up and forward",
+    "Press your hands down to your thighs in a wide arc",
+    "Keep your elbows nearly locked and your ribs down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

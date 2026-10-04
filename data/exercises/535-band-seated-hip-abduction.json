@@ -1,0 +1,56 @@
+{
+  "id": 535,
+  "slug": "band-seated-hip-abduction",
+  "name": "Band Seated Hip Abduction",
+  "aliases": [
+    "seated band abduction",
+    "band hip abduction",
+    "banded abduction"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "hip_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "15-25"
+  },
+  "groups": {
+    "glute_med": "primary",
+    "glute_max": "secondary"
+  },
+  "stabilizers": [],
+  "alternatives": [
+    506,
+    514,
+    536,
+    537
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Loop the band just above your knees and sit on the front of a bench",
+    "Keep your feet flat and close together",
+    "Press your knees out against the band as far as you can",
+    "Let them come back in slowly while keeping tension in the band"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

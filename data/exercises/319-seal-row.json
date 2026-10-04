@@ -1,0 +1,67 @@
+{
+  "id": 319,
+  "slug": "seal-row",
+  "name": "Seal Row",
+  "aliases": [
+    "bench row",
+    "prone barbell row",
+    "seal"
+  ],
+  "family": "back",
+  "equipment": [
+    "barbell",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    338,
+    306,
+    304
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Raise a flat bench on blocks so the bar hangs clear of the floor",
+    "Lie face down with your chin just past the end of the bench",
+    "Row the bar up until it touches the underside of the bench",
+    "Keep your chest on the pad the whole set"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

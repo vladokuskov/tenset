@@ -1,0 +1,56 @@
+{
+  "id": 532,
+  "slug": "frog-pump",
+  "name": "Frog Pump",
+  "aliases": [
+    "frog glute bridge",
+    "butterfly bridge",
+    "frog bridge"
+  ],
+  "family": "hinge",
+  "equipment": [],
+  "pattern": "hip_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "20-30"
+  },
+  "groups": {
+    "glute_max": "primary"
+  },
+  "stabilizers": [
+    "abs",
+    "adductors"
+  ],
+  "alternatives": [
+    511,
+    533,
+    502,
+    530
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on your back and press the soles of your feet together",
+    "Let your knees fall out wide and pull your heels toward your hips",
+    "Push through the outer edges of your feet to lift your hips",
+    "Squeeze your glutes hard at the top of each short rep"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "id": 839,
+  "slug": "dragon-flag",
+  "name": "Dragon Flag",
+  "aliases": [
+    "dragon flags",
+    "bench dragon flag"
+  ],
+  "family": "core",
+  "equipment": [
+    "flat_bench"
+  ],
+  "pattern": "anti_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "4-8"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75
+  },
+  "stabilizers": [
+    "lats",
+    "triceps",
+    "forearms",
+    "glute_max"
+  ],
+  "alternatives": [
+    810,
+    829,
+    815,
+    807
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie on a bench and grip the edge behind your head",
+    "Lift your body until only your upper back touches the bench",
+    "Keep a straight line from shoulders to feet",
+    "Lower slowly without bending at the hips"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

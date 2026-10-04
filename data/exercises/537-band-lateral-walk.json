@@ -1,0 +1,58 @@
+{
+  "id": 537,
+  "slug": "band-lateral-walk",
+  "name": "Band Lateral Walk",
+  "aliases": [
+    "monster walk",
+    "band side walk",
+    "lateral band walk"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "band"
+  ],
+  "pattern": "hip_abduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "glute_med": "primary",
+    "glute_max": "secondary"
+  },
+  "stabilizers": [
+    "quads"
+  ],
+  "alternatives": [
+    535,
+    514,
+    506,
+    536
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Place the band around your ankles or just above your knees",
+    "Sit into a shallow squat with your feet hip-width apart",
+    "Step sideways with the lead leg and keep the band taut as the trail leg follows",
+    "Keep your toes forward and your torso still"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

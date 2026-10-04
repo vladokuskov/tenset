@@ -1,0 +1,69 @@
+{
+  "id": 522,
+  "slug": "good-morning",
+  "name": "Good Morning",
+  "aliases": [
+    "barbell good morning",
+    "GM",
+    "good mornings"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "barbell",
+    "rack"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "abs",
+    "upper_back"
+  ],
+  "alternatives": [
+    501,
+    505,
+    509,
+    525
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bar across your upper back as you would for a squat",
+    "Unlock your knees and push your hips straight back",
+    "Lean forward with a flat back until your hamstrings stretch",
+    "Squeeze your glutes and bring your hips through until you stand tall"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

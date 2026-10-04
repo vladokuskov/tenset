@@ -1,0 +1,60 @@
+{
+  "id": 539,
+  "slug": "single-leg-lying-leg-curl",
+  "name": "Single-Leg Lying Leg Curl",
+  "aliases": [
+    "one-leg lying leg curl",
+    "single leg hamstring curl",
+    "unilateral leg curl"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "leg_curl_lying"
+  ],
+  "pattern": "knee_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "hamstrings": "primary"
+  },
+  "heads": {
+    "biceps_femoris_long": 0.75,
+    "semitendinosus": 0.75,
+    "semimembranosus": 0.75
+  },
+  "stabilizers": [],
+  "alternatives": [
+    504,
+    541,
+    540,
+    503
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie face down and set the roller above one heel",
+    "Rest the other leg straight or off to the side of the pad",
+    "Curl with your hips pressed into the bench",
+    "Lower slowly until the working leg is almost straight"
+  ],
+  "basis": [
+    "maeo-2021"
+  ],
+  "confidence": "high",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

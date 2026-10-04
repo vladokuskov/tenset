@@ -1,0 +1,60 @@
+{
+  "id": 720,
+  "slug": "ez-bar-preacher-curl",
+  "name": "EZ-Bar Preacher Curl",
+  "aliases": [
+    "preacher curl",
+    "EZ preacher curl",
+    "Scott curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "ez_bar",
+    "preacher_bench"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    721,
+    712,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the seat so your armpits rest on the top of the pad",
+    "Hold the bar on its angled grips with your upper arms flat on the pad",
+    "Lower until your elbows are almost straight",
+    "Curl up until your forearms are close to vertical"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": 828,
+  "slug": "plank-shoulder-tap",
+  "name": "Plank Shoulder Tap",
+  "aliases": [
+    "shoulder taps",
+    "plank taps",
+    "high plank shoulder tap"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "anti_rotation",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-16"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75
+  },
+  "stabilizers": [
+    "serratus",
+    "front_delt",
+    "triceps",
+    "glute_med",
+    "glute_max"
+  ],
+  "alternatives": [
+    823,
+    808,
+    812
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set up in a high plank with feet a little wider than your hips",
+    "Tap one hand to the opposite shoulder",
+    "Keep your hips from rocking side to side",
+    "Alternate hands at a steady pace"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

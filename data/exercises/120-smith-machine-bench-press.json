@@ -1,0 +1,66 @@
+{
+  "id": 120,
+  "slug": "smith-machine-bench-press",
+  "name": "Smith Machine Bench Press",
+  "aliases": [
+    "Smith bench",
+    "Smith bench press",
+    "Smith flat press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "smith",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    101,
+    108,
+    107
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Slide the bench so the bar lands on your lower chest",
+    "Pin your shoulder blades before you twist the bar off the hooks",
+    "Lower with elbows slightly tucked and forearms vertical",
+    "Press to straight arms, then turn the bar back onto the hooks"
+  ],
+  "basis": [
+    "rodriguez-ridao-2020",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

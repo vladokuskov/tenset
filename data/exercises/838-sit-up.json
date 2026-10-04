@@ -1,0 +1,58 @@
+{
+  "id": 838,
+  "slug": "sit-up",
+  "name": "Sit-Up",
+  "aliases": [
+    "situp",
+    "full sit-up",
+    "bodyweight sit-up"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "spinal_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "abs": "primary",
+    "hip_flexors": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    805,
+    818,
+    837,
+    834
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Lie face up with knees bent and feet flat or anchored",
+    "Cross your arms over your chest",
+    "Curl up until your chest nears your thighs",
+    "Roll back down slowly one section at a time"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

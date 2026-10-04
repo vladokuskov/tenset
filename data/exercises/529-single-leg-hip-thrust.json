@@ -1,0 +1,63 @@
+{
+  "id": 529,
+  "slug": "single-leg-hip-thrust",
+  "name": "Single-Leg Hip Thrust",
+  "aliases": [
+    "SL hip thrust",
+    "one-leg hip thrust",
+    "single leg glute thrust"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "flat_bench"
+  ],
+  "pattern": "hip_extension",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary"
+  },
+  "heads": {
+    "biceps_femoris_short": 0.25
+  },
+  "stabilizers": [
+    "glute_med",
+    "quads",
+    "abs"
+  ],
+  "alternatives": [
+    502,
+    533,
+    530,
+    531
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Rest your upper back on the bench and plant one foot under your knee",
+    "Lift the other leg with the knee bent and hold it there",
+    "Drive through the planted heel until your hips are level and fully open",
+    "Keep your pelvis from tilting toward the free side"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

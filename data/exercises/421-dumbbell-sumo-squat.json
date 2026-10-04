@@ -1,0 +1,64 @@
+{
+  "id": 421,
+  "slug": "dumbbell-sumo-squat",
+  "name": "Dumbbell Sumo Squat",
+  "aliases": [
+    "sumo squat",
+    "DB sumo squat",
+    "plie squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.75
+  },
+  "stabilizers": [
+    "forearms",
+    "abs"
+  ],
+  "alternatives": [
+    417,
+    401,
+    408,
+    405
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Take a wide stance with your toes turned out",
+    "Hold one dumbbell by its end so it hangs between your legs",
+    "Sit straight down and push your knees out over your toes",
+    "Keep your chest up and stand tall at the top"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

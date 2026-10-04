@@ -1,0 +1,67 @@
+{
+  "id": 116,
+  "slug": "decline-barbell-bench-press",
+  "name": "Decline Barbell Bench Press",
+  "aliases": [
+    "decline bench",
+    "decline bench press",
+    "decline BB press"
+  ],
+  "family": "chest",
+  "equipment": [
+    "barbell",
+    "adjustable_bench",
+    "rack"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "4-6"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 1,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    117,
+    104,
+    101
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set a slight decline and lock your feet under the pads",
+    "Unrack with straight arms, then pin your shoulder blades",
+    "Lower the bar to the bottom of your chest",
+    "Press back up until the bar sits over your shoulders"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

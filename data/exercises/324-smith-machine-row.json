@@ -1,0 +1,68 @@
+{
+  "id": 324,
+  "slug": "smith-machine-row",
+  "name": "Smith Machine Row",
+  "aliases": [
+    "Smith row",
+    "Smith bent-over row"
+  ],
+  "family": "back",
+  "equipment": [
+    "smith"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "hamstrings",
+    "forearms"
+  ],
+  "alternatives": [
+    304,
+    316,
+    305
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bar just below knee height in the Smith machine",
+    "Hinge forward and grip just outside your knees",
+    "Row the bar to your lower stomach",
+    "Keep your back flat and your torso angle steady"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

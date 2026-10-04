@@ -1,0 +1,63 @@
+{
+  "id": 534,
+  "slug": "cable-glute-kickback",
+  "name": "Cable Glute Kickback",
+  "aliases": [
+    "cable kickback",
+    "glute kickback",
+    "cable hip extension"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "hip_extension",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-15"
+  },
+  "groups": {
+    "glute_max": "primary",
+    "hamstrings": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25
+  },
+  "stabilizers": [
+    "glute_med",
+    "abs"
+  ],
+  "alternatives": [
+    528,
+    513,
+    502,
+    511
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Strap a low pulley to one ankle and hold the frame with a slight forward lean",
+    "Kick the strapped leg back and up without arching your lower back",
+    "Pause when your hip is fully open and your glute is tight",
+    "Let the leg swing forward slowly to a stretch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

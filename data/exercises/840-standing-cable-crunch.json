@@ -1,0 +1,57 @@
+{
+  "id": 840,
+  "slug": "standing-cable-crunch",
+  "name": "Standing Cable Crunch",
+  "aliases": [
+    "standing rope crunch",
+    "standing cable ab crunch"
+  ],
+  "family": "core",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "spinal_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "abs": "primary",
+    "obliques": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    801,
+    834,
+    838
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand facing a high pulley with the rope beside your head",
+    "Soften your knees and keep your hips still",
+    "Curl your ribs down toward your pelvis",
+    "Return slowly until your torso is upright"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

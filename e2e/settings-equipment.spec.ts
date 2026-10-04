@@ -8,7 +8,7 @@ test('settings: a whole equipment group toggles at once and the summary follows'
 
   const sheet = page.getByRole('dialog', { name: 'Equipment' })
   await sheet.getByRole('checkbox', { name: 'All free weights' }).locator('xpath=..').click()
-  await expect(sheet.getByText('Custom, 22 of 26 items')).toBeVisible()
+  await expect(sheet.getByText('Custom, 31 of 38 items')).toBeVisible()
   await expect(sheet.getByText(/in your week needs? items you have not selected/)).toBeVisible()
 
   const equipment = await page.evaluate(() => JSON.parse(localStorage.getItem('gb:prefs') ?? '{}').state?.equipment)

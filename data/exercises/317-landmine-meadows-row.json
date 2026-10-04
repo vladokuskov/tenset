@@ -1,0 +1,70 @@
+{
+  "id": 317,
+  "slug": "landmine-meadows-row",
+  "name": "Landmine Meadows Row",
+  "aliases": [
+    "Meadows row",
+    "landmine row",
+    "one-arm landmine row"
+  ],
+  "family": "back",
+  "equipment": [
+    "landmine",
+    "barbell"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "forearms",
+    "obliques"
+  ],
+  "alternatives": [
+    307,
+    315,
+    321,
+    316
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand side-on to the end of the bar in a staggered stance",
+    "Grip the thick end overhand and rest your free forearm on your front thigh",
+    "Row with your elbow travelling up and slightly out",
+    "Let the bar draw your shoulder down at the bottom"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": 747,
+  "slug": "barbell-reverse-wrist-curl",
+  "name": "Barbell Reverse Wrist Curl",
+  "aliases": [
+    "BB reverse wrist curl",
+    "barbell wrist extension",
+    "palms-down barbell wrist curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell",
+    "flat_bench"
+  ],
+  "pattern": "wrist_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_extensors": 1,
+    "brachioradialis": 0,
+    "wrist_flexors": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    709,
+    750,
+    714
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Kneel beside the bench with your forearms on it, palms down",
+    "Hold the bar with a light grip, hands about shoulder width",
+    "Raise the backs of your hands as high as they go",
+    "Lower slowly until your wrists bend down"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

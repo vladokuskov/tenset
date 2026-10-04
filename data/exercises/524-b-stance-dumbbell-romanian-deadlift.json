@@ -1,0 +1,69 @@
+{
+  "id": 524,
+  "slug": "b-stance-dumbbell-romanian-deadlift",
+  "name": "B-Stance Dumbbell Romanian Deadlift",
+  "aliases": [
+    "B-stance RDL",
+    "kickstand RDL",
+    "staggered stance RDL"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "forearms",
+    "upper_back"
+  ],
+  "alternatives": [
+    510,
+    509,
+    542,
+    519
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the back toes beside the front heel and keep most weight on the front foot",
+    "Hinge over the front leg with the dumbbells close to your shin",
+    "Keep your hips square and your front knee softly bent",
+    "Drive through the front heel to stand"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

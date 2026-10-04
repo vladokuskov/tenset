@@ -1,0 +1,65 @@
+{
+  "id": 526,
+  "slug": "glute-ham-raise",
+  "name": "Glute-Ham Raise",
+  "aliases": [
+    "GHR",
+    "glute ham raise",
+    "GHD raise"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "ghd"
+  ],
+  "pattern": "knee_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 3,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10"
+  },
+  "groups": {
+    "hamstrings": "primary"
+  },
+  "heads": {
+    "semitendinosus": 1,
+    "biceps_femoris_short": 0.75,
+    "biceps_femoris_long": 0.75,
+    "semimembranosus": 0.75
+  },
+  "stabilizers": [
+    "glute_max",
+    "abs",
+    "calves"
+  ],
+  "alternatives": [
+    512,
+    504,
+    503,
+    541
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the foot plate so your knees sit just behind the pad",
+    "Start upright on your knees with feet pressed into the plate",
+    "Lower your straight body forward under control",
+    "Curl yourself back up by pulling your heels into the hooks"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

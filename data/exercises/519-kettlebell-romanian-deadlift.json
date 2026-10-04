@@ -1,0 +1,68 @@
+{
+  "id": 519,
+  "slug": "kettlebell-romanian-deadlift",
+  "name": "Kettlebell Romanian Deadlift",
+  "aliases": [
+    "KB RDL",
+    "kettlebell RDL"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "kettlebell"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back",
+    "lats"
+  ],
+  "alternatives": [
+    509,
+    501,
+    517,
+    513
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Hold the bell by the horns against your thighs with knees unlocked",
+    "Push your hips back and keep the bell close to your legs",
+    "Lower until your hamstrings stretch while your back stays long",
+    "Squeeze your glutes to bring your hips through"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

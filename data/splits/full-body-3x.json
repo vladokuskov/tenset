@@ -13,8 +13,8 @@
         { "pattern": "horizontal_push", "group": "chest", "sets": 3, "options": [101, 108, 107, 113] },
         { "pattern": "vertical_pull", "group": "lats", "sets": 3, "options": [303, 302, 301, 307] },
         { "pattern": "hinge", "group": "glute_max", "sets": 3, "options": [501, 509, 511] },
-        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [203, 204] },
-        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [704, 715, 717] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 3, "options": [203, 204, 225] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [704, 715, 717, 732, 741] },
         { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [601, 605, 604, 606] }
       ]
     },
@@ -26,8 +26,8 @@
         { "pattern": "horizontal_pull", "group": "upper_back", "sets": 3, "options": [305, 304, 306] },
         { "pattern": "knee_flexion", "group": "hamstrings", "sets": 3, "options": [503, 504, 510, 512] },
         { "pattern": "shoulder_horizontal_adduction", "group": "chest", "sets": 2, "options": [105, 110, 112, 114] },
-        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 2, "options": [206, 213, 210] },
-        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [701, 710, 711] },
+        { "pattern": "shoulder_horizontal_abduction", "group": "rear_delt", "sets": 2, "options": [206, 213, 210, 228] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [701, 710, 711, 727] },
         { "pattern": "spinal_flexion", "group": "abs", "sets": 2, "options": [801, 805] }
       ]
     },
@@ -38,9 +38,9 @@
         { "pattern": "incline_push", "group": "chest", "sets": 3, "options": [102, 109, 103, 115] },
         { "pattern": "horizontal_pull", "group": "lats", "sets": 3, "options": [307, 315, 305, 309] },
         { "pattern": "hip_extension", "group": "glute_max", "sets": 3, "options": [502, 511] },
-        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 2, "options": [204, 203] },
-        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [703, 719] },
-        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [705, 716] },
+        { "pattern": "shoulder_abduction", "group": "side_delt", "sets": 2, "options": [204, 203, 225] },
+        { "pattern": "elbow_flexion", "group": "biceps", "sets": 2, "options": [703, 719, 727] },
+        { "pattern": "elbow_extension", "group": "triceps", "sets": 2, "options": [705, 716, 732, 741] },
         { "pattern": "plantarflexion", "group": "calves", "sets": 3, "options": [602, 601, 604, 606] }
       ]
     }

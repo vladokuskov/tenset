@@ -1,0 +1,62 @@
+{
+  "id": 722,
+  "slug": "bayesian-cable-curl",
+  "name": "Bayesian Cable Curl",
+  "aliases": [
+    "Bayesian curl",
+    "behind-the-body cable curl",
+    "face-away cable curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    702,
+    713,
+    711
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set a pulley low and face away from the stack",
+    "Step forward until the cable draws your arm behind your body",
+    "Keep your elbow behind your torso as you curl",
+    "Let your arm straighten fully between reps"
+  ],
+  "basis": [
+    "anatomy-general",
+    "varovic-2025"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

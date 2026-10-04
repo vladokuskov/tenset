@@ -1,0 +1,58 @@
+{
+  "id": 738,
+  "slug": "dumbbell-skull-crusher",
+  "name": "Dumbbell Skull Crusher",
+  "aliases": [
+    "DB skull crusher",
+    "dumbbell lying triceps extension",
+    "DB skullcrusher"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    706,
+    716,
+    705
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on the bench holding the dumbbells above your shoulders, palms facing in",
+    "Tilt your upper arms slightly back toward your head",
+    "Lower the dumbbells beside your ears as your elbows bend",
+    "Straighten your arms without letting your elbows flare"
+  ],
+  "basis": [
+    "maeo-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

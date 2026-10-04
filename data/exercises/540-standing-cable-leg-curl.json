@@ -1,0 +1,61 @@
+{
+  "id": 540,
+  "slug": "standing-cable-leg-curl",
+  "name": "Standing Cable Leg Curl",
+  "aliases": [
+    "cable hamstring curl",
+    "standing leg curl",
+    "cable leg curl"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "knee_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-15"
+  },
+  "groups": {
+    "hamstrings": "primary"
+  },
+  "heads": {
+    "biceps_femoris_long": 0.75,
+    "semitendinosus": 0.75,
+    "semimembranosus": 0.75
+  },
+  "stabilizers": [],
+  "alternatives": [
+    504,
+    539,
+    503,
+    541
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Face a low pulley with the strap on one ankle and hold the frame",
+    "Keep your thigh pointing down and your knee still",
+    "Curl your heel toward your glute without letting the hip swing forward",
+    "Straighten the leg slowly against the cable"
+  ],
+  "basis": [
+    "maeo-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

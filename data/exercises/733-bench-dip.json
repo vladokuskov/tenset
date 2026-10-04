@@ -1,0 +1,63 @@
+{
+  "id": 733,
+  "slug": "bench-dip",
+  "name": "Bench Dip",
+  "aliases": [
+    "bench dips",
+    "triceps bench dip",
+    "chair dip"
+  ],
+  "family": "arms",
+  "equipment": [
+    "flat_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-15"
+  },
+  "groups": {
+    "triceps": "primary",
+    "chest": "secondary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "triceps_long": 0.5,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    718,
+    732,
+    704
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Sit on the bench edge with your hands beside your hips, fingers forward",
+    "Slide your hips off the bench with your feet on the floor in front",
+    "Bend your elbows straight back to lower your hips",
+    "Stop when your upper arms are about level with the floor, then press up"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

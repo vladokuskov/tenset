@@ -39,9 +39,10 @@
     "lower_back"
   ],
   "alternatives": [
+    230,
     205,
     213,
-    206
+    228
   ],
   "media": {
     "status": "loop",

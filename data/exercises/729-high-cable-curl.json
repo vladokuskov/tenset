@@ -1,0 +1,61 @@
+{
+  "id": 729,
+  "slug": "high-cable-curl",
+  "name": "High Cable Curl",
+  "aliases": [
+    "overhead cable curl",
+    "double cable curl",
+    "high pulley curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "side_delt"
+  ],
+  "alternatives": [
+    713,
+    722,
+    712
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set both pulleys at shoulder height and stand between them",
+    "Hold a handle in each hand with arms straight out to the sides",
+    "Curl the handles toward your ears",
+    "Keep your upper arms level with the floor"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

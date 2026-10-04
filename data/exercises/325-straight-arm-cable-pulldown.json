@@ -1,0 +1,58 @@
+{
+  "id": 325,
+  "slug": "straight-arm-cable-pulldown",
+  "name": "Straight-Arm Cable Pulldown",
+  "aliases": [
+    "straight-arm pulldown",
+    "cable pullover",
+    "straight-arm lat pulldown"
+  ],
+  "family": "back",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "shoulder_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "lats": "primary"
+  },
+  "stabilizers": [
+    "triceps",
+    "abs",
+    "forearms"
+  ],
+  "alternatives": [
+    327,
+    326,
+    330
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Attach a straight bar or rope at the top pulley",
+    "Hinge slightly with your arms out in front at head height",
+    "Sweep the bar down to your thighs, elbows nearly locked",
+    "Let your arms rise until your lats stretch"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "id": 824,
+  "slug": "suitcase-hold",
+  "name": "Suitcase Hold",
+  "aliases": [
+    "one-arm dumbbell hold",
+    "single-arm farmer hold",
+    "one-sided dumbbell hold"
+  ],
+  "family": "core",
+  "equipment": [
+    "dumbbell"
+  ],
+  "pattern": "anti_lateral_flexion",
+  "mechanic": "isolation",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "seconds",
+  "defaults": {
+    "sets": 3,
+    "reps": "20-40"
+  },
+  "groups": {
+    "obliques": "primary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "erector_spinae": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_traps",
+    "glute_med",
+    "abs"
+  ],
+  "alternatives": [
+    803,
+    830,
+    823
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Hold a heavy dumbbell at one side with a straight arm",
+    "Stand tall with your shoulders level",
+    "Keep your ribs stacked over your hips without leaning",
+    "Switch hands and match the time"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

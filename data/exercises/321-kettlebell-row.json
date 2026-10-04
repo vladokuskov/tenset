@@ -1,0 +1,67 @@
+{
+  "id": 321,
+  "slug": "kettlebell-row",
+  "name": "Kettlebell Row",
+  "aliases": [
+    "KB row",
+    "one-arm kettlebell row",
+    "single-arm KB row"
+  ],
+  "family": "back",
+  "equipment": [
+    "kettlebell",
+    "flat_bench"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75,
+    "biceps_brachii": 0.75
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    307,
+    315,
+    317
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Brace one hand and the same-side knee on the bench",
+    "Hold the kettlebell by the handle with your arm hanging straight",
+    "Row the bell toward your hip",
+    "Lower slowly until your shoulder stretches forward"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": 422,
+  "slug": "box-squat",
+  "name": "Box Squat",
+  "aliases": [
+    "barbell box squat",
+    "squat to box"
+  ],
+  "family": "squat",
+  "equipment": [
+    "barbell",
+    "rack",
+    "step"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "3-5"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "primary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "lower_back",
+    "abs"
+  ],
+  "alternatives": [
+    401,
+    407,
+    413,
+    405
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set a box that puts your thighs about parallel when seated",
+    "Sit back until you touch the box without dropping onto it",
+    "Pause briefly while staying braced",
+    "Drive up through your heels and midfoot"
+  ],
+  "basis": [
+    "kubo-2019",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

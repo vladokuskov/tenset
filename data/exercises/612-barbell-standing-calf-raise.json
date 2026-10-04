@@ -1,0 +1,61 @@
+{
+  "id": 612,
+  "slug": "barbell-standing-calf-raise",
+  "name": "Barbell Standing Calf Raise",
+  "aliases": [
+    "barbell calf raise",
+    "BB calf raise",
+    "back-loaded calf raise"
+  ],
+  "family": "calves",
+  "equipment": [
+    "barbell",
+    "rack",
+    "step"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [
+    "abs",
+    "lower_back"
+  ],
+  "alternatives": [
+    607,
+    601,
+    604,
+    608
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Unrack the bar onto your upper back and step onto the edge of the step",
+    "Keep your forefoot on the edge and your feet about hip width",
+    "Hold your knees nearly straight and your trunk tall",
+    "Let your heels sink below the step, then rise as high as you can"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

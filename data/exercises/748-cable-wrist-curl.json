@@ -1,0 +1,58 @@
+{
+  "id": 748,
+  "slug": "cable-wrist-curl",
+  "name": "Cable Wrist Curl",
+  "aliases": [
+    "cable forearm curl",
+    "low pulley wrist curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "cable"
+  ],
+  "pattern": "wrist_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "12-20"
+  },
+  "groups": {
+    "forearms": "primary"
+  },
+  "heads": {
+    "wrist_flexors": 1,
+    "brachioradialis": 0,
+    "wrist_extensors": 0
+  },
+  "stabilizers": [],
+  "alternatives": [
+    708,
+    746,
+    749
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Attach a straight bar to a low pulley, kneel facing it and sit back on your heels",
+    "Rest your forearms on your thighs, palms up",
+    "Let the cable pull your wrists back into a stretch",
+    "Curl your wrists up without lifting your forearms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

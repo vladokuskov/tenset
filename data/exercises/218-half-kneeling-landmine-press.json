@@ -1,0 +1,67 @@
+{
+  "id": 218,
+  "slug": "half-kneeling-landmine-press",
+  "name": "Half-Kneeling Landmine Press",
+  "aliases": [
+    "kneeling landmine press",
+    "half-kneeling single-arm landmine press"
+  ],
+  "family": "shoulders",
+  "equipment": [
+    "landmine",
+    "barbell"
+  ],
+  "pattern": "vertical_push",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "front_delt": "primary",
+    "chest": "secondary",
+    "triceps": "secondary",
+    "serratus": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 0.25,
+    "pec_minor": 0.25,
+    "triceps_long": 0.75
+  },
+  "stabilizers": [
+    "abs",
+    "obliques",
+    "glute_max"
+  ],
+  "alternatives": [
+    219,
+    217,
+    220,
+    202
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Kneel on the knee of your pressing side, other foot flat in front",
+    "Hold the end of the bar at your shoulder",
+    "Press up and forward until your arm is straight",
+    "Keep your hips square and your glutes tight"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "low",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": 607,
+  "slug": "smith-machine-calf-raise",
+  "name": "Smith Machine Calf Raise",
+  "aliases": [
+    "smith calf raise",
+    "standing smith calf raise",
+    "smith calves"
+  ],
+  "family": "calves",
+  "equipment": [
+    "smith",
+    "step"
+  ],
+  "pattern": "plantarflexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "calves": "primary"
+  },
+  "stabilizers": [
+    "abs",
+    "lower_back"
+  ],
+  "alternatives": [
+    612,
+    601,
+    608,
+    604
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Set the bar at shoulder height and step under it with the step below",
+    "Place only your forefoot on the step edge, feet about hip width",
+    "Keep your knees almost straight from start to finish",
+    "Sink your heels low, then drive up onto the balls of your feet"
+  ],
+  "basis": [
+    "kinoshita-2023",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

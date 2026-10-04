@@ -1,0 +1,69 @@
+{
+  "id": 320,
+  "slug": "underhand-barbell-row",
+  "name": "Underhand Barbell Row",
+  "aliases": [
+    "reverse-grip row",
+    "Yates row",
+    "supinated barbell row"
+  ],
+  "family": "back",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "horizontal_pull",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "lats": "primary",
+    "upper_back": "primary",
+    "rear_delt": "secondary",
+    "biceps": "secondary"
+  },
+  "heads": {
+    "trap_middle": 1,
+    "rhomboids": 1,
+    "trap_lower": 0.75
+  },
+  "stabilizers": [
+    "lower_back",
+    "hamstrings",
+    "forearms"
+  ],
+  "alternatives": [
+    304,
+    318,
+    324,
+    305
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Grip the bar at shoulder width, palms facing forward",
+    "Hinge until your torso is around 45 degrees, knees soft",
+    "Pull the bar to your lower stomach, elbows tight to your sides",
+    "Lower until your arms are straight without letting your back round"
+  ],
+  "basis": [
+    "mannarino-2021",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": 131,
+  "slug": "seated-cable-fly",
+  "name": "Seated Cable Fly",
+  "aliases": [
+    "seated cable crossover",
+    "bench cable fly"
+  ],
+  "family": "chest",
+  "equipment": [
+    "cable",
+    "adjustable_bench"
+  ],
+  "pattern": "shoulder_horizontal_adduction",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary"
+  },
+  "heads": {
+    "pec_clavicular": 0.75,
+    "pec_minor": 0.25
+  },
+  "stabilizers": [],
+  "alternatives": [
+    110,
+    129,
+    112
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the pulleys at shoulder height with an upright bench between them",
+    "Sit tall with your back against the pad",
+    "Keep your elbows softly bent as you sweep the handles together",
+    "Let your arms open slowly until they line up with your torso"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

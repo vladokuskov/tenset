@@ -1,0 +1,66 @@
+{
+  "id": 117,
+  "slug": "decline-dumbbell-press",
+  "name": "Decline Dumbbell Press",
+  "aliases": [
+    "decline DB press",
+    "decline dumbbell bench press",
+    "decline DB bench"
+  ],
+  "family": "chest",
+  "equipment": [
+    "dumbbell",
+    "adjustable_bench"
+  ],
+  "pattern": "horizontal_push",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12",
+    "strengthReps": "6-8"
+  },
+  "groups": {
+    "chest": "primary",
+    "front_delt": "secondary",
+    "triceps": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 1,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.25,
+    "triceps_long": 0.5
+  },
+  "stabilizers": [
+    "upper_back"
+  ],
+  "alternatives": [
+    116,
+    104,
+    114
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Set the bench to a shallow decline and hook your feet in",
+    "Hold the dumbbells on your chest as you lie back",
+    "Lower them to the sides of your lower chest",
+    "Press up and slightly together, wrists stacked over elbows"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

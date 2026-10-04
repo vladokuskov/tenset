@@ -1,0 +1,70 @@
+{
+  "id": 517,
+  "slug": "trap-bar-romanian-deadlift",
+  "name": "Trap-Bar Romanian Deadlift",
+  "aliases": [
+    "trap bar RDL",
+    "hex bar RDL",
+    "hex bar romanian deadlift"
+  ],
+  "family": "hinge",
+  "equipment": [
+    "trap_bar"
+  ],
+  "pattern": "hinge",
+  "mechanic": "compound",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "6-10",
+    "strengthReps": "5-8"
+  },
+  "groups": {
+    "hamstrings": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary",
+    "lower_back": "secondary"
+  },
+  "heads": {
+    "semitendinosus": 0.75,
+    "biceps_femoris_short": 0.25,
+    "adductor_longus": 0.5,
+    "quadratus_lumborum": 0.5
+  },
+  "stabilizers": [
+    "forearms",
+    "upper_back",
+    "lats"
+  ],
+  "alternatives": [
+    501,
+    509,
+    519,
+    513
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Stand inside the frame holding the handles with your knees softly bent",
+    "Push your hips back and let the handles travel straight down by your sides",
+    "Stop when your hamstrings are fully stretched and your back is still flat",
+    "Drive your hips forward to stand tall"
+  ],
+  "basis": [
+    "bourne-2017",
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

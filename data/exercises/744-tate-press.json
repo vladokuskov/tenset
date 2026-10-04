@@ -1,0 +1,56 @@
+{
+  "id": 744,
+  "slug": "tate-press",
+  "name": "Tate Press",
+  "aliases": [
+    "Tate dumbbell press",
+    "elbows-out extension"
+  ],
+  "family": "arms",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "elbow_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "triceps": "primary"
+  },
+  "stabilizers": [
+    "forearms"
+  ],
+  "alternatives": [
+    738,
+    706,
+    717
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on the bench holding the dumbbells above your chest, palms facing your feet",
+    "Point your elbows out to the sides",
+    "Bend your elbows until the dumbbells meet your chest",
+    "Press back up by straightening only your elbows"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

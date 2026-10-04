@@ -1,0 +1,64 @@
+{
+  "id": 326,
+  "slug": "dumbbell-pullover",
+  "name": "Dumbbell Pullover",
+  "aliases": [
+    "DB pullover",
+    "pullover",
+    "lying pullover"
+  ],
+  "family": "back",
+  "equipment": [
+    "dumbbell",
+    "flat_bench"
+  ],
+  "pattern": "shoulder_extension",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "lats": "primary",
+    "chest": "secondary"
+  },
+  "heads": {
+    "pec_sternal": 1,
+    "pec_clavicular": 0.5,
+    "pec_minor": 0.5
+  },
+  "stabilizers": [
+    "triceps",
+    "abs"
+  ],
+  "alternatives": [
+    325,
+    327,
+    303
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "B"
+  },
+  "cues": [
+    "Lie on a flat bench holding one dumbbell over your chest with both hands",
+    "Keep a slight, fixed bend in your elbows",
+    "Lower the dumbbell in an arc behind your head until your arms reach your ears",
+    "Pull it back over your chest along the same arc"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

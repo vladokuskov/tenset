@@ -5,8 +5,7 @@
   "aliases": [
     "bent-over row",
     "BB row",
-    "bent row",
-    "Pendlay row"
+    "bent row"
   ],
   "family": "back",
   "equipment": [
@@ -40,8 +39,9 @@
     "forearms"
   ],
   "alternatives": [
+    316,
+    324,
     305,
-    306,
     313
   ],
   "media": {

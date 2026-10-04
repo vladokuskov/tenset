@@ -1,0 +1,61 @@
+{
+  "id": 816,
+  "slug": "mountain-climber",
+  "name": "Mountain Climber",
+  "aliases": [
+    "mountain climbers",
+    "climbers",
+    "running plank"
+  ],
+  "family": "core",
+  "equipment": [],
+  "pattern": "hip_flexion",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-20"
+  },
+  "groups": {
+    "abs": "primary",
+    "hip_flexors": "primary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.75
+  },
+  "stabilizers": [
+    "obliques",
+    "serratus",
+    "front_delt",
+    "triceps"
+  ],
+  "alternatives": [
+    836,
+    806,
+    826
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Start in a high plank with hands under your shoulders",
+    "Drive one knee toward your chest",
+    "Switch legs in a steady rhythm",
+    "Keep your hips level with your shoulders"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

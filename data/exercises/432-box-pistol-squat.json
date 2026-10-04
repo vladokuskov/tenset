@@ -1,0 +1,64 @@
+{
+  "id": 432,
+  "slug": "box-pistol-squat",
+  "name": "Box Pistol Squat",
+  "aliases": [
+    "single-leg box squat",
+    "pistol to box",
+    "box single-leg squat"
+  ],
+  "family": "squat",
+  "equipment": [
+    "step"
+  ],
+  "pattern": "squat",
+  "mechanic": "compound",
+  "laterality": "unilateral",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "5-10"
+  },
+  "groups": {
+    "quads": "primary",
+    "glute_max": "primary",
+    "adductors": "secondary"
+  },
+  "heads": {
+    "rectus_femoris": 0.5,
+    "adductor_longus": 0.5
+  },
+  "stabilizers": [
+    "glute_med",
+    "abs"
+  ],
+  "alternatives": [
+    403,
+    410,
+    429,
+    430
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Stand on one leg in front of a box with the other leg reaching forward",
+    "Reach your arms out as you sit back",
+    "Touch the box lightly without settling onto it",
+    "Stand up through your whole foot"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": 821,
+  "slug": "russian-twist",
+  "name": "Russian Twist",
+  "aliases": [
+    "plate twist",
+    "weighted Russian twist",
+    "seated twist"
+  ],
+  "family": "core",
+  "equipment": [
+    "plate"
+  ],
+  "pattern": "rotation",
+  "mechanic": "isolation",
+  "laterality": "alternating",
+  "level": 2,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "10-15"
+  },
+  "groups": {
+    "obliques": "primary",
+    "abs": "secondary"
+  },
+  "heads": {
+    "transversus_abdominis": 0.5
+  },
+  "stabilizers": [
+    "hip_flexors"
+  ],
+  "alternatives": [
+    820,
+    822,
+    833,
+    809
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Sit with knees bent and lean back to about 45 degrees",
+    "Hold the plate close to your chest",
+    "Turn your shoulders to bring the plate beside one hip",
+    "Keep your chest up and alternate sides"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}

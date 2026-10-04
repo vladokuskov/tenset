@@ -1,0 +1,61 @@
+{
+  "id": 754,
+  "slug": "wide-grip-barbell-curl",
+  "name": "Wide-Grip Barbell Curl",
+  "aliases": [
+    "wide curl",
+    "wide grip curl",
+    "wide BB curl"
+  ],
+  "family": "arms",
+  "equipment": [
+    "barbell"
+  ],
+  "pattern": "elbow_flexion",
+  "mechanic": "isolation",
+  "laterality": "bilateral",
+  "level": 1,
+  "unit": "reps",
+  "defaults": {
+    "sets": 3,
+    "reps": "8-12"
+  },
+  "groups": {
+    "biceps": "primary",
+    "forearms": "secondary"
+  },
+  "heads": {
+    "wrist_flexors": 0.25,
+    "wrist_extensors": 0.25
+  },
+  "stabilizers": [
+    "front_delt"
+  ],
+  "alternatives": [
+    710,
+    701,
+    713
+  ],
+  "media": {
+    "status": "card",
+    "template": null,
+    "params": {},
+    "mapView": "F"
+  },
+  "cues": [
+    "Grip the bar palms up, hands outside shoulder width",
+    "Keep your elbows by your sides as you curl",
+    "Hold your torso still with no swing",
+    "Lower all the way to straight arms"
+  ],
+  "basis": [
+    "anatomy-general"
+  ],
+  "confidence": "medium",
+  "status": "active",
+  "replacedBy": null,
+  "qa": {
+    "data": "pending",
+    "motion": "pending"
+  }
+}
