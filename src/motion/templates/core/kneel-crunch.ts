@@ -28,7 +28,7 @@ const FIST: V3 = [0.15, 0.03, 0.035]
 /** rope grips below the carabiner, m */
 const ROPE_DROP = 0.4
 /** free strand length: a full-length cable rope, its strands running up past the sides of the head */
-const ROPE_FREE = 0.36
+const ROPE_FREE = 0.45
 /** the free strands leave the fists this far past the grip centre, m: bent up towards the pulley at the bottom of the
  * curl they clear the thumbs (the default 5 cm ran them back across the fists) */
 const ROPE_EXIT = 0.08
