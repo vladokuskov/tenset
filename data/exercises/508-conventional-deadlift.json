@@ -53,7 +53,7 @@
     "params": {
       "implement": "barbell",
       "grip": "pronated",
-      "gripWidth": 1.2,
+      "gripWidth": 1.35,
       "stance": "hip",
       "toeOut": 14,
       "start": "floor"
