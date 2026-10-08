@@ -1,8 +1,8 @@
 import { attachHand, jointByName, legKinematics, plantFoot, root1d, writeLeg, type FootTarget, type LegSolve } from '../constraints.ts'
 import { bodyCapsules } from '../collide.ts'
-import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
+import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { eulerAngles, limbRotation, twoBone } from '../ik.ts'
-import { dumbbell, type ImplementSpec } from '../implements.ts'
+import { barbell, dumbbell, siteWorld, type ImplementSpec } from '../implements.ts'
 import { splitBench } from '../implements/legs-knee.ts'
 import { plyoBox, PLYO_BOX } from '../implements/shared.ts'
 import { add, clamp, DEG, lerp, qaxis, qconj, qid, qmul, qrot, sub, type Quat, type V3 } from '../math.ts'
@@ -26,11 +26,13 @@ import { memo, type Setup, type Template } from './types.ts'
 // straight down.
 
 type P = ParamsOf<'lunge'>
-type Kind = 'split' | 'reverse' | 'forward' | 'step_up'
-type Moving = Exclude<Kind, 'split'>
+type Kind = 'split' | 'split_floor' | 'reverse' | 'forward' | 'step_up'
+type Moving = Exclude<Kind, 'split' | 'split_floor'>
+/** what is carried: dumbbells at the sides, nothing, or a bar on the upper back (free or on the Smith rails) */
+type Load = 'db' | 'none' | 'barbell' | 'smith'
 /** the lunges whose moving foot swings in joint space */
 type Stepping = Exclude<Moving, 'step_up'>
-const KIND_LIST: Kind[] = ['split', 'reverse', 'forward', 'step_up']
+const KIND_LIST: Kind[] = ['split', 'split_floor', 'reverse', 'forward', 'step_up']
 
 const DB_KG = 16
 const TOE_OUT = 6
@@ -41,16 +43,25 @@ const STEP_HALF_WIDTH = 0.1
 /** knees at the top: standing tall, not locked */
 const TOP_KNEE = 3
 /** front knee flexion cap at the bottom, deg (research 90-100; the split squat sinks a little deeper) */
-const FRONT_KNEE_MAX: Record<Kind, number> = { split: 105, reverse: 100, forward: 100, step_up: 100 }
+const FRONT_KNEE_MAX: Record<Kind, number> = { split: 105, split_floor: 100, reverse: 100, forward: 100, step_up: 100 }
 /** the rear kneecap stops this far above the floor, m */
 const REAR_KNEE_CLEAR = 0.035
 /** trailing leg at the bottom of the step-up, deg */
 const STEP_TRAIL_KNEE = 20
 /** share of the body weight on the back foot at the bottom (split squat: at the top and at the bottom) */
-const REAR_SHARE: Record<Exclude<Kind, 'step_up'>, number> = { split: 0.3, reverse: 0.35, forward: 0.4 }
+const REAR_SHARE: Record<Exclude<Kind, 'step_up'>, number> = { split: 0.3, split_floor: 0.35, reverse: 0.35, forward: 0.4 }
 const SPLIT_TOP_SHARE = 0.12
+/** floor split squat: share on the back foot at the top (the hips start between the feet and move over the front foot
+ * as they drop), the rear heel lift at the top (deg; the bottom's is REAR_PITCH.bottom) and the least rear knee bend
+ * standing tall in the split stance */
+const FLOOR_SPLIT = { topShare: 0.5, pitch: 30, rearKnee: 6 }
+/** bar on the upper back (the squat's high-bar site), 60 kg, grip as the back squat's */
+const BAR = { plateKg: 20, grip: 2.1, wristBias: 10 }
+/** body regions the bar rests on, where it may sink into the soft tissue a little (as the squat's high bar) */
+const BAR_REST = ['trunk', 'girdle_l', 'girdle_r', 'neck', 'upperarm_l', 'upperarm_r']
+const ARM_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev', 'grip_*.close']
 /** front midfoot to rear ball (split squat: to the rear ankle) as a fraction of stepLength x leg length */
-const STEP_SCALE: Record<Kind, number> = { split: 0.72, reverse: 0.84, forward: 0.84, step_up: 0 }
+const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0 }
 /** floor tolerance for a rear foot on its ball, mm: the rigid forefoot capsule sinks ~63 mm at REAR_PITCH.bottom */
 const REAR_FLOOR_TOL = 65
 /** the same for the step-up's trailing foot on its ball (heel up STEP.roll.off): ~33 mm (lead decision) */
@@ -70,7 +81,7 @@ const SWING_BEND: Record<Stepping, { down: [number, number]; up: [number, number
   forward: { down: [20, 55], up: [15, 50] },
 }
 /** pelvis hinge (tilt with the spine held) at touch-down, deg; the step-up leans over the box foot all the way down */
-const HINGE: Record<Kind, number> = { split: 0, reverse: 10, forward: 0, step_up: 26 }
+const HINGE: Record<Kind, number> = { split: 0, split_floor: 0, reverse: 10, forward: 0, step_up: 26 }
 /** pelvis shift over the standing foot while the other foot is in the air, m */
 const SHIFT = 0.035
 /** dumbbells hang this far outside the shoulder joints, m, and the grip this far below them */
@@ -122,6 +133,11 @@ type Curve = { u0: number; u1: number; p0: number[]; v0: number[]; a0: number[];
 
 type Ctx = {
   kind: Kind
+  load: Load
+  /** bar loads: the bar, its arm DOFs (solved once, constant: the bar rides on the thorax) and the Smith rail line */
+  bar?: ImplementSpec
+  barArms?: [number, number][]
+  railZ?: number
   tempo: Tempo
   setup: Setup
   torso: number
@@ -159,12 +175,24 @@ type Ctx = {
  */
 type State = { depth: number; swing: number; weight: number; up: boolean; u?: number; rear?: number; roll?: number }
 
+function loadOf(p: P): Load | null {
+  if (p.implement === 'dumbbell') return p.hold === 'sides' ? 'db' : null
+  if (p.implement === 'bodyweight') return p.hold === 'sides' ? 'none' : null
+  return p.hold === 'back_high' ? p.implement : null
+}
+
 function kindOf(p: P): Kind | string {
-  if (p.implement !== 'dumbbell') return p.implement
-  if (p.hold !== 'sides') return `hold ${p.hold}`
+  const load = loadOf(p)
+  if (!load) return `${p.implement} hold ${p.hold}`
   if (p.side !== 'right') return 'left working side'
-  if (p.direction === 'in_place') return p.rearFootElevated ? 'split' : 'split squat with the rear foot on the floor'
+  if (p.direction === 'in_place') {
+    if (!p.rearFootElevated) return 'split_floor'
+    return load === 'db' ? 'split' : `${p.implement} split squat with the rear foot elevated`
+  }
   if (p.rearFootElevated) return `${p.direction} with the rear foot elevated`
+  // a free bar on the back steps back; everything else that steps carries dumbbells
+  if (p.direction === 'reverse' && load === 'barbell') return 'reverse'
+  if (load !== 'db') return `${p.implement} ${p.direction}`
   if (p.direction === 'step_up') return 'step_up'
   return p.direction
 }
@@ -181,7 +209,7 @@ const ramp = (x: number, a: number, b: number) => minJerk(clamp((x - a) / (b - a
 function stateAt(ctx: Ctx, u: number): State {
   const ph = phaseAt(u, ctx.tempo)
   const depth = 1 - ph.c
-  if (ctx.kind === 'split') return { depth, swing: 0, weight: 1, up: false }
+  if (ctx.kind === 'split' || ctx.kind === 'split_floor') return { depth, swing: 0, weight: 1, up: false }
   if (ctx.kind === 'step_up') return stepState(ctx, u)
   const [leave, land] = HOME[ctx.kind as Stepping]
   const s = ph.name === 'con' ? upState(ctx, ph.progress, 1 - ramp(ph.progress, ctx.off, land)) : downState(ctx, depth, ramp(depth, leave, ctx.touch))
@@ -280,7 +308,7 @@ function trunk(skel: Skeleton, q: Float64Array, lean: number) {
 }
 
 function hinge(ctx: Ctx, d: number) {
-  if (ctx.kind === 'split') return 0
+  if (ctx.kind === 'split' || ctx.kind === 'split_floor') return 0
   if (ctx.kind === 'step_up') return HINGE.step_up * ramp(d, 0, 1)
   const t = ctx.touch
   const hat = d <= t ? Math.sin((Math.PI * d) / (2 * t)) ** 2 : Math.cos((Math.PI * (d - t)) / (2 * (1 - t))) ** 2
@@ -336,6 +364,13 @@ function feetAt(skel: Skeleton, ctx: Ctx, s: State): Feet {
       const back = lerp(SPLIT_TOP_SHARE, REAR_SHARE.split, s.depth)
       return { r: ctx.front, l: rear, toes: { l: BENCH_FOOT.toes, r: 0 }, poleL: [0, 0, 1], comZ: ctx.frontMid[2] - back * (ctx.frontMid[2] - rear.ankle[2]), shift: 0 }
     }
+    case 'split_floor': {
+      // the rear foot stays on its ball, the heel lifting further as the rear knee drops
+      const ball = ctx.rearBall!
+      const pitch = lerp(FLOOR_SPLIT.pitch, REAR_PITCH.bottom, s.depth)
+      const back = lerp(FLOOR_SPLIT.topShare, REAR_SHARE.split_floor, s.depth)
+      return { r: ctx.front, l: footOnBall(skel, 'l', ball, pitch, TOE_OUT), toes: { l: -Math.min(58, pitch), r: 0 }, comZ: ctx.frontMid[2] - back * (ctx.frontMid[2] - ball[2]), shift: 0 }
+    }
     case 'reverse': {
       const land = ctx.rearBall!
       const pitch = REAR_PITCH.land + (REAR_PITCH.bottom - REAR_PITCH.land) * s.weight
@@ -363,10 +398,40 @@ function feetAt(skel: Skeleton, ctx: Ctx, s: State): Feet {
   }
 }
 
-/** dumbbells as point loads at the grips */
-function loads(skel: Skeleton, q: Float64Array) {
+/** dumbbells as point loads at the grips, a free bar at its site on the back */
+function loads(skel: Skeleton, ctx: Ctx, q: Float64Array) {
   const f = fk(skel, q)
+  if (ctx.load === 'barbell') return [{ mass: ctx.bar!.mass, pos: barAt(skel, f) }]
+  if (ctx.load !== 'db') return []
   return (['l', 'r'] as const).map((s) => ({ mass: DB_KG, pos: sitePos(skel, f, `grip_${s}`) }))
+}
+
+/** bar centre on the upper back (the high-bar site in the thorax frame) */
+const barAt = (skel: Skeleton, f: ReturnType<typeof fk>): V3 => localToWorld(skel, f, 'thorax2', skel.data.sites.back_high.local)
+
+/** hands on a bar riding on the back: solved once standing and mirrored (as the back squat's high bar) */
+function solveBarArms(skel: Skeleton, bar: ImplementSpec): [number, number][] {
+  const q = zeroQ(skel)
+  trunk(skel, q, 3)
+  setPelvis(skel, q, [0, 0.95, 0], 1.35)
+  const f = fk(skel, q)
+  const thorax = f.rot[skel.seg.thorax2]
+  const T = (x: number, y: number, z: number) => qrot(thorax, [x, y, z])
+  const g = siteWorld(bar, { id: bar.id, pos: barAt(skel, f), rot: qid() }, 'l')
+  attachHand(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: T(0, 0.3, 1) }, { pole: T(0.4, -0.7, -0.6), wristBias: BAR.wristBias, planeHint: -90 })
+  return ARM_DOFS.flatMap((k) => {
+    const x = q[skel.dof[k.replace('*', 'l')]]
+    return [[skel.dof[k.replace('*', 'l')], x], [skel.dof[k.replace('*', 'r')], x]] as [number, number][]
+  })
+}
+
+/** the arms for the load: on the bar, or hanging (dumbbells; empty hands relaxed) */
+function setArms(skel: Skeleton, ctx: Ctx, q: Float64Array) {
+  if (ctx.barArms) for (const [i, x] of ctx.barArms) q[i] = x
+  else {
+    hangArms(skel, q)
+    if (ctx.load === 'none') setDofs(skel, q, { 'grip_*.close': 0.3 })
+  }
 }
 
 /** arms hanging straight down from the shoulders, palms in, the dumbbells clear of the legs */
@@ -427,16 +492,19 @@ function solve(skel: Skeleton, ctx: Ctx, s: State, feet: Feet, air?: number[]): 
   const top = ctx.hipSide === undefined ? ctx.hipTop : lerp(ctx.hipSide, ctx.hipTop, clamp((s.rear ?? 0) / STEP.topShare, 0, 1))
   const y = lerp(top, ctx.hipBottom, s.depth)
   const tilt = trunk(skel, q, 3 + (ctx.torso - 3) * s.depth) + hinge(ctx, s.depth)
-  roughArms(skel, q)
+  if (ctx.barArms) for (const [i, x] of ctx.barArms) q[i] = x
+  else roughArms(skel, q)
   const place = (x: number, z: number) => {
     setPelvis(skel, q, [x, y, z], tilt)
     placeLegs(skel, q, feet, air)
   }
-  const com = () => centerOfMass(skel, fk(skel, q), loads(skel, q))
+  const com = () => centerOfMass(skel, fk(skel, q), loads(skel, ctx, q))
+  // the Smith rails carry the bar on a fixed line, so the hips go where the bar sits on it instead of balancing
+  const measure = () => (ctx.railZ !== undefined ? barAt(skel, fk(skel, q))[2] - ctx.railZ : com()[2] - feet.comZ)
   const at = (x: number) => {
     const r = root1d((z) => {
       place(x, z)
-      return com()[2] - feet.comZ
+      return measure()
     }, feet.comZ - 0.4, feet.comZ + 0.4, { tol: 1e-7 })
     place(x, r.x)
     return r.x
@@ -468,7 +536,7 @@ function solve(skel: Skeleton, ctx: Ctx, s: State, feet: Feet, air?: number[]): 
     }
   }
   place(x, z)
-  hangArms(skel, q)
+  setArms(skel, ctx, q)
   gaze(skel, q)
   return q
 }
@@ -500,9 +568,15 @@ function context(p: P, skel: Skeleton): Ctx {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   const leg = segPos(skel, fk(skel, zeroQ(skel)), 'femur_r')[1]
   const D = STEP_SCALE[kind] * p.stepLength * leg
-  const implements_: ImplementSpec[] = [dumbbell({ id: 'db_l', mass: DB_KG }), dumbbell({ id: 'db_r', mass: DB_KG })]
-  const contacts: Contact[] = [...dumbbellContacts()]
-  const base = { kind, tempo, torso: p.torsoAngle, setup: undefined as unknown as Setup, hipTop: 0, hipBottom: 0, touch: 0.6, off: 0.3 }
+  const load = loadOf(p)!
+  const implements_: ImplementSpec[] = load === 'db' ? [dumbbell({ id: 'db_l', mass: DB_KG }), dumbbell({ id: 'db_r', mass: DB_KG })] : []
+  const contacts: Contact[] = load === 'db' ? [...dumbbellContacts()] : []
+  const bar = load === 'barbell' || load === 'smith' ? barbell({ gripWidth: BAR.grip * skel.data.shoulderWidth, plateKg: BAR.plateKg }) : undefined
+  if (bar) {
+    implements_.push(bar)
+    contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: bar.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: bar.id, grip: 'r' } })
+  }
+  const base = { kind, load, bar, barArms: bar && solveBarArms(skel, bar), tempo, torso: p.torsoAngle, setup: undefined as unknown as Setup, hipTop: 0, hipBottom: 0, touch: 0.6, off: 0.3 }
   let ctx: Ctx
   if (kind === 'split') {
     // rear foot laces-down on the bench, toes back and lying on the pad; the pad's near end just past the forefoot
@@ -517,6 +591,13 @@ function context(p: P, skel: Skeleton): Ctx {
     implements_.push(bench)
     contacts.push(...planted(skel, front))
     ctx = { ...base, front, frontMid: midOf(skel, front), rearHome: rear, rearFixed: rear, bench: { spec: bench, pose } }
+  } else if (kind === 'split_floor') {
+    // long split stance on the floor: front foot flat, the rear foot on its ball behind
+    const front = plantFoot(skel, 'r', [-HALF_WIDTH, 0, 0.3], TOE_OUT)
+    const frontMid = midOf(skel, front)
+    const rearBall: V3 = [HALF_WIDTH, 0, frontMid[2] - D]
+    contacts.push(...planted(skel, front), { site: 'ball_l', kind: 'planted', target: { world: rearBall } })
+    ctx = { ...base, front, frontMid, rearHome: footOnBall(skel, 'l', rearBall, FLOOR_SPLIT.pitch, TOE_OUT), rearBall }
   } else if (kind === 'reverse') {
     const front = plantFoot(skel, 'r', [-HALF_WIDTH, 0, 0.3], TOE_OUT)
     const frontMid = midOf(skel, front)
@@ -548,7 +629,8 @@ function context(p: P, skel: Skeleton): Ctx {
   ctx.setup = { implements: implements_, contacts, tempo, symmetric: false }
   // the rear foot on its ball: the toes lie flat (toe joint) but the collision model's forefoot capsule belongs to the
   // rigid foot and dips under the floor as the heel rises (lead decision, see REAR_FLOOR_TOL)
-  if (kind === 'reverse' || kind === 'forward') ctx.setup.tolerances = { floor: REAR_FLOOR_TOL }
+  if (kind === 'reverse' || kind === 'forward' || kind === 'split_floor') ctx.setup.tolerances = { floor: REAR_FLOOR_TOL }
+  if (bar) ctx.setup.rests = [{ implement: bar.id, regions: BAR_REST, tol: 20 }]
   if (kind === 'step_up') ctx.setup.tolerances = { floor: STEP_FLOOR_TOL }
   if (kind === 'split') {
     ctx.setup.limits = { 'ankle_l.df': BENCH_ANKLE }
@@ -563,17 +645,39 @@ function context(p: P, skel: Skeleton): Ctx {
       set(y)
       return f(solve(skel, ctx, s, feetAt(skel, ctx, s)))
     }, lo, hi, { tol: 1e-5, scan: 16 }).x
-  const top: State = { depth: 0, swing: 0, weight: kind === 'split' ? 1 : 0, up: false, rear: STEP.topShare }
+  const top: State = { depth: 0, swing: 0, weight: kind === 'split' || kind === 'split_floor' ? 1 : 0, up: false, rear: STEP.topShare }
   const bottom: State = { depth: 1, swing: 1, weight: 1, up: false, rear: STEP.bottomShare }
-  ctx.hipTop = hipWhere(top, (q) => kneeOf(skel, q, 'r') - TOP_KNEE, 0.6, 1.6, (y) => (ctx.hipTop = y))
-  // step-up: standing tall too with the weight over the box foot, the pelvis shifted over it
-  if (kind === 'step_up') ctx.hipSide = hipWhere({ ...top, rear: 0 }, (q) => kneeOf(skel, q, 'r') - TOP_KNEE, 0.6, 1.6, (y) => (ctx.hipSide = y))
-  const atBottom = (f: (q: Float64Array) => number, lo: number) => hipWhere(bottom, f, lo, ctx.hipTop, (y) => (ctx.hipBottom = y))
-  ctx.hipBottom = kind === 'step_up'
-    ? atBottom((q) => kneeOf(skel, q, 'l') - STEP_TRAIL_KNEE, 0.6)
-    : Math.max(atBottom((q) => kneeOf(skel, q, 'r') - FRONT_KNEE_MAX[kind], 0.3), atBottom((q) => rearKneeHeight(skel, q) - REAR_KNEE_CLEAR, 0.3))
+  const heights = () => {
+    ctx.hipTop = hipWhere(top, (q) => kneeOf(skel, q, 'r') - TOP_KNEE, 0.6, 1.6, (y) => (ctx.hipTop = y))
+    // floor split squat: standing tall is as far as the rear leg reaches with its ball planted
+    if (kind === 'split_floor') {
+      const tall = ctx.hipTop
+      ctx.hipTop = Math.min(tall, hipWhere(top, (q) => kneeOf(skel, q, 'l') - FLOOR_SPLIT.rearKnee, tall - 0.3, tall, (y) => (ctx.hipTop = y)))
+    }
+    // step-up: standing tall too with the weight over the box foot, the pelvis shifted over it
+    if (kind === 'step_up') ctx.hipSide = hipWhere({ ...top, rear: 0 }, (q) => kneeOf(skel, q, 'r') - TOP_KNEE, 0.6, 1.6, (y) => (ctx.hipSide = y))
+    const atBottom = (f: (q: Float64Array) => number, lo: number) => hipWhere(bottom, f, lo, ctx.hipTop, (y) => (ctx.hipBottom = y))
+    ctx.hipBottom = kind === 'step_up'
+      ? atBottom((q) => kneeOf(skel, q, 'l') - STEP_TRAIL_KNEE, 0.6)
+      : Math.max(atBottom((q) => kneeOf(skel, q, 'r') - FRONT_KNEE_MAX[kind], 0.3), atBottom((q) => rearKneeHeight(skel, q) - REAR_KNEE_CLEAR, 0.3))
+  }
+  heights()
+  if (load === 'smith') {
+    // the rail line through the bar where both legs are long standing tall (front knee TOP_KNEE, rear knee
+    // FLOOR_SPLIT.rearKnee), searched round where the balanced body puts the bar; the rails then hold the bar on that
+    // line, so the hips drop straight down between the feet, and the hip heights are found again
+    const tall: State = { depth: 0, swing: 0, weight: 1, up: false }
+    const z0 = barAt(skel, fk(skel, solve(skel, ctx, tall, feetAt(skel, ctx, tall))))[2]
+    const reach = (sd: 'l' | 'r', knee: number) => hipWhere(top, (q) => kneeOf(skel, q, sd) - knee, 0.6, 1.2, (y) => (ctx.hipTop = y))
+    ctx.railZ = root1d((z) => {
+      ctx.railZ = z
+      return reach('r', TOP_KNEE) - reach('l', FLOOR_SPLIT.rearKnee)
+    }, z0 - 0.12, z0 + 0.04, { tol: 1e-4, scan: 8 }).x
+    implements_.push(smithFrame(ctx.railZ))
+    heights()
+  }
   if (kind === 'step_up') stepSwings(skel, ctx)
-  else if (kind !== 'split') swings(skel, ctx, kind)
+  else if (kind !== 'split' && kind !== 'split_floor') swings(skel, ctx, kind)
   return ctx
 }
 
@@ -625,12 +729,20 @@ function swings(skel: Skeleton, ctx: Ctx, kind: Stepping) {
   ctx.up = curve(at.off, 1, at.home, 0, SWING_BEND[kind].up)
 }
 
+/** Smith rails and top crossbar on the rail line (the composer draws the machine round the bar) */
+function smithFrame(z: number): ImplementSpec {
+  const cyl = (a: V3, b: V3, r: number) => ({ shape: 'cylinder' as const, a, b, r })
+  return { id: 'smith', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [cyl([0.6, 0, z], [0.6, 2.25, z], 0.025), cyl([-0.6, 0, z], [-0.6, 2.25, z], 0.025), cyl([-0.6, 2.25, z], [0.6, 2.25, z], 0.03)], sites: {} }
+}
+
 const contextOf = memo(context)
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = contextOf(p, skel)
   const q = poseFor(skel, ctx, stateAt(ctx, u))
-  const implements_: ImplementPose[] = [...dumbbellPoses(skel, q)]
+  const implements_: ImplementPose[] = ctx.load === 'db' ? [...dumbbellPoses(skel, q)] : []
+  if (ctx.bar) implements_.push({ id: ctx.bar.id, pos: barAt(skel, fk(skel, q)), rot: qid() })
+  if (ctx.railZ !== undefined) implements_.push({ id: 'smith', pos: [0, 0, 0], rot: qid() })
   if (ctx.bench) implements_.push(ctx.bench.pose)
   if (ctx.box) implements_.push(ctx.box.pose)
   return { q, implements: implements_, contacts: ctx.setup.contacts }

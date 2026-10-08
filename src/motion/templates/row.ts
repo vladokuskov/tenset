@@ -11,7 +11,7 @@ import { memo, type Template } from './types.ts'
 
 // Row family (F4). Every variant reads as scapular retraction first, then the elbow drive, with a neutral spine and
 // no torso yank (row/common.ts). Variants:
-// - bent: standing barbell row, trunk hinged to torsoAngle (row/bent.ts)
+// - bent: standing barbell or Smith row, trunk hinged to torsoAngle (row/bent.ts)
 // - seated: cable row on the row station, V-bar or wide bar (row/seated.ts)
 // - cable: standing face pull with a rope, single-arm row with a D-handle (row/cable.ts)
 // - inverted: body under a racked bar, heels down, pivoting about the ankles (row/inverted.ts)
@@ -25,7 +25,7 @@ function unsupported(p: P): string {
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
-  if (p.implement === 'barbell' && p.posture === 'standing' && p.support === 'none') return bentContext(p, skel, tempo)
+  if ((p.implement === 'barbell' || p.implement === 'smith') && p.posture === 'standing' && p.support === 'none') return bentContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && ((p.support === 'bench' && p.posture === 'standing') || (p.support === 'chest_pad' && p.posture === 'lying_prone'))) return benchContext(p, skel, tempo)
   if (p.implement === 'barbell' && p.posture === 'lying_supine') return invertedContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'standing' && (p.attachment === 'rope' || p.attachment === 'single_handle')) return cableContext(p, skel, tempo)

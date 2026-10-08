@@ -34,9 +34,13 @@
     429
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "leg-extension",
+    "params": {
+      "implement": "machine",
+      "machine": "leg_extension",
+      "hipAngle": 90
+    },
     "mapView": "F"
   },
   "cues": [
@@ -54,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Working right knee 90 to 4, idle left knee held at 90 behind the pad, hips at 90, hands closed on the handles. Unilateral reads clearly in the hero."
   }
 }

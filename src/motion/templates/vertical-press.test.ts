@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
-import { centerOfMass, fk, sitePos } from '../fk.ts'
+import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import type { Skeleton } from '../skeleton.ts'
@@ -23,7 +23,7 @@ const TOP = 0, BOTTOM = 0.635
 
 describe('vertical-press template', () => {
   it('covers every record of the template', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([201, 202, 208, 212])
+    expect(variants.map((v) => v.id).sort()).toEqual([201, 202, 208, 212, 217, 221])
   })
 
   it.each([...baked.keys()])('%s: elbow and arm elevation inside the research ranges at both ends', (slug) => {
@@ -105,8 +105,49 @@ describe('vertical-press template', () => {
     expect(y(TOP) - y(BOTTOM)).toBeGreaterThan(0.3)
   })
 
+  it('standing dumbbells (217): ear level to overhead, hands closing in, body and dumbbells balanced over the midfoot', () => {
+    const b = get(217)
+    const ks = ['db_l', 'db_r'].map((id) => b.implements.findIndex((s) => s.id === id))
+    const x = (u: number) => frameImplements(b, at(b, u))[ks[0]].pos[0]
+    expect(x(BOTTOM)).toBeGreaterThan(x(TOP) + 0.15)
+    const f0 = fk(skel, frameQ(b, 0))
+    const mid = (sitePos(skel, f0, 'midfoot_l')[2] + sitePos(skel, f0, 'midfoot_r')[2]) / 2
+    for (let i = 0; i < b.frames; i++) {
+      const im = frameImplements(b, i)
+      const load = ks.map((k) => ({ mass: b.implements[k].mass, pos: im[k].pos }))
+      expect(Math.abs(centerOfMass(skel, fk(skel, frameQ(b, i)), load)[2] - mid)).toBeLessThan(0.025)
+    }
+    // ribs down: the trunk stays within a few degrees of upright, no lay-back
+    const lean = (u: number) => dof(b, u, 'pelvis.tilt') + dof(b, u, 'lumbar.flex') + dof(b, u, 'thorax.flex')
+    for (const u of [TOP, BOTTOM]) expect(Math.abs(lean(u))).toBeLessThan(6)
+    expect(b.balance).toBeDefined()
+  })
+
+  it('seated barbell (221): body still on the bench, bar on a vertical line from below the chin to over the shoulders, the head clearing it', () => {
+    const b = get(221)
+    const k = b.implements.findIndex((s) => s.kind === 'barbell')
+    const bar = (u: number) => frameImplements(b, at(b, u))[k].pos
+    const fTop = fk(skel, frameQ(b, at(b, TOP)))
+    expect(Math.abs(bar(TOP)[2] - segPos(skel, fTop, 'humerus_l')[2])).toBeLessThan(0.02)
+    expect(bar(BOTTOM)[2] - bar(TOP)[2]).toBeGreaterThan(0.03)
+    expect(bar(BOTTOM)[1]).toBeLessThan(sitePos(skel, fk(skel, frameQ(b, at(b, BOTTOM))), 'chin')[1])
+    const base = frameQ(b, 0)
+    let head = Infinity
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      for (const n of ['pelvis.tx', 'pelvis.ty', 'pelvis.tz', 'pelvis.tilt', 'lumbar.flex', 'thorax.flex']) expect(Math.abs(q[skel.dof[n]] - base[skel.dof[n]]), n).toBeLessThan(1e-6)
+      const p = frameImplements(b, i)[k]
+      expect(Math.abs(p.pos[0])).toBeLessThan(1e-6)
+      const caps = bodyCapsules(skel, fk(skel, q)).filter((c) => c.region === 'head' || c.region === 'neck')
+      for (const c of caps) head = Math.min(head, capsuleSolidClearance(c, placeParts(b.implements[k], p)[0]))
+    }
+    expect(head).toBeGreaterThan(0.015)
+    expect(dof(b, BOTTOM, 'neck.flex')).toBeLessThan(-10)
+    expect(dof(b, TOP, 'neck.flex')).toBeGreaterThan(5)
+  })
+
   it('unsupported variants throw', () => {
-    expect(() => bake(t, parse({ implement: 'dumbbell', posture: 'standing' }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => bake(t, parse({ implement: 'smith', posture: 'seated' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ implement: 'barbell', posture: 'standing' }, 'alternating'), skel)).toThrow(/variant not implemented yet/)
   })
 })

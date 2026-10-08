@@ -40,9 +40,14 @@
     115
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "incline-press",
+    "params": {
+      "implement": "dumbbell",
+      "benchAngle": 15,
+      "grip": "pronated",
+      "elbowFlare": 40
+    },
     "mapView": "F"
   },
   "cues": [
@@ -60,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. needs work: The touch contradicts the cue 'sides of your mid chest'. At the bottom the handles sit at thorax-local y=+0.056: 6.4 cm above the sternum site and about 60% of the way to the shoulder joint, almost level with the shoulders along the trunk axis. Flat records touch at -0.059, so 15 deg of incline moves the touch 11.5 cm, almost as far as 102 at 30 deg (+0.091). Forearm lean is 24-26 deg throughout (102: 20-23), against 'forearms vertical the whole way'. Trunk incline (~18 deg) and flare 40 are correct. | ok: press-bench.ts: incline touch height now scales with bench angle, touchY = lerp(TOUCH_Y.flat, TOUCH_Y.incline, min(1, angle/30)). Every approved incline record is at 30 deg, so nothing else changes (102 still measures +0.091, and bake-motion --check reports all records fresh). 123's handles now touch at thorax-local y=+0.011 (was +0.056), matching 'sides of your mid chest'. Forearm lean is 15 deg at the touch and 20 max (was 24-26, and 102 measures 20-23). Flare is still 40 and trunk incline unchanged. Added a 123 mid-chest touch test (|y| < 0.03) and put 123 in the 102 'forearms at touch lean' test. QA passes, the bake is fresh, and the sheet and figure-123.png look right. The cue and uk translation are unchanged and now match."
   }
 }

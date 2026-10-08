@@ -39,8 +39,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lunge",
+    "params": {
+      "implement": "smith",
+      "hold": "back_high",
+      "direction": "in_place",
+      "stepLength": 1.36
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Changed: params stepLength 1.0 -> 1.36. lunge.ts now places the Smith rail line with a root-find, at the z where both legs are long when standing tall (front knee TOP_KNEE, rear knee FLOOR_SPLIT.rearKnee). Before, it used the balanced-body bar position plus a constant. The camera moved from az -85 to -65. Measured: top front knee 20 -> 3 and rear knee 6. Bottom (f67) front knee 85, rear knee 104, hip z -0.258 vs rear knee z -0.198, so the rear knee is now 6 cm ahead of the hips (was 15 cm). Front ankle to rear knee is 42 cm (was 17). Bar path stays vertical. The rear hip reaches -30.1 deg at the top, which is at the limit; stepLength 1.4 would bring the knee to 5 cm but pushes the hip to -31 and fails the gate. QA passes, re-baked, --check fresh, lunge tests pass (test updated: top front knee <10, bottom front knee >80 for 423, rear knee within 7 cm of under the hips). 424 and 430 still pass. Remaining issues: (1) Front knee at the bottom is 85, a little short of 90. In the long stance the rear knee reaches the floor first. (2) At the top of the az -65 hero, the near plate still covers the right shoulder and upper arm, but the head and trunk now read. The near upright still crosses the rear thigh in the bottom frames. (3) The front foot is now about 0.5 m ahead of the bar line, so the cue 'Set your front foot slightly ahead of the bar' undersells it. A content-owner cue tweak (EN+UK) is suggested; I did not edit cues."
   }
 }

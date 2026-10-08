@@ -37,9 +37,13 @@
     110
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "fly",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "lying_supine",
+      "benchAngle": 30
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Thorax-frame DOFs are identical to the approved 112 (plane 94 to -20, elevation 72 to 70, elbow 23), so the arc is the flat fly carried onto the incline. At the top the arms are perpendicular to the torso over the upper chest. At the stretch the hand is level with the shoulder in the torso frame (world z -0.35 vs shoulder -0.39), which is plausible. Feet are planted and the head rests on the pad."
   }
 }

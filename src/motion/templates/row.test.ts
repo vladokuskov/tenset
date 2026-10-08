@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
+import { handFrame } from '../constraints.ts'
 import { fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { add, angleBetween, dist, norm, qrot, RAD, scale, sub } from '../math.ts'
@@ -47,7 +48,7 @@ function range(b: Baked, fn: (i: number) => number) {
 
 describe('row template', () => {
   it('covers every row record', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([206, 304, 305, 306, 307, 312, 313, 315])
+    expect(variants.map((v) => v.id).sort()).toEqual([206, 304, 305, 306, 307, 312, 313, 315, 320, 324])
   })
 
   it.each([...baked.keys()])('%s: finite frames, hands on the load, planted feet still, loop closes', (slug) => {
@@ -102,7 +103,7 @@ describe('row template', () => {
   })
 
   it('bent-over and one-arm rows keep the trunk at torsoAngle and the hips still (no yank)', () => {
-    for (const id of [304, 307]) {
+    for (const id of [304, 307, 320, 324]) {
       const b = get(id)
       const torso = b.params.torsoAngle as number
       expect(Math.abs(trunkAngle(b, at(b, BOTTOM)) - torso)).toBeLessThan(6)
@@ -112,8 +113,8 @@ describe('row template', () => {
     }
   })
 
-  it('barbell row: the bar finishes on the lower stomach, as cue 3 says (not the ribs)', () => {
-    const b = get(304)
+  it.each([304, 320, 324])('%s: the bar finishes on the lower stomach, as the cues say (not the ribs)', (id) => {
+    const b = get(id)
     const i = at(b, TOP)
     const f = fk(skel, frameQ(b, i))
     const rest = fk(skel, zeroQ(skel))
@@ -124,7 +125,8 @@ describe('row template', () => {
     // above the hip crease, below the costal margin (thorax1 origin)
     expect(y).toBeGreaterThan(sitePos(skel, rest, 'hip_crease')[1] + 0.1)
     expect(y).toBeLessThan(segPos(skel, rest, 'thorax1')[1])
-    const record = JSON.parse(readFileSync(new URL('../../../data/exercises/304-barbell-row.json', import.meta.url), 'utf8'))
+    const file = variants.find((v) => v.id === id)!.slug
+    const record = JSON.parse(readFileSync(new URL(`../../../data/exercises/${file}.json`, import.meta.url), 'utf8'))
     expect(record.cues.some((c: string) => /stomach/.test(c))).toBe(true)
     expect(record.cues.some((c: string) => /ribs/.test(c))).toBe(false)
   })
@@ -176,6 +178,30 @@ describe('row template', () => {
     const f = fk(skel, frameQ(b, at(b, TOP)))
     const bar = frameImplements(b, at(b, TOP))[0].pos
     expect(bar[1] - segPos(skel, f, 'thorax2')[1]).toBeLessThan(0.25)
+  })
+
+  it('underhand row: palms forward, elbows tucked behind the trunk at the finish', () => {
+    const b = get(320)
+    const f = fk(skel, frameQ(b, at(b, BOTTOM)))
+    // supinated: the palm faces the toes (+Z) with the bar hanging
+    expect(handFrame(skel, f, 'l').palm[2]).toBeGreaterThan(0.7)
+    // elbows tight: less flare than the overhand row, the humerus behind the trunk
+    expect(flare(b, at(b, TOP))).toBeLessThan(flare(get(304), at(get(304), TOP)))
+    expect(dof(b, TOP, 'shoulder_*.plane')).toBeLessThan(-90)
+  })
+
+  it('Smith row: the bar runs on one vertical line, hanging at the bottom from straight arms', () => {
+    const b = get(324)
+    const z = Array.from({ length: b.frames }, (_, i) => frameImplements(b, i)[0].pos[2])
+    expect(Math.max(...z) - Math.min(...z)).toBeLessThan(1e-6)
+    const rails = b.implements.find((s) => s.id === 'smith')!
+    const rail = rails.parts[0] as Extract<(typeof rails.parts)[number], { shape: 'cylinder' }>
+    expect(Math.abs(rail.a[2] - z[0])).toBeLessThan(1e-6)
+    const y = Array.from({ length: b.frames }, (_, i) => frameImplements(b, i)[0].pos[1])
+    // a full pull: about 0.4 m of travel, the bar below the knees at the bottom (cue: "just below knee height")
+    expect(Math.max(...y) - Math.min(...y)).toBeGreaterThan(0.3)
+    const knee = segPos(skel, fk(skel, frameQ(b, at(b, BOTTOM))), 'tibia_l')
+    expect(Math.min(...y)).toBeLessThan(knee[1] + 0.12)
   })
 
   it('unsupported variants throw', () => {

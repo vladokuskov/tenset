@@ -3,7 +3,7 @@ import { bodyCapsules, restAgainst } from '../collide.ts'
 import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { cableHandle, pullupBar, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { add, DEG, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
-import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -31,6 +31,23 @@ const LEAN: Record<'bar' | 'v_bar', [number, number]> = { bar: [6, 16], v_bar: [
 const VBAR_ELBOW_OUT = 0.25
 /** V-bar finish relative to the sternum, m: handles low and in front so the forearms clear the ribs */
 const VBAR_FINISH: V3 = [0, -0.05, 0.18]
+/** underhand pulldown finish: how far out the elbows point */
+const UNDER_ELBOW_OUT = 0.35
+/** underhand finish relative to the front rack site, m: lower and further out, palms up in front of the chest */
+const UNDER_FINISH: V3 = [0, -0.08, 0.2]
+const UNDER_PALM_UP = 0.8
+/** V-bar attachments wider than this (gripWidth) are the wide parallel-handle bar; the close V-bar ignores gripWidth */
+const WIDE_PARALLEL = 1
+/** single-arm pulldown: hand x at the start and finish as a share of the working shoulder's x */
+const SINGLE_X: [number, number] = [0.35, 0.9]
+const SINGLE_DOWN = 0.8
+const SINGLE_OUT = 0.3
+/** single-arm finish offset from the bar finish, m: lower, so the elbow ends by the ribs */
+const SINGLE_FINISH: V3 = [0, -0.04, 0.04]
+/** single-arm pulldown resting arm: palm flat on the thigh pad roller, the hand's lowest capsule this far into it (m) */
+const REST_SINK = 0.004
+/** underhand: the bar runs straight across the palm */
+const UNDER_TILT = 15 * DEG
 /** arm elevation at the hang and at the top, for the scapular upward rotation the lead curve moves between */
 const HANG_ELEV = 165
 const TOP_ELEV = 45
@@ -45,6 +62,10 @@ type Seated = {
   bottom: V3
   pulley: V3
   vbar: boolean
+  /** single-arm pulldown: the working side (one hand on a single handle, the other resting on the thigh pad) */
+  single?: 'l' | 'r'
+  /** single-arm pulldown: the resting hand's grip-site target on the thigh pad */
+  rest?: V3
 }
 type Ctx = { tempo: Tempo; setup: Setup; v: Hang | Seated }
 
@@ -76,6 +97,10 @@ function gripContacts(id: string): Contact[] {
 function elbowPole(p: P, side: 'l' | 'r', seated: boolean, c: number): V3 {
   if (!seated) return pole(p, side)
   if (p.attachment === 'v_bar') return add(scale(pole(p, side), 1 - c), scale([side === 'l' ? VBAR_ELBOW_OUT : -VBAR_ELBOW_OUT, -1, 0.1], c))
+  // single handle: the elbow travels down by the ribs
+  if (p.attachment === 'single_handle') return [side === 'l' ? SINGLE_OUT : -SINGLE_OUT, -SINGLE_DOWN, 0.8]
+  // underhand bar: elbows down and a little forward and out, so they pass in front of the ribs, not into them
+  if (p.grip === 'supinated') return [side === 'l' ? UNDER_ELBOW_OUT : -UNDER_ELBOW_OUT, -1, 0.5]
   return add(pole(p, side), [0, -0.8, 0])
 }
 
@@ -105,7 +130,9 @@ function arms(skel: Skeleton, q: Float64Array, p: P, spec: ImplementSpec, pose: 
   const mirror = p.laterality === 'bilateral'
   for (const s of mirror ? (['l'] as const) : (['l', 'r'] as const)) {
     const g = siteWorld(spec, pose, s)
-    attachHand(skel, q, s, { pos: g.pos, axis: g.axis!, palm: palm(p, s) }, { pole: elbowPole(p, s, seated, c), planeHint: 20, uprot })
+    // underhand pulldown: the palms turn up as the bar nears the chest (the forearms run out of supination otherwise)
+    const pv = seated && p.grip === 'supinated' ? norm(add(palm(p, s), [0, UNDER_PALM_UP * c, 0])) : palm(p, s)
+    attachHand(skel, q, s, { pos: g.pos, axis: g.axis!, palm: pv }, { pole: elbowPole(p, s, seated, c), planeHint: 20, uprot })
   }
   if (mirror) for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
 }
@@ -207,16 +234,25 @@ function sampleHang(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Hang): Pose {
 // ---------- seated pulldown ----------
 
 function handleSpec(p: P, skel: Skeleton): { spec: ImplementSpec; vbar: boolean } {
+  if (p.attachment === 'single_handle') return { spec: cableHandle({ id: 'handle', attachment: 'single_handle' }), vbar: false }
+  if (p.attachment === 'v_bar' && p.gripWidth > WIDE_PARALLEL) {
+    // wide bar with parallel handles: drawn like the V-bar (stem, cross bar, handles front to back), moved like a bar
+    const g = (p.gripWidth * skel.data.shoulderWidth) / 2
+    const base = cableHandle({ id: 'handle', attachment: 'v_bar' })
+    const parts = [cyl([0, 0, 0], [0, -0.1, 0], 0.012), cyl([g, -0.1, -0.06], [g, -0.1, 0.06], 0.015), cyl([-g, -0.1, -0.06], [-g, -0.1, 0.06], 0.015)]
+    return { spec: { ...base, parts, sites: { l: { pos: [g, -0.1, 0], axis: [0, 0, 1] }, r: { pos: [-g, -0.1, 0], axis: [0, 0, 1] } } }, vbar: false }
+  }
   if (p.attachment === 'v_bar') return { spec: cableHandle({ id: 'handle', attachment: 'v_bar' }), vbar: true }
   const base = cableHandle({ id: 'handle', attachment: p.attachment ?? 'long_bar' })
   const g = (p.gripWidth * skel.data.shoulderWidth) / 2
   const w = Math.max(0.6, g + 0.12)
+  const tilt = p.grip === 'supinated' ? UNDER_TILT : TILT
   return {
     spec: {
       ...base,
       parts: [cyl([0, 0, 0], [0, -0.05, 0], 0.01), cyl([-w, -0.05, 0], [w, -0.05, 0], 0.014)],
       // a wide grip holds the bar slightly across the palm (little-finger side low), keeping wrist deviation in range
-      sites: { l: { pos: [g, -0.05, 0], axis: [Math.cos(TILT), Math.sin(TILT), 0] }, r: { pos: [-g, -0.05, 0], axis: [Math.cos(TILT), -Math.sin(TILT), 0] } },
+      sites: { l: { pos: [g, -0.05, 0], axis: [Math.cos(tilt), Math.sin(tilt), 0] }, r: { pos: [-g, -0.05, 0], axis: [Math.cos(tilt), -Math.sin(tilt), 0] } },
     },
     vbar: false,
   }
@@ -241,6 +277,27 @@ function seatedBody(skel: Skeleton, q: Float64Array, c: number, v: Pick<Seated, 
   solveLegs(skel, q, v.feet)
 }
 
+/** single handle with its grip on `center`, cable towards the pulley; a neutral grip turns the handle front to back */
+function singlePose(spec: ImplementSpec, center: V3, pulley: V3, neutral: boolean): ImplementPose {
+  const rot = qfromBasis(neutral ? [0, 0, 1] : [1, 0, 0], norm(sub(pulley, center)))
+  return { id: spec.id, pos: sub(center, qrot(rot, spec.sites.c.pos)), rot }
+}
+
+/** single-arm pulldown resting hand: palm down on the thigh pad roller, fingers forward, elbow soft and out */
+function restHand(skel: Skeleton, q: Float64Array, free: 'l' | 'r', pos: V3) {
+  setDofs(skel, q, { [`grip_${free}.close`]: 0.15 })
+  attachHand(skel, q, free, { pos, axis: [1, 0, 0], palm: [0, -1, 0] }, { pole: [free === 'l' ? 1 : -1, -0.2, -0.3], planeHint: 30 })
+}
+
+/** single-arm pulldown: the working hand onto the handle, the other hand resting on the thigh pad */
+function singleArms(skel: Skeleton, q: Float64Array, p: P, work: 'l' | 'r', spec: ImplementSpec, pose: ImplementPose, c: number, uprot: number, rest?: V3) {
+  const g = siteWorld(spec, pose, 'c')
+  attachHand(skel, q, work, { pos: g.pos, axis: g.axis!, palm: palm(p, work) }, { pole: elbowPole(p, work, true, c), planeHint: 20, uprot })
+  const free = work === 'l' ? 'r' : 'l'
+  setScapula(skel, q, free)
+  if (rest) restHand(skel, q, free, rest)
+}
+
 /** implement origin that puts the midpoint of the two grips on `center`, cable towards the pulley */
 function handlePose(spec: ImplementSpec, center: V3, pulley: V3): ImplementPose {
   const rot = qfromBasis([1, 0, 0], norm(sub(pulley, center)))
@@ -255,19 +312,22 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const half = femur.offset[0] + 0.05
   const feetZ = SEAT_HIP[2] + femur.length + 0.08 + mid[2]
   const feet = [plantFoot(skel, 'l', [half, 0, feetZ], 10), plantFoot(skel, 'r', [-half, 0, feetZ], 10)]
+  const single = spec.sites.c ? (p.side === 'left' ? 'l' : 'r') : undefined
   const base = { feet, vbar }
   const q0 = zeroQ(skel)
   seatedBody(skel, q0, 0, base)
   const f0 = fk(skel, q0)
   const gh = scale(add(segPos(skel, f0, 'humerus_l'), segPos(skel, f0, 'humerus_r')), 0.5)
   // start: arms up with soft elbows, the grips just in front of the shoulders
-  const topAt = (y: number): V3 => [0, y, gh[2] + 0.13]
+  const wx = single ? segPos(skel, f0, `humerus_${single}`)[0] : 0
+  const topAt = (y: number): V3 => [wx * SINGLE_X[0], y, gh[2] + 0.13]
   const pulleyFor = (top: V3): V3 => [0, BAR_HEIGHT, top[2] + 0.04]
   const elbowAt = (y: number) => {
     const q = Float64Array.from(q0)
     const top = topAt(y)
-    arms(skel, q, p, spec, handlePose(spec, top, pulleyFor(top)), true, 0, leadUprot(0, 30))
-    return q[skel.dof['elbow_l.flex']]
+    if (single) singleArms(skel, q, p, single, spec, singlePose(spec, top, pulleyFor(top), p.grip === 'neutral'), 0, leadUprot(0, 30))
+    else arms(skel, q, p, spec, handlePose(spec, top, pulleyFor(top)), true, 0, leadUprot(0, 30))
+    return q[skel.dof[`elbow_${single ?? 'l'}.flex`]]
   }
   const top = topAt(root1d((y) => elbowAt(y) - PULLDOWN_TOP_ELBOW[vbar ? 'v_bar' : 'bar'], gh[1] + 0.3, gh[1] + 0.75, { tol: 1e-6 }).x)
   const pulley = pulleyFor(top)
@@ -275,13 +335,25 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const q1 = zeroQ(skel)
   seatedBody(skel, q1, 1, base)
   const f1 = fk(skel, q1)
-  const bottom = vbar ? add(sitePos(skel, f1, 'sternum'), VBAR_FINISH) : add(sitePos(skel, f1, 'front_rack'), [0, -0.02, 0.08])
+  const bottom0 = vbar ? add(sitePos(skel, f1, 'sternum'), VBAR_FINISH) : add(sitePos(skel, f1, 'front_rack'), p.grip === 'supinated' ? UNDER_FINISH : [0, -0.02, 0.08])
+  const bottom: V3 = single ? add([segPos(skel, f1, `humerus_${single}`)[0] * SINGLE_X[1], bottom0[1], bottom0[2]], SINGLE_FINISH) : bottom0
   // thigh pad just above the knees, seat under the pelvis, column and top arm to the pulley (static, drawn only)
   const knee = localToWorld(skel, f0, 'femur_l', [0, -femur.length + 0.1, 0])
   const caps0 = bodyCapsules(skel, f0)
   const thighs = caps0.filter((c) => c.region.startsWith('thigh_'))
   const seat = restAgainst(caps0.filter((c) => c.region === 'trunk' || /^thigh_[lr]1/.test(c.name)), { shape: 'box', center: [0, SEAT_HIP[1] - 0.13, SEAT_HIP[2] + 0.05], size: [0.4, 0.06, 0.4], pad: true } as Part & { shape: 'box' }, [0, -1, 0])
-  const thighPad = restAgainst(thighs, { ...cyl([-0.3, knee[1] + 0.1, knee[2]], [0.3, knee[1] + 0.1, knee[2]], 0.06), pad: true }, [0, 1, 0])
+  const thighPad = restAgainst(thighs, { ...cyl([-0.3, knee[1] + 0.1, knee[2]], [0.3, knee[1] + 0.1, knee[2]], 0.06), pad: true } as Part & { shape: 'cylinder' }, [0, 1, 0])
+  // single-arm: the resting palm on top of the roller over its own thigh
+  let rest: V3 | undefined
+  if (single) {
+    const free = single === 'l' ? 'r' : 'l'
+    const padTop = thighPad.a[1] + thighPad.r
+    const probe: V3 = [segPos(skel, f0, `femur_${free}`)[0], padTop + 0.05, thighPad.a[2]]
+    const q = Float64Array.from(q0)
+    restHand(skel, q, free, probe)
+    const low = Math.min(...bodyCapsules(skel, fk(skel, q)).filter((k) => k.region === `hand_${free}`).map((k) => Math.min(k.a[1], k.b[1]) - k.r))
+    rest = [probe[0], probe[1] - (low - (padTop - REST_SINK)), probe[2]]
+  }
   const frame: ImplementSpec = {
     id: 'station',
     kind: 'bench',
@@ -297,13 +369,13 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     ],
     sites: {},
   }
-  const contacts: Contact[] = [...gripContacts(spec.id)]
+  const contacts: Contact[] = single ? [{ site: `grip_${single}`, kind: 'grip', target: { implement: spec.id, grip: 'c' } }] : [...gripContacts(spec.id)]
   for (const f of feet) for (const site of ['heel', 'ball']) {
     const name = `${site}_${f.side}`
     contacts.push({ site: name, kind: 'planted', target: { world: add(f.ankle, qrot(f.rot, skel.data.sites[name].local)) } })
   }
   const setup: Setup = { implements: [spec, frame], contacts, tempo, symmetric: p.laterality === 'bilateral' }
-  return { tempo, setup, v: { kind: 'seated', handle: spec, ...base, top, bottom, pulley } }
+  return { tempo, setup, v: { kind: 'seated', handle: spec, ...base, top, bottom, pulley, single, rest } }
 }
 
 function sampleSeated(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Seated): Pose {
@@ -311,7 +383,13 @@ function sampleSeated(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Seated): Pos
   const q = zeroQ(skel)
   seatedBody(skel, q, c, v)
   // the bar bows forward a little so it passes in front of the face
-  const hp = handlePose(v.handle, add(add(scale(v.top, 1 - c), scale(v.bottom, c)), [0, 0, BOW * Math.sin(Math.PI * c)]), v.pulley)
+  const center = add(add(scale(v.top, 1 - c), scale(v.bottom, c)), [0, 0, BOW * Math.sin(Math.PI * c)])
+  if (v.single) {
+    const sp = singlePose(v.handle, center, v.pulley, p.grip === 'neutral')
+    singleArms(skel, q, p, v.single, v.handle, sp, c, leadUprot(c, 30), v.rest)
+    return { q, implements: [sp, { id: 'station', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
+  }
+  const hp = handlePose(v.handle, center, v.pulley)
   arms(skel, q, p, v.handle, hp, true, c, leadUprot(c, 30))
   return { q, implements: [hp, { id: 'station', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
 }

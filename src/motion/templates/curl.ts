@@ -1,13 +1,14 @@
 import { attachHand, handFrame, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
 import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, restAgainst } from '../collide.ts'
 import { centerOfMass, centerOfPressure, fk, segPos, sitePos } from '../fk.ts'
-import { barbell, bench, cableForce, cableHandle, ezBar, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
-import { add, clamp, DEG, dot, len, lerp, norm, qaxis, qconj, qfromBasis, qfromTo, qid, qmul, qrot, RAD, scale, sub, type V3 } from '../math.ts'
+import { barbell, bench, cableForce, cableHandle, comWorld, ezBar, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { add, clamp, cross, DEG, dot, len, lerp, norm, qaxis, qconj, qfromBasis, qfromTo, qid, qmul, qrot, RAD, scale, sub, type V3 } from '../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells, isWorking, sidePhase } from './arms.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, setPelvis, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
+import { footContacts, splitStance, standSplit, type SplitStance } from './isolation.ts'
 import { memo, type Setup, type Template } from './types.ts'
 
 // Elbow flexion ~8 -> 140 deg with the upper arm quiet (a few degrees of forward drift near the top, no shoulder
@@ -55,8 +56,24 @@ const SPIDER_HIP: V3 = [0, 0.9, 0]
 const SPIDER_PAD = 0.36
 /** incline curl: upper arms a little out from the side so the dumbbells pass outside the hips, deg */
 const INCLINE_ABD = 16
+/** wide barbell curl: grips past this get the reference arm abducted by WIDE_ABD, deg */
+const WIDE_GRIP = 1.2
+const WIDE_ABD = 6
 
 type Body = 'stand' | 'incline' | 'spider'
+
+/** wide barbell grip: the reference arm hangs out this far, so the hands reach the bar at the bottom */
+const wideBar = (p: P) => p.implement === 'barbell' && p.gripWidth > WIDE_GRIP
+
+/** close EZ curl grip: below this gripWidth the upper arms sit CLOSE_FLEX further forward at the bottom, deg */
+const CLOSE_EZ = 0.9
+const CLOSE_FLEX = 12
+/** share of CLOSE_FLEX gone by the top (the drift near the top brings the elbows forward anyway) */
+const CLOSE_FADE = 0.3
+/** close EZ curl: the real elbows stop this bent at the bottom, so they stay beside the ribs while the forearms angle in, deg */
+const CLOSE_BOTTOM = 19
+/** close EZ curl: the elbows sit a little in front of the trunk, so the forearms converge on the bar without the upper arms pressing into the ribs */
+const closeEz = (p: P) => p.implement === 'ez_bar' && p.grip !== 'pronated' && p.gripWidth < CLOSE_EZ
 
 type Ctx = {
   tempo: Tempo
@@ -72,6 +89,8 @@ type Ctx = {
   barLean?: number
   measure?: (q: Float64Array) => number
   sway?: Sway
+  /** Bayesian curl: one hand on a single handle, the low pulley behind the lifter */
+  behind?: { work: 'l' | 'r'; pulley: V3; handle: ImplementSpec; split: SplitStance }
 }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
@@ -82,9 +101,12 @@ function bodyOf(p: P): Body {
   return 'stand'
 }
 
+/** Bayesian curl: facing away from a low pulley, one arm drawn behind the body by the cable */
+const isBehind = (p: P) => p.implement === 'cable' && p.attachment === 'single_handle' && p.laterality === 'unilateral' && (p.shoulderFlexion ?? 0) < 0
+
 function unsupported(p: P) {
   if (p.implement !== 'dumbbell' && p.posture !== 'standing') return `${p.implement}/${p.posture}`
-  if (p.implement === 'cable' && p.attachment !== 'straight_bar' && p.attachment !== 'rope') return `cable ${p.attachment ?? 'no attachment'}`
+  if (p.implement === 'cable' && p.attachment !== 'straight_bar' && p.attachment !== 'rope' && !isBehind(p)) return `cable ${p.attachment ?? 'no attachment'}`
   return null
 }
 
@@ -183,12 +205,12 @@ function topElbow(body: Body) {
 /** c drives the elbow; cl (slightly lagged) the upper-arm drift and forearm rotation */
 function dbArm(skel: Skeleton, q: Float64Array, side: 'l' | 'r', c: number, cl: number, p: P, body: Body, bottom = ELBOW[0], lean = 0) {
   const d = skel.dof
-  const abd = body === 'incline' ? INCLINE_ABD : body === 'stand' && p.implement === 'dumbbell' ? DB_ABD : 0
-  const ua = upperArm(skel, q, p, side, cl, abd, lean * (1 - c))
+  const abd = body === 'incline' ? INCLINE_ABD : body === 'stand' && p.implement === 'dumbbell' ? DB_ABD : wideBar(p) ? WIDE_ABD : 0
+  const ua = upperArm(skel, q, p, side, cl, abd, lean * (1 - c) + (body === 'stand' && closeEz(p) ? CLOSE_FLEX * (1 - CLOSE_FADE * c) : 0))
   q[d[`shoulder_${side}.plane`]] = ua.plane
   q[d[`shoulder_${side}.elev`]] = ua.elev
   q[d[`shoulder_${side}.rot`]] = 0
-  q[d[`elbow_${side}.flex`]] = lerp(bottom, topElbow(body), c)
+  q[d[`elbow_${side}.flex`]] = lerp(bottom, isBehind(p) ? BEHIND_TOP : topElbow(body), c)
   q[d[`forearm_${side}.pro`]] = forearm(p, cl)
   q[d[`wrist_${side}.flex`]] = 6 * c
   q[d[`clavicle_${side}.prot`]] = -3
@@ -300,6 +322,76 @@ function standingBase(skel: Skeleton) {
   return q
 }
 
+// ---------- Bayesian curl ----------
+
+/** pulley behind the lifter, roughly in line with the arm at the bottom, so the cable draws the arm back (m) */
+const BEHIND_PULLEY = { y: 0.1, z: -0.75 }
+/** Bayesian curl top: the cable along the forearm stops the curl here, deg */
+const BEHIND_TOP = 126
+/** Bayesian curl: staggered stance, working-side foot back, so the base (not an ankle lean) holds the cable; step (m), front knee and pelvis tilt (deg) */
+const BEHIND_SPLIT = { step: 0.4, frontKnee: 42, tilt: 3 }
+/** one-arm stack load for the balance, kg: half the two-hand cable curl's */
+const BEHIND_KG = 8
+
+function relaxedArm(skel: Skeleton, q: Float64Array, s: 'l' | 'r') {
+  setDofs(skel, q, { [`shoulder_${s}.plane`]: 30, [`shoulder_${s}.elev`]: 8, [`elbow_${s}.flex`]: 12, [`grip_${s}.close`]: 0.3 })
+  setScapula(skel, q, s)
+}
+
+/** single handle in the hand: across the palm, carabiner towards the pulley */
+function behindHandle(skel: Skeleton, q: Float64Array, b: NonNullable<Ctx['behind']>): ImplementPose {
+  const h = handFrame(skel, fk(skel, q), b.work)
+  const toward = norm(sub(b.pulley, h.pos))
+  const rot = qfromBasis(h.axis, norm(cross(cross(h.axis, toward), h.axis)))
+  return { id: b.handle.id, pos: sub(h.pos, qrot(rot, b.handle.sites.c.pos)), rot }
+}
+
+function behindContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const work = p.side === 'left' ? 'l' : 'r'
+  const stance = splitStance(skel, work === 'l' ? 'r' : 'l', BEHIND_SPLIT.step)
+  const contacts = footContacts(skel, stance.feet)
+  const x = (work === 'l' ? 1 : -1) * skel.data.shoulderWidth / 2
+  const pulley: V3 = [x, BEHIND_PULLEY.y, stance.midfoot[2] + BEHIND_PULLEY.z]
+  const handle = cableHandle({ id: 'handle', attachment: 'single_handle' })
+  const stack: ImplementSpec = {
+    id: 'stack',
+    kind: 'bench',
+    mass: 0,
+    com: [0, 0, 0],
+    parts: [cyl([x, 0, pulley[2] - 0.12], [x, 2.1, pulley[2] - 0.12], 0.05), cyl(pulley, add(pulley, [0, 0, -0.12]), 0.04)],
+    sites: {},
+  }
+  const cable = { pulley, implement: handle.id, point: [0, 0, 0] as V3, kg: BEHIND_KG }
+  const setup: Setup = {
+    implements: [handle, stack],
+    contacts: [...contacts, { site: `grip_${work}`, kind: 'grip', target: { implement: handle.id, grip: 'c' } }],
+    tempo,
+    symmetric: false,
+    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+    cables: [cable],
+  }
+  const behind = { work, pulley, handle, split: stance } as const
+  // centre of pressure: the cable pulls the hand back and down towards the pulley, so the lifter leans forward
+  const measure = (q: Float64Array) => {
+    const hp = behindHandle(skel, q, behind)
+    const { at, force } = cableForce(cable, hp)
+    return centerOfPressure(skel, fk(skel, q), [{ mass: handle.mass, pos: comWorld(handle, hp) }], [{ at, force }])[1]
+  }
+  const ctx: Ctx = { tempo, setup, body: 'stand', stance, measure, behind }
+  ctx.sway = limitSway((u, sway) => standBehind(skel, standingBase(skel), u, p, ctx, sway))
+  return ctx
+}
+
+function standBehind(skel: Skeleton, q: Float64Array, u: number, p: P, ctx: Ctx, sway?: Sway) {
+  const { work, split } = ctx.behind!
+  const upper = (qq: Float64Array) => {
+    const { c, cl } = phases(u, p, ctx.tempo, work)
+    dbArm(skel, qq, work, c, cl, p, 'stand')
+    relaxedArm(skel, qq, work === 'l' ? 'r' : 'l')
+  }
+  return standSplit(skel, q, split, { frontKnee: BEHIND_SPLIT.frontKnee, tilt: BEHIND_SPLIT.tilt }, upper, ctx.measure!, sway)
+}
+
 // ---------- context ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
@@ -320,6 +412,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   }
   const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
   const contacts = plantedContacts(skel, stance)
+  if (isBehind(p)) return behindContext(p, skel, tempo)
   if (p.implement === 'dumbbell') {
     const setup: Setup = {
       implements: handDumbbells(DB_KG),
@@ -375,11 +468,12 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     const bellyGap = Math.min(...forearms.flatMap((fa) => trunkCaps.map((t) => capsuleClearance(fa, t))))
     return Math.min(thighGap - BAR_OFF_THIGHS, bellyGap - FOREARMS_OFF_BELLY)
   }
-  ctx.barBottom = root1d((b) => elbowAt(b) - ELBOW[0], 0, 45, { tol: 1e-4 }).x
+  const bottomElbow = closeEz(p) ? CLOSE_BOTTOM : ELBOW[0]
+  ctx.barBottom = root1d((b) => elbowAt(b) - bottomElbow, 0, 45, { tol: 1e-4 }).x
   for (let pass = 0; pass < 3; pass++) {
     // a cable also pulls the hands forward towards the low pulley, so those may hang further forward
     ctx.barLean = onThighs(0) >= 0 ? 0 : root1d(onThighs, 0, bar.cable ? 40 : 25, { tol: 1e-4 }).x
-    ctx.barBottom = root1d((b) => elbowAt(b) - ELBOW[0], -20, 45, { tol: 1e-4 }).x
+    ctx.barBottom = root1d((b) => elbowAt(b) - bottomElbow, -20, 45, { tol: 1e-4 }).x
   }
   // cable loads are the handle only, so the body barely needs to sway anyway
   ctx.sway = limitSway((u, sway) => {
@@ -419,6 +513,10 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
     return { q, implements: [...dumbbellPoses(skel, q), ctx.benchPose!], contacts: ctx.setup.contacts }
   }
   q.set(standingBase(skel))
+  if (ctx.behind) {
+    standBehind(skel, q, u, p, ctx, ctx.sway)
+    return { q, implements: [behindHandle(skel, q, ctx.behind), { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
+  }
   if (!ctx.bar) {
     standDumbbells(skel, q, u, p, ctx, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }

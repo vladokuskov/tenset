@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, qconj, qrot, sub } from '../math.ts'
+import { dist, qconj, qrot, sub, type V3 } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
@@ -89,5 +89,48 @@ describe('vertical-pull template', () => {
     expect(dof(b, 0.3, 'knee_l.flex')).toBeCloseTo(90, 0)
     const pad = (i: number) => frameImplements(b, i)[1].pos[1]
     expect(pad(at(b, 0)) - pad(at(b, 0.625))).toBeGreaterThan(0.3)
+  })
+
+  it('wide-grip pull-up: hands wider than the pull-up, same dead hang to chin over the bar', () => {
+    const wide = get('328-wide-grip-pull-up')
+    const std = get('301-pull-up')
+    const gap = (b: Baked) => dist(...(['grip_l', 'grip_r'].map((s) => sitePos(skel, fk(skel, frameQ(b, 0)), s)) as [V3, V3]))
+    expect(gap(wide)).toBeGreaterThan(gap(std) + 0.08)
+    expect(dof(wide, 0.625, 'elbow_l.flex')).toBeLessThan(8)
+    expect(sitePos(skel, fk(skel, frameQ(wide, 0)), 'chin')[1]).toBeGreaterThan(frameImplements(wide, 0)[0].pos[1])
+  })
+
+  it('pulldown variants: arms long at the top, bar or handle brought down to the chest', () => {
+    for (const slug of ['329-underhand-lat-pulldown', '330-single-arm-cable-pulldown', '331-neutral-grip-lat-pulldown']) {
+      const b = get(slug)
+      const s = b.params.laterality === 'unilateral' && b.params.side !== 'left' ? 'r' : 'l'
+      expect(dof(b, 0.625, `elbow_${s}.flex`), slug).toBeLessThan(20)
+      expect(dof(b, 0.625, `shoulder_${s}.elev`), slug).toBeGreaterThan(140)
+      expect(dof(b, 0, `elbow_${s}.flex`), slug).toBeGreaterThan(90)
+      expect(dof(b, 0, `shoulder_${s}.elev`), slug).toBeLessThan(45)
+      const f = fk(skel, frameQ(b, 0))
+      expect(sitePos(skel, f, `grip_${s}`)[1], slug).toBeLessThan(segPos(skel, f, `humerus_${s}`)[1] + 0.08)
+    }
+  })
+
+  it('underhand pulldown: forearms supinated, elbows by the sides at the finish', () => {
+    const b = get('329-underhand-lat-pulldown')
+    expect(dof(b, 0, 'forearm_l.pro')).toBeLessThan(-70)
+    const f = fk(skel, frameQ(b, 0))
+    const th = f.rot[skel.seg.thorax2]
+    const e = qrot(qconj(th), sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'thorax2')))
+    expect(Math.abs(e[0])).toBeLessThan(0.3)
+  })
+
+  it('single-arm pulldown: only the working arm pulls, its elbow ends close to the side', () => {
+    const b = get('330-single-arm-cable-pulldown')
+    expect(b.contacts.filter((c) => c.kind === 'grip')).toHaveLength(1)
+    // the resting hand stays on the thigh pad: the arm only follows the small trunk lean
+    expect(Math.abs(dof(b, 0, 'shoulder_l.elev') - dof(b, 0.625, 'shoulder_l.elev'))).toBeLessThan(3)
+    expect(Math.abs(dof(b, 0, 'elbow_l.flex') - dof(b, 0.625, 'elbow_l.flex'))).toBeLessThan(8)
+    const f = fk(skel, frameQ(b, 0))
+    const th = f.rot[skel.seg.thorax2]
+    const e = qrot(qconj(th), sub(segPos(skel, f, 'forearm_r'), segPos(skel, f, 'thorax2')))
+    expect(Math.abs(e[0])).toBeLessThan(0.33)
   })
 })

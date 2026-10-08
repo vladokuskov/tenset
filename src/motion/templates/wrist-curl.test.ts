@@ -17,11 +17,11 @@ const flex = (b: Baked, u: number, s = 'l') => frameQ(b, at(b, u))[skel.dof[`wri
 
 describe('wrist-curl template', () => {
   it('covers every wrist-curl record', () => {
-    expect([...baked.keys()].sort()).toEqual([708, 709])
+    expect([...baked.keys()].sort()).toEqual([708, 709, 746, 747])
   })
 
-  it('only the wrists move', () => {
-    for (const b of baked.values()) {
+  it('only the wrists move (the barbell adds a little deviation to keep the hands on its spacing)', () => {
+    for (const [id, b] of baked) {
       const moving = skel.dofs.filter((d) => {
         let lo = Infinity, hi = -Infinity
         for (let i = 0; i < b.frames; i++) {
@@ -31,12 +31,13 @@ describe('wrist-curl template', () => {
         }
         return hi - lo > 1e-3
       })
-      expect(moving.map((d) => d.name).sort()).toEqual(['wrist_l.flex', 'wrist_r.flex'])
+      const wrists = ['wrist_l.flex', 'wrist_r.flex']
+      expect(moving.map((d) => d.name).sort()).toEqual(id === 746 || id === 747 ? ['wrist_l.dev', ...wrists, 'wrist_r.dev'].sort() : wrists)
     }
   })
 
-  it('palms up: from extension to flexion; palms down: from flexion to extension, inside the limits', () => {
-    const up = get(708), down = get(709)
+  it.each([[708, 709], [746, 747]])('palms up (%s): from extension to flexion; palms down (%s): from flexion to extension, inside the limits', (a, z) => {
+    const up = get(a), down = get(z)
     // mid top pause (u = 0) is the contraction, mid bottom pause the stretch
     expect(flex(up, midBottom(up))).toBeLessThan(-50)
     expect(flex(up, 0)).toBeGreaterThan(55)
@@ -99,14 +100,16 @@ describe('wrist-curl template', () => {
     expect(Math.min(...low.map((z) => z[0])) - back).toBeGreaterThan(0.02)
   })
 
-  it.each([...baked.keys()])('%s: the hanging dumbbells clear the bench by 15 mm', (id) => {
+  it.each([...baked.keys()])('%s: the hanging load clears the bench by 15 mm', (id) => {
     const b = get(id)
     const k = b.implements.findIndex((s) => s.kind === 'cross_bench')
+    const held = b.implements.filter((s) => s.kind === 'dumbbell' || s.kind === 'barbell').map((s) => s.id)
+    expect(held.length).toBeGreaterThan(0)
     let gap = Infinity
     for (let i = 0; i < b.frames; i += 2) {
       const impl = frameImplements(b, i)
       const bench = placeParts(b.implements[k], impl[k])
-      for (const id of ['db_l', 'db_r']) {
+      for (const id of held) {
         const j = b.implements.findIndex((s) => s.id === id)
         for (const d of placeParts(b.implements[j], impl[j])) for (const p of bench) gap = Math.min(gap, solidClearance(d, p))
       }
@@ -121,6 +124,20 @@ describe('wrist-curl template', () => {
     const x = Array.from({ length: n }, (_, i) => b.q[i * b.nDof + d])
     const step = Math.max(...x.slice(1).map((v, i) => Math.abs(v - x[i])))
     expect(Math.abs(x[0] - x[n - 1])).toBeLessThanOrEqual(1.5 * step)
+  })
+
+  it('barbell: one bar across both hands, its axis level and across the lifter', () => {
+    for (const id of [746, 747]) {
+      const b = get(id)
+      expect(b.contacts.filter((c) => c.kind === 'grip').map((c) => 'implement' in c.target && `${c.target.implement}:${c.target.grip}`)).toEqual(['bar:l', 'bar:r'])
+      const k = b.implements.findIndex((s) => s.id === 'bar')
+      for (let i = 0; i < b.frames; i += 5) {
+        const axis = qrot(frameImplements(b, i)[k].rot, [1, 0, 0])
+        expect(axis[0]).toBeGreaterThan(0.999)
+      }
+      // the deviation that keeps the hands on the bar stays small
+      for (let i = 0; i < b.frames; i++) expect(Math.abs(frameQ(b, i)[skel.dof['wrist_l.dev']])).toBeLessThan(15)
+    }
   })
 
   it('unsupported variants throw', () => {

@@ -1,9 +1,11 @@
+import type { FootTarget } from '../constraints.ts'
 import { lerp, norm, sub, type V3 } from '../math.ts'
-import { setDofs, zeroQ, type Pose, type Skeleton } from '../skeleton.ts'
+import { setDofs, zeroQ, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
 import { crossoverBody, crossoverContext, crossoverSway, handlePoses, type CrossoverCtx } from './crossover.ts'
-import { armDir, mirrorArm, planeElevOf, poseArm, thoraxFrame } from './isolation.ts'
+import { inclineProne, proneBody } from './front-raise.ts'
+import { armDir, footContacts, mirrorArm, planeElevOf, poseArm, thoraxFrame } from './isolation.ts'
 import { pecDeckContext, samplePecDeck, type PecDeckCtx } from './pec-deck.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
@@ -14,11 +16,22 @@ import { memo, type Setup, type Template } from './types.ts'
 // ~70-90 or prone; horizontal abduction ~-90 -> 0"), the backs of the hands leading. Bent-over dumbbells: flat back
 // hinged to torsoAngle, knees soft, ankles balancing body + load over the midfoot. Cable: standing between the
 // crossover towers, each hand on the opposite tower's cable at shoulder height. Reverse pec deck: seated, chest on
-// the pad, handles on arcs round the shoulders.
+// the pad, handles on arcs round the shoulders. Prone: chest down on an incline bench (the prone Y-raise's setup), the
+// same arc from the hang; neutral grip there is the T-raise, thumbs turning up as the arms rise (external rotation).
 
 type P = ParamsOf<'rear-raise'>
 
 const DB_KG = 6
+/** prone: lighter dumbbells, as the prone Y-raise */
+const PRONE_KG = 3
+/**
+ * prone hands, deg (hang -> top): pronated hangs palms towards the feet, thumbs in, and ends palms down, thumbs
+ * towards the head; neutral (T-raise) hangs palms in and ends thumbs up, palms towards the head (external rotation)
+ */
+const PRONE_ROT: Record<P['grip'], { rot: [number, number]; pro: [number, number] }> = {
+  pronated: { rot: [0, -60], pro: [85, 0] },
+  neutral: { rot: [0, 75], pro: [0, 80] },
+}
 const CABLE_KG = 5
 /** top of the dumbbell rep: arm plane and elevation relative to the trunk (arms level with the shoulders) */
 const DB_TOP = { plane: 2, elev: 86 }
@@ -34,6 +47,7 @@ const HINGE_KNEE = 22
 
 type Ctx =
   | { kind: 'db'; tempo: Tempo; setup: Setup; stance: StanceSetup; sway?: Sway; measure: (q: Float64Array) => number }
+  | { kind: 'prone'; tempo: Tempo; setup: Setup; hip: V3; feet: FootTarget[]; benchPose: ImplementPose }
   | { kind: 'cable'; tempo: Tempo; setup: Setup; x: CrossoverCtx }
   | { kind: 'machine'; tempo: Tempo; setup: Setup; x: PecDeckCtx }
 
@@ -57,6 +71,12 @@ function dbArm(skel: Skeleton, q: Float64Array, c: number, p: P) {
   const elev = (x: number) => lerp(hang.elev, DB_TOP.elev, x)
   const back = backwards(plane, elev, c, fr)
   poseArm(skel, q, 'l', { plane: plane(c), elev: elev(c), elbow: p.elbowAngle, bend: back, palm: back, girdle: { prot: lerp(2, -12, c) }, shrug: 0.5 })
+  if (p.posture === 'lying_prone') {
+    // prone: humeral and forearm rotation run straight from the hang to the top (no stops reached on the way)
+    const r = PRONE_ROT[p.grip]
+    q[skel.dof['shoulder_l.rot']] = lerp(r.rot[0], r.rot[1], c)
+    q[skel.dof['forearm_l.pro']] = lerp(r.pro[0], r.pro[1], c)
+  }
   mirrorArm(skel, q)
 }
 
@@ -79,6 +99,19 @@ function dbContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const ctx: Extract<Ctx, { kind: 'db' }> = { kind: 'db', tempo, setup, stance, measure: comWithDumbbells(skel, DB_KG) }
   ctx.sway = limitSway((u, sway) => dbStand(u, p, skel, ctx, zeroQ(skel), sway))
   return ctx
+}
+
+// ---------- prone on an incline bench ----------
+
+function proneContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const { hip, feet, bench, benchPose } = inclineProne(skel, p.benchAngle ?? 90 - p.torsoAngle)
+  const setup: Setup = {
+    implements: [...handDumbbells(PRONE_KG), bench],
+    contacts: [...footContacts(skel, feet), ...dumbbellContacts()],
+    tempo,
+    symmetric: false,
+  }
+  return { kind: 'prone', tempo, setup, hip, feet, benchPose }
 }
 
 // ---------- cable crossover ----------
@@ -117,6 +150,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if (p.laterality !== 'bilateral') throw new Error(`rear-raise: variant not implemented yet (${p.laterality})`)
   if (p.implement === 'dumbbell' && p.posture === 'standing') return dbContext(p, skel, tempo)
+  if (p.implement === 'dumbbell' && p.posture === 'lying_prone') return proneContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'standing' && p.torsoAngle === 0) return cableContext(p, skel, tempo)
   if (p.implement === 'machine' && p.posture === 'seated') {
     const x = pecDeckContext(skel, 'rear', { elbow: p.elbowAngle, tempo, symmetric: true })
@@ -136,6 +170,11 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   if (ctx.kind === 'db') {
     dbStand(u, p, skel, ctx, q, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }
+  }
+  if (ctx.kind === 'prone') {
+    proneBody(skel, q, p.benchAngle ?? 90 - p.torsoAngle, ctx.hip, ctx.feet)
+    dbArm(skel, q, c, p)
+    return { q, implements: [...dumbbellPoses(skel, q), ctx.benchPose], contacts: ctx.setup.contacts }
   }
   crossoverBody(skel, ctx.x, q, cableArms(skel, c, p), ctx.x.sway)
   return { q, implements: [...handlePoses(skel, ctx.x, q), { id: ctx.x.crossover.id, pos: [0, 0, 0], rot: [0, 0, 0, 1] }], contacts: ctx.setup.contacts }

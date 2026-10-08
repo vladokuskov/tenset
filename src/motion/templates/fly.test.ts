@@ -3,7 +3,7 @@ import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, dot, sub } from '../math.ts'
+import { dist, dot, scale, sub } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 import { planeElevOf, thoraxFrame } from './isolation.ts'
@@ -16,11 +16,18 @@ const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const OPEN = 0.625
 const CLOSED = 0
 
-/** left humerus plane of elevation and elevation in the thorax frame, deg */
+/** the working arm: the right on single-arm records (side defaults to right), else the left */
+const work = (b: Baked) => (b.params.laterality === 'unilateral' && b.params.side !== 'left' ? 'r' : 'l')
+const single = (b: Baked) => b.params.laterality === 'unilateral'
+
+/** working humerus plane of elevation and elevation in the thorax frame, deg (the right arm mirrored to the left's) */
 function arm(b: Baked, u: number) {
   const q = frameQ(b, at(b, u))
   const f = fk(skel, q)
-  return planeElevOf(sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'humerus_l')), thoraxFrame(skel, q))
+  const s = work(b)
+  const d = sub(segPos(skel, f, `forearm_${s}`), segPos(skel, f, `humerus_${s}`))
+  const fr = thoraxFrame(skel, q)
+  return planeElevOf(s === 'l' ? d : sub(d, scale(fr.right, 2 * dot(d, fr.right))), fr)
 }
 
 const posAt = (b: Baked, u: number, site: string) => sitePos(skel, fk(skel, frameQ(b, at(b, u))), site)
@@ -28,7 +35,10 @@ const segAt = (b: Baked, u: number, seg: string) => segPos(skel, fk(skel, frameQ
 
 describe('fly template', () => {
   it('covers every fly record', () => {
-    expect([...baked.keys()]).toEqual(['105-cable-fly-high-to-low', '110-pec-deck-fly', '111-cable-fly-low-to-high', '112-dumbbell-fly'])
+    expect([...baked.keys()]).toEqual([
+      '105-cable-fly-high-to-low', '110-pec-deck-fly', '111-cable-fly-low-to-high', '112-dumbbell-fly', '129-mid-cable-fly', '130-incline-dumbbell-fly',
+      '131-seated-cable-fly', '132-single-arm-cable-fly',
+    ])
   })
 
   it.each([...baked.keys()])('%s: horizontal adduction from past the frontal plane to the arms in front, elbows soft and fixed', (slug) => {
@@ -38,13 +48,18 @@ describe('fly template', () => {
     expect(arm(b, OPEN).plane).toBeLessThan(-5)
     expect(arm(b, CLOSED).plane).toBeGreaterThan(85)
     expect(arm(b, CLOSED).plane).toBeLessThan(105)
-    const elbows = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof['elbow_l.flex']])
+    const elbows = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof[`elbow_${work(b)}.flex`]])
     // the pec deck's hands are solved onto the handle arcs, so the soft elbow drifts a little
     const [lo, hi] = b.params.implement === 'machine' ? [8, 25] : [15, 25]
     expect(Math.min(...elbows)).toBeGreaterThanOrEqual(lo)
     expect(Math.max(...elbows)).toBeLessThanOrEqual(hi)
     expect(Math.max(...elbows) - Math.min(...elbows)).toBeLessThan(10)
-    // the hands meet in front without colliding
+    // the hands meet in front without colliding (single arm: the hand reaches the midline)
+    if (single(b)) {
+      const sternum = posAt(b, CLOSED, 'sternum')
+      expect(Math.abs(posAt(b, CLOSED, `grip_${work(b)}`)[0] - sternum[0])).toBeLessThan(0.08)
+      return
+    }
     const gap = dist(posAt(b, CLOSED, 'grip_l'), posAt(b, CLOSED, 'grip_r'))
     expect(gap).toBeGreaterThan(0.08)
     expect(gap).toBeLessThan(0.25)
@@ -129,11 +144,65 @@ describe('fly template', () => {
     }
   })
 
+  it('mid cable fly: open with the hands level with the shoulders, closed together in front of the sternum', () => {
+    const b = get('129-mid-cable-fly')
+    for (const u of [OPEN, CLOSED]) {
+      expect(arm(b, u).elev).toBeGreaterThan(75)
+      expect(arm(b, u).elev).toBeLessThan(95)
+    }
+    // open about level with the shoulders (soft elbows lift the hands a little), closed at mid-chest height
+    expect(Math.abs(posAt(b, OPEN, 'grip_l')[1] - segAt(b, OPEN, 'humerus_l')[1])).toBeLessThan(0.12)
+    expect(Math.abs(posAt(b, CLOSED, 'grip_l')[1] - posAt(b, CLOSED, 'sternum')[1])).toBeLessThan(0.05)
+    expect(posAt(b, CLOSED, 'grip_l')[2]).toBeGreaterThan(posAt(b, CLOSED, 'sternum')[2] + 0.2)
+    const z = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof['pelvis.tz']])
+    expect(Math.max(...z) - Math.min(...z)).toBeLessThan(1e-9)
+  })
+
+  it('incline dumbbell fly: butt on the seat, upper back on the pad, the dumbbells close over the upper chest', () => {
+    const b = get('130-incline-dumbbell-fly')
+    const trunk = sub(segAt(b, 0, 'humerus_l'), segAt(b, 0, 'femur_l'))
+    // the trunk lies along the 30 deg pad (hips to shoulders, within the arch)
+    const incline = (Math.atan2(trunk[1], -trunk[2]) * 180) / Math.PI
+    expect(incline).toBeGreaterThan(22)
+    expect(incline).toBeLessThan(42)
+    for (const name of ['pelvis.ty', 'pelvis.tz', 'pelvis.tilt', 'lumbar.flex', 'knee_l.flex']) {
+      const v = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof[name]])
+      expect(Math.max(...v) - Math.min(...v)).toBeLessThan(1e-9)
+    }
+    // closed: the hands in front of the upper chest, above the shoulders along the chest's normal
+    const q = frameQ(b, at(b, CLOSED))
+    const fr = thoraxFrame(skel, q)
+    expect(dot(sub(posAt(b, CLOSED, 'grip_l'), segAt(b, CLOSED, 'humerus_l')), fr.fwd)).toBeGreaterThan(0.4)
+  })
+
+  it('seated cable fly: seated against the upright pad, still, the pulleys level with the shoulders', () => {
+    const b = get('131-seated-cable-fly')
+    for (const name of ['pelvis.ty', 'pelvis.tz', 'pelvis.tilt', 'knee_l.flex']) {
+      const v = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof[name]])
+      expect(Math.max(...v) - Math.min(...v)).toBeLessThan(1e-9)
+    }
+    const sh = segAt(b, 0, 'humerus_l')
+    for (const c of b.cables!) expect(Math.abs(c.pulley[1] - sh[1])).toBeLessThan(0.03)
+    expect(segAt(b, 0, 'pelvis')[1]).toBeLessThan(0.7)
+  })
+
+  it('single-arm cable fly: one handle on the working tower, the free arm hangs relaxed', () => {
+    const b = get('132-single-arm-cable-fly')
+    expect(b.cables!.length).toBe(1)
+    expect(b.cables![0].implement).toBe('handle_r')
+    expect(b.cables![0].pulley[0]).toBeLessThan(0)
+    expect(frameQ(b, 0)[skel.dof['shoulder_l.elev']]).toBeLessThan(15)
+    for (const name of ['clavicle_l.elev', 'clavicle_l.prot', 'shoulder_l.plane', 'shoulder_l.elev', 'shoulder_l.rot', 'elbow_l.flex', 'forearm_l.pro']) {
+      const v = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof[name]])
+      expect(Math.max(...v) - Math.min(...v), name).toBeLessThan(1e-9)
+    }
+  })
+
   it('unsupported variants throw', () => {
     const t = getTemplate('fly')
-    const run = (params: Record<string, unknown>) => () => t.setup(parseParams('fly', params), skel)
-    expect(run({ implement: 'cable', posture: 'standing', cableHeight: 'mid', stance: 'split' })).toThrow(/variant not implemented yet/)
+    const run = (params: Record<string, unknown>, laterality?: string) => () => t.setup(parseParams('fly', params, laterality), skel)
     expect(run({ implement: 'cable', posture: 'standing', cableHeight: 'high', stance: 'hip' })).toThrow(/variant not implemented yet/)
-    expect(run({ implement: 'dumbbell', benchAngle: 30 })).toThrow(/variant not implemented yet/)
+    expect(run({ implement: 'dumbbell', benchAngle: -15 })).toThrow(/variant not implemented yet/)
+    expect(run({ implement: 'cable', posture: 'standing', cableHeight: 'high', stance: 'split' }, 'unilateral')).toThrow(/variant not implemented yet/)
   })
 })

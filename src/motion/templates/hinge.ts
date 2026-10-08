@@ -46,6 +46,8 @@ const DB_X = 0.22
  * floor. Hips hinge evenly, the knees bend on a power curve through that point, so the hips lead and nothing jerks */
 const FLOOR_SOFT_KNEE = 14
 const FLOOR_KNEE_AT = 0.6
+/** a floor start with kneeAngle at or below this (the schema default 20 is the conventional pull's) pulls stiff-legged */
+const STIFF_KNEE_MAX = 18
 /**
  * Plates on the floor put the hips at ~120 deg flexion for this figure (liftoff ~110-120, Escamilla 2000): the thigh
  * presses the belly and lower ribs (34 mm into the ribs' capsule, 70 mm into the belly's) and the knees push out into
@@ -55,6 +57,20 @@ const FLOOR_START_TOL = {
   'thigh_l / trunk': 36, 'thigh_r / trunk': 36, 'thigh_l / trunk (lumbar3)': 72, 'thigh_r / trunk (lumbar3)': 72,
   'forearm_l / thigh_l': 20, 'forearm_r / thigh_r': 20, 'forearm_l / shank_l': 16, 'forearm_r / shank_r': 16,
 }
+/**
+ * Sumo (wide floor pull): the grip sits inside the knees and so inside the shoulders, and at lockout the hanging upper
+ * arms press ~15 mm into the sides of the chest (lats; soft tissue, lead decision). At the floor the straight arms hang
+ * between the thighs and the triceps press ~27 mm into the inner thighs' thick capsules (soft tissue on soft tissue,
+ * lead decision; a narrower grip moves it only a few mm)
+ */
+const SUMO_TOL = { 'trunk / upperarm_l': 16, 'trunk / upperarm_r': 16, 'thigh_l / upperarm_l': 28, 'thigh_r / upperarm_r': 28 }
+/**
+ * Sumo: feet wide (stance `width` x shoulder width; wider needs the ankles past their limit to balance standing),
+ * knees out over the toes reaching `knee` deg at the floor with the hips low and the trunk ~45-50 deg from vertical;
+ * knees and hips bend together (the knees a little behind, `lag` of a quadratic on eccentric progress) instead of the
+ * conventional hips-first schedule
+ */
+const SUMO = { width: 1.65, knee: 92, lag: 0.5 }
 /**
  * floor start: shoulders a few cm ahead of the bar (straight-arm angle, deg) with the bar against the shins. Resting
  * the arms on the legs instead stopped the knees short of the bar (the forearms met the thighs first), which left the
@@ -452,11 +468,13 @@ function sideShift(skel: Skeleton, ctx: Ctx, s: number) {
  */
 const PHI_SAMPLES = 81
 const PHI_WINDOW = 0.045
+/** stiff-leg pull: the bar rides the knee bump with straighter legs, so the arm angle is smoothed wider */
+const STIFF_PHI_WINDOW = 0.09
 
-function smoothPhi(skel: Skeleton, ctx: Ctx): (s: number) => number {
+function smoothPhi(skel: Skeleton, ctx: Ctx, window = PHI_WINDOW): (s: number) => number {
   const xs = Array.from({ length: PHI_SAMPLES }, (_, k) => k / (PHI_SAMPLES - 1))
   const raw = xs.map((s) => solveFrame(skel, ctx, s, ctx.kneeAt(s), ctx.hipAt(s)).g.phi)
-  const w = Math.round(PHI_WINDOW * (PHI_SAMPLES - 1))
+  const w = Math.round(window * (PHI_SAMPLES - 1))
   const win = (a: number[], k: number) => a.slice(Math.max(0, k - w), Math.min(a.length, k + w + 1))
   const eroded = raw.map((_, k) => Math.min(...win(raw, k)))
   const opened = eroded.map((_, k) => {
@@ -480,7 +498,9 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   const side: Side = p.side === 'left' ? 'l' : 'r'
   const single = k === 'single'
-  const stance = single ? makeStance(skel, 2 * SINGLE_FOOT_X, p.toeOut) : makeStance(skel, stanceWidth(skel, p.stance as StanceName), p.toeOut)
+  const sumo = k === 'bar' && p.start === 'floor' && p.stance === 'wide'
+  const width = sumo ? SUMO.width * skel.data.shoulderWidth : stanceWidth(skel, p.stance as StanceName)
+  const stance = single ? makeStance(skel, 2 * SINGLE_FOOT_X, p.toeOut) : makeStance(skel, width, p.toeOut)
   const feet = single ? [plantFoot(skel, side, [side === 'l' ? SINGLE_FOOT_X : -SINGLE_FOOT_X, 0, 0], p.toeOut)] : stance.feet
   const contacts: Contact[] = plantedContacts(skel, { feet, midfoot: stance.midfoot })
   const implements_: ImplementSpec[] = []
@@ -499,7 +519,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     ctx.setup.balance = { point: { implement: bar.id }, over: 'midfoot', tol: 0.025 }
     if (floor) {
       ctx.floorY = PLATE_20_RADIUS + 0.001
-      ctx.setup.tolerances = { body: FLOOR_START_TOL }
+      ctx.setup.tolerances = { body: sumo ? { ...FLOOR_START_TOL, ...SUMO_TOL } : FLOOR_START_TOL }
     }
   } else if (k === 'db') {
     ctx.dbs = [dumbbell({ id: 'db_l', mass: DB_KG }), dumbbell({ id: 'db_r', mass: DB_KG })]
@@ -539,12 +559,27 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     }
     const hipFor = (kb: number) => root1d((hb) => solveFrame(skel, ctx, 1, kb, hb).g.l[1] - ctx.floorY!, 40, 130, { tol: 1e-6, scan: 9 }).x
     ctx.armFloor = (s) => ramp((s - FLOOR_KNEE_AT) / (1 - FLOOR_KNEE_AT))
-    const shins = (kb: number) => {
-      const fr = solveFrame(skel, ctx, 1, kb, hipFor(kb))
-      return barToShins(skel, fk(skel, fr.q), ctx, fr.g)
+    if (sumo) {
+      // the upright trunk keeps the shoulders over the bar on their own: the bar stays resting on the shins
+      ctx.armFloor = undefined
+      const kb = SUMO.knee
+      ctx.kneeAt = (s) => TOP_KNEE + (kb - TOP_KNEE) * lerp(s, s * s, SUMO.lag)
+      const hb = hipFor(kb)
+      ctx.hipAt = (s) => TOP_HIP + (hb - TOP_HIP) * s
+    } else if (p.kneeAngle <= STIFF_KNEE_MAX) {
+      // stiff-leg pull: the knees stay at kneeAngle and the hips alone take the bar to the floor
+      const kb = p.kneeAngle
+      ctx.kneeAt = (s) => TOP_KNEE + (kb - TOP_KNEE) * ramp(s)
+      const hb = hipFor(kb)
+      ctx.hipAt = (s) => TOP_HIP + (hb - TOP_HIP) * s
+    } else {
+      const shins = (kb: number) => {
+        const fr = solveFrame(skel, ctx, 1, kb, hipFor(kb))
+        return barToShins(skel, fk(skel, fr.q), ctx, fr.g)
+      }
+      const kb = root1d(shins, 45, 95, { tol: 1e-4, scan: 10 }).x
+      schedule(kb, hipFor(kb))
     }
-    const kb = root1d(shins, 45, 95, { tol: 1e-4, scan: 10 }).x
-    schedule(kb, hipFor(kb))
   } else {
     const kb = p.kneeAngle
     const hb = BOTTOM_HIP[k]
@@ -555,7 +590,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
       ctx.tx = [top, bottom]
     }
   }
-  if (ctx.floorY !== undefined) ctx.phiAt = smoothPhi(skel, ctx)
+  if (ctx.floorY !== undefined) ctx.phiAt = smoothPhi(skel, ctx, p.kneeAngle <= STIFF_KNEE_MAX ? STIFF_PHI_WINDOW : PHI_WINDOW)
   return ctx
 })
 

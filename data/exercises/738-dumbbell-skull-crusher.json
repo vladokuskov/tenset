@@ -33,9 +33,15 @@
     705
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "posture": "lying_supine",
+      "benchAngle": 0,
+      "shoulderFlexion": 110
+    },
     "mapView": "B"
   },
   "cues": [
@@ -53,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Palms in (palm normal x 0.985, forearm pro within +-8), handles run head to feet, upper arm at 107-110 deg elevation like 706. Elbow goes from 6 to 123 deg, the elbows stay at x 0.213-0.222 (no flare), and the dumbbells come down beside the ears with 25 mm head clearance and 46 mm to the bench. Hands 0.50 m apart, symmetric, no slip, distinct from the EZ 706 (whose stretch is 105)."
   }
 }

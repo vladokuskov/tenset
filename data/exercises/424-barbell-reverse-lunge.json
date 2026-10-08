@@ -40,9 +40,13 @@
     430
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "lunge",
+    "params": {
+      "implement": "barbell",
+      "hold": "back_high",
+      "direction": "reverse"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Back foot steps 0.90 m back, the front foot is planted (slip 0.2 mm), front knee 3 to 100, rear knee to 102, rear hip -5 to 1 at the bottom. Trunk 9 to 23 deg, peaking during the step, same as the approved 409. The bar sits on the high-bar site at 1.52 m and follows the trunk."
   }
 }

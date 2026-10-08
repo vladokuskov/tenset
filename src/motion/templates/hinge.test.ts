@@ -19,7 +19,7 @@ const stance = (b: Baked) => (b.params.stance === 'single_leg' ? (b.params.side 
 
 describe('hinge template', () => {
   it('covers every hinge record in the family', () => {
-    expect([...baked.keys()].sort()).toEqual([501, 508, 509, 510, 513])
+    expect([...baked.keys()].sort()).toEqual([501, 508, 509, 510, 513, 521, 525])
   })
 
   it.each([...baked.keys()])('%i: feet planted, hands on the load, finite frames, seamless loop', (id) => {
@@ -92,6 +92,36 @@ describe('hinge template', () => {
     expect(bottom[1]).toBeCloseTo(PLATE_20_RADIUS, 2)
     expect(dof(b, 0.625, 'hip_l.flex')).toBeGreaterThan(dof(b, 0.625, 'knee_l.flex') + 30)
     expect(dof(b, 0.625, 'knee_l.flex')).toBeGreaterThan(50)
+  })
+
+  it('sumo deadlift: wide stance, toes out, grip inside the knees, plates on the floor, trunk more upright than conventional', () => {
+    const b = get(521), conv = get(508)
+    const bottom = frameImplements(b, at(b, 0.625))[0].pos
+    expect(bottom[1]).toBeCloseTo(PLATE_20_RADIUS, 2)
+    const f = fk(skel, frameQ(b, at(b, 0.625)))
+    // hands inside the knees
+    expect(sitePos(skel, f, 'grip_l')[0]).toBeLessThan(segPos(skel, f, 'tibia_l')[0])
+    // feet wider than the conventional pull's
+    const width = (x: Baked) => sitePos(skel, fk(skel, frameQ(x, 0)), 'heel_l')[0]
+    expect(width(b)).toBeGreaterThan(width(conv) + 0.1)
+    expect(dof(b, 0.625, 'pelvis.tilt')).toBeLessThan(dof(conv, 0.625, 'pelvis.tilt') - 5)
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeGreaterThan(dof(conv, 0.625, 'knee_l.flex'))
+    // a sumo floor position: knees ~90-100, hips low, trunk ~45-50 deg from vertical
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeGreaterThan(88)
+    const hip = segPos(skel, f, 'femur_l'), neck = segPos(skel, f, 'neck1')
+    expect(hip[1]).toBeLessThan(0.66)
+    const lean = Math.atan2(Math.abs(neck[2] - hip[2]), neck[1] - hip[1]) / (Math.PI / 180)
+    expect(lean).toBeGreaterThan(42)
+    expect(lean).toBeLessThan(54)
+  })
+
+  it('stiff-leg deadlift: knees held at the param from the floor, the hips alone take the bar down to the plates', () => {
+    const b = get(525)
+    const bottom = frameImplements(b, at(b, 0.625))[0].pos
+    expect(bottom[1]).toBeCloseTo(PLATE_20_RADIUS, 2)
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeCloseTo(b.params.kneeAngle as number, 0)
+    for (let i = 0; i < b.frames; i += 3) expect(frameQ(b, i)[skel.dof['knee_l.flex']]).toBeLessThanOrEqual((b.params.kneeAngle as number) + 0.01)
+    expect(dof(b, 0.625, 'hip_l.flex')).toBeGreaterThan(95)
   })
 
   it('single leg: the free leg swings up in line with the trunk as a lever and never touches down', () => {

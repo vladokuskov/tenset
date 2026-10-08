@@ -26,7 +26,7 @@ function range(b: Baked, fn: (i: number) => number) {
 
 describe('shrug template', () => {
   it('covers every shrug record', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([308, 314])
+    expect(variants.map((v) => v.id).sort()).toEqual([308, 314, 336, 337])
   })
 
   it.each([...baked.keys()])('%s: clavicles rise ~0 -> 25 deg straight up, no rolling, arms still', (slug) => {
@@ -75,9 +75,31 @@ describe('shrug template', () => {
     expect(step).toBeLessThan(0.5)
   })
 
+  it('Smith shrug: the bar rides one vertical line, on the rails', () => {
+    const b = [...baked.entries()].find(([slug]) => slug.startsWith('337-'))![1]
+    const z = Array.from({ length: b.frames }, (_, i) => frameImplements(b, i)[0].pos[2])
+    expect(Math.max(...z) - Math.min(...z)).toBeLessThan(1e-6)
+    const rails = b.implements.find((s) => s.id === 'smith')!
+    const rail = rails.parts[0] as Extract<(typeof rails.parts)[number], { shape: 'cylinder' }>
+    expect(Math.abs(rail.a[2] - z[0])).toBeLessThan(1e-6)
+  })
+
+  it('cable shrug: a straight bar on the low pulley in front of the feet, the cable pulling it forward and down', () => {
+    const b = [...baked.entries()].find(([slug]) => slug.startsWith('336-'))![1]
+    expect(b.cables!.length).toBe(1)
+    const pulley = b.cables![0].pulley
+    const first = fk(skel, frameQ(b, 0))
+    const toes = Math.max(sitePos(skel, first, 'ball_l')[2], sitePos(skel, first, 'ball_r')[2])
+    expect(pulley[1]).toBeLessThan(0.15)
+    expect(pulley[2]).toBeGreaterThan(toes + 0.1)
+    // the bar hangs in front of the thighs
+    const bar = frameImplements(b, at(b, BOTTOM))[0].pos
+    expect(bar[2]).toBeGreaterThan(segPos(skel, fk(skel, frameQ(b, at(b, BOTTOM))), 'femur_l')[2])
+  })
+
   it('unsupported variants throw', () => {
     const t = getTemplate('shrug')
-    expect(() => t.setup(parseParams('shrug', { implement: 'cable' }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => t.setup(parseParams('shrug', { implement: 'machine' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => t.setup(parseParams('shrug', { implement: 'dumbbell', posture: 'seated' }), skel)).toThrow(/variant not implemented yet/)
   })
 })

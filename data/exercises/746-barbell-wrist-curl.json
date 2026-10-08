@@ -36,8 +36,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "wrist-curl",
+    "params": {
+      "implement": "barbell",
+      "grip": "supinated",
+      "posture": "kneeling",
+      "support": "bench"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -54,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Form is right. Wrist flex goes from +61 (curled) to -54 (extended), only wrist flex/dev move, forearms stay on the pad, no foot slip, and the bar clears the bench and head. The issue: the straight bar runs 12-17 deg skew to the hands' grip axis all the way through (the 14 deg palm turn-in is kept, and dev only holds spacing), against 8 deg (BAR_OBLIQUE) on the approved straight-bar 715. It's barely visible in the hero, but no test guards it (832's test caps bar-vs-hand at 3 deg)."
   }
 }

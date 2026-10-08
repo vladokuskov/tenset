@@ -35,9 +35,15 @@
     604
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "calf-raise",
+    "params": {
+      "implement": "smith",
+      "kneeAngle": 0,
+      "stance": "hip",
+      "support": "none",
+      "platform": "step"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Balls planted on the step (slip 0.1 mm), knees 4, ankle -36 to +25, heels about 3.8 cm below the step. Pelvis z is fixed and the bar runs vertically (z -0.023). The camera from behind shows both calves clearly."
   }
 }

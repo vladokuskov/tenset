@@ -31,9 +31,13 @@
     335
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "shrug",
+    "params": {
+      "implement": "smith",
+      "grip": "pronated",
+      "gripWidth": 1
+    },
     "mapView": "B"
   },
   "cues": [
@@ -50,6 +54,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Bar runs y 0.77 to 0.86, so the bottom is at mid-thigh (hip 0.997, knee 0.537, midpoint 0.77) as the cue says. Bar z is fixed at 0.09. Clavicle elevation is -3 to 26 deg, identical to 314. The balance gate passes and the az -165 camera keeps the uprights off the traps."
   }
 }

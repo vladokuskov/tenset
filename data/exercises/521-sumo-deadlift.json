@@ -48,8 +48,15 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hinge",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "gripWidth": 0.96,
+      "stance": "wide",
+      "toeOut": 45,
+      "start": "floor"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -66,6 +73,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. needs work: Reads as a wide conventional pull, not a sumo. At the floor (f75) the hip-to-neck trunk line is 63 deg from vertical, against 73 for 508. Knee 75 vs 64, hip joint at 0.72 m vs 0.79. The midfoot stance is 1.4 x shoulder width (about 0.6 m) with the plates at +/-0.65. The grip inside the knees (0.44 m) and the 45 deg toe-out are correct, but the from-behind hero hides the toe-out. The author also flags that a dedicated sumo schedule is needed. | minor: Changed: added a sumo branch in hinge.ts (barbell + floor + stance wide). It sets its own stance width of 1.65 x shoulder width, about 0.75 m (was 1.4). Knees go to 92 at the floor, and knees and hips bend together (knee = lerp(s, s^2, 0.5) instead of the hips-first power curve). armFloor is off for sumo, so the bar stays on the shins. That removed a 24 mm shank/bar penetration. scenes/hinge.ts got a sumo camera branch at az -40 / elev 0.22 (front three-quarter). Floor position now: hip joint 0.62 m (was 0.72), trunk 49 deg from vertical (was 63), knees 92 (was 75). The bar is on the floor over the midfoot and the grip is inside the knees. In the render the toe-out and knees-out read clearly. QA passes, re-baked, --check fresh, hinge tests pass (new assertions: knee >88, hip <0.66 m, trunk 42-54 deg). 508, 513 and 525 still pass. Remaining issues: (1) The stance is 1.65x, not the 1.7-1.8x asked. At 1.75x the standing top needs the ankles past their plantarflexion limit to balance, which fails balance (34 mm) and gives a knee/ankle flip near lockout. (2) New tolerance (lead decision): 'thigh_l|r / upperarm_l|r' 28 mm at the floor. The straight arms hang between the thick inner-thigh capsules and press about 27 mm in. A narrower grip only gains a few mm (0.85x: 19 mm). This is on top of the author's existing 16 mm trunk/upperarm lockout tolerance. In the stills the arms read in front of the thighs, with no obvious clipping."
   }
 }

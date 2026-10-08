@@ -40,9 +40,13 @@
     424
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "forward"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Forward step of 0.90 m and return, rear ball planted, front knee to 102, rear knee 89. The bottom pose is identical to 411 minus the travel, as stated, and it reads correctly. It shows one side only, though the record is 'alternating', the same convention as 409/411."
   }
 }

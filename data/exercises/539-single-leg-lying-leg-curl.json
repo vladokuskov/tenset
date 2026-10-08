@@ -36,9 +36,14 @@
     503
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "leg-curl",
+    "params": {
+      "implement": "machine",
+      "machine": "leg_curl_lying",
+      "posture": "lying_prone",
+      "hipAngle": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Working knee 8 to 115, idle leg straight at 8 on the pad, hips 0, hands closed on the handles. Matches the cues."
   }
 }

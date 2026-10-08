@@ -16,6 +16,8 @@ import { memo, type Setup, type Template } from './types.ts'
 // away (pelvis yaw plus lumbar and thoracic rotation, ~110 deg of shoulder-line turn), the weight shifts to the far
 // leg, the near foot pivots on the ball (heel up, turning in, toes flat) and the knees soften as the handle finishes low outside
 // the far hip. Research (motion-authoring): trunk rotation +-30-45 deg, transverse-plane motion is author judgment.
+// Low to high (832): the same turn from a low pulley, starting sunk and bent towards the handle low by the near thigh
+// and finishing tall with long arms above the far shoulder (the chop's spine flexion and hip drop run the other way).
 
 type P = ParamsOf<'rotation'>
 
@@ -33,6 +35,13 @@ export const CHOP = {
   /** near foot: heel lift about the ball and inward turn at the finish, deg */
   heel: 20,
   pivot: 32,
+} as const
+/** low to high lift: as CHOP, the spine flexion and hip drop reversed (sunk and bent at the low start, tall at the finish) */
+export const LIFT = {
+  ...CHOP,
+  lumbarFlex: [16, 0],
+  thoraxFlex: [32, -2],
+  drop: [0.18, 0.015],
 } as const
 /** elbow flexion of the straighter arm (long arms), deg */
 const LONG_ELBOW = 6
@@ -53,10 +62,22 @@ const PULLEY_Z = 0.5
 /** where the arms point, world, side right (mirrored for left): up towards the pulley at the start, outside the far
  * knee at the finish, bowing forward through the middle of the chop */
 const AIM = { start: [-0.85, 2.15, 0.4] as V3, end: [0.8, 0.5, 0.55] as V3, bow: 0.32 }
+/** low to high: low by the near thigh at the start, above the far shoulder at the finish where the chest faces
+ * (aimed across less, the near arm folds), bowing well forward so neither arm folds as the fists swap over midway */
+const LIFT_AIM = { start: [-1.0, -0.1, 0.4] as V3, end: [0.85, 2.0, 0.65] as V3, bow: 0.4 }
 /** where the thumbs point along the bar, world, side right: up at the start, forwards, up and across towards the far
  * side at the finish, so both wrists stay inside their deviation band and the bar sits square in both fists (a bar
  * turned straight forwards needs more radial deviation of the lower hand than it has, and slides across its palm) */
 const THUMBS = { start: [-0.25, 1, 0] as V3, end: [1, 0.5, 1] as V3 }
+/** low to high: thumbs forwards at the low start, up and across towards the far side at the finish (the bar square
+ * in both fists, the handle's rods off the lower forearm) */
+const LIFT_THUMBS = { start: [0, 0.5, 1] as V3, end: [0.55, 1, 0.4] as V3 }
+
+type Path = { body: typeof CHOP | typeof LIFT; aim: typeof AIM; thumbs: typeof THUMBS; neck: [number, number]; clav: { prot: [number, number]; elev: [number, number] }; pulleyY: number }
+const PATHS: Record<'high_to_low' | 'low_to_high', Path> = {
+  high_to_low: { body: CHOP, aim: AIM, thumbs: THUMBS, neck: [-4, 12], clav: { prot: [12, 8], elev: [8, 4] }, pulleyY: 2.0 },
+  low_to_high: { body: LIFT, aim: LIFT_AIM, thumbs: LIFT_THUMBS, neck: [10, -6], clav: { prot: [8, 12], elev: [4, 8] }, pulleyY: 0.1 },
+}
 
 type Ctx = {
   tempo: Tempo
@@ -64,6 +85,7 @@ type Ctx = {
   work: Side
   /** +1 when the stack is on the right (mirror sign for left) */
   s: number
+  path: Path
   feet: { near: FootTarget; far: FootTarget }
   nearBall: V3
   handle: ImplementSpec
@@ -83,6 +105,8 @@ function nearFoot(skel: Skeleton, ctx: Pick<Ctx, 'work' | 's' | 'nearBall' | 'fe
 
 function body(skel: Skeleton, q: Float64Array, ctx: Ctx, c: number) {
   const s = ctx.s
+  const CHOP = ctx.path.body
+  const { neck, clav } = ctx.path
   setDofs(skel, q, {
     'lumbar.rot': s * lerp(CHOP.lumbarRot[0], CHOP.lumbarRot[1], c),
     'thorax.rot': s * lerp(CHOP.thoraxRot[0], CHOP.thoraxRot[1], c),
@@ -90,10 +114,10 @@ function body(skel: Skeleton, q: Float64Array, ctx: Ctx, c: number) {
     'thorax.flex': lerp(CHOP.thoraxFlex[0], CHOP.thoraxFlex[1], c),
     'lumbar.bend': s * lerp(CHOP.bend[0], CHOP.bend[1], c) * 0.5,
     'thorax.bend': s * lerp(CHOP.bend[0], CHOP.bend[1], c) * 0.5,
-    'neck.flex': lerp(-4, 12, c),
+    'neck.flex': lerp(neck[0], neck[1], c),
     'neck.rot': s * lerp(-6, 8, c),
-    'clavicle_*.prot': lerp(12, 8, c),
-    'clavicle_*.elev': lerp(8, 4, c),
+    'clavicle_*.prot': lerp(clav.prot[0], clav.prot[1], c),
+    'clavicle_*.elev': lerp(clav.elev[0], clav.elev[1], c),
     'grip_*.close': 1,
   })
   const hip: V3 = [s * lerp(CHOP.shift[0], CHOP.shift[1], c), ctx.hipY - lerp(CHOP.drop[0], CHOP.drop[1], c), 0]
@@ -114,6 +138,7 @@ type Hold = { pose: ImplementPose; hand: Quat; up: V3 }
 function handleAt(skel: Skeleton, q: Float64Array, ctx: Ctx, c: number, d: number): Hold {
   const f = fk(skel, q)
   const mid = scale(add(segPos(skel, f, 'humerus_l'), segPos(skel, f, 'humerus_r')), 0.5)
+  const { aim: AIM, thumbs: THUMBS } = ctx.path
   const aim = add(lerpV(AIM.start, AIM.end, c), [0, 0, AIM.bow * Math.sin(Math.PI * c)])
   const dir = norm(sub([ctx.s * aim[0], aim[1], aim[2]], mid))
   const center = add(mid, scale(dir, d))
@@ -145,8 +170,10 @@ function solveFrame(skel: Skeleton, ctx: Ctx, c: number, d: number): { q: Float6
 }
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
-  if (p.implement !== 'cable' || p.direction !== 'high_to_low' || p.posture !== 'standing' || p.stance === 'split' || (p.attachment ?? 'single_handle') !== 'single_handle') {
-    throw new Error(`rotation: variant not implemented yet (${p.implement}/${p.direction}/${p.posture}/${p.stance}/${p.attachment ?? '-'})`)
+  // the pulley sits where the handle starts: high for the chop, low for the lift
+  const height = p.direction === 'low_to_high' ? 'low' : 'high'
+  if (p.implement !== 'cable' || p.direction === 'horizontal' || p.cableHeight !== height || p.posture !== 'standing' || p.stance === 'split' || (p.attachment ?? 'single_handle') !== 'single_handle') {
+    throw new Error(`rotation: variant not implemented yet (${p.implement}/${p.direction}/${p.cableHeight}/${p.posture}/${p.stance}/${p.attachment ?? '-'})`)
   }
   const tempo = p.tempo ?? DEFAULT_TEMPO
   const work: Side = p.side === 'left' ? 'l' : 'r'
@@ -162,8 +189,9 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   // standing hip height with straight-ish legs over the wide stance
   const hipY = skel.data.standingHeight + hipMidLocal(skel)[1] - 0.03
   const handle = twoHandHandle({ gap: GAP })
-  const pulley: V3 = [-s * PULLEY_OUT, 2.0, PULLEY_Z]
-  const ctx: Ctx = { tempo, setup: undefined as unknown as Setup, work, s, feet, nearBall, handle, pulley, hipY, reach: () => 0.6 }
+  const path = PATHS[p.direction]
+  const pulley: V3 = [-s * PULLEY_OUT, path.pulleyY, PULLEY_Z]
+  const ctx: Ctx = { tempo, setup: undefined as unknown as Setup, work, s, path, feet, nearBall, handle, pulley, hipY, reach: () => 0.6 }
   // arm reach at knots: the straighter arm nearly straight
   const cs = Array.from({ length: 13 }, (_, k) => 0.5 - 0.5 * Math.cos((Math.PI * k) / 12))
   const ds = cs.map((c) => root1d((d) => {

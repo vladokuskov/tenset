@@ -41,9 +41,14 @@
     311
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "cable",
+      "posture": "seated",
+      "grip": "neutral",
+      "attachment": "single_handle"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -61,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. needs work: The working side is fine: single handle, neutral (forearm -6 to -9), elbow 10 to 142, ends 8.6 cm outside the shoulder at y 0.683. The free left hand does not rest on the thigh pad as the author says. Its capsule is 65 mm off the pad (grip site 115 to 131 mm away) and more than 150 mm from any body part. The forearm is held out horizontally, so the arm floats in the hero (t=0.5) and the side view. | ok: Fixed in vertical-pull.ts: the old fixed REST_ARM pose is gone. A new restHand() uses attachHand to put the free left palm face down on top of the thigh-pad roller over the left thigh, with the elbow pointing out. The target is calibrated once in seatedContext so the hand's lowest capsule sits 4 mm into the pad (REST_SINK). QA: hand_l / station pad is -4.0 mm (tol 15), so the hand is in contact. All other body-machine pairs are unchanged (trunk/seat -11.8, thighs/pad about -10), and no new close pairs appeared. My first pole choice made the shoulder plane swing 1 to 42 deg (a wrist_l.dev jerk flip). A more lateral pole fixed it: the free arm now holds elev 37-39, elbow 97-102. The hero and side renders show the hand resting on the roller through the whole loop. The working side and the 24 approved bakes are untouched. I loosened the unit test's free-arm check from 1 to 3 deg shoulder elev and added an elbow-change check under 8 deg, because the arm now follows the small trunk lean."
   }
 }

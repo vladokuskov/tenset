@@ -38,8 +38,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "leg-curl",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "lying_prone",
+      "hipAngle": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -57,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Prone, knees just past the bench end, dumbbell vertical between the feet at the top (knee 95, shins vertical). ROM is only 45 to 95 (the template's research range is 5 to 110), so the stretch end stops with the shins about 45 deg above horizontal. Reads correctly otherwise."
   }
 }

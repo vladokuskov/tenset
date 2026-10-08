@@ -41,9 +41,15 @@
     107
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "smith",
+      "benchAngle": 0,
+      "grip": "pronated",
+      "gripWidth": 1.4,
+      "elbowFlare": 40
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Reads as a Smith press. The bar holds x=0 and z=-0.10 on the rail every frame. The bottom matches 101 exactly (grip 5.9 cm below the sternum in the thorax frame, elbow 137, flare 39). Lockout elbow is 13 deg with the arms 13 deg toward the feet, which is right for a fixed groove. Max forearm lean is 23 deg (101 has 34). The near plate covering the near hand at the bottom happens on 101 too."
   }
 }

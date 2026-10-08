@@ -2,6 +2,7 @@ import { root1d } from '../../constraints.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../../collide.ts'
 import { centerOfMass, fk, localToWorld, segPos } from '../../fk.ts'
 import { barbell, type ImplementSpec } from '../../implements.ts'
+import { smithRails } from '../../implements/back.ts'
 import { add, angleBetween, qrot, RAD, scale, sub, type V3 } from '../../math.ts'
 import { setDofs, zeroQ, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
 import type { Tempo } from '../../timing.ts'
@@ -14,7 +15,8 @@ import { elbowPole, gripContacts, lerp, mirrorArm, phases, PROT, reach, shoulder
 // set back and the elbows drive the bar up to the lower stomach, at the shorts' waistband (elbow ~0 -> ~124 deg,
 // humerus to ~30-60 deg behind the trunk; research: elbow 0 -> 90-110, shoulder to 0..-30 extension; higher on the
 // ribs folds the elbow past 130 on this figure, lower lands on the hip crease). The bar path runs from under the
-// shoulders to the trunk; the ankles keep body + bar over the midfoot.
+// shoulders to the trunk; the ankles keep body + bar over the midfoot. Smith: the bar runs on the rails' vertical
+// line through the finish (lower stomach), so it hangs a little behind the shoulders at the bottom.
 
 const KNEE = 22
 const PLATE_KG = 20
@@ -38,6 +40,8 @@ export type Bent = {
   top: V3
   /** shoulder midpoint relative to the pelvis at s = 0 */
   sm0: V3
+  /** Smith: the rails' line (world z) */
+  railZ?: number
   sway?: Sway
 }
 
@@ -62,24 +66,32 @@ export function trunkAngle(skel: Skeleton, q: Float64Array) {
   return angleBetween(sub(shoulderMid(skel, q), hips), [0, 1, 0]) * RAD
 }
 
-function barPoseAt(skel: Skeleton, q: Float64Array, v: Pick<Bent, 'bar' | 'bottom' | 'top' | 'sm0'>, e: number): ImplementPose {
+function barPoseAt(skel: Skeleton, q: Float64Array, v: Pick<Bent, 'bar' | 'bottom' | 'top' | 'sm0' | 'railZ'>, e: number): ImplementPose {
   const pel = pelvisPos(skel, q)
   const sm = sub(shoulderMid(skel, q), pel)
   const hang = add(v.bottom, sub(sm, v.sm0))
   const rel: V3 = [0, lerp(hang[1], v.top[1], e), lerp(hang[2], v.top[2], e)]
-  return { id: v.bar.id, pos: add(pel, rel), rot: [0, 0, 0, 1] }
+  const pos = add(pel, rel)
+  if (v.railZ !== undefined) pos[2] = v.railZ
+  return { id: v.bar.id, pos, rot: [0, 0, 0, 1] }
 }
 
 function arms(skel: Skeleton, q: Float64Array, p: P, bar: ImplementSpec, pose: ImplementPose) {
   const g = add(pose.pos, bar.sites.l.pos)
-  reach(skel, q, 'l', { pos: g, axis: [1, 0, 0], palm: [0, 0, -1] }, { pole: elbowPole(skel, q, 'l', p.elbowFlare, 0.6), planeHint: 90 })
+  // underhand: palms forward (towards the toes) with the bar a little oblique across the palm (the forearm is at full
+  // supination), elbows tucked and pointed down at the hips, so the finish sits behind the trunk (plane past -90)
+  const under = p.grip === 'supinated'
+  const grip = { pos: g, axis: [1, 0, 0] as V3, palm: (under ? [0, 0, 1] : [0, 0, -1]) as V3, ...(under ? { oblique: 6 } : {}) }
+  reach(skel, q, 'l', grip, { pole: elbowPole(skel, q, 'l', p.elbowFlare, under ? 1 : 0.6), planeHint: under ? 0 : 90 })
   mirrorArm(skel, q)
 }
 
 function frame(skel: Skeleton, q: Float64Array, p: P, v: Bent, s: number, e: number, sway?: Sway) {
   trunk(skel, q, s)
   let pose!: ImplementPose
-  const measure = (qq: Float64Array) => centerOfMass(skel, fk(skel, qq), [{ mass: v.bar.mass, pos: barPoseAt(skel, qq, v, e).pos }])[2]
+  // Smith: the rails take the bar's fore-aft load, so the body balances itself (as the Smith overhead press)
+  const loads = v.railZ === undefined ? (qq: Float64Array) => [{ mass: v.bar.mass, pos: barPoseAt(skel, qq, v, e).pos }] : () => []
+  const measure = (qq: Float64Array) => centerOfMass(skel, fk(skel, qq), loads(qq))[2]
   const bal = standBalanced(skel, q, v.stance, { knee: KNEE, tilt: v.tilt }, measure, (qq) => {
     pose = barPoseAt(skel, qq, v, e)
     arms(skel, qq, p, v.bar, pose)
@@ -101,15 +113,6 @@ export function bentContext(p: P, skel: Skeleton, tempo: Tempo): Bent {
   const pel0 = pelvisPos(skel, q0)
   const sm0 = sub(shoulderMid(skel, q0), pel0)
   const v: Bent = { kind: 'bent', tempo, setup: undefined as never, stance, bar, tilt, bottom: [0, sm0[1] - 0.6, sm0[2]], top: [0, 0, 0], sm0 }
-  // hang: grips straight under the shoulders with the elbows just short of straight
-  const elbowAt = (dy: number) => {
-    const q = Float64Array.from(q0)
-    const vv = { ...v, bottom: [0, sm0[1] - dy, sm0[2]] as V3 }
-    arms(skel, q, p, bar, barPoseAt(skel, q, vv, 0))
-    return q[skel.dof['elbow_l.flex']]
-  }
-  const dy = root1d((d) => elbowAt(d) - BOTTOM_ELBOW, 0.45, 0.75, { tol: 1e-6 }).x
-  v.bottom = [0, sm0[1] - dy, sm0[2]]
   // finish: the bar against the lower stomach, reached along the trunk's front normal
   const q1 = base(1, tilt)
   const pel1 = pelvisPos(skel, q1)
@@ -123,12 +126,42 @@ export function bentContext(p: P, skel: Skeleton, tempo: Tempo): Bent {
     return Math.min(...trunkCaps.map((c) => capsuleSolidClearance(c, solids[0]))) - RIB_GAP
   }
   v.top = sub(at(root1d(gap, 0, 0.4, { tol: 1e-6 }).x), pel1)
+  if (p.implement === 'smith') v.railZ = pel1[2] + v.top[2]
+  // hang: grips straight under the shoulders with the elbows just short of straight
+  const elbowAt = (dy: number) => {
+    const q = Float64Array.from(q0)
+    const vv = { ...v, bottom: [0, sm0[1] - dy, sm0[2]] as V3 }
+    arms(skel, q, p, bar, barPoseAt(skel, q, vv, 0))
+    return q[skel.dof['elbow_l.flex']]
+  }
+  const dy = root1d((d) => elbowAt(d) - BOTTOM_ELBOW, 0.45, 0.75, { tol: 1e-6 }).x
+  v.bottom = [0, sm0[1] - dy, sm0[2]]
   const contacts = [...plantedContacts(skel, stance), ...gripContacts(bar.id)]
-  v.setup = { implements: [bar], contacts, tempo, symmetric: true, balance: { point: 'com', over: 'midfoot', tol: BALANCE_TOL } }
-  v.sway = limitSway((u, sway) => {
-    const ph = phases(u, tempo)
-    return frame(skel, zeroQ(skel), p, v, ph.s, ph.g, sway).bal
-  }, BALANCE_TOL - 0.005)
+  v.setup = { implements: [bar], contacts, tempo, symmetric: true }
+  if (v.railZ === undefined) v.setup.balance = { point: 'com', over: 'midfoot', tol: BALANCE_TOL }
+  else v.setup.implements.push(smithRails({ z: v.railZ }))
+  const balance = () =>
+    limitSway((u, sway) => {
+      const ph = phases(u, tempo)
+      return frame(skel, zeroQ(skel), p, v, ph.s, ph.g, sway).bal
+    }, BALANCE_TOL - 0.005)
+  v.sway = balance()
+  // Smith: the body settles where it balances, so the rails go where the bar meets the stomach at the finish (u = 0)
+  for (let pass = 0; v.railZ !== undefined && pass < 4; pass++) {
+    const q = zeroQ(skel)
+    const ph = phases(0, tempo)
+    frame(skel, q, p, v, ph.s, ph.g, v.sway)
+    v.railZ = pelvisPos(skel, q)[2] + v.top[2]
+    // hang: as low on the rails as the elbows allow, in the balanced body
+    const elbowIn = (d: number) => {
+      const qq = zeroQ(skel)
+      frame(skel, qq, p, { ...v, bottom: [0, sm0[1] - d, sm0[2]] }, 0, 0, v.sway)
+      return qq[skel.dof['elbow_l.flex']]
+    }
+    v.bottom = [0, sm0[1] - root1d((d) => elbowIn(d) - BOTTOM_ELBOW, 0.3, 0.75, { tol: 1e-6, scan: 12 }).x, sm0[2]]
+    v.setup.implements[1] = smithRails({ z: v.railZ })
+    v.sway = balance()
+  }
   return v
 }
 
@@ -136,5 +169,6 @@ export function sampleBent(u: number, p: P, skel: Skeleton, v: Bent): Pose {
   const ph = phases(u, v.tempo)
   const q = zeroQ(skel)
   const { pose } = frame(skel, q, p, v, ph.s, ph.g, v.sway)
-  return { q, implements: [pose], contacts: v.setup.contacts }
+  const rails: ImplementPose[] = v.railZ === undefined ? [] : [{ id: 'smith', pos: [0, 0, 0], rot: [0, 0, 0, 1] }]
+  return { q, implements: [pose, ...rails], contacts: v.setup.contacts }
 }

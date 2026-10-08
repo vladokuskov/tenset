@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
-import { fk, sitePos } from '../fk.ts'
+import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, qrot, RAD } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
@@ -21,10 +21,12 @@ const TOP = 0, BOTTOM = 0.635
 const pitch = (b: Baked, u: number) => 90 - dof(b, u, 'pelvis.tilt')
 /** regions whose capsules model the body faithfully here (palms and turned-under toes are allowed their sink) */
 const FREE = /^(trunk|head|neck|thigh|shank|upperarm|forearm)/
+/** kneeling: the capsules round the knees, which rest on the floor */
+const KNEES = /^(shank_[lr]1|thigh_[lr][23])/
 
 describe('push-up template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([106, 113, 114, 115])
+    expect([...baked.keys()].sort()).toEqual([106, 113, 114, 115, 134])
   })
 
   it.each([...baked.keys()])('%s: elbow ~6 at the top to the chest a fist above the support, plank rigid', (id) => {
@@ -35,7 +37,7 @@ describe('push-up template', () => {
     for (let i = 0; i < b.frames; i += 3) {
       const q = frameQ(b, i)
       expect(q[skel.dof['hip_l.flex']]).toBeCloseTo(2, 5)
-      expect(q[skel.dof['knee_l.flex']]).toBeCloseTo(2, 5)
+      if (!b.params.kneeling) expect(q[skel.dof['knee_l.flex']]).toBeCloseTo(2, 5)
       expect(q[skel.dof['lumbar.flex']]).toBeCloseTo(0, 5)
     }
     // bottom: the chest a fist (8 cm) over the support under the hands, or the head 4 cm off the floor where that
@@ -82,7 +84,7 @@ describe('push-up template', () => {
     const box = b.implements.findIndex((s) => s.kind === 'plyo_box')
     let floor = Infinity, prop = Infinity
     for (let i = 0; i < b.frames; i++) {
-      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => FREE.test(c.region))
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => FREE.test(c.region) && !(b.params.kneeling && KNEES.test(c.name)))
       for (const c of caps) floor = Math.min(floor, Math.min(c.a[1], c.b[1]) - c.r)
       if (box >= 0) for (const s of placeParts(b.implements[box], frameImplements(b, i)[box])) for (const c of caps) prop = Math.min(prop, capsuleSolidClearance(c, s))
     }
@@ -152,8 +154,22 @@ describe('push-up template', () => {
     expect(pitch(floor, TOP)).toBeLessThan(25)
   })
 
+  it('kneeling (134): the knees rest on the floor in one place the whole rep, balls of the feet planted behind, a shorter and steeper plank', () => {
+    const b = baked.get(134)!
+    const knee0 = segPos(skel, fk(skel, frameQ(b, 0)), 'tibia_l')
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const low = Math.min(...bodyCapsules(skel, f).filter((c) => KNEES.test(c.name)).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+      expect(low, `knee rest @${i}`).toBeGreaterThan(-0.006)
+      expect(low, `knee rest @${i}`).toBeLessThan(-0.004)
+      expect(dist(segPos(skel, f, 'tibia_l'), knee0), `knee still @${i}`).toBeLessThan(0.01)
+      expect(frameQ(b, i)[skel.dof['knee_l.flex']]).toBeGreaterThan(10)
+    }
+    expect(pitch(b, TOP)).toBeGreaterThan(pitch(baked.get(113)!, TOP) + 10)
+  })
+
   it('unsupported variants throw', () => {
-    expect(() => bake(t, parse({ kneeling: true }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => bake(t, parse({ kneeling: true, elevation: 'hands' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({}, 'unilateral'), skel)).toThrow(/variant not implemented yet/)
   })
 })

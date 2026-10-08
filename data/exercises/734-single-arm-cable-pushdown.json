@@ -37,8 +37,16 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "single_handle",
+      "cableHeight": "high",
+      "grip": "pronated",
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Unilateral is correct: only the right arm works (4 to 108 deg, forearm 29 deg above horizontal at the stretch, matching cue 4), the left arm stays fixed at elbow 14 / pro 20 / grip 0.4, pronated, the elbow moves 17 mm, head sway is within tolerance. Small issues: at lockout and in the lockout hold the D-handle rods are 27 deg off the cable line (3-7 deg mid-rep), so it kinks at the carabiner, and the free hand is half-closed. The camera only suits side right."
   }
 }

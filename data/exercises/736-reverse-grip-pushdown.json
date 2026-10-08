@@ -37,8 +37,17 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "straight_bar",
+      "cableHeight": "high",
+      "grip": "supinated",
+      "gripWidth": 1.15,
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Palms really are up: pro -89.5 at lockout to -92.5 at the stretch, palm normal (0, 0.9, -0.44) at the top. Elbows hold within 16 mm, wrists stay flat, the body is still, and grip is 1.15x shoulder width. The bar's top is 1.384 m, the same as 715's (1.394), so apart from the palms it matches 715. Ships only if the lead accepts the scoped forearm.pro [-94, 85] limit (2.5 deg past the model's -90). 704/715 bakes stay fresh."
   }
 }

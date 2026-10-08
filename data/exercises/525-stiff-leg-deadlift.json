@@ -46,8 +46,15 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hinge",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "gripWidth": 1.2,
+      "stance": "hip",
+      "kneeAngle": 15,
+      "start": "floor"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -65,6 +72,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Knees held at 15 (ramp to 3 at the top), shins near vertical, bar on the floor at 0.227 m over the midfoot. Hip DOF 109 with only 11 deg of spine flexion puts the trunk 23 deg past horizontal. At the bottom the arms rake 26 deg back from vertical, and the hip moves forward 11.5 cm (z -0.241 to -0.126) in the last third of the descent. Same pattern as the approved 501 (rake 20, reversal 9 cm) but a bit stronger."
   }
 }

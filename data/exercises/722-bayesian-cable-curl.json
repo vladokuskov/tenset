@@ -38,8 +38,15 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "cable",
+      "grip": "supinated",
+      "posture": "standing",
+      "attachment": "single_handle",
+      "cableHeight": "low",
+      "shoulderFlexion": -25
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. needs work: The elbow stays behind the shoulder throughout (4 cm at the top, 15 cm at the bottom), so the Bayesian shape is right. The whole body leans as a plank, though. The pelvis is 9.6 cm ahead of the ankles vs 9.5 cm behind on 713 (a 19 cm shift, about 12 deg from the ankles), and the head is 19 cm forward. It reads as tipping in both the hero and the side view. Top flexion is capped at 122 vs 139 on 713. | minor: Fixed in curl.ts: the Bayesian variant now stands in a split stance from isolation.ts (splitStance/standSplit, BEHIND_SPLIT step 0.4 m, front knee 42, pelvis tilt 3). The free-side foot is forward and the working foot back. Pelvis z is balanced over the middle of the base, so the base holds the 8 kg cable instead of an ankle lean. Trunk lean is 3 deg in every frame, the pelvis sits 0.4 cm off the base midline, and the side view reads upright. The elbow stays behind the shoulder (8 to 14 cm). BEHIND_TOP went from 122 to 126. At 128 the forearm/handle clearance is -8.9 mm (tol 10), and at 130 it fails the body-prop gate (-11.9). So top flexion is 126, still short of the requested ~130 and of 713's 139. The front knee at 42 deg is a fairly deep bend for a curl and reads slightly lunge-like. With a shallower knee the rear heel lifted off its target (foot error 25 to 44 mm). Rear knee is about 11 deg. QA passes, and jerk and acceleration are low. I updated the unit test: top elbow under 130, and pelvis tilt under 5 deg in every frame."
   }
 }

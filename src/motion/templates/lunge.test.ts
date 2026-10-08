@@ -22,8 +22,8 @@ const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[
 const trunkLean = (b: Baked, u: number) => dof(b, u, 'pelvis.tilt') + dof(b, u, 'lumbar.flex') + dof(b, u, 'thorax.flex')
 
 describe('lunge template', () => {
-  it('covers every lunge record: split squat, reverse, step-up and walking lunge', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411])
+  it('covers every lunge record: split squats, reverse and forward lunges, step-up and walking lunge', () => {
+    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 430])
   })
 
   it.each(variants.map((v) => [v.slug, v.id] as const))('%s: finite, planted feet still, dumbbells in the hands, loop closes', (_, id) => {
@@ -46,7 +46,7 @@ describe('lunge template', () => {
   })
 
   it('front knee ~5 -> 90-100 (research: lunge front knee 0 -> 90-100), torso within torsoAngle of upright', () => {
-    for (const id of [403, 409, 411]) {
+    for (const id of [403, 409, 411, 424, 425]) {
       const b = get(id)
       expect(dof(b, 0, 'knee_r.flex'), `${id} top`).toBeLessThan(6)
       const knee = dof(b, bottomU(b), 'knee_r.flex')
@@ -59,7 +59,7 @@ describe('lunge template', () => {
   })
 
   it('rear knee drops towards the floor: 80-100 deg on the lunges, deeper with the foot on the bench; rear hip open', () => {
-    for (const id of [409, 411]) {
+    for (const id of [409, 411, 424, 425]) {
       const b = get(id)
       const knee = dof(b, bottomU(b), 'knee_l.flex')
       expect(knee, `${id}`).toBeGreaterThan(80)
@@ -197,11 +197,58 @@ describe('lunge template', () => {
     expect(air).toBeGreaterThan(20)
   })
 
+  it('split squat on the floor: the rear ball stays planted, front knee ~5-20 -> 90-100, the rear knee drops to the floor', () => {
+    for (const id of [423, 430]) {
+      const b = get(id)
+      expect(b.contacts.map((c) => c.site)).toContain('ball_l')
+      // standing tall in the split stance leaves a little bend in the front knee (Smith: the rail line puts both legs long)
+      expect(dof(b, 0, 'knee_r.flex'), `${id} top`).toBeLessThan(id === 423 ? 10 : 16)
+      expect(dof(b, 0, 'knee_l.flex'), `${id} rear top`).toBeLessThan(8)
+      const knee = dof(b, bottomU(b), 'knee_r.flex')
+      // the Smith's long stance: the rear knee reaches the floor with the front shin near vertical, a little short of 90
+      expect(knee, `${id} bottom`).toBeGreaterThan(id === 423 ? 80 : 90)
+      expect(knee, `${id} bottom`).toBeLessThan(101)
+      expect(dof(b, bottomU(b), 'knee_l.flex'), `${id} rear bottom`).toBeGreaterThan(85)
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, at(b, bottomU(b))))).filter((c) => /^(thigh|shank)_l$/.test(c.region))
+      const low = Math.min(...caps.map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+      expect(low, `${id} rear knee near the floor`).toBeGreaterThan(0.02)
+      expect(low, `${id} rear knee near the floor`).toBeLessThan(0.12)
+      // the heel stays up, higher at the bottom
+      const f = fk(skel, frameQ(b, at(b, bottomU(b))))
+      expect(sitePos(skel, f, 'heel_l')[1] - sitePos(skel, f, 'ball_l')[1]).toBeGreaterThan(0.08)
+      // Smith: the back knee drops about straight down under the hips
+      if (id === 423) {
+        const hip = (segPos(skel, f, 'femur_l')[2] + segPos(skel, f, 'femur_r')[2]) / 2
+        expect(Math.abs(segPos(skel, f, 'tibia_l')[2] - hip), 'rear knee under the hips').toBeLessThan(0.07)
+      }
+    }
+  })
+
+  it('bar on the back: it rides on the upper back, the hands hold it; on the Smith it stays on the rail line', () => {
+    for (const id of [423, 424]) {
+      const b = get(id)
+      const k = b.implements.findIndex((s) => s.id === 'bar')
+      for (let i = 0; i < b.frames; i += 5) {
+        const f = fk(skel, frameQ(b, i))
+        const bar = frameImplements(b, i)[k].pos
+        // behind the neck, above the shoulder joints
+        expect(bar[1], `${id} @${i}`).toBeGreaterThan(segPos(skel, f, 'humerus_l')[1])
+        expect(bar[2], `${id} @${i}`).toBeLessThan(segPos(skel, f, 'neck1')[2])
+      }
+    }
+    const smith = get(423)
+    const k = smith.implements.findIndex((s) => s.id === 'bar')
+    const z0 = frameImplements(smith, 0)[k].pos[2]
+    for (let i = 0; i < smith.frames; i++) expect(Math.abs(frameImplements(smith, i)[k].pos[2] - z0)).toBeLessThan(0.001)
+    expect(smith.implements.some((s) => s.id === 'smith')).toBe(true)
+  })
+
   it.each([
-    ['barbell', { implement: 'barbell', hold: 'back_high' }],
+    ['barbell forward lunge', { implement: 'barbell', hold: 'back_high', direction: 'forward' }],
+    ['Smith reverse lunge', { implement: 'smith', hold: 'back_high', direction: 'reverse' }],
+    ['barbell split squat with the rear foot on a bench', { implement: 'barbell', hold: 'back_high', direction: 'in_place', rearFootElevated: true }],
     ['goblet hold', { hold: 'goblet' }],
     ['left working side', { side: 'left' }],
-    ['split squat on the floor', { direction: 'in_place' }],
   ])('%s: throws variant not implemented yet', (_, params) => {
     expect(() => getTemplate('lunge').setup(parseParams('lunge', params), skel)).toThrow(/variant not implemented yet/)
   })

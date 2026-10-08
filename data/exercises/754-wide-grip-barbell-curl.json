@@ -38,8 +38,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "barbell",
+      "grip": "supinated",
+      "gripWidth": 1.5,
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Clearly wide: hands 0.68 m vs 0.52 m on 710, elbows 5.5 cm outside the shoulders. Bottom elbow is 15 to 16 deg vs 9 to 10 on 710, so 'lower all the way to straight arms' falls about 6 deg short. Top is 132 vs 139, and wrist extension is 16 at the bottom. The WIDE_GRIP gate (>1.2) leaves 710 (1.15) untouched."
   }
 }

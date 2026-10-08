@@ -6,7 +6,7 @@ import { pressHandles, PRESS_MACHINE, pressMachineFrame, type PressGeometry } fr
 import { add, lerp, norm, qid, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
-import { dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
+import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic, secant } from './solve.ts'
 import { makeStance, plantedContacts, setPelvis, stand, stanceWidth, type StanceSetup } from './standing.ts'
@@ -18,9 +18,10 @@ import { memo, type Setup, type Template } from './types.ts'
 // lifter starts leaning back a little with the bar just below the chin, keeps the head back while the bar passes the
 // face, then brings the chest and head through under the bar at lockout. Smith: one vertical line on the rails, the
 // body balancing alone. Seated dumbbells: from ear level to overhead, the hands closing in slightly. Machine: the
-// handles swing up on an arc about a pivot behind the seat. Endpoints: humeral elevation ~40-60 deg at the bottom to
-// ~165-175 at lockout, elbow flexion bottom ~95-140 to ~0-10 (motion-authoring research: Evangelista 2025 two-link
-// OHP model; author judgment for the rest).
+// handles swing up on an arc about a pivot behind the seat. Standing dumbbells: the seated path off the shoulders,
+// ribs down, balanced over the midfoot. Seated barbell: the standing bar line and head motion on an upright bench.
+// Endpoints: humeral elevation ~40-60 deg at the bottom to ~165-175 at lockout, elbow flexion bottom ~95-140 to ~0-10
+// (motion-authoring research: Evangelista 2025 two-link OHP model; author judgment for the rest).
 
 type P = ParamsOf<'vertical-press'>
 
@@ -77,6 +78,15 @@ type Stand = {
   df: (c: number) => number
 }
 
+/** the bar fields the bar path and the arms on it read (standing or seated) */
+type BarLine = Pick<Stand, 'kind' | 'bar' | 'z0' | 'z1' | 'y0' | 'y1'>
+
+/** standing dumbbells: path offsets from the shoulder joint (left), balanced ankle dorsiflexion along the rep */
+type StandDb = { kind: 'sdb'; stance: StanceSetup; from: V3; to: V3; df: (c: number) => number }
+
+/** seated barbell: the bar line in front of the face, as standing, with the body still on an upright bench */
+type SeatedBar = BarLine & { seatedBar: true; feet: FootTarget[]; benchPose: ImplementPose }
+
 type Seated = {
   kind: 'db' | 'machine'
   feet: FootTarget[]
@@ -87,7 +97,7 @@ type Seated = {
   press?: PressGeometry
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated }
+type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | StandDb | SeatedBar }
 
 const ramp = (c: number, a: number, b: number) => minJerk((c - a) / (b - a))
 
@@ -102,6 +112,8 @@ function unsupported(p: P) {
   if (p.implement === 'barbell' && p.posture === 'standing') return null
   if (p.implement === 'smith' && p.posture === 'standing') return null
   if (p.implement === 'dumbbell' && p.posture === 'seated') return null
+  if (p.implement === 'dumbbell' && p.posture === 'standing') return null
+  if (p.implement === 'barbell' && p.posture === 'seated') return null
   if (p.implement === 'machine' && p.machine === 'shoulder_press_machine' && p.posture === 'seated') return null
   return `${p.implement}/${p.posture}`
 }
@@ -150,13 +162,13 @@ function posture(skel: Skeleton, q: Float64Array, k: ReturnType<typeof keys>) {
 const tiltOf = (lean: number) => 3 + 0.5 * lean
 
 /** straight up in front of the face, then back over the midfoot once it has passed the forehead */
-function barPose(v: Stand, c: number): ImplementPose {
+function barPose(v: BarLine, c: number): ImplementPose {
   return { id: v.bar.id, pos: [0, lerp(v.y0, v.y1, c), lerp(v.z0, v.z1, ramp(c, BAR_BACK[0], BAR_BACK[1]))], rot: qid() }
 }
 
 /** hands onto the bar: elbows down and a little out in front at the bottom, out to the sides at lockout (the pole
  * stays well off the shoulder-wrist line, so the elbow's swivel is well conditioned) */
-function barArms(skel: Skeleton, q: Float64Array, v: Stand, c: number) {
+function barArms(skel: Skeleton, q: Float64Array, v: BarLine, c: number) {
   const g = siteWorld(v.bar, barPose(v, c), 'l')
   const thorax = fk(skel, q).rot[skel.seg.thorax2]
   const top = v.kind === 'smith' ? SMITH_POLE : BAR_POLE
@@ -274,7 +286,8 @@ function seatedFrame(skel: Skeleton, v: Seated, c: number): { q: Float64Array; i
   return { q, implements: [hp, { id: 'shoulder-press', pos: [0, 0, 0], rot: qid() }] }
 }
 
-function dbContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+/** the seated body and the upright bench fitted to it */
+function seatBench(p: P, skel: Skeleton) {
   const feet = seatedFeet(skel)
   const q = zeroQ(skel)
   seatedBody(skel, q, feet)
@@ -295,6 +308,11 @@ function dbContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   hinge = add(hinge, sub(restAgainst(trunk, padPart, out, -0.006).center, padPart.center))
   const benchSpec = bench({ backAngle: p.benchAngle, seatHeight: hinge[1] })
   const benchPose: ImplementPose = { id: benchSpec.id, pos: hinge, rot: qid() }
+  return { feet, f, benchSpec, benchPose }
+}
+
+function dbContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const { feet, f, benchSpec, benchPose } = seatBench(p, skel)
   // grip paths: from ear level beside the head (forearms vertical under the dumbbells) to overhead, hands closing in
   const gh = segPos(skel, f, 'humerus_l')
   const v: Seated = { kind: 'db', feet, benchPose }
@@ -359,17 +377,116 @@ function sampleSeated(u: number, skel: Skeleton, ctx: Ctx, v: Seated): Pose {
   return { q: r.q, implements: r.implements, contacts: ctx.setup.contacts }
 }
 
+// ---------- standing dumbbells ----------
+
+/** trunk lean, deg (negative = back): ribs down, a little back at the bottom, upright at lockout */
+const SDB_LEAN: [number, number] = [-3, -1]
+
+/** body standing at ankle dorsiflexion df, dumbbells on a path set relative to the shoulder joint */
+function standDbFrame(skel: Skeleton, v: Pick<StandDb, 'stance' | 'from' | 'to'>, c: number, df: number): Float64Array {
+  const q = zeroQ(skel)
+  const lean = lerp(SDB_LEAN[0], SDB_LEAN[1], c)
+  setDofs(skel, q, { 'lumbar.flex': -2 + 0.35 * lean, 'thorax.flex': 0.15 * lean, 'grip_*.close': 1 })
+  stand(skel, q, v.stance, { knee: KNEE, df, tilt: tiltOf(lean) })
+  const gh = segPos(skel, fk(skel, q), 'humerus_l')
+  dbArm(skel, q, add(gh, add(scale(v.from, 1 - c), scale(v.to, c))), c)
+  return q
+}
+
+function standDbContext(skel: Skeleton, tempo: Tempo): Ctx {
+  const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
+  const v: StandDb = { kind: 'sdb', stance, from: [0, 0, 0], to: [0, 0, 0], df: () => 5 }
+  // the seated grip path (ear level to overhead, hands closing in), offsets from the shoulder joint
+  const elbowAt = (off: V3, c: number) => {
+    v.from = v.to = off
+    return standDbFrame(skel, v, c, 5)[skel.dof['elbow_l.flex']]
+  }
+  const [bx, bz] = DB_FROM, [tx, tz] = DB_TO
+  const from: V3 = [bx, root1d((y) => elbowAt([bx, y, bz], 0) - DB_ELBOW0, 0, 0.4, { tol: 1e-5, scan: 8 }).x, bz]
+  const to: V3 = [tx, root1d((y) => elbowAt([tx, y, tz], 1) - DB_ELBOW1, 0.35, 0.8, { tol: 1e-5, scan: 8 }).x, tz]
+  v.from = from
+  v.to = to
+  // the ankles put the body and dumbbells' centre of mass over the midfoot
+  const com = comWithDumbbells(skel, DB_KG)
+  const cs = Array.from({ length: KNOTS }, (_, i) => i / (KNOTS - 1))
+  const dfs = cs.map((c) => secant((df) => com(standDbFrame(skel, v, c, df)) - stance.midfoot[2], 4, 7, 1e-6, 12))
+  v.df = monotoneCubic(cs, dfs)
+  const setup: Setup = {
+    implements: handDumbbells(DB_KG),
+    contacts: [...plantedContacts(skel, stance), ...dumbbellContacts()],
+    tempo,
+    symmetric: true,
+    balance: { point: 'com', over: 'midfoot', tol: 0.025 },
+  }
+  return { tempo, setup, v }
+}
+
+function sampleStandDb(u: number, skel: Skeleton, ctx: Ctx, v: StandDb): Pose {
+  const c = phaseAt(u, ctx.tempo).c
+  const q = standDbFrame(skel, v, c, v.df(c))
+  return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }
+}
+
+// ---------- seated barbell ----------
+
+/** seated on the upright bench: the head goes back while the bar passes the face and through under it at lockout */
+function seatedBarFrame(skel: Skeleton, v: SeatedBar, c: number): Float64Array {
+  const q = zeroQ(skel)
+  seatedBody(skel, q, v.feet)
+  const k = keys(c)
+  setDofs(skel, q, { 'neck.flex': -18 * k.back + 10 * k.through, 'head.flex': 13 * k.back - 5 * k.through })
+  barArms(skel, q, v, c)
+  return q
+}
+
+function seatedBarContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const { feet, f, benchSpec, benchPose } = seatBench(p, skel)
+  const bar = barbell({ gripWidth: p.gripWidth * skel.data.shoulderWidth, plateKg: BAR_PLATE_KG })
+  const gh = segPos(skel, f, 'humerus_l')
+  const y0 = sitePos(skel, f, 'chin')[1] - BAR_BELOW_CHIN
+  const v: SeatedBar = { seatedBar: true, kind: 'bar', bar, feet, benchPose, z0: 0, z1: gh[2], y0, y1: y0 + 0.55 }
+  const elbow = (c: number) => seatedBarFrame(skel, v, c)[skel.dof['elbow_l.flex']]
+  // as standing: the bar starts as close in front of the neck as the elbows allow and locks out over the shoulders
+  v.z0 = root1d((z) => {
+    v.z0 = z
+    return elbow(0) - BAR_ELBOW0
+  }, gh[2] + 0.25, gh[2] + 0.06, { tol: 1e-5, scan: 12 }).x
+  v.y1 = root1d((y) => {
+    v.y1 = y
+    return elbow(1) - LOCK_ELBOW
+  }, y0 + 0.35, y0 + 0.8, { tol: 1e-5, scan: 6 }).x
+  const setup: Setup = {
+    implements: [bar, benchSpec],
+    contacts: [
+      ...feetContacts(skel, feet),
+      { site: 'grip_l', kind: 'grip', target: { implement: bar.id, grip: 'l' } },
+      { site: 'grip_r', kind: 'grip', target: { implement: bar.id, grip: 'r' } },
+    ],
+    tempo,
+    symmetric: true,
+  }
+  return { tempo, setup, v }
+}
+
+function sampleSeatedBar(u: number, skel: Skeleton, ctx: Ctx, v: SeatedBar): Pose {
+  const c = phaseAt(u, ctx.tempo).c
+  return { q: seatedBarFrame(skel, v, c), implements: [barPose(v, c), v.benchPose], contacts: ctx.setup.contacts }
+}
+
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`vertical-press: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
-  if (p.posture === 'standing') return standContext(p, skel, tempo)
+  if (p.posture === 'standing') return p.implement === 'dumbbell' ? standDbContext(skel, tempo) : standContext(p, skel, tempo)
+  if (p.implement === 'barbell') return seatedBarContext(p, skel, tempo)
   return p.implement === 'dumbbell' ? dbContext(p, skel, tempo) : machineContext(p, skel, tempo)
 })
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const v = ctx.v
+  if ('seatedBar' in v) return sampleSeatedBar(u, skel, ctx, v)
+  if (v.kind === 'sdb') return sampleStandDb(u, skel, ctx, v)
   return 'stance' in v ? sampleStand(u, skel, ctx, v) : sampleSeated(u, skel, ctx, v)
 }
 

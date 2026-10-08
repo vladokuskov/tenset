@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
+import { handFrame } from '../constraints.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, sub } from '../math.ts'
+import { dist, dot, sub } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 import { planeElevOf, thoraxFrame } from './isolation.ts'
@@ -27,7 +28,9 @@ const series = (b: Baked, name: string) => Array.from({ length: b.frames }, (_, 
 
 describe('rear-raise template', () => {
   it('covers every rear-raise record', () => {
-    expect([...baked.keys()]).toEqual(['205-reverse-pec-deck', '210-bent-over-rear-delt-fly', '213-cable-rear-delt-fly'])
+    expect([...baked.keys()]).toEqual([
+      '205-reverse-pec-deck', '210-bent-over-rear-delt-fly', '213-cable-rear-delt-fly', '230-incline-prone-rear-delt-raise', '231-prone-t-raise',
+    ])
   })
 
   it.each([...baked.keys()])('%s: horizontal abduction from in front to in line with the shoulders, elbows soft, no shrug', (slug) => {
@@ -35,7 +38,10 @@ describe('rear-raise template', () => {
     // research: horizontal abduction ~-90 -> 0
     expect(arm(b, BOTTOM).plane).toBeGreaterThan(75)
     expect(Math.abs(arm(b, TOP).plane)).toBeLessThan(10)
-    for (const u of [TOP, 0.3, BOTTOM]) expect(arm(b, u).elev).toBeGreaterThan(70)
+    // prone on the 45 deg pad the arms hang at 45 deg of flexion, then rise level with the shoulders
+    const low = b.params.posture === 'lying_prone' ? 40 : 70
+    for (const u of [TOP, 0.3, BOTTOM]) expect(arm(b, u).elev).toBeGreaterThan(low)
+    if (b.params.posture === 'lying_prone') expect(arm(b, TOP).elev).toBeGreaterThan(80)
     const elbows = series(b, 'elbow_l.flex')
     if (b.params.implement === 'machine') {
       // "arms nearly straight": solved onto the handle arcs
@@ -104,11 +110,48 @@ describe('rear-raise template', () => {
     }
   })
 
+  it.each(['230-incline-prone-rear-delt-raise', '231-prone-t-raise'])('%s: chest on the incline pad, body still, the dumbbells hang plumb at the bottom', (slug) => {
+    const b = get(slug)
+    const bench = b.implements.find((s) => s.id === 'bench')!
+    for (const i of [0, at(b, BOTTOM)]) {
+      const pad = placeParts(bench, frameImplements(b, i).find((p) => p.id === bench.id)!).filter((s) => s.part.pad)
+      const trunk = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region === 'trunk')
+      const rest = Math.min(...trunk.flatMap((c) => pad.map((s) => capsuleSolidClearance(c, s))))
+      expect(rest).toBeGreaterThan(-0.015)
+      expect(rest).toBeLessThan(0.002)
+    }
+    for (const name of ['pelvis.ty', 'pelvis.tz', 'pelvis.tilt', 'lumbar.flex', 'knee_l.flex']) {
+      const v = series(b, name)
+      expect(Math.max(...v) - Math.min(...v)).toBeLessThan(1e-9)
+    }
+    const f = fk(skel, frameQ(b, at(b, BOTTOM)))
+    const gh = segPos(skel, f, 'humerus_l'), elbow = segPos(skel, f, 'forearm_l')
+    expect(Math.hypot(elbow[0] - gh[0], elbow[2] - gh[2])).toBeLessThan(0.01)
+    // the hands turn smoothly: no humeral or forearm rotation step
+    for (const name of ['shoulder_l.rot', 'forearm_l.pro']) {
+      const v = series(b, name)
+      for (let i = 1; i < v.length; i++) expect(Math.abs(v[i] - v[i - 1])).toBeLessThan(6)
+    }
+  })
+
+  it('prone hands at the top: palms down on the rear delt raise, thumbs up and palms towards the head on the T-raise', () => {
+    const palmAtTop = (slug: string) => {
+      const b = get(slug)
+      const q = frameQ(b, at(b, TOP))
+      const fr = thoraxFrame(skel, q)
+      const palm = handFrame(skel, fk(skel, q), 'l').palm
+      return { fwd: dot(palm, fr.fwd), up: dot(palm, fr.up) }
+    }
+    // the trunk's front faces the floor prone, so palms down is along the thorax's forward axis
+    expect(palmAtTop('230-incline-prone-rear-delt-raise').fwd).toBeGreaterThan(0.7)
+    expect(palmAtTop('231-prone-t-raise').up).toBeGreaterThan(0.7)
+  })
+
   it('unsupported variants throw', () => {
     const t = getTemplate('rear-raise')
     const run = (params: Record<string, unknown>, lat?: string) => () => t.setup(parseParams('rear-raise', params, lat), skel)
     expect(run({ implement: 'dumbbell' }, 'unilateral')).toThrow(/variant not implemented yet/)
-    expect(run({ implement: 'dumbbell', posture: 'lying_prone' })).toThrow(/variant not implemented yet/)
+    expect(run({ implement: 'cable', posture: 'lying_prone', benchAngle: 45 })).toThrow(/variant not implemented yet/)
     expect(run({ implement: 'cable', torsoAngle: 45 })).toThrow(/variant not implemented yet/)
   })
 })

@@ -54,7 +54,7 @@ function toeAwareFoot(f: FK, s: 'l' | 'r'): Capsule[] {
 
 describe('calf-raise template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([601, 602, 603, 604, 605, 606])
+    expect([...baked.keys()].sort()).toEqual([601, 602, 603, 604, 605, 606, 607, 610, 612])
   })
 
   it.each([...baked.keys()])('%s: finite, contacts held, the loop closes', (id) => {
@@ -66,7 +66,7 @@ describe('calf-raise template', () => {
   })
 
   it('heel raises: full ankle range, ~10-25 deg stretch below the support to 30-45 deg plantarflexion', () => {
-    for (const id of [601, 602, 604, 605, 606]) {
+    for (const id of [601, 602, 604, 605, 606, 607, 612]) {
       const b = get(id), s = side(id)
       const stretch = dof(b, at(b, STRETCH), `ankle_${s}.df`), top = dof(b, at(b, TOP), `ankle_${s}.df`)
       expect(stretch, `${id} stretch`).toBeGreaterThanOrEqual(10)
@@ -79,22 +79,25 @@ describe('calf-raise template', () => {
         return sitePos(skel, f, `ball_${s}`)[1] - sitePos(skel, f, `heel_${s}`)[1]
       }
       if (id !== 605) {
-        expect(heelDrop(STRETCH), `${id} heel below the edge`).toBeGreaterThan(0.04)
+        // with a bar on the back the body leans less over the ball, so the heel drops a little less
+        expect(heelDrop(STRETCH), `${id} heel below the edge`).toBeGreaterThan(id === 607 || id === 612 ? 0.035 : 0.04)
         expect(heelDrop(TOP), `${id} heel raised`).toBeLessThan(-0.06)
       }
     }
   })
 
   it('knees straight on standing raises and the leg press, ~90 deg seated', () => {
-    for (const id of [601, 604, 605, 606]) {
+    for (const id of [601, 604, 605, 606, 607, 612]) {
       const b = get(id), s = side(id)
       for (let i = 0; i < b.frames; i += 3) {
         expect(dof(b, i, `knee_${s}.flex`)).toBeGreaterThanOrEqual(0)
         expect(dof(b, i, `knee_${s}.flex`)).toBeLessThan(6)
       }
     }
-    const seated = get(602)
-    for (let i = 0; i < seated.frames; i += 3) expect(Math.abs(dof(seated, i, 'knee_l.flex') - 90)).toBeLessThan(8)
+    for (const id of [602, 610]) {
+      const seated = get(id)
+      for (let i = 0; i < seated.frames; i += 3) expect(Math.abs(dof(seated, i, 'knee_l.flex') - 90)).toBeLessThan(8)
+    }
   })
 
   it('tibialis raise: heels planted, back on the wall, toes lift ~30 deg about the heels', () => {
@@ -116,7 +119,7 @@ describe('calf-raise template', () => {
     const f0 = fk(skel, zeroQ(skel))
     // the toes segment starts at the joint with the foot's rest orientation
     expect(dist(localToWorld(skel, f0, 'foot_l', skel.data.segments.toes_l.offset as V3), f0.pos[skel.seg.toes_l])).toBeLessThan(1e-9)
-    for (const [id, support] of [[604, 'box'], [606, 'box'], [605, 'sled']] as const) {
+    for (const [id, support] of [[604, 'box'], [606, 'box'], [605, 'sled'], [607, 'box'], [612, 'box']] as const) {
       const b = get(id), s = side(id)
       const k = b.implements.findIndex((x) => x.id === support)
       let worst = Infinity
@@ -137,9 +140,49 @@ describe('calf-raise template', () => {
     }
   })
 
+  it('bar on the back, both forefeet on the step: free, the centre of mass with the bar over the balls; Smith, on the rail line', () => {
+    const free = get(612), smith = get(607)
+    expect(free.balance?.over).toEqual({ implement: 'box', sites: ['ball'] })
+    expect(smith.balance).toBeUndefined()
+    expect(smith.implements.some((s) => s.id === 'smith')).toBe(true)
+    for (const b of [free, smith]) {
+      const k = b.implements.findIndex((s) => s.id === 'bar')
+      const z0 = frameImplements(b, 0)[k].pos[2]
+      for (let i = 0; i < b.frames; i += 3) {
+        const f = fk(skel, frameQ(b, i))
+        const bar = frameImplements(b, i)[k].pos
+        // on the upper back, above the shoulder joints and behind the neck
+        expect(bar[1]).toBeGreaterThan(f.pos[skel.seg.humerus_l][1])
+        expect(bar[2]).toBeLessThan(f.pos[skel.seg.neck1][2])
+        // the Smith bar stays on its rail line
+        if (b === smith) expect(Math.abs(bar[2] - z0)).toBeLessThan(0.001)
+      }
+    }
+  })
+
+  it('seated with dumbbells: feet flat at the bottom, heels high at the top, the dumbbells upright on the lower thighs', () => {
+    const b = get(610)
+    expect(dof(b, at(b, STRETCH), 'ankle_l.df')).toBeCloseTo(0, 0)
+    expect(-dof(b, at(b, TOP), 'ankle_l.df')).toBeGreaterThanOrEqual(30)
+    const flat = fk(skel, frameQ(b, at(b, STRETCH)))
+    for (const s of ['l', 'r']) expect(Math.abs(sitePos(skel, flat, `heel_${s}`)[1] - sitePos(skel, flat, `ball_${s}`)[1])).toBeLessThan(0.01)
+    const raised = fk(skel, frameQ(b, at(b, TOP)))
+    expect(sitePos(skel, raised, 'heel_l')[1] - sitePos(skel, raised, 'ball_l')[1]).toBeGreaterThan(0.06)
+    for (const s of ['l', 'r'] as const) {
+      const k = b.implements.findIndex((x) => x.id === `db_${s}`)
+      for (let i = 0; i < b.frames; i += 5) {
+        const solids = placeParts(b.implements[k], frameImplements(b, i)[k])
+        const thigh = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region === `thigh_${s}`)
+        const gap = Math.min(...thigh.flatMap((c) => solids.map((sd) => capsuleSolidClearance(c, sd))))
+        expect(gap).toBeGreaterThan(-0.008)
+        expect(gap).toBeLessThan(0.003)
+      }
+    }
+  })
+
   it('throws for variants it does not draw', () => {
     const t = getTemplate('calf-raise')
-    for (const raw of [{ implement: 'smith' }, { implement: 'barbell', stance: 'hip' }, { implement: 'bodyweight', direction: 'dorsiflexion', platform: 'step', support: 'none' }]) {
+    for (const raw of [{ implement: 'smith', stance: 'single_leg' }, { implement: 'barbell', platform: 'floor' }, { implement: 'dumbbell', posture: 'seated', platform: 'step' }, { implement: 'bodyweight', direction: 'dorsiflexion', platform: 'step', support: 'none' }]) {
       expect(() => t.setup(parseParams('calf-raise', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

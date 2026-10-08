@@ -40,9 +40,14 @@
     225
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "lateral-raise",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "seated",
+      "grip": "neutral",
+      "support": "bench"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Seated on the bench end, feet planted (slip 0 mm). Shoulder elevation 10 to 85 with 19 deg elbow, the same arc as 203. Top hand y 1.022 vs shoulder 1.048, so it reaches shoulder height. At the bottom the dumbbells sit at y 0.36, x ±0.44, beside and below the bench top, which matches the cue. Torso static, all gates clear."
   }
 }

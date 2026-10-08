@@ -36,8 +36,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "fly",
+    "params": {
+      "implement": "cable",
+      "posture": "seated",
+      "benchAngle": 90,
+      "cableHeight": "mid"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -54,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: The hands stay at y 1.13 m through the whole rep: 7 cm above the shoulder joint (1.06) and 20 cm above the sternum (0.93), with the upper arm at 91 deg to the trunk. They meet at collarbone level, while 129 meets at the sternum and the pec deck 110 meets 13 cm below the shoulder. The pulley sits at shoulder height (1.04) as the cue says. Tower tops are slightly cropped."
   }
 }

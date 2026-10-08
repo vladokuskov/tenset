@@ -77,4 +77,18 @@ describe('lateral-raise template', () => {
     const hand = handFrame(skel, f, 'r').pos
     expect(Math.abs(hand[0] - gh[0])).toBeLessThan(0.08)
   })
+
+  it('seated: pelvis still on the bench, feet planted, same scapular-plane arc as standing', () => {
+    const b = get('224-seated-dumbbell-lateral-raise')
+    expect(dof(b, 0.625, 'shoulder_l.elev')).toBeCloseTo(10, 5)
+    expect(dof(b, 0, 'shoulder_l.elev')).toBeCloseTo(85, 5)
+    const pelvis = (u: number) => segPos(skel, fk(skel, frameQ(b, at(b, u))), 'pelvis')
+    expect(dist(pelvis(0), pelvis(0.625))).toBeLessThan(1e-6)
+    const k = b.implements.findIndex((s) => s.kind === 'bench')
+    const seat = siteWorld(b.implements[k], frameImplements(b, 0)[k], 'seat').pos
+    expect(Math.abs(pelvis(0)[1] - seat[1])).toBeLessThan(0.2)
+    // the dumbbells hang outside the bench (pad half width 0.14 m)
+    const hand = handFrame(skel, fk(skel, frameQ(b, at(b, 0.625))), 'l').pos
+    expect(hand[0]).toBeGreaterThan(0.25)
+  })
 })

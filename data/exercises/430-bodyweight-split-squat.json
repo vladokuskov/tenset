@@ -38,8 +38,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lunge",
+    "params": {
+      "implement": "bodyweight",
+      "hold": "sides",
+      "direction": "in_place"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Front knee 14 to 100, rear knee 6 to 95, hands relaxed (close 0.3), feet fixed. But the stance is 0.76 m ball to ball (lunges use 0.90) under a 'long split stance' cue. The front shin leans 28 deg and the knee travels 8 cm past the front ball at the bottom. The rear knee is 5 cm in front of the hip. Reads plausibly but cramped."
   }
 }

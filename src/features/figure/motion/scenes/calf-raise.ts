@@ -10,6 +10,8 @@ export const calfRaise: SceneSpec = {
     if (params.machine === 'seated_calf') return { az: -130, elev: 0.24 }
     // standing machine: rear three-quarter as the squats, calves and the heel travel below the roller both read
     if (params.implement === 'machine') return { az: -128, elev: 0.16 }
+    // Smith: from behind, as the Smith squat, so the view runs between the uprights onto both calves
+    if (params.implement === 'smith') return { az: -163, elev: 0.1 }
     // step: low and more from the side than the squats' rear three-quarter, so the heel reads dropping below the tread
     // edge while the calf still faces the camera
     const s = params.side === 'left' ? -1 : 1

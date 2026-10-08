@@ -1,22 +1,24 @@
 import { attachHand, handFrame } from '../../constraints.ts'
 import { centerOfPressure, fk, segPos, sitePos, type FK } from '../../fk.ts'
 import { cableForce, cableHandle, siteWorld, type Cable, type ImplementSpec } from '../../implements.ts'
-import { add, DEG, lerp, norm, qaxis, qid, qrot, RAD, scale, sub, type V3 } from '../../math.ts'
+import { add, DEG, lerp, norm, qaxis, qfromBasis, qid, qrot, RAD, scale, sub, type V3 } from '../../math.ts'
 import { zeroQ, setDofs, type ImplementPose, type Skeleton } from '../../skeleton.ts'
 import { phaseAt, type Tempo } from '../../timing.ts'
-import { limitSway, makeStance, plantedContacts, stanceWidth, standBalanced, type StanceSetup, type Sway } from '../standing.ts'
+import { limitSway, makeStance, plantedContacts, stand, stanceWidth, standBalanced, type StanceSetup, type Sway } from '../standing.ts'
 import type { Setup } from '../types.ts'
 import { cyl, frameY, mirrorArm, setArm, type Base, type P, type Sampled } from './common.ts'
 import { ROPE_IDS, ropeContacts, ropeHandle, ropeImplements, ropePoses, stackSpec } from './rope.ts'
 
-// Cable pushdowns (rope 704, straight bar 715): upper arms at the sides, a little ahead of vertical against the
-// trunk's lean, the elbow running from ~110-125 deg to lockout (research: pushdown shoulder 0, elbow ~120-140 -> 0).
+// Cable pushdowns (rope 704, straight bar 715, reverse grip 736, single arm 734): upper arms at the sides, a little
+// ahead of vertical against the trunk's lean, the elbow running from ~110-125 deg to lockout (research: pushdown
+// shoulder 0, elbow ~120-140 -> 0). Single arm: the working arm on the bar's path with its D-handle swivelling on
+// the carabiner, the pulley over the working hand, the free arm hanging relaxed.
 
 /**
  * elbow flexion at lockout and at the stretch, deg. Bar: 115 brings the bar to chest height (cue 4); with the upper arm
  * ~20 deg forward the forearm sits where 135 would with the arm vertical (research 120-140). 125 reached the collarbones
  */
-const PUSH_ELBOW = { rope: [4, 108], bar: [4, 115] } as const
+const PUSH_ELBOW = { rope: [4, 108], bar: [4, 115], reverse: [4, 105] } as const
 /**
  * pushdown stance: slight knee bend, trunk leaning ~10 deg (pelvis tilt plus spine flexion). The upper arms stay at
  * the sides but a little ahead of vertical (`forward` deg of flexion against the lean), so lockout ends in front of
@@ -35,6 +37,15 @@ const PUSH_PULLEY_Z = 0.64
  */
 const ROPE_ARM = { abd: 0, rot: [20, 40], pro: 75, dev: 12, ext: 10 }
 const BAR_PRO = 75
+/** single arm (734): the working arm's humeral rotation through the rep, deg; the free arm hanging relaxed at the side */
+const SINGLE = { rot: [10, 25], free: { plane: 90, elev: 6, rot: 0, elbow: 14, pro: 20, close: 0.4 } }
+/**
+ * reverse grip (736): palms up, the forearms supinated instead; humeral rotation held at lockout and the bar's lie
+ * across the palm, deg. With the elbows clear of the trunk the stretch takes ~92.5 deg of supination, a little past
+ * the model's 90 (normal adult range 80-90+, AAOS), so the variant allows SUP_LIMIT (a lead decision)
+ */
+const SUP_BAR = { pro: -70, rot: 0, oblique: 0 }
+const SUP_LIMIT: [number, number] = [-94, 85]
 /** the bar sits a little flatter across the palms (held towards the fingers), which keeps the wrists inside their deviation band, deg */
 const BAR_OBLIQUE = 8
 /** attachments stay this far off the front of the thighs at lockout, mm (the curls keep 10) */
@@ -53,12 +64,16 @@ export type Pushdown = Base & {
   pulley: V3
   rope: boolean
   bar?: ImplementSpec
+  /** single arm: the D-handle and the working / free sides */
+  single?: { handle: ImplementSpec; work: 'l' | 'r'; free: 'l' | 'r' }
   elbow: readonly [number, number]
   sway?: Sway
   /** centre of the balance band, m ahead of the midfoot */
   target: number
   /** bar: the arm at lockout (its `out` holds through the rep), solved once from the hand spacing */
   barArm?: BarArm
+  /** bar: forearm rotation and humeral rotation at lockout the solve starts from, deg */
+  barStart: { pro: number; rot: number; oblique: number }
 }
 
 function straightBar(p: P, skel: Skeleton): ImplementSpec {
@@ -101,12 +116,29 @@ function pushArms(skel: Skeleton, q: Float64Array, p: P, v: Pushdown, c: number)
   setArm(skel, q, {
     flex: p.shoulderFlexion + PUSH.forward + PUSH.drift * (1 - c) * (1 - c),
     abd: rope ? ROPE_ARM.abd : 0,
-    rot: rope ? lerp(ROPE_ARM.rot[0], ROPE_ARM.rot[1], c) : 0,
+    rot: rope ? lerp(ROPE_ARM.rot[0], ROPE_ARM.rot[1], c) : v.single ? lerp(SINGLE.rot[0], SINGLE.rot[1], c) : 0,
     elbow: lerp(v.elbow[1], v.elbow[0], c),
-    pro: rope ? ROPE_ARM.pro * k : BAR_PRO,
+    pro: rope ? ROPE_ARM.pro * k : v.barStart.pro,
     wrist: rope ? -ROPE_ARM.ext * k : 0,
     dev: rope ? ROPE_ARM.dev * k : 0,
   })
+  if (v.single) freeArm(skel, q, v.single.free)
+}
+
+/** the free arm hangs relaxed at the side (setArm wrote both sides) */
+function freeArm(skel: Skeleton, q: Float64Array, s: 'l' | 'r') {
+  const a = SINGLE.free
+  setDofs(skel, q, { [`shoulder_${s}.plane`]: a.plane, [`shoulder_${s}.elev`]: a.elev, [`shoulder_${s}.rot`]: a.rot, [`elbow_${s}.flex`]: a.elbow, [`forearm_${s}.pro`]: a.pro, [`wrist_${s}.flex`]: 0, [`wrist_${s}.dev`]: 0, [`grip_${s}.close`]: a.close })
+}
+
+/** single arm: the D-handle swivels on its carabiner, so it follows the hand: its grip on the hand's grip, its bar
+ * along the hand's pinky-to-index line, its rods turned towards the pulley */
+function singlePose(skel: Skeleton, f: FK, v: Pushdown): ImplementPose {
+  const { handle, work } = v.single!
+  const h = handFrame(skel, f, work)
+  const site = handle.sites.c
+  const rot = qfromBasis(h.axis, norm(sub(v.pulley, h.pos)))
+  return { id: handle.id, pos: sub(h.pos, qrot(rot, site.pos)), rot }
 }
 
 /** centre of pressure of body + attachment with the cable pulling it towards the pulley */
@@ -141,11 +173,11 @@ const BAR_ROT_LOCK = 50
 function barHold(skel: Skeleton, q: Float64Array, p: P, v: Pushdown, c: number, lock = false): { pose: ImplementPose; arm: BarArm } {
   const g = v.bar!.sites.l.pos[0]
   const site = skel.data.sites.grip_l
-  const across = qrot(qaxis(site.normal!, BAR_OBLIQUE * DEG), site.axis!)
+  const across = qrot(qaxis(site.normal!, v.barStart.oblique * DEG), site.axis!)
   const flex = p.shoulderFlexion + PUSH.forward + PUSH.drift * (1 - c) * (1 - c)
   const elbow = lerp(v.elbow[1], v.elbow[0], c)
   const base = Float64Array.from(q)
-  let arm: BarArm = lock ? { rot: BAR_ROT_LOCK, pro: BAR_PRO, dev: 0, out: 0, sgn: 0 } : { ...v.barArm! }
+  let arm: BarArm = lock ? { rot: v.barStart.rot, pro: v.barStart.pro, dev: 0, out: 0, sgn: 0 } : { ...v.barArm! }
   const keys = (lock ? ['out', 'pro', 'dev'] : ['rot', 'pro', 'dev']) as (keyof BarArm)[]
   const apply = (a: BarArm) => {
     q.set(base)
@@ -185,10 +217,11 @@ function pushFrame(skel: Skeleton, q: Float64Array, p: P, v: Pushdown, c: number
     const f = fk(skel, qq)
     // the cable pulls where the bar's rod meets it, 5 cm up the cable from the bar (as the balance gate measures)
     const c0 = barCenter(skel, f)
-    const at = v.rope ? ropeHandle(skel, f, pulley).pos : add(c0, scale(norm(sub(pulley, c0)), 0.05))
+    const at = v.rope ? ropeHandle(skel, f, pulley).pos : v.single ? singlePose(skel, f, v).pos : add(c0, scale(norm(sub(pulley, c0)), 0.05))
     return cablePressure(skel, f, at, pulley, 0.5) - v.target
   }
   const bal = standBalanced(skel, q, v.stance, { knee: PUSH.knee, tilt: PUSH.tilt }, measure, (qq) => pushArms(skel, qq, p, v, c), undefined, sway)
+  if (v.single) return { bal, implements: hands ? [singlePose(skel, fk(skel, q), v)] : [] }
   if (v.rope || !hands) return { bal, implements: v.rope ? ropePoses(skel, fk(skel, q), pulley) : [] }
   const held = barHold(skel, q, p, v, c, !v.barArm)
   return { bal, implements: [held.pose], arm: held.arm }
@@ -201,7 +234,18 @@ export function pushdownContext(p: P, skel: Skeleton, tempo: Tempo): Pushdown {
   const contacts = plantedContacts(skel, stance)
   const implements_: ImplementSpec[] = []
   let bar: ImplementSpec | undefined
-  if (rope) {
+  let single: Pushdown['single']
+  if (p.attachment === 'single_handle') {
+    const work = p.side === 'left' ? 'l' : 'r'
+    single = { handle: cableHandle({ id: 'handle', attachment: 'single_handle' }), work, free: work === 'l' ? 'r' : 'l' }
+    implements_.push(single.handle)
+    contacts.push({ site: `grip_${work}`, kind: 'grip', target: { implement: 'handle', grip: 'c' } })
+    // the pulley over the working hand at lockout
+    const q0 = pushBase(skel)
+    stand(skel, q0, stance, { knee: PUSH.knee, df: 0, tilt: PUSH.tilt })
+    setArm(skel, q0, { flex: p.shoulderFlexion + PUSH.forward, abd: 0, rot: SINGLE.rot[1], elbow: PUSH_ELBOW.rope[0], pro: BAR_PRO, wrist: 0 })
+    pulley[0] = sitePos(skel, fk(skel, q0), `grip_${work}`)[0]
+  } else if (rope) {
     implements_.push(...ropeImplements())
     contacts.push(...ropeContacts())
   } else {
@@ -211,10 +255,11 @@ export function pushdownContext(p: P, skel: Skeleton, tempo: Tempo): Pushdown {
   }
   implements_.push(stackSpec(pulley, false))
   const cables: Cable[] = [{ pulley, implement: 'handle', point: [0, 0, 0], kg: CABLE_KG }]
-  const setup: Setup = { implements: implements_, contacts, tempo, symmetric: true, cables, balance: { point: 'com', over: 'midfoot', tol: PUSH_TOL } }
+  const setup: Setup = { implements: implements_, contacts, tempo, symmetric: !single, cables, balance: { point: 'com', over: 'midfoot', tol: PUSH_TOL } }
   const held = rope ? [...ROPE_IDS.ends] : ['handle']
   setup.rests = held.map((implement) => ({ implement, regions: ['thigh_l', 'thigh_r'], tol: -THIGH_CLEAR }))
-  const v: Pushdown = { kind: 'pushdown', tempo, setup, stance, pulley, rope, bar, elbow: rope ? PUSH_ELBOW.rope : PUSH_ELBOW.bar, target: 0 }
+  if (!rope && p.grip === 'supinated') setup.limits = { 'forearm_l.pro': SUP_LIMIT, 'forearm_r.pro': SUP_LIMIT }
+  const v: Pushdown = { kind: 'pushdown', tempo, setup, stance, pulley, rope, bar, single, elbow: rope || single ? PUSH_ELBOW.rope : p.grip === 'supinated' ? PUSH_ELBOW.reverse : PUSH_ELBOW.bar, target: 0, barStart: p.grip === 'supinated' ? SUP_BAR : { pro: BAR_PRO, rot: BAR_ROT_LOCK, oblique: BAR_OBLIQUE } }
   const bal = (u: number, sway?: Sway) => pushFrame(skel, pushBase(skel), p, v, phaseAt(u, tempo).c, sway, false).bal
   // the swing with the ankles still, then the band centred on it
   const still = limitSway(bal, Infinity, 64).ref
