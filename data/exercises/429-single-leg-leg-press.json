@@ -37,7 +37,7 @@
     432
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "machine",
@@ -64,7 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Truly single-leg: only the right foot is on the sled, and the left leg is static (hip 95 / knee 120 / abd 20) with no penetration. Working-leg ROM is identical to approved 402 (knee 10 to 72, hip 81 to 111). That is shallow for the cue 'until your hip is about to curl off the seat', but it is inherited from the parent. Holding the resting leg tucked is author judgment."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Truly single-leg: only the right foot is on the sled, and the left leg is static (hip 95 / knee 120 / abd 20) with no penetration. Working-leg ROM is identical to approved 402 (knee 10 to 72, hip 81 to 111). That is shallow for the cue 'until your hip is about to curl off the seat', but it is inherited from the parent. Holding the resting leg tucked is author judgment."
   }
 }

@@ -43,7 +43,7 @@
     207
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "rear-raise",
     "params": {
       "implement": "dumbbell",
@@ -70,7 +70,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Same arc as 230 with elbow flexion 5. Palms face in at the hang (thorax-frame palm +x 0.98). At the top the grip axis points to the ceiling and the palm toward the head (rotation 0 to 75, pronation 0 to 80), so the thumbs-up T convention is clear and distinct from 230. Scapular retraction is the same 15 deg as 230, although this cue emphasises it. The 45 deg vs 'low incline' caveat applies."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Same arc as 230 with elbow flexion 5. Palms face in at the hang (thorax-frame palm +x 0.98). At the top the grip axis points to the ceiling and the palm toward the head (rotation 0 to 75, pronation 0 to 80), so the thumbs-up T convention is clear and distinct from 230. Scapular retraction is the same 15 deg as 230, although this cue emphasises it. The 45 deg vs 'low incline' caveat applies."
   }
 }

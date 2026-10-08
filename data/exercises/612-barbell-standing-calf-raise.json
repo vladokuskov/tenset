@@ -36,7 +36,7 @@
     608
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "calf-raise",
     "params": {
       "implement": "barbell",
@@ -62,7 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: The motion is correct and nearly identical to 607: ankle -36 to +25, bar drift 7 mm, feet fixed. But on the reused low step camera (az -108) the near plate covers the whole head and upper back in every hero frame. The calves stay visible."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: The motion is correct and nearly identical to 607: ankle -36 to +25, bar drift 7 mm, feet fixed. But on the reused low step camera (az -108) the near plate covers the whole head and upper back in every hero frame. The calves stay visible."
   }
 }

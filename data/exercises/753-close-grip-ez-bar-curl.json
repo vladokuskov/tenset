@@ -37,7 +37,7 @@
     711
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "curl",
     "params": {
       "implement": "ez_bar",
@@ -61,7 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. needs work: Effectively indistinguishable from 701. Hand centres are 0.432 m vs 0.500 m (3.4 cm per side) on the same inner-grip EZ geometry, with the same -90 forearm and the same arc (elbow 11 to 141 vs 10 to 139). The hands are only 1.1 cm inside the shoulder joint centres, so the 'close grip' named in the title and cue does not read. | minor: gripWidth went from 0.95 to 0.7. Hand centres are now 0.318 m vs 0.499 m on 701, which is 9 cm narrower per side and well inside the shoulders. I added a close-EZ branch in curl.ts (closeEz: ez_bar, not pronated, gripWidth < 0.9; 701 and 714 are unaffected). Upper arms get CLOSE_FLEX 12 deg of forward flexion, fading by 30% toward the top. The real elbows stop at CLOSE_BOTTOM 19 deg, so they stay beside the ribs while the forearms converge. The renders show forearms angled in at the bottom with the elbows slightly forward, and it reads narrower than 701. Remaining: (1) bottom elbow is 19 vs 10 on 701, a shorter ROM at the bottom. (2) Upper-arm swing is 14 deg (11 to 25) vs 8 on 701, just under the 15-deg test bound. (3) Margins are thin: DOF jerk 58,860 vs the 60,000 limit, and trunk/upperarm -10.2 mm vs tol 12. Neighbouring settings flip one of these over its limit. Constant flexion fails the swing test (17 deg), and bottoms of 17-18 bring back the penetration and jerk flips."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. needs work: Effectively indistinguishable from 701. Hand centres are 0.432 m vs 0.500 m (3.4 cm per side) on the same inner-grip EZ geometry, with the same -90 forearm and the same arc (elbow 11 to 141 vs 10 to 139). The hands are only 1.1 cm inside the shoulder joint centres, so the 'close grip' named in the title and cue does not read. | minor: gripWidth went from 0.95 to 0.7. Hand centres are now 0.318 m vs 0.499 m on 701, which is 9 cm narrower per side and well inside the shoulders. I added a close-EZ branch in curl.ts (closeEz: ez_bar, not pronated, gripWidth < 0.9; 701 and 714 are unaffected). Upper arms get CLOSE_FLEX 12 deg of forward flexion, fading by 30% toward the top. The real elbows stop at CLOSE_BOTTOM 19 deg, so they stay beside the ribs while the forearms converge. The renders show forearms angled in at the bottom with the elbows slightly forward, and it reads narrower than 701. Remaining: (1) bottom elbow is 19 vs 10 on 701, a shorter ROM at the bottom. (2) Upper-arm swing is 14 deg (11 to 25) vs 8 on 701, just under the 15-deg test bound. (3) Margins are thin: DOF jerk 58,860 vs the 60,000 limit, and trunk/upperarm -10.2 mm vs tol 12. Neighbouring settings flip one of these over its limit. Constant flexion fails the swing test (17 deg), and bottoms of 17-18 bring back the penetration and jerk flips."
   }
 }

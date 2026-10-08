@@ -43,7 +43,7 @@
     228
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "rear-raise",
     "params": {
       "implement": "dumbbell",
@@ -68,7 +68,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: At the top the upper arm is at 86 deg to the trunk and 2 deg off the coronal plane (a true T), palm facing the pad (pronated). It hangs at 45/45 deg (vertical) and retracts the shoulder blades by 15 deg (clavicle protraction +2.9 to -11.9). The only issue is the 45 deg bench against the cue's 'low incline' (lead decision). Foot target error is a constant 3.2/5 mm, with no sliding."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: At the top the upper arm is at 86 deg to the trunk and 2 deg off the coronal plane (a true T), palm facing the pad (pronated). It hangs at 45/45 deg (vertical) and retracts the shoulder blades by 15 deg (clavicle protraction +2.9 to -11.9). The only issue is the 45 deg bench against the cue's 'low incline' (lead decision). Foot target error is a constant 3.2/5 mm, with no sliding."
   }
 }

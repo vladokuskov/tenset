@@ -31,7 +31,7 @@
     341
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "shrug",
     "params": {
       "implement": "cable",
@@ -54,7 +54,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Shrug DOFs match 314 (clavicle elevation -3 to 26 deg, elbow 13). The pulley at (0, 0.08, 0.5) pulls about 31 deg from vertical, so the body leans back (COM z -0.117 vs -0.065 on 314), which is plausible. The cable clears the shins (z 0.24 at knee height vs knee -0.08). Tower top is cropped and the trap highlight is small. The 'bar_stack' implement id is a workaround for the missing attachment param."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Shrug DOFs match 314 (clavicle elevation -3 to 26 deg, elbow 13). The pulley at (0, 0.08, 0.5) pulls about 31 deg from vertical, so the body leans back (COM z -0.117 vs -0.065 on 314), which is plausible. The cable clears the shins (z 0.24 at knee height vs knee -0.08). Tower top is cropped and the trap highlight is small. The 'bar_stack' implement id is a workaround for the missing attachment param."
   }
 }

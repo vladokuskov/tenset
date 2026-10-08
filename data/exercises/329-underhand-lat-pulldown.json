@@ -40,7 +40,7 @@
     311
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-pull",
     "params": {
       "implement": "cable",
@@ -66,7 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Grip is truly supinated (forearm -89.5 throughout) and the elbows finish 5 cm outside the shoulders. The finish is short of the chest, though. The bar stops at y 1.038 / z 0.205, about 11 cm in front of the sternum (303 finishes at z 0.09, on the chest), with the elbows 7 cm in front of the shoulder joints and 126 deg flexion. That is why the hero reads chin/throat. Approved 311 has a similar forward finish, so this is owner review, not a block."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Grip is truly supinated (forearm -89.5 throughout) and the elbows finish 5 cm outside the shoulders. The finish is short of the chest, though. The bar stops at y 1.038 / z 0.205, about 11 cm in front of the sternum (303 finishes at z 0.09, on the chest), with the elbows 7 cm in front of the shoulder joints and 126 deg flexion. That is why the hero reads chin/throat. Approved 311 has a similar forward finish, so this is owner review, not a block."
   }
 }

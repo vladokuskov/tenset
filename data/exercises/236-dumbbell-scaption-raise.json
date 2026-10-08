@@ -39,7 +39,7 @@
     234
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "front-raise",
     "params": {
       "implement": "dumbbell",
@@ -64,7 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Scaption itself is right: shoulder plane 30 (upper arm 30 deg forward of the coronal plane), top elevation 90 at shoulder height, grip axis vertical at the top (thumbs up), palms to the thighs at the hang. However, humeral rotation is a constant -60.5 deg, which is about 60 deg of external rotation at the hang (humerus anterior faces lateral, -0.87 x), offset by 61 deg of pronation. Approved 209 hangs at 30 deg internal rotation. The hero view reads acceptably."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Scaption itself is right: shoulder plane 30 (upper arm 30 deg forward of the coronal plane), top elevation 90 at shoulder height, grip axis vertical at the top (thumbs up), palms to the thighs at the hang. However, humeral rotation is a constant -60.5 deg, which is about 60 deg of external rotation at the hang (humerus anterior faces lateral, -0.87 x), offset by 61 deg of pronation. Approved 209 hangs at 30 deg internal rotation. The hero view reads acceptably."
   }
 }

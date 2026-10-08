@@ -41,7 +41,7 @@
     301
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-pull",
     "params": {
       "implement": "bodyweight",
@@ -65,7 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: gripWidth 1.9 puts the hand centres 0.862 m apart. That is about 2.15x BAD (0.40 m), not 'about 1.5x biacromial' as the author says. The cue's '1.5 shoulder widths' (1.5 x 0.454 = 0.68 m) is exactly 301's width. Pull height matches 301 (chin 3 cm over the bar). Top elbow 121 vs 135 on 301, which is plausible for a wide grip. Reads as a clear wide grip, but the number and the cue disagree, so it goes to owner review."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: gripWidth 1.9 puts the hand centres 0.862 m apart. That is about 2.15x BAD (0.40 m), not 'about 1.5x biacromial' as the author says. The cue's '1.5 shoulder widths' (1.5 x 0.454 = 0.68 m) is exactly 301's width. Pull height matches 301 (chin 3 cm over the bar). Top elbow 121 vs 135 on 301, which is plausible for a wide grip. Reads as a clear wide grip, but the number and the cue disagree, so it goes to owner review."
   }
 }

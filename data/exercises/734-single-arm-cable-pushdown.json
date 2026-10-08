@@ -36,7 +36,7 @@
     740
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "triceps-extension",
     "params": {
       "implement": "cable",
@@ -63,7 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: Unilateral is correct: only the right arm works (4 to 108 deg, forearm 29 deg above horizontal at the stretch, matching cue 4), the left arm stays fixed at elbow 14 / pro 20 / grip 0.4, pronated, the elbow moves 17 mm, head sway is within tolerance. Small issues: at lockout and in the lockout hold the D-handle rods are 27 deg off the cable line (3-7 deg mid-rep), so it kinks at the carabiner, and the free hand is half-closed. The camera only suits side right."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Unilateral is correct: only the right arm works (4 to 108 deg, forearm 29 deg above horizontal at the stretch, matching cue 4), the left arm stays fixed at elbow 14 / pro 20 / grip 0.4, pronated, the elbow moves 17 mm, head sway is within tolerance. Small issues: at lockout and in the lockout hold the D-handle rods are 27 deg off the cable line (3-7 deg mid-rep), so it kinks at the carabiner, and the free hand is half-closed. The camera only suits side right."
   }
 }

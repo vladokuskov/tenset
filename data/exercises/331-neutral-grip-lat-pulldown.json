@@ -41,7 +41,7 @@
     303
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-pull",
     "params": {
       "implement": "cable",
@@ -67,7 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3a 2026-10-08: rated minor, owner review. minor: The motion is sound. The finish grip at y 1.048 / z 0.088 is identical to 303. Forearm -32 to -38 matches the neutral 310. Elbow 10 to 144. The v_bar + gripWidth>1 'WIDE_PARALLEL' encoding is a schema stretch the lead needs to accept or replace with a parallel_bar attachment value."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: The motion is sound. The finish grip at y 1.048 / z 0.088 is identical to 303. Forearm -32 to -38 matches the neutral 310. Elbow 10 to 144. The v_bar + gripWidth>1 'WIDE_PARALLEL' encoding is a schema stretch the lead needs to accept or replace with a parallel_bar attachment value."
   }
 }
