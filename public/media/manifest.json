@@ -1,8 +1,8 @@
 {
   "101": {
-    "poster": "media/posters/101-5c32bb9aa0f7.webp",
-    "loop": "media/loops/101-5c32bb9aa0f7.mp4",
-    "hash": "5c32bb9aa0f7",
+    "poster": "media/posters/101-0c133d01fb83.webp",
+    "loop": "media/loops/101-0c133d01fb83.mp4",
+    "hash": "0c133d01fb83",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -10,13 +10,14 @@
       "skeleton": "b4e70b3d",
       "record": "f226be4d",
       "motion": "5936e164",
+      "camera": "b8bf721b",
       "renderer": "f46e5060"
     }
   },
   "102": {
-    "poster": "media/posters/102-20d7dfbd06ef.webp",
-    "loop": "media/loops/102-20d7dfbd06ef.mp4",
-    "hash": "20d7dfbd06ef",
+    "poster": "media/posters/102-6a488f129030.webp",
+    "loop": "media/loops/102-6a488f129030.mp4",
+    "hash": "6a488f129030",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -24,13 +25,14 @@
       "skeleton": "b4e70b3d",
       "record": "739d19f7",
       "motion": "a82f6aae",
+      "camera": "be0ed2e9",
       "renderer": "f46e5060"
     }
   },
   "103": {
-    "poster": "media/posters/103-8bac8ea98e17.webp",
-    "loop": "media/loops/103-8bac8ea98e17.mp4",
-    "hash": "8bac8ea98e17",
+    "poster": "media/posters/103-e11f9a8ecc5c.webp",
+    "loop": "media/loops/103-e11f9a8ecc5c.mp4",
+    "hash": "e11f9a8ecc5c",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -38,13 +40,14 @@
       "skeleton": "b4e70b3d",
       "record": "e2e26c71",
       "motion": "bb1e27ab",
+      "camera": "be0ed2e9",
       "renderer": "f46e5060"
     }
   },
   "104": {
-    "poster": "media/posters/104-99f5bbd8ab50.webp",
-    "loop": "media/loops/104-99f5bbd8ab50.mp4",
-    "hash": "99f5bbd8ab50",
+    "poster": "media/posters/104-af0d8462564a.webp",
+    "loop": "media/loops/104-af0d8462564a.mp4",
+    "hash": "af0d8462564a",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -52,13 +55,14 @@
       "skeleton": "b4e70b3d",
       "record": "11c14e09",
       "motion": "c7ca28fd",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "105": {
-    "poster": "media/posters/105-b1341bfcba04.webp",
-    "loop": "media/loops/105-b1341bfcba04.mp4",
-    "hash": "b1341bfcba04",
+    "poster": "media/posters/105-a97adbc62df6.webp",
+    "loop": "media/loops/105-a97adbc62df6.mp4",
+    "hash": "a97adbc62df6",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -66,13 +70,14 @@
       "skeleton": "b4e70b3d",
       "record": "2faddd9c",
       "motion": "0d773ac8",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "106": {
-    "poster": "media/posters/106-e25eb3c92a6f.webp",
-    "loop": "media/loops/106-e25eb3c92a6f.mp4",
-    "hash": "e25eb3c92a6f",
+    "poster": "media/posters/106-c91f94623c58.webp",
+    "loop": "media/loops/106-c91f94623c58.mp4",
+    "hash": "c91f94623c58",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -80,13 +85,14 @@
       "skeleton": "b4e70b3d",
       "record": "d63e114b",
       "motion": "28f8cee1",
+      "camera": "391afcc7",
       "renderer": "f46e5060"
     }
   },
   "107": {
-    "poster": "media/posters/107-bd6591d19746.webp",
-    "loop": "media/loops/107-bd6591d19746.mp4",
-    "hash": "bd6591d19746",
+    "poster": "media/posters/107-adcd87e6fd7b.webp",
+    "loop": "media/loops/107-adcd87e6fd7b.mp4",
+    "hash": "adcd87e6fd7b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -94,13 +100,14 @@
       "skeleton": "b4e70b3d",
       "record": "4b655ffb",
       "motion": "57c8b010",
+      "camera": "b8bf721b",
       "renderer": "f46e5060"
     }
   },
   "108": {
-    "poster": "media/posters/108-5fcbd6009d4c.webp",
-    "loop": "media/loops/108-5fcbd6009d4c.mp4",
-    "hash": "5fcbd6009d4c",
+    "poster": "media/posters/108-72a913e3a7e1.webp",
+    "loop": "media/loops/108-72a913e3a7e1.mp4",
+    "hash": "72a913e3a7e1",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -108,13 +115,14 @@
       "skeleton": "b4e70b3d",
       "record": "93a8f32b",
       "motion": "92813e91",
+      "camera": "3dfe1084",
       "renderer": "f46e5060"
     }
   },
   "109": {
-    "poster": "media/posters/109-f0b74147bc03.webp",
-    "loop": "media/loops/109-f0b74147bc03.mp4",
-    "hash": "f0b74147bc03",
+    "poster": "media/posters/109-fa555d4e23c0.webp",
+    "loop": "media/loops/109-fa555d4e23c0.mp4",
+    "hash": "fa555d4e23c0",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -122,13 +130,14 @@
       "skeleton": "b4e70b3d",
       "record": "9d615e10",
       "motion": "9a11f163",
+      "camera": "a2e408d0",
       "renderer": "f46e5060"
     }
   },
   "110": {
-    "poster": "media/posters/110-41235c9bb9a0.webp",
-    "loop": "media/loops/110-41235c9bb9a0.mp4",
-    "hash": "41235c9bb9a0",
+    "poster": "media/posters/110-11dbf61d25a6.webp",
+    "loop": "media/loops/110-11dbf61d25a6.mp4",
+    "hash": "11dbf61d25a6",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -136,13 +145,14 @@
       "skeleton": "b4e70b3d",
       "record": "f0af8574",
       "motion": "539b1e95",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "111": {
-    "poster": "media/posters/111-b5364bf90292.webp",
-    "loop": "media/loops/111-b5364bf90292.mp4",
-    "hash": "b5364bf90292",
+    "poster": "media/posters/111-6101c7828edf.webp",
+    "loop": "media/loops/111-6101c7828edf.mp4",
+    "hash": "6101c7828edf",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -150,13 +160,14 @@
       "skeleton": "b4e70b3d",
       "record": "9aad44db",
       "motion": "d3260ad5",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "112": {
-    "poster": "media/posters/112-c64ba235b380.webp",
-    "loop": "media/loops/112-c64ba235b380.mp4",
-    "hash": "c64ba235b380",
+    "poster": "media/posters/112-a7e9f2bf8b07.webp",
+    "loop": "media/loops/112-a7e9f2bf8b07.mp4",
+    "hash": "a7e9f2bf8b07",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -164,13 +175,14 @@
       "skeleton": "b4e70b3d",
       "record": "9b355f9f",
       "motion": "25fe76e5",
+      "camera": "b7928e9f",
       "renderer": "f46e5060"
     }
   },
   "113": {
-    "poster": "media/posters/113-a54d4896d4e2.webp",
-    "loop": "media/loops/113-a54d4896d4e2.mp4",
-    "hash": "a54d4896d4e2",
+    "poster": "media/posters/113-ef4b191822ea.webp",
+    "loop": "media/loops/113-ef4b191822ea.mp4",
+    "hash": "ef4b191822ea",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -178,13 +190,14 @@
       "skeleton": "b4e70b3d",
       "record": "8d2e5bf1",
       "motion": "aaf01b2c",
+      "camera": "391afcc7",
       "renderer": "f46e5060"
     }
   },
   "114": {
-    "poster": "media/posters/114-dfeea5a3f93b.webp",
-    "loop": "media/loops/114-dfeea5a3f93b.mp4",
-    "hash": "dfeea5a3f93b",
+    "poster": "media/posters/114-f0dceaec13a8.webp",
+    "loop": "media/loops/114-f0dceaec13a8.mp4",
+    "hash": "f0dceaec13a8",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -192,13 +205,14 @@
       "skeleton": "b4e70b3d",
       "record": "59d5d583",
       "motion": "50e119a8",
+      "camera": "391afcc7",
       "renderer": "f46e5060"
     }
   },
   "115": {
-    "poster": "media/posters/115-83cdad1a4b52.webp",
-    "loop": "media/loops/115-83cdad1a4b52.mp4",
-    "hash": "83cdad1a4b52",
+    "poster": "media/posters/115-7d25fc640831.webp",
+    "loop": "media/loops/115-7d25fc640831.mp4",
+    "hash": "7d25fc640831",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -206,13 +220,14 @@
       "skeleton": "b4e70b3d",
       "record": "266fc6ba",
       "motion": "435884e0",
+      "camera": "391afcc7",
       "renderer": "f46e5060"
     }
   },
   "201": {
-    "poster": "media/posters/201-3a8a67b28c69.webp",
-    "loop": "media/loops/201-3a8a67b28c69.mp4",
-    "hash": "3a8a67b28c69",
+    "poster": "media/posters/201-447c4baf5230.webp",
+    "loop": "media/loops/201-447c4baf5230.mp4",
+    "hash": "447c4baf5230",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -220,13 +235,14 @@
       "skeleton": "b4e70b3d",
       "record": "ef00fd0c",
       "motion": "3e31d11c",
+      "camera": "a018f346",
       "renderer": "f46e5060"
     }
   },
   "202": {
-    "poster": "media/posters/202-d0aff9ad2acf.webp",
-    "loop": "media/loops/202-d0aff9ad2acf.mp4",
-    "hash": "d0aff9ad2acf",
+    "poster": "media/posters/202-79b7860fac54.webp",
+    "loop": "media/loops/202-79b7860fac54.mp4",
+    "hash": "79b7860fac54",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -234,13 +250,14 @@
       "skeleton": "b4e70b3d",
       "record": "e66e2578",
       "motion": "f23ef6f7",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "203": {
-    "poster": "media/posters/203-4067c8c2ba2b.webp",
-    "loop": "media/loops/203-4067c8c2ba2b.mp4",
-    "hash": "4067c8c2ba2b",
+    "poster": "media/posters/203-193a1898b2b0.webp",
+    "loop": "media/loops/203-193a1898b2b0.mp4",
+    "hash": "193a1898b2b0",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -248,13 +265,14 @@
       "skeleton": "b4e70b3d",
       "record": "1c6ea3b1",
       "motion": "bf6e83a6",
+      "camera": "26dd9915",
       "renderer": "f46e5060"
     }
   },
   "204": {
-    "poster": "media/posters/204-ff10680198a3.webp",
-    "loop": "media/loops/204-ff10680198a3.mp4",
-    "hash": "ff10680198a3",
+    "poster": "media/posters/204-65265b84feb7.webp",
+    "loop": "media/loops/204-65265b84feb7.mp4",
+    "hash": "65265b84feb7",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -262,13 +280,14 @@
       "skeleton": "b4e70b3d",
       "record": "75563560",
       "motion": "519e5bd3",
+      "camera": "26dd9915",
       "renderer": "f46e5060"
     }
   },
   "205": {
-    "poster": "media/posters/205-795f44ea361b.webp",
-    "loop": "media/loops/205-795f44ea361b.mp4",
-    "hash": "795f44ea361b",
+    "poster": "media/posters/205-43552b94e075.webp",
+    "loop": "media/loops/205-43552b94e075.mp4",
+    "hash": "43552b94e075",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -276,13 +295,14 @@
       "skeleton": "b4e70b3d",
       "record": "f01b95ab",
       "motion": "cd8cd636",
+      "camera": "0aef14af",
       "renderer": "f46e5060"
     }
   },
   "206": {
-    "poster": "media/posters/206-8df431f3844c.webp",
-    "loop": "media/loops/206-8df431f3844c.mp4",
-    "hash": "8df431f3844c",
+    "poster": "media/posters/206-1300d2fcf7c0.webp",
+    "loop": "media/loops/206-1300d2fcf7c0.mp4",
+    "hash": "1300d2fcf7c0",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -290,13 +310,14 @@
       "skeleton": "b4e70b3d",
       "record": "ae07f130",
       "motion": "b590101d",
+      "camera": "72a52b54",
       "renderer": "f46e5060"
     }
   },
   "207": {
-    "poster": "media/posters/207-4128f26aafe7.webp",
-    "loop": "media/loops/207-4128f26aafe7.mp4",
-    "hash": "4128f26aafe7",
+    "poster": "media/posters/207-4f2448531f81.webp",
+    "loop": "media/loops/207-4f2448531f81.mp4",
+    "hash": "4f2448531f81",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -304,13 +325,14 @@
       "skeleton": "b4e70b3d",
       "record": "9cc4e56c",
       "motion": "ea60e18f",
+      "camera": "6f821b70",
       "renderer": "f46e5060"
     }
   },
   "208": {
-    "poster": "media/posters/208-ed731599808b.webp",
-    "loop": "media/loops/208-ed731599808b.mp4",
-    "hash": "ed731599808b",
+    "poster": "media/posters/208-a3d1344787fd.webp",
+    "loop": "media/loops/208-a3d1344787fd.mp4",
+    "hash": "a3d1344787fd",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -318,13 +340,14 @@
       "skeleton": "b4e70b3d",
       "record": "439e5cbc",
       "motion": "3c54a0b5",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "209": {
-    "poster": "media/posters/209-bb5b70c50a64.webp",
-    "loop": "media/loops/209-bb5b70c50a64.mp4",
-    "hash": "bb5b70c50a64",
+    "poster": "media/posters/209-bb37bd6cd5f5.webp",
+    "loop": "media/loops/209-bb37bd6cd5f5.mp4",
+    "hash": "bb37bd6cd5f5",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -332,13 +355,14 @@
       "skeleton": "b4e70b3d",
       "record": "52dc9642",
       "motion": "26d2fc75",
+      "camera": "26018bf0",
       "renderer": "f46e5060"
     }
   },
   "210": {
-    "poster": "media/posters/210-742fabd4992d.webp",
-    "loop": "media/loops/210-742fabd4992d.mp4",
-    "hash": "742fabd4992d",
+    "poster": "media/posters/210-2b4dd3de20b9.webp",
+    "loop": "media/loops/210-2b4dd3de20b9.mp4",
+    "hash": "2b4dd3de20b9",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -346,13 +370,14 @@
       "skeleton": "b4e70b3d",
       "record": "113df26c",
       "motion": "92887bac",
+      "camera": "578e88ad",
       "renderer": "f46e5060"
     }
   },
   "211": {
-    "poster": "media/posters/211-6fc2a52697b2.webp",
-    "loop": "media/loops/211-6fc2a52697b2.mp4",
-    "hash": "6fc2a52697b2",
+    "poster": "media/posters/211-9c47fb72495f.webp",
+    "loop": "media/loops/211-9c47fb72495f.mp4",
+    "hash": "9c47fb72495f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -360,13 +385,14 @@
       "skeleton": "b4e70b3d",
       "record": "7fc1a15b",
       "motion": "1919ec8b",
+      "camera": "0aef14af",
       "renderer": "f46e5060"
     }
   },
   "212": {
-    "poster": "media/posters/212-32a9265b94f0.webp",
-    "loop": "media/loops/212-32a9265b94f0.mp4",
-    "hash": "32a9265b94f0",
+    "poster": "media/posters/212-6bd511875ec7.webp",
+    "loop": "media/loops/212-6bd511875ec7.mp4",
+    "hash": "6bd511875ec7",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -374,13 +400,14 @@
       "skeleton": "b4e70b3d",
       "record": "a4147377",
       "motion": "eb519b1e",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "213": {
-    "poster": "media/posters/213-df1fa06ac752.webp",
-    "loop": "media/loops/213-df1fa06ac752.mp4",
-    "hash": "df1fa06ac752",
+    "poster": "media/posters/213-897dee959ee5.webp",
+    "loop": "media/loops/213-897dee959ee5.mp4",
+    "hash": "897dee959ee5",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -388,13 +415,14 @@
       "skeleton": "b4e70b3d",
       "record": "734c4f75",
       "motion": "b766f8ed",
+      "camera": "60ab96fa",
       "renderer": "f46e5060"
     }
   },
   "214": {
-    "poster": "media/posters/214-874cea8f5049.webp",
-    "loop": "media/loops/214-874cea8f5049.mp4",
-    "hash": "874cea8f5049",
+    "poster": "media/posters/214-342e85fa83af.webp",
+    "loop": "media/loops/214-342e85fa83af.mp4",
+    "hash": "342e85fa83af",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -402,13 +430,14 @@
       "skeleton": "b4e70b3d",
       "record": "9d867b93",
       "motion": "97b45c37",
+      "camera": "26dd9915",
       "renderer": "f46e5060"
     }
   },
   "215": {
-    "poster": "media/posters/215-fdb5bef48e0d.webp",
-    "loop": "media/loops/215-fdb5bef48e0d.mp4",
-    "hash": "fdb5bef48e0d",
+    "poster": "media/posters/215-d788d85cf477.webp",
+    "loop": "media/loops/215-d788d85cf477.mp4",
+    "hash": "d788d85cf477",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -416,13 +445,14 @@
       "skeleton": "b4e70b3d",
       "record": "53425a29",
       "motion": "27f096ba",
+      "camera": "d45a5c16",
       "renderer": "f46e5060"
     }
   },
   "301": {
-    "poster": "media/posters/301-918d608b008a.webp",
-    "loop": "media/loops/301-918d608b008a.mp4",
-    "hash": "918d608b008a",
+    "poster": "media/posters/301-de3c1b1d8c67.webp",
+    "loop": "media/loops/301-de3c1b1d8c67.mp4",
+    "hash": "de3c1b1d8c67",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -430,13 +460,14 @@
       "skeleton": "b4e70b3d",
       "record": "ed040a2e",
       "motion": "93818556",
+      "camera": "2f2f56fb",
       "renderer": "f46e5060"
     }
   },
   "302": {
-    "poster": "media/posters/302-c95072007ef5.webp",
-    "loop": "media/loops/302-c95072007ef5.mp4",
-    "hash": "c95072007ef5",
+    "poster": "media/posters/302-7c6d721038ff.webp",
+    "loop": "media/loops/302-7c6d721038ff.mp4",
+    "hash": "7c6d721038ff",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -444,13 +475,14 @@
       "skeleton": "b4e70b3d",
       "record": "85eb257d",
       "motion": "03f53301",
+      "camera": "2f2f56fb",
       "renderer": "f46e5060"
     }
   },
   "303": {
-    "poster": "media/posters/303-3d0554fd77fa.webp",
-    "loop": "media/loops/303-3d0554fd77fa.mp4",
-    "hash": "3d0554fd77fa",
+    "poster": "media/posters/303-526ccd24c82e.webp",
+    "loop": "media/loops/303-526ccd24c82e.mp4",
+    "hash": "526ccd24c82e",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -458,13 +490,14 @@
       "skeleton": "b4e70b3d",
       "record": "3552dadc",
       "motion": "f1aadd66",
+      "camera": "72a52b54",
       "renderer": "f46e5060"
     }
   },
   "304": {
-    "poster": "media/posters/304-44aef89418a6.webp",
-    "loop": "media/loops/304-44aef89418a6.mp4",
-    "hash": "44aef89418a6",
+    "poster": "media/posters/304-b1e9c865b1e3.webp",
+    "loop": "media/loops/304-b1e9c865b1e3.mp4",
+    "hash": "b1e9c865b1e3",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -472,13 +505,14 @@
       "skeleton": "b4e70b3d",
       "record": "91581f38",
       "motion": "053416ea",
+      "camera": "c1b486d6",
       "renderer": "f46e5060"
     }
   },
   "305": {
-    "poster": "media/posters/305-e6cdd740e5b6.webp",
-    "loop": "media/loops/305-e6cdd740e5b6.mp4",
-    "hash": "e6cdd740e5b6",
+    "poster": "media/posters/305-dd00a9a9329a.webp",
+    "loop": "media/loops/305-dd00a9a9329a.mp4",
+    "hash": "dd00a9a9329a",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -486,13 +520,14 @@
       "skeleton": "b4e70b3d",
       "record": "036d4b33",
       "motion": "3c59220b",
+      "camera": "1e523639",
       "renderer": "f46e5060"
     }
   },
   "306": {
-    "poster": "media/posters/306-1e234e29e260.webp",
-    "loop": "media/loops/306-1e234e29e260.mp4",
-    "hash": "1e234e29e260",
+    "poster": "media/posters/306-e3132a1a85ea.webp",
+    "loop": "media/loops/306-e3132a1a85ea.mp4",
+    "hash": "e3132a1a85ea",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -500,13 +535,14 @@
       "skeleton": "b4e70b3d",
       "record": "8a0556b7",
       "motion": "f2cffdc9",
+      "camera": "14dfad76",
       "renderer": "f46e5060"
     }
   },
   "307": {
-    "poster": "media/posters/307-50c0a105d443.webp",
-    "loop": "media/loops/307-50c0a105d443.mp4",
-    "hash": "50c0a105d443",
+    "poster": "media/posters/307-62a0ebabdd35.webp",
+    "loop": "media/loops/307-62a0ebabdd35.mp4",
+    "hash": "62a0ebabdd35",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -514,13 +550,14 @@
       "skeleton": "b4e70b3d",
       "record": "db538ac1",
       "motion": "54cf8a83",
+      "camera": "ea8c7445",
       "renderer": "f46e5060"
     }
   },
   "308": {
-    "poster": "media/posters/308-c1ade5cd205c.webp",
-    "loop": "media/loops/308-c1ade5cd205c.mp4",
-    "hash": "c1ade5cd205c",
+    "poster": "media/posters/308-042bb9cf203b.webp",
+    "loop": "media/loops/308-042bb9cf203b.mp4",
+    "hash": "042bb9cf203b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -528,13 +565,14 @@
       "skeleton": "b4e70b3d",
       "record": "0e172d9b",
       "motion": "7672d911",
+      "camera": "5751496d",
       "renderer": "f46e5060"
     }
   },
   "309": {
-    "poster": "media/posters/309-6c0693e88c15.webp",
-    "loop": "media/loops/309-6c0693e88c15.mp4",
-    "hash": "6c0693e88c15",
+    "poster": "media/posters/309-6075486a1f84.webp",
+    "loop": "media/loops/309-6075486a1f84.mp4",
+    "hash": "6075486a1f84",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -542,13 +580,14 @@
       "skeleton": "b4e70b3d",
       "record": "3e03a970",
       "motion": "b9643b3f",
+      "camera": "2f2f56fb",
       "renderer": "f46e5060"
     }
   },
   "310": {
-    "poster": "media/posters/310-ff22ef2e983a.webp",
-    "loop": "media/loops/310-ff22ef2e983a.mp4",
-    "hash": "ff22ef2e983a",
+    "poster": "media/posters/310-c93bbae85d05.webp",
+    "loop": "media/loops/310-c93bbae85d05.mp4",
+    "hash": "c93bbae85d05",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -556,13 +595,14 @@
       "skeleton": "b4e70b3d",
       "record": "a0f4b894",
       "motion": "f8e00319",
+      "camera": "c88ba4e1",
       "renderer": "f46e5060"
     }
   },
   "311": {
-    "poster": "media/posters/311-c231ffd1cba0.webp",
-    "loop": "media/loops/311-c231ffd1cba0.mp4",
-    "hash": "c231ffd1cba0",
+    "poster": "media/posters/311-e47f2e6c4175.webp",
+    "loop": "media/loops/311-e47f2e6c4175.mp4",
+    "hash": "e47f2e6c4175",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -570,13 +610,14 @@
       "skeleton": "b4e70b3d",
       "record": "4b839e4c",
       "motion": "bb0ab5f0",
+      "camera": "72a52b54",
       "renderer": "f46e5060"
     }
   },
   "312": {
-    "poster": "media/posters/312-1c6c6cc2b499.webp",
-    "loop": "media/loops/312-1c6c6cc2b499.mp4",
-    "hash": "1c6c6cc2b499",
+    "poster": "media/posters/312-8ad231a7dd15.webp",
+    "loop": "media/loops/312-8ad231a7dd15.mp4",
+    "hash": "8ad231a7dd15",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -584,13 +625,14 @@
       "skeleton": "b4e70b3d",
       "record": "0e8ac1aa",
       "motion": "eed79fe4",
+      "camera": "1e523639",
       "renderer": "f46e5060"
     }
   },
   "313": {
-    "poster": "media/posters/313-7de568c784fa.webp",
-    "loop": "media/loops/313-7de568c784fa.mp4",
-    "hash": "7de568c784fa",
+    "poster": "media/posters/313-39fdf3ac8773.webp",
+    "loop": "media/loops/313-39fdf3ac8773.mp4",
+    "hash": "39fdf3ac8773",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -598,13 +640,14 @@
       "skeleton": "b4e70b3d",
       "record": "dd02d857",
       "motion": "b6a04a83",
+      "camera": "6581f7d6",
       "renderer": "f46e5060"
     }
   },
   "314": {
-    "poster": "media/posters/314-468769384599.webp",
-    "loop": "media/loops/314-468769384599.mp4",
-    "hash": "468769384599",
+    "poster": "media/posters/314-44c215e0b386.webp",
+    "loop": "media/loops/314-44c215e0b386.mp4",
+    "hash": "44c215e0b386",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -612,13 +655,14 @@
       "skeleton": "b4e70b3d",
       "record": "2e23a508",
       "motion": "13b3d08c",
+      "camera": "5751496d",
       "renderer": "f46e5060"
     }
   },
   "315": {
-    "poster": "media/posters/315-87a618b1ff28.webp",
-    "loop": "media/loops/315-87a618b1ff28.mp4",
-    "hash": "87a618b1ff28",
+    "poster": "media/posters/315-4d3d14a841c7.webp",
+    "loop": "media/loops/315-4d3d14a841c7.mp4",
+    "hash": "4d3d14a841c7",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -626,13 +670,14 @@
       "skeleton": "b4e70b3d",
       "record": "db97cb34",
       "motion": "9a4aa297",
+      "camera": "1e523639",
       "renderer": "f46e5060"
     }
   },
   "401": {
-    "poster": "media/posters/401-c69e829911bf.webp",
-    "loop": "media/loops/401-c69e829911bf.mp4",
-    "hash": "c69e829911bf",
+    "poster": "media/posters/401-5ff1cd0a1ac9.webp",
+    "loop": "media/loops/401-5ff1cd0a1ac9.mp4",
+    "hash": "5ff1cd0a1ac9",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -640,13 +685,14 @@
       "skeleton": "b4e70b3d",
       "record": "e8c58a98",
       "motion": "1269c5eb",
+      "camera": "881f3328",
       "renderer": "f46e5060"
     }
   },
   "402": {
-    "poster": "media/posters/402-9f2416ca989a.webp",
-    "loop": "media/loops/402-9f2416ca989a.mp4",
-    "hash": "9f2416ca989a",
+    "poster": "media/posters/402-3fef2b11ef64.webp",
+    "loop": "media/loops/402-3fef2b11ef64.mp4",
+    "hash": "3fef2b11ef64",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -654,13 +700,14 @@
       "skeleton": "b4e70b3d",
       "record": "6021e39b",
       "motion": "7e16d0ed",
+      "camera": "8f0bc66b",
       "renderer": "f46e5060"
     }
   },
   "403": {
-    "poster": "media/posters/403-e30c207558b6.webp",
-    "loop": "media/loops/403-e30c207558b6.mp4",
-    "hash": "e30c207558b6",
+    "poster": "media/posters/403-e37d7b8651b8.webp",
+    "loop": "media/loops/403-e37d7b8651b8.mp4",
+    "hash": "e37d7b8651b8",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -668,13 +715,14 @@
       "skeleton": "b4e70b3d",
       "record": "5f6d1fe9",
       "motion": "aabd0af4",
+      "camera": "9ba58d71",
       "renderer": "f46e5060"
     }
   },
   "404": {
-    "poster": "media/posters/404-c94504ecf57a.webp",
-    "loop": "media/loops/404-c94504ecf57a.mp4",
-    "hash": "c94504ecf57a",
+    "poster": "media/posters/404-3c706a8fa393.webp",
+    "loop": "media/loops/404-3c706a8fa393.mp4",
+    "hash": "3c706a8fa393",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -682,13 +730,14 @@
       "skeleton": "b4e70b3d",
       "record": "4ba76932",
       "motion": "8b359abf",
+      "camera": "d38dc32b",
       "renderer": "f46e5060"
     }
   },
   "405": {
-    "poster": "media/posters/405-e77884beda75.webp",
-    "loop": "media/loops/405-e77884beda75.mp4",
-    "hash": "e77884beda75",
+    "poster": "media/posters/405-fa73c6126bd7.webp",
+    "loop": "media/loops/405-fa73c6126bd7.mp4",
+    "hash": "fa73c6126bd7",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -696,13 +745,14 @@
       "skeleton": "b4e70b3d",
       "record": "6c8d8d19",
       "motion": "af65a00f",
+      "camera": "2aebf334",
       "renderer": "f46e5060"
     }
   },
   "406": {
-    "poster": "media/posters/406-46a040b58370.webp",
-    "loop": "media/loops/406-46a040b58370.mp4",
-    "hash": "46a040b58370",
+    "poster": "media/posters/406-f5adf96bf48d.webp",
+    "loop": "media/loops/406-f5adf96bf48d.mp4",
+    "hash": "f5adf96bf48d",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -710,13 +760,14 @@
       "skeleton": "b4e70b3d",
       "record": "e1e821f7",
       "motion": "b80bbae4",
+      "camera": "dcaef0b9",
       "renderer": "f46e5060"
     }
   },
   "407": {
-    "poster": "media/posters/407-33e7e92ebf5d.webp",
-    "loop": "media/loops/407-33e7e92ebf5d.mp4",
-    "hash": "33e7e92ebf5d",
+    "poster": "media/posters/407-582430d4f95b.webp",
+    "loop": "media/loops/407-582430d4f95b.mp4",
+    "hash": "582430d4f95b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -724,13 +775,14 @@
       "skeleton": "b4e70b3d",
       "record": "21234a68",
       "motion": "c90cdba6",
+      "camera": "3c67f7ee",
       "renderer": "f46e5060"
     }
   },
   "408": {
-    "poster": "media/posters/408-7da668d2c288.webp",
-    "loop": "media/loops/408-7da668d2c288.mp4",
-    "hash": "7da668d2c288",
+    "poster": "media/posters/408-680f71202d16.webp",
+    "loop": "media/loops/408-680f71202d16.mp4",
+    "hash": "680f71202d16",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -738,13 +790,14 @@
       "skeleton": "b4e70b3d",
       "record": "ab01d7ad",
       "motion": "b7d16114",
+      "camera": "881f3328",
       "renderer": "f46e5060"
     }
   },
   "409": {
-    "poster": "media/posters/409-cf9f5705edbd.webp",
-    "loop": "media/loops/409-cf9f5705edbd.mp4",
-    "hash": "cf9f5705edbd",
+    "poster": "media/posters/409-d1fddf225556.webp",
+    "loop": "media/loops/409-d1fddf225556.mp4",
+    "hash": "d1fddf225556",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -752,13 +805,14 @@
       "skeleton": "b4e70b3d",
       "record": "732ac3b3",
       "motion": "9c816fa0",
+      "camera": "9ba58d71",
       "renderer": "f46e5060"
     }
   },
   "410": {
-    "poster": "media/posters/410-2c5bf73e5d62.webp",
-    "loop": "media/loops/410-2c5bf73e5d62.mp4",
-    "hash": "2c5bf73e5d62",
+    "poster": "media/posters/410-48a8a271800f.webp",
+    "loop": "media/loops/410-48a8a271800f.mp4",
+    "hash": "48a8a271800f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -766,13 +820,14 @@
       "skeleton": "b4e70b3d",
       "record": "402cc8b5",
       "motion": "24e4674a",
+      "camera": "9ba58d71",
       "renderer": "f46e5060"
     }
   },
   "411": {
-    "poster": "media/posters/411-11024c088805.webp",
-    "loop": "media/loops/411-11024c088805.mp4",
-    "hash": "11024c088805",
+    "poster": "media/posters/411-b8cb43be1c6f.webp",
+    "loop": "media/loops/411-b8cb43be1c6f.mp4",
+    "hash": "b8cb43be1c6f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -780,13 +835,14 @@
       "skeleton": "b4e70b3d",
       "record": "f3a6dc34",
       "motion": "96f2a220",
+      "camera": "9ba58d71",
       "renderer": "f46e5060"
     }
   },
   "412": {
-    "poster": "media/posters/412-a5f875fdf1fa.webp",
-    "loop": "media/loops/412-a5f875fdf1fa.mp4",
-    "hash": "a5f875fdf1fa",
+    "poster": "media/posters/412-2e876d29ffcd.webp",
+    "loop": "media/loops/412-2e876d29ffcd.mp4",
+    "hash": "2e876d29ffcd",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -794,13 +850,14 @@
       "skeleton": "b4e70b3d",
       "record": "cedcc867",
       "motion": "808e1a71",
+      "camera": "d38dc32b",
       "renderer": "f46e5060"
     }
   },
   "501": {
-    "poster": "media/posters/501-71559679f7b6.webp",
-    "loop": "media/loops/501-71559679f7b6.mp4",
-    "hash": "71559679f7b6",
+    "poster": "media/posters/501-7848712a775b.webp",
+    "loop": "media/loops/501-7848712a775b.mp4",
+    "hash": "7848712a775b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -808,13 +865,14 @@
       "skeleton": "b4e70b3d",
       "record": "05a51321",
       "motion": "34f7de07",
+      "camera": "eafe1d24",
       "renderer": "f46e5060"
     }
   },
   "502": {
-    "poster": "media/posters/502-f1ba52a6f68d.webp",
-    "loop": "media/loops/502-f1ba52a6f68d.mp4",
-    "hash": "f1ba52a6f68d",
+    "poster": "media/posters/502-4407c31833da.webp",
+    "loop": "media/loops/502-4407c31833da.mp4",
+    "hash": "4407c31833da",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -822,13 +880,14 @@
       "skeleton": "b4e70b3d",
       "record": "92d0eca5",
       "motion": "33a6cb86",
+      "camera": "7f9ee135",
       "renderer": "f46e5060"
     }
   },
   "503": {
-    "poster": "media/posters/503-355ad19c667e.webp",
-    "loop": "media/loops/503-355ad19c667e.mp4",
-    "hash": "355ad19c667e",
+    "poster": "media/posters/503-297e301c95c5.webp",
+    "loop": "media/loops/503-297e301c95c5.mp4",
+    "hash": "297e301c95c5",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -836,13 +895,14 @@
       "skeleton": "b4e70b3d",
       "record": "e8bb1a8c",
       "motion": "1f0cd223",
+      "camera": "6e32b33b",
       "renderer": "f46e5060"
     }
   },
   "504": {
-    "poster": "media/posters/504-f7072c7362eb.webp",
-    "loop": "media/loops/504-f7072c7362eb.mp4",
-    "hash": "f7072c7362eb",
+    "poster": "media/posters/504-b63f6f2bb18d.webp",
+    "loop": "media/loops/504-b63f6f2bb18d.mp4",
+    "hash": "b63f6f2bb18d",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -850,13 +910,14 @@
       "skeleton": "b4e70b3d",
       "record": "67fd72e0",
       "motion": "139f331a",
+      "camera": "cf967043",
       "renderer": "f46e5060"
     }
   },
   "505": {
-    "poster": "media/posters/505-c270e5b9245c.webp",
-    "loop": "media/loops/505-c270e5b9245c.mp4",
-    "hash": "c270e5b9245c",
+    "poster": "media/posters/505-e828de1d1600.webp",
+    "loop": "media/loops/505-e828de1d1600.mp4",
+    "hash": "e828de1d1600",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -864,13 +925,14 @@
       "skeleton": "b4e70b3d",
       "record": "fb739e4d",
       "motion": "7f3c2e81",
+      "camera": "b38f0796",
       "renderer": "f46e5060"
     }
   },
   "506": {
-    "poster": "media/posters/506-c51f3d425abd.webp",
-    "loop": "media/loops/506-c51f3d425abd.mp4",
-    "hash": "c51f3d425abd",
+    "poster": "media/posters/506-c151dd9c29ea.webp",
+    "loop": "media/loops/506-c151dd9c29ea.mp4",
+    "hash": "c151dd9c29ea",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -878,13 +940,14 @@
       "skeleton": "b4e70b3d",
       "record": "e857f283",
       "motion": "91b537ea",
+      "camera": "d2465efe",
       "renderer": "f46e5060"
     }
   },
   "507": {
-    "poster": "media/posters/507-e759fcced458.webp",
-    "loop": "media/loops/507-e759fcced458.mp4",
-    "hash": "e759fcced458",
+    "poster": "media/posters/507-235671475e1f.webp",
+    "loop": "media/loops/507-235671475e1f.mp4",
+    "hash": "235671475e1f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -892,27 +955,29 @@
       "skeleton": "b4e70b3d",
       "record": "b1c4b07a",
       "motion": "288504b4",
+      "camera": "5d0b49f6",
       "renderer": "f46e5060"
     }
   },
   "508": {
-    "poster": "media/posters/508-cd328b8a314e.webp",
-    "loop": "media/loops/508-cd328b8a314e.mp4",
-    "hash": "cd328b8a314e",
+    "poster": "media/posters/508-83501b7c62d5.webp",
+    "loop": "media/loops/508-83501b7c62d5.mp4",
+    "hash": "83501b7c62d5",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
       "body": "b66660eb",
       "skeleton": "b4e70b3d",
-      "record": "2d59ad38",
-      "motion": "2c02dd89",
+      "record": "44f8763d",
+      "motion": "a0dfeb90",
+      "camera": "eafe1d24",
       "renderer": "f46e5060"
     }
   },
   "509": {
-    "poster": "media/posters/509-137fcc40ca02.webp",
-    "loop": "media/loops/509-137fcc40ca02.mp4",
-    "hash": "137fcc40ca02",
+    "poster": "media/posters/509-b75b5b81200b.webp",
+    "loop": "media/loops/509-b75b5b81200b.mp4",
+    "hash": "b75b5b81200b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -920,13 +985,14 @@
       "skeleton": "b4e70b3d",
       "record": "c5462847",
       "motion": "3c8f4591",
+      "camera": "eafe1d24",
       "renderer": "f46e5060"
     }
   },
   "510": {
-    "poster": "media/posters/510-fe0d46447256.webp",
-    "loop": "media/loops/510-fe0d46447256.mp4",
-    "hash": "fe0d46447256",
+    "poster": "media/posters/510-3695eed65a32.webp",
+    "loop": "media/loops/510-3695eed65a32.mp4",
+    "hash": "3695eed65a32",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -934,13 +1000,14 @@
       "skeleton": "b4e70b3d",
       "record": "46b4df10",
       "motion": "51c5d29c",
+      "camera": "34fcf9b9",
       "renderer": "f46e5060"
     }
   },
   "511": {
-    "poster": "media/posters/511-894de4eacec3.webp",
-    "loop": "media/loops/511-894de4eacec3.mp4",
-    "hash": "894de4eacec3",
+    "poster": "media/posters/511-9e6892307ce1.webp",
+    "loop": "media/loops/511-9e6892307ce1.mp4",
+    "hash": "9e6892307ce1",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -948,13 +1015,14 @@
       "skeleton": "b4e70b3d",
       "record": "f492eb38",
       "motion": "9b1c34ef",
+      "camera": "f2a498c3",
       "renderer": "f46e5060"
     }
   },
   "512": {
-    "poster": "media/posters/512-91842036445d.webp",
-    "loop": "media/loops/512-91842036445d.mp4",
-    "hash": "91842036445d",
+    "poster": "media/posters/512-7ad124dd2bce.webp",
+    "loop": "media/loops/512-7ad124dd2bce.mp4",
+    "hash": "7ad124dd2bce",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -962,13 +1030,14 @@
       "skeleton": "b4e70b3d",
       "record": "4f2c897e",
       "motion": "0e768cf4",
+      "camera": "e9033299",
       "renderer": "f46e5060"
     }
   },
   "513": {
-    "poster": "media/posters/513-d2e6f4151d67.webp",
-    "loop": "media/loops/513-d2e6f4151d67.mp4",
-    "hash": "d2e6f4151d67",
+    "poster": "media/posters/513-7b50afbea55b.webp",
+    "loop": "media/loops/513-7b50afbea55b.mp4",
+    "hash": "7b50afbea55b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -976,13 +1045,14 @@
       "skeleton": "b4e70b3d",
       "record": "9834314c",
       "motion": "48b8a51e",
+      "camera": "3ce785d1",
       "renderer": "f46e5060"
     }
   },
   "514": {
-    "poster": "media/posters/514-afd18e0ba372.webp",
-    "loop": "media/loops/514-afd18e0ba372.mp4",
-    "hash": "afd18e0ba372",
+    "poster": "media/posters/514-4963b261e42d.webp",
+    "loop": "media/loops/514-4963b261e42d.mp4",
+    "hash": "4963b261e42d",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -990,13 +1060,14 @@
       "skeleton": "b4e70b3d",
       "record": "2edca8aa",
       "motion": "2c71eafe",
+      "camera": "f00cb478",
       "renderer": "f46e5060"
     }
   },
   "515": {
-    "poster": "media/posters/515-e244713ce69a.webp",
-    "loop": "media/loops/515-e244713ce69a.mp4",
-    "hash": "e244713ce69a",
+    "poster": "media/posters/515-3ba613b16234.webp",
+    "loop": "media/loops/515-3ba613b16234.mp4",
+    "hash": "3ba613b16234",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1004,13 +1075,14 @@
       "skeleton": "b4e70b3d",
       "record": "b7e84980",
       "motion": "ee61fc69",
+      "camera": "328a4f0b",
       "renderer": "f46e5060"
     }
   },
   "601": {
-    "poster": "media/posters/601-8cbdd16d828a.webp",
-    "loop": "media/loops/601-8cbdd16d828a.mp4",
-    "hash": "8cbdd16d828a",
+    "poster": "media/posters/601-c82278b7267e.webp",
+    "loop": "media/loops/601-c82278b7267e.mp4",
+    "hash": "c82278b7267e",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1018,13 +1090,14 @@
       "skeleton": "b4e70b3d",
       "record": "d0aa200d",
       "motion": "8e1031ca",
+      "camera": "745db90a",
       "renderer": "f46e5060"
     }
   },
   "602": {
-    "poster": "media/posters/602-a40a1018350c.webp",
-    "loop": "media/loops/602-a40a1018350c.mp4",
-    "hash": "a40a1018350c",
+    "poster": "media/posters/602-e0b963ea321f.webp",
+    "loop": "media/loops/602-e0b963ea321f.mp4",
+    "hash": "e0b963ea321f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1032,13 +1105,14 @@
       "skeleton": "b4e70b3d",
       "record": "901c4d50",
       "motion": "6bf7791b",
+      "camera": "7581c7f6",
       "renderer": "f46e5060"
     }
   },
   "603": {
-    "poster": "media/posters/603-6705f7e1ba69.webp",
-    "loop": "media/loops/603-6705f7e1ba69.mp4",
-    "hash": "6705f7e1ba69",
+    "poster": "media/posters/603-cc4967672412.webp",
+    "loop": "media/loops/603-cc4967672412.mp4",
+    "hash": "cc4967672412",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1046,13 +1120,14 @@
       "skeleton": "b4e70b3d",
       "record": "883143db",
       "motion": "d4778b01",
+      "camera": "58936012",
       "renderer": "f46e5060"
     }
   },
   "604": {
-    "poster": "media/posters/604-10ab15423e68.webp",
-    "loop": "media/loops/604-10ab15423e68.mp4",
-    "hash": "10ab15423e68",
+    "poster": "media/posters/604-552a2e4bff91.webp",
+    "loop": "media/loops/604-552a2e4bff91.mp4",
+    "hash": "552a2e4bff91",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1060,13 +1135,14 @@
       "skeleton": "b4e70b3d",
       "record": "fed1e2fc",
       "motion": "32ec55c5",
+      "camera": "57313d8e",
       "renderer": "f46e5060"
     }
   },
   "605": {
-    "poster": "media/posters/605-2a9fccfdc083.webp",
-    "loop": "media/loops/605-2a9fccfdc083.mp4",
-    "hash": "2a9fccfdc083",
+    "poster": "media/posters/605-2bb7d2cf0a96.webp",
+    "loop": "media/loops/605-2bb7d2cf0a96.mp4",
+    "hash": "2bb7d2cf0a96",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1074,13 +1150,14 @@
       "skeleton": "b4e70b3d",
       "record": "ff7c07ba",
       "motion": "ef6a572b",
+      "camera": "380e22dc",
       "renderer": "f46e5060"
     }
   },
   "606": {
-    "poster": "media/posters/606-7a4c092ce916.webp",
-    "loop": "media/loops/606-7a4c092ce916.mp4",
-    "hash": "7a4c092ce916",
+    "poster": "media/posters/606-3e10ea843369.webp",
+    "loop": "media/loops/606-3e10ea843369.mp4",
+    "hash": "3e10ea843369",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1088,13 +1165,14 @@
       "skeleton": "b4e70b3d",
       "record": "e490f5a9",
       "motion": "8d740662",
+      "camera": "57313d8e",
       "renderer": "f46e5060"
     }
   },
   "701": {
-    "poster": "media/posters/701-951727576839.webp",
-    "loop": "media/loops/701-951727576839.mp4",
-    "hash": "951727576839",
+    "poster": "media/posters/701-3b2f2bfe505b.webp",
+    "loop": "media/loops/701-3b2f2bfe505b.mp4",
+    "hash": "3b2f2bfe505b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1102,13 +1180,14 @@
       "skeleton": "b4e70b3d",
       "record": "72a4129a",
       "motion": "2a95b9a9",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "702": {
-    "poster": "media/posters/702-a55afbc2250a.webp",
-    "loop": "media/loops/702-a55afbc2250a.mp4",
-    "hash": "a55afbc2250a",
+    "poster": "media/posters/702-87fadf99a982.webp",
+    "loop": "media/loops/702-87fadf99a982.mp4",
+    "hash": "87fadf99a982",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1116,13 +1195,14 @@
       "skeleton": "b4e70b3d",
       "record": "ee1704d6",
       "motion": "b78a1d63",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "703": {
-    "poster": "media/posters/703-a8faf5bb2172.webp",
-    "loop": "media/loops/703-a8faf5bb2172.mp4",
-    "hash": "a8faf5bb2172",
+    "poster": "media/posters/703-70b8a04b8107.webp",
+    "loop": "media/loops/703-70b8a04b8107.mp4",
+    "hash": "70b8a04b8107",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1130,13 +1210,14 @@
       "skeleton": "b4e70b3d",
       "record": "4a597e94",
       "motion": "31bf3d65",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "704": {
-    "poster": "media/posters/704-27385a96b954.webp",
-    "loop": "media/loops/704-27385a96b954.mp4",
-    "hash": "27385a96b954",
+    "poster": "media/posters/704-92a4201b2c5f.webp",
+    "loop": "media/loops/704-92a4201b2c5f.mp4",
+    "hash": "92a4201b2c5f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1144,13 +1225,14 @@
       "skeleton": "b4e70b3d",
       "record": "dc324b01",
       "motion": "26847df0",
+      "camera": "a1c1f77a",
       "renderer": "f46e5060"
     }
   },
   "705": {
-    "poster": "media/posters/705-64420738911c.webp",
-    "loop": "media/loops/705-64420738911c.mp4",
-    "hash": "64420738911c",
+    "poster": "media/posters/705-421abcdd835a.webp",
+    "loop": "media/loops/705-421abcdd835a.mp4",
+    "hash": "421abcdd835a",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1158,13 +1240,14 @@
       "skeleton": "b4e70b3d",
       "record": "47f49c52",
       "motion": "e741335a",
+      "camera": "e3c32b13",
       "renderer": "f46e5060"
     }
   },
   "706": {
-    "poster": "media/posters/706-9bec65794d7d.webp",
-    "loop": "media/loops/706-9bec65794d7d.mp4",
-    "hash": "9bec65794d7d",
+    "poster": "media/posters/706-18619f746b73.webp",
+    "loop": "media/loops/706-18619f746b73.mp4",
+    "hash": "18619f746b73",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1172,27 +1255,29 @@
       "skeleton": "b4e70b3d",
       "record": "268ce31f",
       "motion": "609114ea",
+      "camera": "6abe36d7",
       "renderer": "f46e5060"
     }
   },
   "707": {
-    "poster": "media/posters/707-939458ff3647.webp",
-    "loop": "media/loops/707-939458ff3647.mp4",
-    "hash": "939458ff3647",
+    "poster": "media/posters/707-aa9e912c0d29.webp",
+    "loop": "media/loops/707-aa9e912c0d29.mp4",
+    "hash": "aa9e912c0d29",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
       "body": "b66660eb",
       "skeleton": "b4e70b3d",
       "record": "a193e941",
-      "motion": "94bc32d1",
+      "motion": "1237d1ca",
+      "camera": "f2eb25c7",
       "renderer": "f46e5060"
     }
   },
   "708": {
-    "poster": "media/posters/708-b1391cc9af71.webp",
-    "loop": "media/loops/708-b1391cc9af71.mp4",
-    "hash": "b1391cc9af71",
+    "poster": "media/posters/708-7ace0aba1d64.webp",
+    "loop": "media/loops/708-7ace0aba1d64.mp4",
+    "hash": "7ace0aba1d64",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1200,13 +1285,14 @@
       "skeleton": "b4e70b3d",
       "record": "c93b259d",
       "motion": "bd1bdce9",
+      "camera": "9838de9e",
       "renderer": "f46e5060"
     }
   },
   "709": {
-    "poster": "media/posters/709-9526adcfc1d1.webp",
-    "loop": "media/loops/709-9526adcfc1d1.mp4",
-    "hash": "9526adcfc1d1",
+    "poster": "media/posters/709-833cee348e6c.webp",
+    "loop": "media/loops/709-833cee348e6c.mp4",
+    "hash": "833cee348e6c",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1214,13 +1300,14 @@
       "skeleton": "b4e70b3d",
       "record": "56bd11cc",
       "motion": "e1c9706a",
+      "camera": "50a1a4cb",
       "renderer": "f46e5060"
     }
   },
   "710": {
-    "poster": "media/posters/710-4d62a1ff6e66.webp",
-    "loop": "media/loops/710-4d62a1ff6e66.mp4",
-    "hash": "4d62a1ff6e66",
+    "poster": "media/posters/710-6f8055ac6704.webp",
+    "loop": "media/loops/710-6f8055ac6704.mp4",
+    "hash": "6f8055ac6704",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1228,13 +1315,14 @@
       "skeleton": "b4e70b3d",
       "record": "fbe97396",
       "motion": "4dedfd3d",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "711": {
-    "poster": "media/posters/711-fc88a55fe39b.webp",
-    "loop": "media/loops/711-fc88a55fe39b.mp4",
-    "hash": "fc88a55fe39b",
+    "poster": "media/posters/711-560a93a87e3e.webp",
+    "loop": "media/loops/711-560a93a87e3e.mp4",
+    "hash": "560a93a87e3e",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1242,13 +1330,14 @@
       "skeleton": "b4e70b3d",
       "record": "bf35dc53",
       "motion": "623cccc0",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "712": {
-    "poster": "media/posters/712-286ee8634003.webp",
-    "loop": "media/loops/712-286ee8634003.mp4",
-    "hash": "286ee8634003",
+    "poster": "media/posters/712-6acc896cc01b.webp",
+    "loop": "media/loops/712-6acc896cc01b.mp4",
+    "hash": "6acc896cc01b",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1256,13 +1345,14 @@
       "skeleton": "b4e70b3d",
       "record": "63278b12",
       "motion": "db35ea66",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "713": {
-    "poster": "media/posters/713-40d79a89f1b7.webp",
-    "loop": "media/loops/713-40d79a89f1b7.mp4",
-    "hash": "40d79a89f1b7",
+    "poster": "media/posters/713-4523b6d658c9.webp",
+    "loop": "media/loops/713-4523b6d658c9.mp4",
+    "hash": "4523b6d658c9",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1270,13 +1360,14 @@
       "skeleton": "b4e70b3d",
       "record": "cfac9d55",
       "motion": "6ff33fe6",
+      "camera": "500f63e3",
       "renderer": "f46e5060"
     }
   },
   "714": {
-    "poster": "media/posters/714-ab919daf53f3.webp",
-    "loop": "media/loops/714-ab919daf53f3.mp4",
-    "hash": "ab919daf53f3",
+    "poster": "media/posters/714-afe54a7da8ba.webp",
+    "loop": "media/loops/714-afe54a7da8ba.mp4",
+    "hash": "afe54a7da8ba",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1284,13 +1375,14 @@
       "skeleton": "b4e70b3d",
       "record": "65f8ab18",
       "motion": "4b0412c3",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "715": {
-    "poster": "media/posters/715-abe0bfe3f05d.webp",
-    "loop": "media/loops/715-abe0bfe3f05d.mp4",
-    "hash": "abe0bfe3f05d",
+    "poster": "media/posters/715-e3dcd34d0e37.webp",
+    "loop": "media/loops/715-e3dcd34d0e37.mp4",
+    "hash": "e3dcd34d0e37",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1298,13 +1390,14 @@
       "skeleton": "b4e70b3d",
       "record": "b3ec0a48",
       "motion": "cb7935b7",
+      "camera": "a1c1f77a",
       "renderer": "f46e5060"
     }
   },
   "716": {
-    "poster": "media/posters/716-29ea3ed435ba.webp",
-    "loop": "media/loops/716-29ea3ed435ba.mp4",
-    "hash": "29ea3ed435ba",
+    "poster": "media/posters/716-b71648ab6fb1.webp",
+    "loop": "media/loops/716-b71648ab6fb1.mp4",
+    "hash": "b71648ab6fb1",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1312,13 +1405,14 @@
       "skeleton": "b4e70b3d",
       "record": "12e42d01",
       "motion": "74505c32",
+      "camera": "73a5eeed",
       "renderer": "f46e5060"
     }
   },
   "717": {
-    "poster": "media/posters/717-038e7dc5d952.webp",
-    "loop": "media/loops/717-038e7dc5d952.mp4",
-    "hash": "038e7dc5d952",
+    "poster": "media/posters/717-1de977e894fd.webp",
+    "loop": "media/loops/717-1de977e894fd.mp4",
+    "hash": "1de977e894fd",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1326,13 +1420,14 @@
       "skeleton": "b4e70b3d",
       "record": "44ec8693",
       "motion": "8a3d5baf",
+      "camera": "cf855224",
       "renderer": "f46e5060"
     }
   },
   "718": {
-    "poster": "media/posters/718-09494f49cfd3.webp",
-    "loop": "media/loops/718-09494f49cfd3.mp4",
-    "hash": "09494f49cfd3",
+    "poster": "media/posters/718-48375731f4a9.webp",
+    "loop": "media/loops/718-48375731f4a9.mp4",
+    "hash": "48375731f4a9",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1340,13 +1435,14 @@
       "skeleton": "b4e70b3d",
       "record": "d85178cc",
       "motion": "bd53f495",
+      "camera": "1e523639",
       "renderer": "f46e5060"
     }
   },
   "719": {
-    "poster": "media/posters/719-dd7d3e092b42.webp",
-    "loop": "media/loops/719-dd7d3e092b42.mp4",
-    "hash": "dd7d3e092b42",
+    "poster": "media/posters/719-23ab12295815.webp",
+    "loop": "media/loops/719-23ab12295815.mp4",
+    "hash": "23ab12295815",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1354,27 +1450,29 @@
       "skeleton": "b4e70b3d",
       "record": "45179305",
       "motion": "9a54953a",
+      "camera": "500f63e3",
       "renderer": "f46e5060"
     }
   },
   "801": {
-    "poster": "media/posters/801-b7262a6304c6.webp",
-    "loop": "media/loops/801-b7262a6304c6.mp4",
-    "hash": "b7262a6304c6",
+    "poster": "media/posters/801-521bd3a4b9b4.webp",
+    "loop": "media/loops/801-521bd3a4b9b4.mp4",
+    "hash": "521bd3a4b9b4",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
       "body": "b66660eb",
       "skeleton": "b4e70b3d",
       "record": "a89085d2",
-      "motion": "c636f791",
+      "motion": "6eb3f4c3",
+      "camera": "26018bf0",
       "renderer": "f46e5060"
     }
   },
   "802": {
-    "poster": "media/posters/802-89b27aeb8c42.webp",
-    "loop": "media/loops/802-89b27aeb8c42.mp4",
-    "hash": "89b27aeb8c42",
+    "poster": "media/posters/802-9760b311148f.webp",
+    "loop": "media/loops/802-9760b311148f.mp4",
+    "hash": "9760b311148f",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1382,13 +1480,14 @@
       "skeleton": "b4e70b3d",
       "record": "f47a4497",
       "motion": "282cfad9",
+      "camera": "3496a995",
       "renderer": "f46e5060"
     }
   },
   "803": {
-    "poster": "media/posters/803-1adf138e65b7.webp",
-    "loop": "media/loops/803-1adf138e65b7.mp4",
-    "hash": "1adf138e65b7",
+    "poster": "media/posters/803-c158f548a337.webp",
+    "loop": "media/loops/803-c158f548a337.mp4",
+    "hash": "c158f548a337",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1396,13 +1495,14 @@
       "skeleton": "b4e70b3d",
       "record": "e5930424",
       "motion": "94d759cd",
+      "camera": "3eaa3cf8",
       "renderer": "f46e5060"
     }
   },
   "804": {
-    "poster": "media/posters/804-481979dd6518.webp",
-    "loop": "media/loops/804-481979dd6518.mp4",
-    "hash": "481979dd6518",
+    "poster": "media/posters/804-aae431256daa.webp",
+    "loop": "media/loops/804-aae431256daa.mp4",
+    "hash": "aae431256daa",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1410,13 +1510,14 @@
       "skeleton": "b4e70b3d",
       "record": "324459d3",
       "motion": "9b2ae333",
+      "camera": "b15ee8ab",
       "renderer": "f46e5060"
     }
   },
   "805": {
-    "poster": "media/posters/805-cb59aa5ebe25.webp",
-    "loop": "media/loops/805-cb59aa5ebe25.mp4",
-    "hash": "cb59aa5ebe25",
+    "poster": "media/posters/805-e6da7ed92975.webp",
+    "loop": "media/loops/805-e6da7ed92975.mp4",
+    "hash": "e6da7ed92975",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1424,13 +1525,14 @@
       "skeleton": "b4e70b3d",
       "record": "83ed2b9b",
       "motion": "618b5bc6",
+      "camera": "a07345c9",
       "renderer": "f46e5060"
     }
   },
   "806": {
-    "poster": "media/posters/806-08eabbf18642.webp",
-    "loop": "media/loops/806-08eabbf18642.mp4",
-    "hash": "08eabbf18642",
+    "poster": "media/posters/806-383d857e4714.webp",
+    "loop": "media/loops/806-383d857e4714.mp4",
+    "hash": "383d857e4714",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1438,13 +1540,14 @@
       "skeleton": "b4e70b3d",
       "record": "e643e65e",
       "motion": "5f3b9c10",
+      "camera": "3496a995",
       "renderer": "f46e5060"
     }
   },
   "807": {
-    "poster": "media/posters/807-97c34f446752.webp",
-    "loop": "media/loops/807-97c34f446752.mp4",
-    "hash": "97c34f446752",
+    "poster": "media/posters/807-22e2d94aed26.webp",
+    "loop": "media/loops/807-22e2d94aed26.mp4",
+    "hash": "22e2d94aed26",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1452,13 +1555,14 @@
       "skeleton": "b4e70b3d",
       "record": "5fd8c88a",
       "motion": "8c347270",
+      "camera": "a07345c9",
       "renderer": "f46e5060"
     }
   },
   "808": {
-    "poster": "media/posters/808-ade9973b47ae.webp",
-    "loop": "media/loops/808-ade9973b47ae.mp4",
-    "hash": "ade9973b47ae",
+    "poster": "media/posters/808-5f1cfb7c6e44.webp",
+    "loop": "media/loops/808-5f1cfb7c6e44.mp4",
+    "hash": "5f1cfb7c6e44",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1466,13 +1570,14 @@
       "skeleton": "b4e70b3d",
       "record": "5857ba3e",
       "motion": "061334cb",
+      "camera": "893b1576",
       "renderer": "f46e5060"
     }
   },
   "809": {
-    "poster": "media/posters/809-395170aeb265.webp",
-    "loop": "media/loops/809-395170aeb265.mp4",
-    "hash": "395170aeb265",
+    "poster": "media/posters/809-0d8c77bdbe91.webp",
+    "loop": "media/loops/809-0d8c77bdbe91.mp4",
+    "hash": "0d8c77bdbe91",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
@@ -1480,6 +1585,7 @@
       "skeleton": "b4e70b3d",
       "record": "45b474b8",
       "motion": "70ad4bec",
+      "camera": "072c6ffc",
       "renderer": "f46e5060"
     }
   }
