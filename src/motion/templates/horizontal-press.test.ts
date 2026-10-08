@@ -34,7 +34,7 @@ const folded = (b: Baked) => Array.from({ length: b.frames }, (_, i) => frameQ(b
 
 describe('horizontal-press template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([101, 107, 108, 707])
+    expect([...baked.keys()].sort()).toEqual([101, 107, 108, 120, 121, 707])
   })
 
   it.each(variants.map((v) => v.id))('%s: finite, feet planted, hands on the implement, body still, seamless loop', (id) => {
@@ -64,7 +64,7 @@ describe('horizontal-press template', () => {
     for (let k = 0; k < b.nDof; k++) expect(Math.abs(last[k] - base[k])).toBeLessThan(0.05)
   })
 
-  it.each([101, 107, 707])('%s: soft lockout over the shoulders, elbows folded at the touch (Madsen & McLaughlin 1984)', (id) => {
+  it.each([101, 107, 121, 707])('%s: soft lockout over the shoulders, elbows folded at the touch (Madsen & McLaughlin 1984)', (id) => {
     const b = get(id)
     // lockout with soft elbows, the load over the shoulder joints
     expect(dof(b, TOP, 'elbow_l.flex')).toBeGreaterThan(2)
@@ -154,19 +154,21 @@ describe('horizontal-press template', () => {
     }
   })
 
-  it('dumbbells (107) keep the forearms vertical the whole press ("forearms vertical"), elbows opening steadily', () => {
+  it.each([[107, 0.1], [121, 0.12]])('dumbbells (%s) keep the forearms vertical the whole press ("forearms vertical"), elbows opening steadily', (id, wider) => {
     // with the hands free sideways the forearm holds its touch lean in 3D (it leaned ~35 deg towards the head
-    // mid-press with the elbows pinned at 29 deg); the dumbbells arc a little wider on the way up
-    const b = get(107)
+    // mid-press with the elbows pinned at 29 deg); the dumbbells arc a little wider on the way up. Neutral handles
+    // (121) sit over the elbows at the touch: on the bar's path they leaned ~45 deg with the elbows out past them
+    const b = get(id)
     const { f: fb, impl } = pose(b, BOTTOM)
     const k = b.implements.findIndex((s) => s.id === 'db_l')
     const [lean0, elev0] = [forearmLean(skel, fb), armElevation(skel, fb)]
     expect(lean0).toBeLessThan(15)
     for (const f of folded(b)) {
-      expect(forearmLean(skel, f)).toBeLessThan(lean0 + 6)
+      expect(forearmLean(skel, f)).toBeLessThan(Math.min(20, lean0 + 6))
+      expect(forearmTilt(skel, f)).toBeGreaterThan(-20)
       expect(armElevation(skel, f)).toBeGreaterThan(elev0 - 2)
     }
-    for (let i = 0; i < b.frames; i++) expect(frameImplements(b, i)[k].pos[0] - impl[k].pos[0]).toBeLessThan(0.1)
+    for (let i = 0; i < b.frames; i++) expect(frameImplements(b, i)[k].pos[0] - impl[k].pos[0]).toBeLessThan(wider)
   })
 
   it('707: close grip touches low on the sternum with the forearms stacked under the bar, then presses back in the J', () => {
@@ -248,16 +250,44 @@ describe('horizontal-press template', () => {
     expect(lean).toBeLessThan(20)
   })
 
+  it('Smith (120): the bar runs straight up and down its rails over the lower chest, soft lockout, elbows folded at the touch', () => {
+    const b = get(120)
+    const top = implPos(b, TOP, 'bar'), bottom = implPos(b, BOTTOM, 'bar')
+    for (let i = 0; i < b.frames; i++) {
+      const p = frameImplements(b, i)[0].pos
+      expect(Math.abs(p[0])).toBeLessThan(1e-9)
+      expect(Math.abs(p[2] - bottom[2])).toBeLessThan(1e-9)
+    }
+    expect(top[1] - bottom[1]).toBeGreaterThan(0.3)
+    expect(inThorax(b, BOTTOM, bottom)[1]).toBeLessThan(0)
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeGreaterThan(2)
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(110)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeLessThan(150)
+  })
+
+  it('neutral-grip dumbbells (121): handles along the torso, palms facing, elbows nearer the sides than on 107', () => {
+    const b = get(121)
+    const k = b.implements.findIndex((s) => s.id === 'db_l')
+    for (const u of [TOP, BOTTOM]) {
+      const { f, impl } = pose(b, u)
+      const along = qrot(impl[k].rot, b.implements[k].sites.c.axis!)
+      const up = qrot(f.rot[skel.seg.thorax2], [0, 1, 0])
+      expect(Math.abs(along[0] * up[0] + along[1] * up[1] + along[2] * up[2])).toBeGreaterThan(0.9)
+    }
+    expect(flareOf(skel, pose(b, BOTTOM).f)).toBeLessThan(flareOf(skel, pose(get(107), BOTTOM).f))
+  })
+
   it('unsupported variants throw with a reason', () => {
     expect(() => run({ benchAngle: -15 })).toThrow(/variant not implemented yet/)
     expect(() => run({ benchAngle: 5 })).toThrow(/variant not implemented yet/)
-    expect(() => run({ implement: 'dumbbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)
+    expect(() => run({ implement: 'barbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'machine', posture: 'lying_supine' })).toThrow(/variant not implemented yet/)
     expect(() => bake(getTemplate(T), parseParams(T, {}, 'unilateral'), skel)).toThrow(/variant not implemented yet/)
   })
 
   it('dumbbells and machine never touch the body beyond soft contact', () => {
-    for (const id of [107, 108]) {
+    for (const id of [107, 108, 121]) {
       const b = get(id)
       let worst = Infinity
       for (let i = 0; i < b.frames; i += 3) {

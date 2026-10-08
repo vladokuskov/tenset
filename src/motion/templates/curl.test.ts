@@ -15,33 +15,37 @@ const get = (slug: string) => baked.get(slug)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
 
+/** the working side: the left arm of bilateral records (mirrored), the record's side of unilateral ones */
+const work = (b: Baked) => (b.params.laterality === 'unilateral' && b.params.side !== 'left' ? 'r' : 'l')
+
 /** upper-arm angle from vertical in the world, deg */
-function humerusFromVertical(b: Baked, i: number) {
+function humerusFromVertical(b: Baked, i: number, s: 'l' | 'r' = 'l') {
   const f = fk(skel, frameQ(b, i))
-  return angleBetween(sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'humerus_l')), [0, -1, 0]) * RAD
+  return angleBetween(sub(segPos(skel, f, `forearm_${s}`), segPos(skel, f, `humerus_${s}`)), [0, -1, 0]) * RAD
 }
 
 /** upper-arm swing in the side view (forward +), deg */
-function humerusSwing(b: Baked, i: number) {
+function humerusSwing(b: Baked, i: number, s: 'l' | 'r' = 'l') {
   const f = fk(skel, frameQ(b, i))
-  const h = sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'humerus_l'))
+  const h = sub(segPos(skel, f, `forearm_${s}`), segPos(skel, f, `humerus_${s}`))
   return Math.atan2(h[2], -h[1]) * RAD
 }
 
 describe('curl template', () => {
   it.each([...baked.keys()])('%s: elbow ~8-17 -> 125-140, upper arm quiet, no shrug, hands on the load', (slug) => {
     const b = get(slug)
+    const s = work(b)
     // bars end a little short of lockout: the carrying angle and full supination stop the elbows ~12-17 deg
-    expect(dof(b, 0.625, 'elbow_l.flex')).toBeLessThan(b.params.implement === 'dumbbell' ? 12 : 20)
-    expect(dof(b, 0, 'elbow_l.flex')).toBeGreaterThan(120)
+    expect(dof(b, 0.625, `elbow_${s}.flex`)).toBeLessThan(b.params.implement === 'dumbbell' ? 12 : 20)
+    expect(dof(b, 0, `elbow_${s}.flex`)).toBeGreaterThan(120)
     let lo = Infinity, hi = -Infinity
     for (let i = 0; i < b.frames; i++) {
       const q = frameQ(b, i)
-      expect(q[skel.dof['clavicle_l.elev']]).toBeLessThan(1)
-      const h = humerusSwing(b, i)
+      expect(q[skel.dof[`clavicle_${s}.elev`]]).toBeLessThan(1)
+      const h = humerusSwing(b, i, s)
       lo = Math.min(lo, h)
       hi = Math.max(hi, h)
-      expect(humerusFromVertical(b, i)).toBeLessThan(35)
+      expect(humerusFromVertical(b, i, s)).toBeLessThan(35)
       const f = fk(skel, q)
       const impl = frameImplements(b, i)
       for (const c of b.contacts) {
@@ -136,5 +140,28 @@ describe('curl template', () => {
     }
     // incline: elbows a little out so the dumbbells pass outside the hips
     expect(humerusFromVertical(incline, at(incline, 0.625))).toBeGreaterThan(10)
+  })
+
+  it('Bayesian: the working upper arm stays behind the trunk, the cable runs back to a low pulley, the free arm hangs', () => {
+    const b = get('722-bayesian-cable-curl')
+    for (let i = 0; i < b.frames; i++) expect(humerusSwing(b, i, 'r')).toBeLessThan(-8)
+    expect(dof(b, 0, 'elbow_r.flex')).toBeLessThan(130)
+    // staggered stance, working foot back: the trunk stays near upright, the base holds the cable
+    for (let i = 0; i < b.frames; i += 10) expect(Math.abs(frameQ(b, i)[skel.dof['pelvis.tilt']])).toBeLessThan(5)
+    const pulley = b.cables![0].pulley
+    expect(pulley[2]).toBeLessThan(-0.5)
+    expect(pulley[1]).toBeLessThan(0.3)
+    for (const u of [0, 0.625]) expect(dof(b, u, 'elbow_l.flex')).toBeLessThan(20)
+  })
+
+  it('grip widths: close EZ inside, wide barbell outside the standard grips', () => {
+    const gap = (slug: string) => {
+      const b = get(slug)
+      const f = fk(skel, frameQ(b, at(b, 0.625)))
+      return dist(sitePos(skel, f, 'grip_l'), sitePos(skel, f, 'grip_r'))
+    }
+    expect(gap('753-close-grip-ez-bar-curl')).toBeLessThan(gap('701-ez-bar-curl') - 0.05)
+    expect(gap('754-wide-grip-barbell-curl')).toBeGreaterThan(gap('710-barbell-curl') + 0.12)
+    expect(dof(get('751-reverse-cable-curl'), 0.3, 'forearm_l.pro')).toBeGreaterThan(40)
   })
 })

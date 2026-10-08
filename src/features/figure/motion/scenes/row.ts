@@ -2,6 +2,8 @@ import { defaultCamera, type SceneSpec } from './types.ts'
 
 export const row: SceneSpec = {
   camera: (params, mapView) => {
+    // Smith row: from behind and high, so the view runs between the uprights onto the back (as the Smith squat)
+    if (params.implement === 'smith') return { az: -165, elev: 0.32 }
     // standing bar row: round towards the side so the hinge and the bar path read beside the back
     if (params.implement === 'barbell' && params.posture !== 'lying_supine') return { az: -120, elev: 0.24 }
     // inverted row: the back faces the floor, and from the side the near front upright hides the hands and the chest at

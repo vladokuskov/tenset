@@ -109,66 +109,66 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 117,decline-dumbbell-press,Decline Dumbbell Press,chest,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,horizontal-press
 118,dumbbell-floor-press,Dumbbell Floor Press,chest,,dumbbell,nice,todo,todo,todo,todo,horizontal-press
 119,kettlebell-floor-press,Kettlebell Floor Press,chest,,kettlebell,nice,todo,todo,todo,todo,horizontal-press
-120,smith-machine-bench-press,Smith Machine Bench Press,chest,,smith;flat_bench,nice,todo,todo,todo,todo,horizontal-press
-121,neutral-grip-dumbbell-press,Neutral-Grip Dumbbell Press,chest,,dumbbell;flat_bench,variant,todo,todo,todo,todo,horizontal-press
+120,smith-machine-bench-press,Smith Machine Bench Press,chest,horizontal-press,smith;flat_bench,nice,todo,todo,done,approved,
+121,neutral-grip-dumbbell-press,Neutral-Grip Dumbbell Press,chest,horizontal-press,dumbbell;flat_bench,variant,todo,todo,done,approved,
 122,incline-machine-chest-press,Incline Machine Chest Press,chest,,chest_press_machine,nice,todo,todo,todo,todo,incline-press
-123,low-incline-dumbbell-press,Low-Incline Dumbbell Press,chest,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,incline-press
+123,low-incline-dumbbell-press,Low-Incline Dumbbell Press,chest,incline-press,dumbbell;adjustable_bench,nice,todo,todo,done,approved,
 124,standing-cable-chest-press,Standing Cable Chest Press,chest,,cable,nice,todo,todo,todo,todo,horizontal-press
 125,band-push-up,Band Push-Up,chest,,band,nice,todo,todo,todo,todo,push-up
 126,ring-push-up,Ring Push-Up,chest,,rings,nice,todo,todo,todo,todo,push-up
 127,ring-dip,Ring Dip,chest,,rings,nice,todo,todo,todo,todo,dip
 128,band-chest-press,Band Chest Press,chest,,band,nice,todo,todo,todo,todo,horizontal-press
-129,mid-cable-fly,Mid-Cable Fly,chest,,cable,nice,todo,todo,todo,todo,fly
-130,incline-dumbbell-fly,Incline Dumbbell Fly,chest,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,fly
-131,seated-cable-fly,Seated Cable Fly,chest,,cable;adjustable_bench,nice,todo,todo,todo,todo,fly
-132,single-arm-cable-fly,Single-Arm Cable Fly,chest,,cable,variant,todo,todo,todo,todo,fly
+129,mid-cable-fly,Mid-Cable Fly,chest,fly,cable,nice,todo,todo,done,approved,
+130,incline-dumbbell-fly,Incline Dumbbell Fly,chest,fly,dumbbell;adjustable_bench,nice,todo,todo,done,approved,
+131,seated-cable-fly,Seated Cable Fly,chest,fly,cable;adjustable_bench,nice,todo,todo,done,approved,
+132,single-arm-cable-fly,Single-Arm Cable Fly,chest,fly,cable,variant,todo,todo,done,approved,
 133,band-fly,Band Fly,chest,,band,nice,todo,todo,todo,todo,fly
-134,kneeling-push-up,Kneeling Push-Up,chest,,,variant,todo,todo,todo,todo,push-up
+134,kneeling-push-up,Kneeling Push-Up,chest,push-up,,variant,todo,todo,done,approved,
 135,dumbbell-squeeze-press,Dumbbell Squeeze Press,chest,,dumbbell;flat_bench,nice,todo,todo,todo,todo,horizontal-press
 136,landmine-chest-press,Landmine Chest Press,chest,,landmine;barbell,nice,todo,todo,todo,todo,incline-press
 216,arnold-press,Arnold Press,shoulders,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,vertical-press
-217,standing-dumbbell-shoulder-press,Standing Dumbbell Shoulder Press,shoulders,,dumbbell,nice,todo,todo,todo,todo,vertical-press
+217,standing-dumbbell-shoulder-press,Standing Dumbbell Shoulder Press,shoulders,vertical-press,dumbbell,nice,todo,todo,done,approved,
 218,half-kneeling-landmine-press,Half-Kneeling Landmine Press,shoulders,,landmine;barbell,nice,todo,todo,todo,todo,vertical-press
 219,standing-landmine-press,Standing Landmine Press,shoulders,,landmine;barbell,nice,todo,todo,todo,todo,vertical-press
 220,kettlebell-overhead-press,Kettlebell Overhead Press,shoulders,,kettlebell,nice,todo,todo,todo,todo,vertical-press
-221,seated-barbell-overhead-press,Seated Barbell Overhead Press,shoulders,,barbell;adjustable_bench;rack,nice,todo,todo,todo,todo,vertical-press
+221,seated-barbell-overhead-press,Seated Barbell Overhead Press,shoulders,vertical-press,barbell;adjustable_bench;rack,nice,todo,todo,done,approved,
 222,band-overhead-press,Band Overhead Press,shoulders,,band,nice,todo,todo,todo,todo,vertical-press
 223,pike-push-up,Pike Push-Up,shoulders,,,nice,todo,todo,todo,todo,push-up
-224,seated-dumbbell-lateral-raise,Seated Dumbbell Lateral Raise,shoulders,,dumbbell;flat_bench,variant,todo,todo,todo,todo,lateral-raise
+224,seated-dumbbell-lateral-raise,Seated Dumbbell Lateral Raise,shoulders,lateral-raise,dumbbell;flat_bench,variant,todo,todo,done,approved,
 225,band-lateral-raise,Band Lateral Raise,shoulders,,band,nice,todo,todo,todo,todo,lateral-raise
 226,cable-y-raise,Cable Y-Raise,shoulders,,cable,nice,todo,todo,todo,todo,lateral-raise
 227,cable-upright-row,Cable Upright Row,shoulders,,cable,nice,todo,todo,todo,todo,shrug
 228,band-pull-apart,Band Pull-Apart,shoulders,,band,nice,todo,todo,todo,todo,rear-raise
 229,band-face-pull,Band Face Pull,shoulders,,band,nice,todo,todo,todo,todo,row
-230,incline-prone-rear-delt-raise,Incline Prone Rear Delt Raise,shoulders,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,rear-raise
-231,prone-t-raise,Prone T-Raise,shoulders,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,rear-raise
+230,incline-prone-rear-delt-raise,Incline Prone Rear Delt Raise,shoulders,rear-raise,dumbbell;adjustable_bench,nice,todo,todo,done,approved,
+231,prone-t-raise,Prone T-Raise,shoulders,rear-raise,dumbbell;adjustable_bench,nice,todo,todo,done,approved,
 232,band-external-rotation,Band External Rotation,shoulders,,band,nice,todo,todo,todo,todo,external-rotation
 233,cable-front-raise,Cable Front Raise,shoulders,,cable,nice,todo,todo,todo,todo,front-raise
 234,plate-front-raise,Plate Front Raise,shoulders,,plate,nice,todo,todo,todo,todo,front-raise
 235,dumbbell-z-press,Dumbbell Z Press,shoulders,,dumbbell,nice,todo,todo,todo,todo,vertical-press
-236,dumbbell-scaption-raise,Dumbbell Scaption Raise,shoulders,,dumbbell,nice,todo,todo,todo,todo,front-raise
+236,dumbbell-scaption-raise,Dumbbell Scaption Raise,shoulders,front-raise,dumbbell,nice,todo,todo,done,approved,
 316,t-bar-row,T-Bar Row,back,,t_bar,nice,todo,todo,todo,todo,row
 317,landmine-meadows-row,Landmine Meadows Row,back,,landmine;barbell,nice,todo,todo,todo,todo,row
 318,pendlay-row,Pendlay Row,back,,barbell,nice,todo,todo,todo,todo,row
 319,seal-row,Seal Row,back,,barbell;flat_bench,nice,todo,todo,todo,todo,row
-320,underhand-barbell-row,Underhand Barbell Row,back,,barbell,nice,todo,todo,todo,todo,row
+320,underhand-barbell-row,Underhand Barbell Row,back,row,barbell,nice,todo,todo,done,approved,
 321,kettlebell-row,Kettlebell Row,back,,kettlebell;flat_bench,nice,todo,todo,todo,todo,row
 322,ring-row,Ring Row,back,,rings,nice,todo,todo,todo,todo,row
 323,band-seated-row,Band Seated Row,back,,band,nice,todo,todo,todo,todo,row
-324,smith-machine-row,Smith Machine Row,back,,smith,nice,todo,todo,todo,todo,row
+324,smith-machine-row,Smith Machine Row,back,row,smith,nice,todo,todo,done,approved,
 325,straight-arm-cable-pulldown,Straight-Arm Cable Pulldown,back,,cable,nice,todo,todo,todo,todo,pullover
 326,dumbbell-pullover,Dumbbell Pullover,back,,dumbbell;flat_bench,nice,todo,todo,todo,todo,pullover
 327,band-straight-arm-pulldown,Band Straight-Arm Pulldown,back,,band,nice,todo,todo,todo,todo,pullover
-328,wide-grip-pull-up,Wide-Grip Pull-Up,back,,pullup_bar,nice,todo,todo,todo,todo,vertical-pull
-329,underhand-lat-pulldown,Underhand Lat Pulldown,back,,lat_pulldown,nice,todo,todo,todo,todo,vertical-pull
-330,single-arm-cable-pulldown,Single-Arm Cable Pulldown,back,,cable,variant,todo,todo,todo,todo,vertical-pull
-331,neutral-grip-lat-pulldown,Neutral-Grip Lat Pulldown,back,,lat_pulldown,nice,todo,todo,todo,todo,vertical-pull
+328,wide-grip-pull-up,Wide-Grip Pull-Up,back,vertical-pull,pullup_bar,nice,todo,todo,done,approved,
+329,underhand-lat-pulldown,Underhand Lat Pulldown,back,vertical-pull,lat_pulldown,nice,todo,todo,done,approved,
+330,single-arm-cable-pulldown,Single-Arm Cable Pulldown,back,vertical-pull,cable,variant,todo,todo,done,approved,
+331,neutral-grip-lat-pulldown,Neutral-Grip Lat Pulldown,back,vertical-pull,lat_pulldown,nice,todo,todo,done,approved,
 332,band-lat-pulldown,Band Lat Pulldown,back,,band,nice,todo,todo,todo,todo,vertical-pull
 333,ring-pull-up,Ring Pull-Up,back,,rings,nice,todo,todo,todo,todo,vertical-pull
 334,band-assisted-pull-up,Band-Assisted Pull-Up,back,,pullup_bar;band,nice,todo,todo,todo,todo,vertical-pull
 335,trap-bar-shrug,Trap-Bar Shrug,back,,trap_bar,nice,todo,todo,todo,todo,shrug
-336,cable-shrug,Cable Shrug,back,,cable,variant,todo,todo,todo,todo,shrug
-337,smith-machine-shrug,Smith Machine Shrug,back,,smith,variant,todo,todo,todo,todo,shrug
+336,cable-shrug,Cable Shrug,back,shrug,cable,variant,todo,todo,done,approved,
+337,smith-machine-shrug,Smith Machine Shrug,back,shrug,smith,variant,todo,todo,done,approved,
 338,chest-supported-t-bar-row,Chest-Supported T-Bar Row,back,,t_bar,nice,todo,todo,todo,todo,row
 339,wide-grip-chest-supported-t-bar-row,Wide-Grip Chest-Supported T-Bar Row,back,,t_bar,nice,todo,todo,todo,todo,row
 340,renegade-row,Renegade Row,back,,dumbbell,nice,todo,todo,todo,todo,row
@@ -184,56 +184,56 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 420,heel-elevated-goblet-squat,Heel-Elevated Goblet Squat,squat,,dumbbell;plate,nice,todo,todo,todo,todo,squat
 421,dumbbell-sumo-squat,Dumbbell Sumo Squat,squat,,dumbbell,nice,todo,todo,todo,todo,squat
 422,box-squat,Box Squat,squat,,barbell;rack;step,nice,todo,todo,todo,todo,squat
-423,smith-machine-split-squat,Smith Machine Split Squat,squat,,smith,nice,todo,todo,todo,todo,lunge
-424,barbell-reverse-lunge,Barbell Reverse Lunge,squat,,barbell;rack,nice,todo,todo,todo,todo,lunge
-425,dumbbell-forward-lunge,Dumbbell Forward Lunge,squat,,dumbbell,nice,todo,todo,todo,todo,lunge
+423,smith-machine-split-squat,Smith Machine Split Squat,squat,lunge,smith,nice,todo,todo,done,approved,
+424,barbell-reverse-lunge,Barbell Reverse Lunge,squat,lunge,barbell;rack,nice,todo,todo,done,approved,
+425,dumbbell-forward-lunge,Dumbbell Forward Lunge,squat,lunge,dumbbell,nice,todo,todo,done,approved,
 426,dumbbell-lateral-lunge,Dumbbell Lateral Lunge,squat,,dumbbell,nice,todo,todo,todo,todo,lunge
 427,cossack-squat,Cossack Squat,squat,,,nice,todo,todo,todo,todo,lunge
 428,sissy-squat,Sissy Squat,squat,,,nice,todo,todo,todo,todo,squat
-429,single-leg-leg-press,Single-Leg Leg Press,squat,,leg_press,variant,todo,todo,todo,todo,squat
-430,bodyweight-split-squat,Bodyweight Split Squat,squat,,,nice,todo,todo,todo,todo,lunge
+429,single-leg-leg-press,Single-Leg Leg Press,squat,squat,leg_press,variant,todo,todo,done,approved,
+430,bodyweight-split-squat,Bodyweight Split Squat,squat,lunge,,nice,todo,todo,done,approved,
 431,kettlebell-goblet-reverse-lunge,Kettlebell Goblet Reverse Lunge,squat,,kettlebell,nice,todo,todo,todo,todo,lunge
 432,box-pistol-squat,Box Pistol Squat,squat,,step,nice,todo,todo,todo,todo,squat
 433,dumbbell-curtsy-lunge,Dumbbell Curtsy Lunge,squat,,dumbbell,nice,todo,todo,todo,todo,lunge
 434,front-foot-elevated-split-squat,Front-Foot-Elevated Split Squat,squat,,dumbbell;step,nice,todo,todo,todo,todo,lunge
-435,single-leg-leg-extension,Single-Leg Leg Extension,squat,,leg_extension,variant,todo,todo,todo,todo,leg-extension
+435,single-leg-leg-extension,Single-Leg Leg Extension,squat,leg-extension,leg_extension,variant,todo,todo,done,approved,
 436,band-spanish-squat,Band Spanish Squat,squat,,band,nice,todo,todo,todo,todo,squat
 516,trap-bar-deadlift,Trap-Bar Deadlift,hinge,,trap_bar,nice,todo,todo,todo,todo,hinge
 517,trap-bar-romanian-deadlift,Trap-Bar Romanian Deadlift,hinge,,trap_bar,nice,todo,todo,todo,todo,hinge
 518,kettlebell-swing,Kettlebell Swing,hinge,,kettlebell,nice,todo,todo,todo,todo,swing
 519,kettlebell-romanian-deadlift,Kettlebell Romanian Deadlift,hinge,,kettlebell,nice,todo,todo,todo,todo,hinge
 520,kettlebell-sumo-deadlift,Kettlebell Sumo Deadlift,hinge,,kettlebell,nice,todo,todo,todo,todo,hinge
-521,sumo-deadlift,Sumo Deadlift,hinge,,barbell,nice,todo,todo,todo,todo,hinge
+521,sumo-deadlift,Sumo Deadlift,hinge,hinge,barbell,nice,todo,todo,done,approved,
 522,good-morning,Good Morning,hinge,,barbell;rack,nice,todo,todo,todo,todo,hinge
 523,rack-pull,Rack Pull,hinge,,barbell;rack,nice,todo,todo,todo,todo,hinge
 524,b-stance-dumbbell-romanian-deadlift,B-Stance Dumbbell Romanian Deadlift,hinge,,dumbbell,nice,todo,todo,todo,todo,hinge
-525,stiff-leg-deadlift,Stiff-Leg Deadlift,hinge,,barbell,nice,todo,todo,todo,todo,hinge
+525,stiff-leg-deadlift,Stiff-Leg Deadlift,hinge,hinge,barbell,nice,todo,todo,done,approved,
 526,glute-ham-raise,Glute-Ham Raise,hinge,,ghd,nice,todo,todo,todo,todo,leg-curl
 527,ghd-back-extension,GHD Back Extension,hinge,,ghd,nice,todo,todo,todo,todo,back-extension
 528,reverse-hyperextension,Reverse Hyperextension,hinge,,flat_bench,nice,todo,todo,todo,todo,hip-kickback
 529,single-leg-hip-thrust,Single-Leg Hip Thrust,hinge,,flat_bench,nice,todo,todo,todo,todo,hip-thrust
-530,dumbbell-hip-thrust,Dumbbell Hip Thrust,hinge,,dumbbell;flat_bench,nice,todo,todo,todo,todo,hip-thrust
+530,dumbbell-hip-thrust,Dumbbell Hip Thrust,hinge,hip-thrust,dumbbell;flat_bench,nice,todo,todo,done,approved,
 531,smith-machine-hip-thrust,Smith Machine Hip Thrust,hinge,,smith;flat_bench,nice,todo,todo,todo,todo,hip-thrust
 532,frog-pump,Frog Pump,hinge,,,nice,todo,todo,todo,todo,hip-thrust
 533,single-leg-glute-bridge,Single-Leg Glute Bridge,hinge,,,nice,todo,todo,todo,todo,hip-thrust
 534,cable-glute-kickback,Cable Glute Kickback,hinge,,cable,nice,todo,todo,todo,todo,hip-kickback
 535,band-seated-hip-abduction,Band Seated Hip Abduction,hinge,,band,nice,todo,todo,todo,todo,hip-abduction
-536,side-lying-hip-abduction,Side-Lying Hip Abduction,hinge,,,nice,todo,todo,todo,todo,hip-abduction
+536,side-lying-hip-abduction,Side-Lying Hip Abduction,hinge,hip-abduction,,nice,todo,todo,done,approved,
 537,band-lateral-walk,Band Lateral Walk,hinge,,band,nice,todo,todo,todo,todo,hip-abduction
 538,copenhagen-plank,Copenhagen Plank,hinge,,flat_bench,nice,todo,todo,todo,todo,hold
-539,single-leg-lying-leg-curl,Single-Leg Lying Leg Curl,hinge,,leg_curl_lying,variant,todo,todo,todo,todo,leg-curl
-540,standing-cable-leg-curl,Standing Cable Leg Curl,hinge,,cable,nice,todo,todo,todo,todo,leg-curl
-541,dumbbell-lying-leg-curl,Dumbbell Lying Leg Curl,hinge,,dumbbell;flat_bench,nice,todo,todo,todo,todo,leg-curl
+539,single-leg-lying-leg-curl,Single-Leg Lying Leg Curl,hinge,leg-curl,leg_curl_lying,variant,todo,todo,done,approved,
+540,standing-cable-leg-curl,Standing Cable Leg Curl,hinge,leg-curl,cable,nice,todo,todo,done,approved,
+541,dumbbell-lying-leg-curl,Dumbbell Lying Leg Curl,hinge,leg-curl,dumbbell;flat_bench,nice,todo,todo,done,approved,
 542,kettlebell-single-leg-romanian-deadlift,Kettlebell Single-Leg Romanian Deadlift,hinge,,kettlebell,nice,todo,todo,todo,todo,hinge
-607,smith-machine-calf-raise,Smith Machine Calf Raise,calves,,smith;step,variant,todo,todo,todo,todo,calf-raise
+607,smith-machine-calf-raise,Smith Machine Calf Raise,calves,calf-raise,smith;step,variant,todo,todo,done,approved,
 608,hack-squat-calf-raise,Hack Squat Calf Raise,calves,,hack_squat,nice,todo,todo,todo,todo,calf-raise
 609,donkey-calf-raise,Donkey Calf Raise,calves,,step,nice,todo,todo,todo,todo,calf-raise
-610,seated-dumbbell-calf-raise,Seated Dumbbell Calf Raise,calves,,dumbbell;flat_bench,variant,todo,todo,todo,todo,calf-raise
+610,seated-dumbbell-calf-raise,Seated Dumbbell Calf Raise,calves,calf-raise,dumbbell;flat_bench,variant,todo,todo,done,approved,
 611,band-tibialis-raise,Band Tibialis Raise,calves,,band,nice,todo,todo,todo,todo,calf-raise
-612,barbell-standing-calf-raise,Barbell Standing Calf Raise,calves,,barbell;rack;step,variant,todo,todo,todo,todo,calf-raise
+612,barbell-standing-calf-raise,Barbell Standing Calf Raise,calves,calf-raise,barbell;rack;step,variant,todo,todo,done,approved,
 720,ez-bar-preacher-curl,EZ-Bar Preacher Curl,arms,,ez_bar;preacher_bench,nice,todo,todo,todo,todo,curl
 721,dumbbell-preacher-curl,Dumbbell Preacher Curl,arms,,dumbbell;preacher_bench,nice,todo,todo,todo,todo,curl
-722,bayesian-cable-curl,Bayesian Cable Curl,arms,,cable,nice,todo,todo,todo,todo,curl
+722,bayesian-cable-curl,Bayesian Cable Curl,arms,curl,cable,nice,todo,todo,done,approved,
 723,barbell-drag-curl,Barbell Drag Curl,arms,,barbell,nice,todo,todo,todo,todo,curl
 724,concentration-curl,Concentration Curl,arms,,dumbbell;flat_bench,nice,todo,todo,todo,todo,curl
 725,zottman-curl,Zottman Curl,arms,,dumbbell,nice,todo,todo,todo,todo,curl
@@ -245,11 +245,11 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 731,jm-press,JM Press,arms,,barbell;flat_bench;rack,nice,todo,todo,todo,todo,triceps-extension
 732,diamond-push-up,Diamond Push-Up,arms,,,nice,todo,todo,todo,todo,push-up
 733,bench-dip,Bench Dip,arms,,flat_bench,nice,todo,todo,todo,todo,dip
-734,single-arm-cable-pushdown,Single-Arm Cable Pushdown,arms,,cable,variant,todo,todo,todo,todo,triceps-extension
+734,single-arm-cable-pushdown,Single-Arm Cable Pushdown,arms,triceps-extension,cable,variant,todo,todo,done,approved,
 735,v-bar-pushdown,V-Bar Pushdown,arms,,cable,nice,todo,todo,todo,todo,triceps-extension
-736,reverse-grip-pushdown,Reverse-Grip Pushdown,arms,,cable,nice,todo,todo,todo,todo,triceps-extension
+736,reverse-grip-pushdown,Reverse-Grip Pushdown,arms,triceps-extension,cable,nice,todo,todo,done,approved,
 737,single-arm-overhead-cable-extension,Single-Arm Overhead Cable Extension,arms,,cable,variant,todo,todo,todo,todo,triceps-extension
-738,dumbbell-skull-crusher,Dumbbell Skull Crusher,arms,,dumbbell;flat_bench,nice,todo,todo,todo,todo,triceps-extension
+738,dumbbell-skull-crusher,Dumbbell Skull Crusher,arms,triceps-extension,dumbbell;flat_bench,nice,todo,todo,done,approved,
 739,incline-dumbbell-skull-crusher,Incline Dumbbell Skull Crusher,arms,,dumbbell;adjustable_bench,nice,todo,todo,todo,todo,triceps-extension
 740,cable-kickback,Cable Kickback,arms,,cable,nice,todo,todo,todo,todo,triceps-extension
 741,band-pushdown,Band Pushdown,arms,,band,nice,todo,todo,todo,todo,triceps-extension
@@ -257,15 +257,15 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 743,ring-triceps-extension,Ring Triceps Extension,arms,,rings,nice,todo,todo,todo,todo,triceps-extension
 744,tate-press,Tate Press,arms,,dumbbell;flat_bench,nice,todo,todo,todo,todo,triceps-extension
 745,seated-ez-bar-overhead-extension,Seated EZ-Bar Overhead Extension,arms,,ez_bar;adjustable_bench,nice,todo,todo,todo,todo,triceps-extension
-746,barbell-wrist-curl,Barbell Wrist Curl,arms,,barbell;flat_bench,nice,todo,todo,todo,todo,wrist-curl
-747,barbell-reverse-wrist-curl,Barbell Reverse Wrist Curl,arms,,barbell;flat_bench,nice,todo,todo,todo,todo,wrist-curl
+746,barbell-wrist-curl,Barbell Wrist Curl,arms,wrist-curl,barbell;flat_bench,nice,todo,todo,done,approved,
+747,barbell-reverse-wrist-curl,Barbell Reverse Wrist Curl,arms,wrist-curl,barbell;flat_bench,nice,todo,todo,done,approved,
 748,cable-wrist-curl,Cable Wrist Curl,arms,,cable,nice,todo,todo,todo,todo,wrist-curl
 749,behind-the-back-barbell-wrist-curl,Behind-the-Back Barbell Wrist Curl,arms,,barbell,nice,todo,todo,todo,todo,wrist-curl
 750,band-wrist-extension,Band Wrist Extension,arms,,band,nice,todo,todo,todo,todo,wrist-curl
-751,reverse-cable-curl,Reverse Cable Curl,arms,,cable,nice,todo,todo,todo,todo,curl
+751,reverse-cable-curl,Reverse Cable Curl,arms,curl,cable,nice,todo,todo,done,approved,
 752,band-hammer-curl,Band Hammer Curl,arms,,band,nice,todo,todo,todo,todo,curl
-753,close-grip-ez-bar-curl,Close-Grip EZ-Bar Curl,arms,,ez_bar,variant,todo,todo,todo,todo,curl
-754,wide-grip-barbell-curl,Wide-Grip Barbell Curl,arms,,barbell,variant,todo,todo,todo,todo,curl
+753,close-grip-ez-bar-curl,Close-Grip EZ-Bar Curl,arms,curl,ez_bar,variant,todo,todo,done,approved,
+754,wide-grip-barbell-curl,Wide-Grip Barbell Curl,arms,curl,barbell,variant,todo,todo,done,approved,
 810,ab-wheel-rollout,Ab Wheel Rollout,core,,ab_wheel,nice,todo,todo,todo,todo,rollout
 811,kneeling-ab-wheel-rollout,Kneeling Ab Wheel Rollout,core,,ab_wheel,nice,todo,todo,todo,todo,rollout
 812,ab-wheel-oblique-rollout,Ab Wheel Oblique Rollout,core,,ab_wheel,nice,todo,todo,todo,todo,rollout
@@ -288,7 +288,7 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 829,long-lever-plank,Long-Lever Plank,core,,,nice,todo,todo,todo,todo,hold
 830,side-plank-hip-dip,Side Plank Hip Dip,core,,,nice,todo,todo,todo,todo,hold
 831,half-kneeling-cable-chop,Half-Kneeling Cable Chop,core,,cable,nice,todo,todo,todo,todo,rotation
-832,low-to-high-cable-lift,Low-to-High Cable Lift,core,,cable,nice,todo,todo,todo,todo,rotation
+832,low-to-high-cable-lift,Low-to-High Cable Lift,core,rotation,cable,nice,todo,todo,done,approved,
 833,band-woodchop,Band Woodchop,core,,band,nice,todo,todo,todo,todo,rotation
 834,weighted-crunch,Weighted Crunch,core,,plate,nice,todo,todo,todo,todo,crunch
 835,l-sit-hold,L-Sit Hold,core,,dip_station,nice,todo,todo,todo,todo,hold

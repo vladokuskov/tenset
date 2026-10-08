@@ -20,6 +20,7 @@ import { memo, type Setup, type Template } from './types.ts'
 // 1.5 x shoulder width (coaching standard ~30-45); with the feet on a box the neck extends so the face clears. The
 // scapulae retract as the chest lowers and protract at the top; the push-up plus adds full protraction after lockout
 // (the thorax rises between the shoulder blades), still inside the default tempo.
+// Kneeling: the knees rest on the floor with the toes turned under behind them, the plank pivoting at the knees.
 
 type P = ParamsOf<'push-up'>
 
@@ -75,6 +76,12 @@ const PALM_LIFT_BOX = 0.003
  * turned-under toes reach over the edge: at the toe joint's -60 stop they tip down ~10 deg at the bottom of the decline */
 const BALL_EDGE = 0.03
 const KNOTS = 17
+/** kneeling: the capsules round the knee that rest on the floor, and how far they sink into it (soft tissue), m */
+const KNEE_CAPS = /^(shank_[lr]1|thigh_[lr][23])/
+const KNEE_SINK = 0.005
+/** kneeling: ankle dorsiflexion with the toes turned under behind the knees, deg (the joint's stop: less tips the
+ * forefoot capsule further into the floor than the push-up's toe sink allows) */
+const KNEEL_DF = 40
 /**
  * How far the capsule model sinks into a support at the palms and the balls of the feet, mm: the fist capsule models
  * fingers closed round a handle and the forefoot capsule straight toes, while here the palms lie flat and the toes
@@ -107,7 +114,7 @@ const MIRRORED = ['clavicle_*.elev', 'clavicle_*.prot', 'scapula_*.uprot', 'shou
 
 function unsupported(p: P) {
   if (p.laterality !== 'bilateral') return `laterality ${p.laterality}`
-  if (p.kneeling) return 'kneeling'
+  if (p.kneeling && p.elevation !== 'floor') return `kneeling ${p.elevation}`
   return null
 }
 
@@ -121,13 +128,26 @@ function plank(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Ctx, 'balls'>, c
     'head.flex': NECK[p.elevation === 'feet' ? 1 : 0][1],
     'hip_*.flex': HIP,
     'knee_*.flex': KNEE,
-    'ankle_*.df': ANKLE_DF + (p.elevation === 'feet' ? DECLINE_DF * Math.min(1, Math.max(0, -pitch / DECLINE_PITCH)) : 0),
+    'ankle_*.df': p.kneeling ? KNEEL_DF : ANKLE_DF + (p.elevation === 'feet' ? DECLINE_DF * Math.min(1, Math.max(0, -pitch / DECLINE_PITCH)) : 0),
     'clavicle_*.prot': lerp(PROT[0], PROT[1], c) + PLUS * plus,
     'grip_*.close': 1,
   })
   q[skel.dof['pelvis.tilt']] = 90 - pitch
-  const d = sub(ctx.balls[0], sitePos(skel, fk(skel, q), 'ball_l'))
-  for (const [k, i] of [['pelvis.tx', 0], ['pelvis.ty', 1], ['pelvis.tz', 2]] as const) q[skel.dof[k]] += d[i]
+  const root = () => {
+    const d = sub(ctx.balls[0], sitePos(skel, fk(skel, q), 'ball_l'))
+    for (const [k, i] of [['pelvis.tx', 0], ['pelvis.ty', 1], ['pelvis.tz', 2]] as const) q[skel.dof[k]] += d[i]
+  }
+  root()
+  if (p.kneeling) {
+    // knees down: the knees bend until they rest on the floor, the balls of the feet planted behind them (toes under)
+    const kneeAt = (k: number) => {
+      q[skel.dof['knee_l.flex']] = q[skel.dof['knee_r.flex']] = k
+      root()
+      const caps = bodyCapsules(skel, fk(skel, q)).filter((cap) => KNEE_CAPS.test(cap.name))
+      return Math.min(...caps.map((cap) => Math.min(cap.a[1], cap.b[1]) - cap.r)) + KNEE_SINK
+    }
+    kneeAt(root1d(kneeAt, KNEE, 150, { tol: 1e-6, scan: 15 }).x)
+  }
   // toes turned under, lying flat (pointing towards the hands), on the floor or on the box top
   const toe = root1d((t) => {
     q[skel.dof['toe_l.flex']] = t

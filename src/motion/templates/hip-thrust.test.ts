@@ -18,7 +18,7 @@ const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[
 
 describe('hip-thrust template', () => {
   it('covers every hip-thrust record in the family', () => {
-    expect([...baked.keys()].sort()).toEqual([502, 511])
+    expect([...baked.keys()].sort()).toEqual([502, 511, 530])
   })
 
   it.each([...baked.keys()])('%i: feet planted, hands held, finite frames, seamless loop', (id) => {
@@ -57,8 +57,8 @@ describe('hip-thrust template', () => {
     expect(rom).toBeLessThan(30)
   })
 
-  it('barbell on the bench: shins vertical at lockout, ~75 deg hip flexion at the bottom, back on the edge, bar on the hips', () => {
-    const b = get(502)
+  it.each([502, 530])('%i on the bench: shins vertical at lockout, ~75 deg hip flexion at the bottom, back on the edge, load on the hips', (id) => {
+    const b = get(id)
     const f = fk(skel, frameQ(b, 0))
     expect(Math.abs(segPos(skel, f, 'tibia_l')[2] - segPos(skel, f, 'foot_l')[2])).toBeLessThan(0.02)
     expect(dof(b, 0.625, 'hip_l.flex')).toBeCloseTo(HIP_BOTTOM, 0)
@@ -76,9 +76,26 @@ describe('hip-thrust template', () => {
       const back = Math.min(...caps.filter((c) => c.region === 'trunk').map((c) => capsuleSolidClearance(c, pad)))
       expect(back).toBeLessThan(0)
       expect(back).toBeGreaterThan(-0.015)
-      const bar = frameImplements(b, i).find((p) => p.id === 'bar')!.pos
+      const bar = frameImplements(b, i).find((p) => p.id === (id === 530 ? 'db' : 'bar'))!.pos
       expect(Math.abs(bar[2] - sitePos(skel, g, 'hip_crease')[2])).toBeLessThan(0.001)
       expect(bar[1]).toBeGreaterThan(segPos(skel, g, 'pelvis')[1])
+    }
+  })
+
+  it('dumbbell on the bench: it lies across the hips on its heads, the palms on its end faces', () => {
+    const b = get(530)
+    const k = b.implements.findIndex((s) => s.id === 'db')
+    for (let i = 0; i < b.frames; i += 4) {
+      const f = fk(skel, frameQ(b, i))
+      const solids = placeParts(b.implements[k], frameImplements(b, i)[k])
+      const hips = bodyCapsules(skel, f).filter((c) => c.segment === 'pelvis' || c.segment.startsWith('lumbar') || c.region.startsWith('thigh_'))
+      const gap = Math.min(...hips.flatMap((c) => solids.map((sd) => capsuleSolidClearance(c, sd))))
+      expect(gap).toBeLessThan(0)
+      expect(gap).toBeGreaterThan(-0.008)
+      // each hand on its own end of the dumbbell
+      const db = frameImplements(b, i)[k].pos
+      expect(sitePos(skel, f, 'grip_l')[0] - db[0]).toBeGreaterThan(0.15)
+      expect(sitePos(skel, f, 'grip_r')[0] - db[0]).toBeLessThan(-0.15)
     }
   })
 
@@ -97,7 +114,7 @@ describe('hip-thrust template', () => {
 
   it('throws for variants it does not draw yet', () => {
     const t = getTemplate('hip-thrust')
-    for (const raw of [{ implement: 'dumbbell' }, { implement: 'machine' }, { implement: 'barbell', support: 'floor' }]) {
+    for (const raw of [{ implement: 'dumbbell', support: 'floor' }, { implement: 'machine' }, { implement: 'barbell', support: 'floor' }]) {
       expect(() => t.sample(0, parseParams('hip-thrust', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

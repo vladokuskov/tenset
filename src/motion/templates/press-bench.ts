@@ -4,7 +4,7 @@ import { fk, localToWorld, segPos } from '../fk.ts'
 import { barbell, dumbbell, type ImplementSpec, type Part } from '../implements.ts'
 import { benchRack, pressBench, PRESS_BENCH } from '../implements/press-horizontal.ts'
 import { dls } from '../ik.ts'
-import { add, lerp, norm, qid, scale, type V3 } from '../math.ts'
+import { add, lerp, norm, qid, qrot, scale, type V3 } from '../math.ts'
 import { zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { phaseAt, type Tempo } from '../timing.ts'
 import {
@@ -86,6 +86,8 @@ export type BenchCtx = {
   /** static body: pelvis, spine, legs, head; the arms are solved per frame */
   base: Float64Array
   bar?: ImplementSpec
+  /** neutral-grip dumbbells: the handles lie along the torso, this direction */
+  along?: V3
   /** bar centre or left dumbbell handle path: lockout, touch */
   top: V3
   bottom: V3
@@ -101,7 +103,8 @@ export function unsupportedBench(p: PressParams): string | null {
   if (p.implement === 'machine') return 'machine lying'
   if (p.benchAngle < 0) return `decline ${p.benchAngle}`
   if (p.benchAngle > 0 && p.benchAngle < 10) return `bench angle ${p.benchAngle}`
-  if (p.implement === 'dumbbell' && p.grip !== 'pronated') return `dumbbell grip ${p.grip}`
+  if (p.implement === 'dumbbell' && p.grip !== 'pronated' && p.grip !== 'neutral') return `dumbbell grip ${p.grip}`
+  if (p.implement !== 'dumbbell' && p.grip !== 'pronated') return `${p.implement} grip ${p.grip}`
   if (p.laterality !== 'bilateral') return p.laterality
   return null
 }
@@ -176,8 +179,8 @@ function holdDumbbells(skel: Skeleton, solve: (c: number, off: V3, th: number) =
   return { offset: (c: number): V3 => [dx(clamp(c)) / 100, 0, dz(clamp(c)) / 100], pole: (c: number) => poleAt(th(clamp(c))) }
 }
 
-function gripOf(ctx: Pick<BenchCtx, 'hold' | 'bar'>, center: V3) {
-  return { pos: ctx.hold === 'dumbbell' ? center : add(center, ctx.bar!.sites.l.pos), axis: [1, 0, 0] as V3 }
+function gripOf(ctx: Pick<BenchCtx, 'hold' | 'bar' | 'along'>, center: V3) {
+  return { pos: ctx.hold === 'dumbbell' ? center : add(center, ctx.bar!.sites.l.pos), axis: ctx.along ?? ([1, 0, 0] as V3) }
 }
 
 // ---------- context ----------
@@ -196,7 +199,9 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   const legs = plantFeet(skel, base, hip, incline ? KNEE.incline : KNEE.flat, FEET_HALF)
   const f0 = fk(skel, base)
   const gh = scale(add(segPos(skel, f0, 'humerus_l'), segPos(skel, f0, 'humerus_r')), 0.5)
-  const touch = localToWorld(skel, f0, 'thorax2', [0, incline ? TOUCH_Y.incline : close ? TOUCH_Y.close : TOUCH_Y.flat, 0.1])
+  // a low incline touches between the flat and the 30 deg points
+  const touchY = incline ? lerp(TOUCH_Y.flat, TOUCH_Y.incline, Math.min(1, a / 30)) : close ? TOUCH_Y.close : TOUCH_Y.flat
+  const touch = localToWorld(skel, f0, 'thorax2', [0, touchY, 0.1])
 
   const implements_: ImplementSpec[] = []
   const contacts: Contact[] = [...legs.contacts]
@@ -213,9 +218,13 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   implements_.push(bench)
   // palms face the feet, knuckles up; the bar sits low in the palm over a slightly extended wrist
   const rig: ArmRig = { pole: poleAt(60), palm: norm(incline ? [0, 0.2, 1] : [0, 0.35, 1]), wristBias: WRIST_EXT }
+  // neutral dumbbells: palms face each other, the handles along the torso
+  const neutral = hold === 'dumbbell' && p.grip === 'neutral'
+  const along = neutral ? qrot(f0.rot[skel.seg.thorax2], [0, -1, 0]) : undefined
+  if (neutral) rig.palm = qrot(f0.rot[skel.seg.thorax2], [-1, 0, 0])
   const arm = (center: V3, pole = rig.pole) => {
     const q = Float64Array.from(base)
-    solveLeftArm(skel, q, gripOf({ hold, bar }, center), { ...rig, pole })
+    solveLeftArm(skel, q, gripOf({ hold, bar, along }, center), { ...rig, pole })
     return q
   }
 
@@ -239,6 +248,13 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
       bottom = [root1d((x) => gap([x, bottom[1], bottom[2]]), 0.2, 0.5, { tol: 1e-5 }).x, bottom[1], bottom[2]]
       rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
     }
+    // neutral handles are narrow across the chest: widen them until they stack over the elbows (front view)
+    const clearX = bottom[0]
+    for (let pass = 0; neutral && pass < 4; pass++) {
+      const tilt = (x: number) => forearmTilt(skel, fk(skel, arm([x, bottom[1], bottom[2]])))
+      if (tilt(clearX) < 0) bottom = [root1d(tilt, clearX, 0.5, { tol: 1e-5 }).x, bottom[1], bottom[2]]
+      rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
+    }
   } else if (close) {
     // wrist extension and pole lean together: the record's flare with the forearm vertical in the side view
     const sagAt = (w: number) => {
@@ -260,7 +276,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     const r: ArmRig = { ...rig }
     const pose = (center: V3, pole: V3) => {
       const q = Float64Array.from(base)
-      solveLeftArm(skel, q, gripOf({ hold, bar }, center), { ...r, pole })
+      solveLeftArm(skel, q, gripOf({ hold, bar, along }, center), { ...r, pole })
       return q
     }
     let path = (c: number) => jCurve(top, bottom, c, stroke)
@@ -275,12 +291,24 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     }
     r.oblique = wristSchedule((c, o) => {
       const q = Float64Array.from(base)
-      solveLeftArm(skel, q, gripOf({ hold, bar }, path(c)), { ...r, oblique: () => o }, c, true)
+      solveLeftArm(skel, q, gripOf({ hold, bar, along }, path(c)), { ...r, oblique: () => o }, c, true)
       return q[skel.dof['wrist_l.dev']]
     })
     return { path, rig: r }
   }
-  const strokes = { ecc: strokeOf('ecc'), con: strokeOf('con') }
+  let strokes = { ecc: strokeOf('ecc'), con: strokeOf('con') }
+  if (neutral) {
+    // the scheduled pole and wrist change the reach at lockout: lower the top until the elbows are soft there
+    const lockAt = (y: number) => {
+      top[1] = y
+      const con = strokeOf('con')
+      const q = Float64Array.from(base)
+      solveLeftArm(skel, q, gripOf({ hold, bar, along }, con.path(1)), con.rig, 1)
+      return q[skel.dof['elbow_l.flex']] - LOCK_ELBOW
+    }
+    top[1] = root1d(lockAt, topY - 0.05, topY, { tol: 5e-4 }).x
+    strokes = { ecc: strokeOf('ecc'), con: strokeOf('con') }
+  }
 
   const setup: Setup = { implements: implements_, contacts, tempo, symmetric: true }
   if (bar) setup.rests = [{ implement: bar.id, regions: ['trunk'], tol: 10 }]
@@ -302,7 +330,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     implements_.push(rack)
     fixed.push({ id: 'rack', pos: [0, 0, top[2] - RACK_BACK - rack.sites.l.pos[2]], rot: qid() })
   }
-  return { kind: 'bench', tempo, setup, hold, base, bar, top, bottom, strokes, fixed }
+  return { kind: 'bench', tempo, setup, hold, base, bar, along, top, bottom, strokes, fixed }
 }
 
 export function sampleBench(u: number, skel: Skeleton, ctx: BenchCtx): Pose {

@@ -17,14 +17,14 @@ type Ctx = { tempo: Tempo; setup: Setup; m: SeatedMachine }
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.implement !== 'machine') throw new Error(`leg-extension: variant not implemented yet (${p.implement})`)
-  if (p.laterality !== 'bilateral') throw new Error(`leg-extension: variant not implemented yet (${p.laterality})`)
+  if (p.laterality === 'alternating') throw new Error(`leg-extension: variant not implemented yet (${p.laterality})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
   const m = seatedMachine(skel, { hipAngle: p.hipAngle, kind: 'leg_extension', knee: KNEE.start })
   const setup: Setup = {
     implements: [m.machine, m.lever, m.handles],
     contacts: m.contacts,
     tempo,
-    symmetric: true,
+    symmetric: p.laterality === 'bilateral',
     rests: [{ implement: m.lever.id, regions: ['shank_l', 'shank_r'], tol: 15 }],
   }
   return { tempo, setup, m }
@@ -35,6 +35,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const knee = lerp(KNEE.start, KNEE.lockout, phaseAt(u, ctx.tempo).c)
   const q = zeroQ(skel)
   const implements_ = seatedPose(skel, ctx.m, p.hipAngle, knee, q)
+  // single leg: the other knee stays bent behind the pad, which lifts away from its shin
+  if (p.laterality === 'unilateral') q[skel.dof[`knee_${p.side === 'left' ? 'r' : 'l'}.flex`]] = KNEE.start
   return { q, implements: implements_, contacts: ctx.setup.contacts }
 }
 

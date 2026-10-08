@@ -1,10 +1,10 @@
 import { bodyCapsules } from '../collide.ts'
 import { attachHand, handFrame, implementFromHand, root1d } from '../constraints.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
-import { dumbbell, type ImplementSpec } from '../implements.ts'
+import { barbell, dumbbell, type ImplementSpec } from '../implements.ts'
 import { crossBench, DRAWN_BENCH } from '../implements/arms.ts'
 import { FLOOR_MAT, floorMat } from '../implements/shared.ts'
-import { add, DEG, lerp, norm, qalign, qaxis, qrot, scale, sub, type V3 } from '../math.ts'
+import { add, DEG, dist, lerp, norm, qalign, qaxis, qfromBasis, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
@@ -16,11 +16,14 @@ import { memo, type Setup, type Template } from './types.ts'
 // (708): from full extension, the hands hanging with the dumbbells, to full flexion; palms down (709): from
 // flexion to extension, a shorter range against the load. Wrist ranges from the joint limits (Rajagopal model
 // flexion/extension +-70) less a margin; the rest is coaching standard (forearms flat, wrists over the edge).
+// Barbell (746, 747): the same pose with an unloaded bar across both hands instead of two dumbbells.
 
 type P = ParamsOf<'wrist-curl'>
 
 const WRIST = {
   kg: 8,
+  /** barbell variant: plates per side, kg (an empty bar keeps the sleeves clear of the bench's seat end) */
+  barPlates: 0,
   /** bench top before it is fitted under the forearms, m; forearms sink this far into the pad, m */
   benchTop: 0.44,
   sink: 0.004,
@@ -56,6 +59,9 @@ type Ctx = {
   flex0: number
   range: [number, number]
   db: ImplementSpec[]
+  /** barbell variant: the bar instead of the dumbbells, and the grip's distance from the midline it holds, m */
+  bar?: ImplementSpec
+  half: number
   bench: ImplementPose
   mat: ImplementPose
 }
@@ -93,7 +99,7 @@ function feet(skel: Skeleton, q: Float64Array, top: number) {
 }
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
-  if (p.implement !== 'dumbbell' || p.posture !== 'kneeling' || p.support !== 'bench') {
+  if ((p.implement !== 'dumbbell' && p.implement !== 'barbell') || p.posture !== 'kneeling' || p.support !== 'bench') {
     throw new Error(`wrist-curl: variant not implemented yet (${p.implement}/${p.posture}/${p.support})`)
   }
   const tempo = p.tempo ?? DEFAULT_TEMPO
@@ -150,14 +156,15 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const { length, width } = WRIST.mat
   const matSpec = floorMat({ id: 'mat', length, width })
   const mat: ImplementPose = { id: 'mat', pos: [0, 0, kneecap + WRIST.mat.knee - width / 2], rot: qaxis([0, 1, 0], Math.PI / 2) }
-  const db = [dumbbell({ id: 'db_l', mass: WRIST.kg }), dumbbell({ id: 'db_r', mass: WRIST.kg })]
+  const bar = p.implement === 'barbell' ? barbell({ id: 'bar', gripWidth: dist(sitePos(skel, F, 'grip_l'), sitePos(skel, F, 'grip_r')), plateKg: WRIST.barPlates }) : undefined
+  const db = bar ? [] : [dumbbell({ id: 'db_l', mass: WRIST.kg }), dumbbell({ id: 'db_r', mass: WRIST.kg })]
   const contacts: Contact[] = [
     ...(['l', 'r'] as const).map((s): Contact => ({ site: `ball_${s}`, kind: 'planted', target: { world: sitePos(skel, F, `ball_${s}`) } })),
-    { site: 'grip_l', kind: 'grip', target: { implement: 'db_l', grip: 'c' } },
-    { site: 'grip_r', kind: 'grip', target: { implement: 'db_r', grip: 'c' } },
+    { site: 'grip_l', kind: 'grip', target: bar ? { implement: bar.id, grip: 'l' } : { implement: 'db_l', grip: 'c' } },
+    { site: 'grip_r', kind: 'grip', target: bar ? { implement: bar.id, grip: 'r' } : { implement: 'db_r', grip: 'c' } },
   ]
-  const setup: Setup = { implements: [...db, benchSpec, matSpec], contacts, tempo, symmetric: true }
-  return { tempo, setup, q, flex0: q[skel.dof['wrist_l.flex']], range: WRIST.range[grip], db, bench, mat }
+  const setup: Setup = { implements: [...(bar ? [bar] : db), benchSpec, matSpec], contacts, tempo, symmetric: true }
+  return { tempo, setup, q, flex0: q[skel.dof['wrist_l.flex']], range: WRIST.range[grip], db, bar, half: sitePos(skel, F, 'grip_l')[0], bench, mat }
 })
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
@@ -166,7 +173,23 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const q = Float64Array.from(v.q)
   const flex = v.flex0 + lerp(v.range[0], v.range[1], c)
   setDofs(skel, q, { 'wrist_*.flex': flex })
+  if (v.bar) {
+    // the palms turn in a little, so flexion swings the hands sideways; deviation keeps them on the bar's spacing
+    const dl = skel.dof['wrist_l.dev'], dr = skel.dof['wrist_r.dev']
+    q[dl] = root1d((d) => {
+      q[dl] = d
+      return sitePos(skel, fk(skel, q), 'grip_l')[0] - v.half
+    }, -30, 18, { tol: 1e-7 }).x
+    q[dr] = q[dl]
+  }
   const F = fk(skel, q)
+  if (v.bar) {
+    // the bar runs through both grips (the hands mirror each other, so its axis stays across the lifter)
+    const gl = sitePos(skel, F, 'grip_l'), gr = sitePos(skel, F, 'grip_r')
+    const h = handFrame(skel, F, 'l')
+    const rot = qfromBasis(norm(sub(gl, gr)), norm(h.palm))
+    return { q, implements: [{ id: v.bar.id, pos: scale(add(gl, gr), 0.5), rot }, v.bench, v.mat], contacts: v.setup.contacts }
+  }
   const dbs = v.db.map((spec, k): ImplementPose => {
     const h = handFrame(skel, F, k === 0 ? 'l' : 'r')
     return { id: spec.id, pos: h.pos, rot: implementFromHand(h.axis, h.palm) }

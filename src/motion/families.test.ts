@@ -32,7 +32,7 @@ describe('template families', () => {
   })
 
   it('resolve a family by code or name', () => {
-    expect(familyExercises('F1')).toEqual([101, 102, 103, 107, 108, 109, 707])
+    expect(familyExercises('F1')).toEqual([101, 102, 103, 107, 108, 109, 120, 121, 123, 707])
     expect(familyExercises('press-horizontal')).toEqual(familyExercises('f1'))
     expect(() => familyExercises('F10')).toThrow(/unknown family/)
   })

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
+import { handFrame } from '../constraints.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, sub } from '../math.ts'
+import { dist, dot, sub } from '../math.ts'
 import { shoulderRhythm } from '../skeleton.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -30,7 +31,7 @@ const spread = (v: number[]) => Math.max(...v) - Math.min(...v)
 
 describe('front-raise template', () => {
   it('covers every front-raise record', () => {
-    expect([...baked.keys()]).toEqual(['207-prone-y-raise', '209-dumbbell-front-raise'])
+    expect([...baked.keys()]).toEqual(['207-prone-y-raise', '209-dumbbell-front-raise', '236-dumbbell-scaption-raise'])
   })
 
   it('dumbbell front raise: straight forward from in front of the thighs to shoulder height, soft fixed elbow, no shrug, still trunk', () => {
@@ -77,6 +78,29 @@ describe('front-raise template', () => {
     const rest = Math.min(...trunk.flatMap((c) => pad.map((s) => capsuleSolidClearance(c, s))))
     expect(rest).toBeGreaterThan(-0.015)
     expect(rest).toBeLessThan(0.002)
+  })
+
+  it('scaption raise: in the scapular plane to shoulder height, thumbs turning up, soft fixed elbow, still trunk', () => {
+    const b = get('236-dumbbell-scaption-raise')
+    // ~30 deg forward of the frontal plane; research: elevation 0 -> ~90
+    for (const u of [0.25, 0.5, 0.8]) expect(arm(b, u).plane).toBeCloseTo(30, 0)
+    expect(arm(b, BOTTOM).elev).toBeLessThan(25)
+    expect(arm(b, TOP).elev).toBeGreaterThan(85)
+    expect(arm(b, TOP).elev).toBeLessThan(95)
+    expect(spread(series(b, 'elbow_l.flex'))).toBeLessThan(1e-9)
+    for (const name of ['lumbar.flex', 'thorax.flex', 'pelvis.tilt']) expect(spread(series(b, name))).toBeLessThan(1e-9)
+    // palms in at the bottom; thumbs up at the top: the index side of the hand faces up
+    const hand = (u: number) => {
+      const q = frameQ(b, at(b, u))
+      return { h: handFrame(skel, fk(skel, q), 'l'), fr: thoraxFrame(skel, q) }
+    }
+    const lo = hand(BOTTOM), hi = hand(TOP)
+    expect(dot(lo.h.palm, lo.fr.right)).toBeGreaterThan(0.7)
+    expect(Math.abs(dot(hi.h.axis, hi.fr.up))).toBeGreaterThan(0.7)
+    for (const name of ['shoulder_l.rot', 'forearm_l.pro']) {
+      const v = series(b, name)
+      for (let i = 1; i < v.length; i++) expect(Math.abs(v[i] - v[i - 1])).toBeLessThan(6)
+    }
   })
 
   it.each([...baked.keys()])('%s: hands stay on the dumbbells, feet stay planted, the loop closes', (slug) => {

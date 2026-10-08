@@ -34,7 +34,7 @@ function contactError(b: Baked, i: number) {
 
 describe('hip-abduction template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([506, 507, 514, 515])
+    expect([...baked.keys()].sort()).toEqual([506, 507, 514, 515, 536])
   })
 
   it.each([...baked.keys()])('%s: finite, contacts held, the loop closes', (id) => {
@@ -142,9 +142,41 @@ describe('hip-abduction template', () => {
     }
   })
 
+  it('side lying: the top leg lifts ~0 -> 35-40 deg straight in line with the trunk, hip and shoulder still on the mat', () => {
+    const b = get(536)
+    // the right leg works on top: the left side lies on the mat
+    const top = dof(b, at(b, TOP), 'hip_r.abd'), stretch = dof(b, at(b, STRETCH), 'hip_r.abd')
+    expect(top).toBeGreaterThanOrEqual(35)
+    expect(top).toBeLessThanOrEqual(40)
+    expect(stretch).toBeLessThan(3)
+    const mat = b.implements.findIndex((s) => s.id === 'mat')
+    const matTop = siteWorld(b.implements[mat], frameImplements(b, 0)[mat], 'top').pos[1]
+    const root = ['pelvis.tx', 'pelvis.ty', 'pelvis.tz', 'pelvis.tilt', 'pelvis.rot', 'pelvis.list'].map((n) => skel.dof[n])
+    const q0 = frameQ(b, 0)
+    for (let i = 0; i < b.frames; i += 3) {
+      const q = frameQ(b, i)
+      // hips stacked and still, the working knee straight, the bottom leg bent forward for balance
+      for (const k of root) expect(q[k]).toBeCloseTo(q0[k], 6)
+      expect(Math.abs(q[skel.dof['pelvis.list']])).toBeCloseTo(90, 6)
+      expect(q[skel.dof['knee_r.flex']]).toBeLessThan(5)
+      expect(Math.abs(q[skel.dof['hip_r.flex']])).toBeLessThan(5)
+      expect(q[skel.dof['knee_l.flex']]).toBeGreaterThan(60)
+      // the lifted leg's foot rises above the bottom one, the body rests on the mat
+      const f = fk(skel, q)
+      const caps = bodyCapsules(skel, f)
+      const low = (pred: (c: (typeof caps)[number]) => boolean) => Math.min(...caps.filter(pred).map((c) => Math.min(c.a[1], c.b[1]) - c.r)) - matTop
+      // the hip (pelvis and the top of the bottom thigh) and the bottom shoulder (its upper arm overhead) rest on the mat
+      for (const support of [(c: (typeof caps)[number]) => c.segment === 'pelvis' || c.region === 'thigh_l', (c: (typeof caps)[number]) => c.region === 'girdle_l' || c.region === 'upperarm_l']) {
+        expect(low(support)).toBeLessThan(0.002)
+        expect(low(support)).toBeGreaterThan(-0.015)
+      }
+    }
+    expect(sitePos(skel, fk(skel, frameQ(b, at(b, TOP))), 'heel_r')[1]).toBeGreaterThan(0.45)
+  })
+
   it('throws for variants it does not draw', () => {
     const t = getTemplate('hip-abduction')
-    for (const raw of [{ implement: 'bodyweight', posture: 'side_lying' }, { implement: 'machine', posture: 'standing' }]) {
+    for (const raw of [{ implement: 'bodyweight', posture: 'side_lying', direction: 'adduction' }, { implement: 'bodyweight', posture: 'standing' }, { implement: 'machine', posture: 'standing' }]) {
       expect(() => t.setup(parseParams('hip-abduction', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

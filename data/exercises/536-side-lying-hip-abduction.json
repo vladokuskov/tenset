@@ -32,9 +32,14 @@
     537
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hip-abduction",
+    "params": {
+      "implement": "bodyweight",
+      "direction": "abduction",
+      "posture": "side_lying",
+      "hipAngle": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -51,6 +56,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Hips stacked exactly (the hip axis is vertical). The top leg abducts 0 to 38 in the frontal plane with the toes forward. The bottom leg (hip 40, knee 75) reads bent in the hero and the side view. But the shoulder axis is 26 deg off stacked, the trunk sits about 10 deg forward of the leg line (the top thigh is 12 deg off the body axis at rest, against 'one straight line'), the neck bends 24, and the overhead upper arm sinks 13 mm into the mat. The hero from behind is readable and glute_med is visible."
   }
 }

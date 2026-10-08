@@ -10,6 +10,7 @@ Approved by the owner (2026-10-03). Growing the catalog from 106 to 300 (decisio
   - **B:** an existing template that needs new params, a new implement (band, kettlebell, plate) or a new hold kind.
   - **C:** needs a new prop (rings, landmine, trap bar, T-bar, hack, pendulum and belt squat, GHD, preacher bench, ab wheel), a pose the template cannot reach yet, or one of 5 new templates.
 - Totals: A 65, B 75, C 54.
+- Wave 3a (2026-10-08) animated 48 of the 65 A rows. The other 17 (116, 117, 122, 135, 233, 319, 421, 732, 735, 737, 739, 740, 745, 748, 826, 827, 831) move to 3b/3c; reasons are in `docs/PLAN.md` "Wave 3a".
 
 ## New templates (tier C)
 

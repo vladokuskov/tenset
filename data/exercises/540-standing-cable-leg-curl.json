@@ -36,9 +36,13 @@
     541
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "leg-curl",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "hipAngle": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -56,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Stance knee locked at 5 (feet slip 0.2 mm). Working hip held at 11 flex and 8 abd, so the thigh stays down as cued, and the knee goes 100 to 25. The strap is on the ankle and the cable runs to the low pulley on the working side (x 0 to -0.11), clear of the stance leg. The stretched end stops at 25 deg, short of the 'straighten the leg' cue. The curl_stack implement id is a workaround for a schema gap."
   }
 }

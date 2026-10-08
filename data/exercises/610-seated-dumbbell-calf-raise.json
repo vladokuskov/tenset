@@ -36,9 +36,15 @@
     606
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "calf-raise",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "seated",
+      "kneeAngle": 90,
+      "stance": "hip",
+      "platform": "floor"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -56,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Thighs level, knees 90, shins upright. Ankle 0 to -34 (heel rises 7.7 cm, knees rise 5 cm). The dumbbell bottoms rest on the lower thighs about 10 cm above the knee joint, as cued, with hands closed on the handles. Ships with the 42 mm floor tolerance on the forefoot, which needs lead acceptance."
   }
 }

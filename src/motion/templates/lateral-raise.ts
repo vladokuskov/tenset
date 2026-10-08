@@ -1,6 +1,8 @@
-import { attachHand, handFrame, implementFromHand, root1d, solveLegs } from '../constraints.ts'
+import { attachHand, handFrame, implementFromHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
+import { bodyCapsules, restAgainst } from '../collide.ts'
 import { centerOfMass, centerOfPressure, fk, segPos, sitePos } from '../fk.ts'
 import { cableForce, cableHandle, comWorld, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { flatBench } from '../implements/shared.ts'
 import { add, cross, DEG, dist, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
@@ -31,11 +33,15 @@ const LEG_LEAN = 0.6
 const PELVIS_LEAN = 0.15
 /** lean-away: supporting elbow bend where the upright is placed, deg */
 const POST_ELBOW = 15
+/** seated: hip point over the bench, the seat's front edge this far ahead of it (m), trunk tilt (deg) */
+const SEAT_HIP: V3 = [0, 0.56, 0]
+const SEAT_EDGE = 0.14
+const SEAT_TILT = 2
 
 type Side = 'l' | 'r'
 
 type Ctx = {
-  kind: 'db' | 'cable' | 'lean'
+  kind: 'db' | 'cable' | 'lean' | 'seat'
   tempo: Tempo
   setup: Setup
   stance: StanceSetup
@@ -45,6 +51,8 @@ type Ctx = {
   post?: { spec: ImplementSpec; site: string }
   measure: (q: Float64Array) => number
   sway?: Sway
+  feet?: FootTarget[]
+  benchPose?: ImplementPose
 }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
@@ -190,8 +198,39 @@ function leanContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   return { kind: 'lean', tempo, setup, stance, work, post: { spec: post, site: 'h' }, measure }
 }
 
+/** seated on the end of a flat bench, feet flat, trunk upright; the dumbbells hang beside the bench */
+function seatedBody(skel: Skeleton, q: Float64Array, feet: FootTarget[]) {
+  trunkPose(skel, q)
+  setPelvis(skel, q, SEAT_HIP, SEAT_TILT)
+  solveLegs(skel, q, feet)
+}
+
+function seatContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const femur = skel.segments[skel.seg.femur_l]
+  const half = femur.offset[0] + 0.06
+  const z = SEAT_HIP[2] + femur.length + 0.08
+  const feet = [plantFoot(skel, 'l', [half, 0, z], 10), plantFoot(skel, 'r', [-half, 0, z], 10)]
+  const q = zeroQ(skel)
+  seatedBody(skel, q, feet)
+  const caps = bodyCapsules(skel, fk(skel, q))
+  // the seat top where the glutes and upper thighs rest on it (a light sink into the padding)
+  const top = restAgainst(caps.filter((c) => c.region === 'trunk' || /^thigh_[lr]1/.test(c.name)), { shape: 'box', center: [0, SEAT_HIP[1] - 0.15, 0], size: [0.28, 0.06, 0.3], pad: true } as Part & { shape: 'box' }, [0, -1, 0])
+  const h = top.center[1] + 0.03
+  const bench = flatBench({ seatHeight: h })
+  // the bench runs back from just behind the knees; seat pad front edge at z 0.44 in the bench frame
+  const benchPose: ImplementPose = { id: bench.id, pos: [0, h, SEAT_HIP[2] + SEAT_EDGE - 0.44], rot: qid() }
+  const contacts: Contact[] = [...dumbbellContacts()]
+  for (const f of feet) for (const site of ['heel', 'ball']) {
+    const name = `${site}_${f.side}`
+    contacts.push({ site: name, kind: 'planted', target: { world: add(f.ankle, qrot(f.rot, skel.data.sites[name].local)) } })
+  }
+  const setup: Setup = { implements: [...handDumbbells(DB_KG), bench], contacts, tempo, symmetric: p.laterality === 'bilateral' }
+  return { kind: 'seat', tempo, setup, stance: makeStance(skel, stanceWidth(skel, 'hip'), 8), measure: () => 0, feet, benchPose }
+}
+
 function makeContext(p: P, skel: Skeleton): Ctx {
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.posture === 'seated' && p.implement === 'dumbbell' && p.support === 'bench' && p.leanAngle === 0) return seatContext(p, skel, tempo)
   if (p.posture !== 'standing') throw new Error(`lateral-raise: variant not implemented yet (${p.posture})`)
   if (p.implement === 'cable' && p.support === 'none' && p.leanAngle === 0) return cableContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && p.support === 'upright' && p.leanAngle > 0 && p.laterality === 'unilateral') return leanContext(p, skel, tempo)
@@ -201,7 +240,7 @@ function makeContext(p: P, skel: Skeleton): Ctx {
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const ctx = makeContext(p, skel)
-  if (ctx.kind !== 'lean') ctx.sway = limitSway((u, sway) => standing(u, p, skel, ctx, zeroQ(skel), sway))
+  if (ctx.kind === 'db' || ctx.kind === 'cable') ctx.sway = limitSway((u, sway) => standing(u, p, skel, ctx, zeroQ(skel), sway))
   return ctx
 })
 
@@ -236,6 +275,13 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const q = zeroQ(skel)
   trunkPose(skel, q)
+
+  if (ctx.kind === 'seat') {
+    seatedBody(skel, q, ctx.feet!)
+    arm(skel, q, 'l', cOf(u, 'l', p, ctx.tempo), p)
+    arm(skel, q, 'r', cOf(u, 'r', p, ctx.tempo), p)
+    return { q, implements: [...dumbbellPoses(skel, q), ctx.benchPose!], contacts: ctx.setup.contacts }
+  }
 
   if (ctx.kind === 'db') {
     standing(u, p, skel, ctx, q, ctx.sway)

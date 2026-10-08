@@ -36,9 +36,14 @@
     714
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "wrist-curl",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "posture": "kneeling",
+      "support": "bench"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. needs work: The motion matches the cues: extension -49 at the top, flexion +51 at the bottom, hands 0.43 m apart against shoulders at 0.46. But in the hero (az -112, the dumbbell 709 preset) the bar's far collar is drawn across the chin and neck in 4 of 8 sheet frames (t=0, 0.125, 0.25, 0.875). The poster frame reads as the bar going through the face, though in 3D it is 0.3 m clear. The bar also sits 14-21 deg skew in the fists (20.5 deg at the flexed bottom). | minor: Fixed the camera. scenes/wrist-curl.ts now sends barbell + pronated to the palms-up view (az -62, elev 0.36). Dumbbell 709 keeps az -112/0.34, so its preset and media hash are unchanged. I tried az -112 with elev 0.5 first, but the far sleeve still crossed the face at t=0 to 0.25, so I dropped it. In the new hero (qa/out/3a/L4/repair-figure/figure-747.png) the bar stays well clear of the head in all 8 frames. The extensors highlighted on top of the forearms and the wrist lift both read clearly. QA passes, the bake is unchanged (motion untouched) and wrist-curl tests pass. What remains: the bar still sits 14.4 to 20.9 deg skewed in the fists (746 is 12.4 to 17.1). Most of that is hand roll from palmIn 14 (pronation is at its joint limit). Wrist deviation turns the hand in the palm plane and cannot undo a roll about the fingers, so I left it rather than add a joint-limit exception. From this camera the skew barely shows."
   }
 }

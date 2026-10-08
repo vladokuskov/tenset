@@ -91,6 +91,9 @@ const PRESS_RECLINE = 53
 const PRESS_HIP: V3 = [0, 0.62, 0]
 /** the drawn leg press's seat pan (props/legpress.ts): surface centre `along` the pan from the hip point and `drop` below it */
 const PRESS_SEAT = { along: 0.114, drop: 0.0545, tilt: 25 }
+/** single-leg press: working foot this far from the plate centre (m), resting leg pose (deg) */
+const PRESS_ONE_X = 0.06
+const PRESS_FREE = { flex: 95, abd: 20, knee: 120, df: 10 }
 
 type Stand = {
   kind: 'stand'
@@ -119,6 +122,8 @@ type Press = {
   s: [number, number]
   /** body offset from the hip point (seated on the drawn seat pan) */
   shift: V3
+  /** single-leg press: the resting leg, bent and held out to the side clear of the plate */
+  free?: 'l' | 'r'
 }
 
 type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Press }
@@ -456,6 +461,10 @@ function pressShift(skel: Skeleton): V3 {
   return scale(n, dot(sub(drawn, add(seat.center, scale(n, SEAT_PAD / 2))), n))
 }
 
+function freeLeg(skel: Skeleton, q: Float64Array, side: 'l' | 'r') {
+  setDofs(skel, q, { [`hip_${side}.flex`]: PRESS_FREE.flex, [`hip_${side}.abd`]: PRESS_FREE.abd, [`knee_${side}.flex`]: PRESS_FREE.knee, [`ankle_${side}.df`]: PRESS_FREE.df })
+}
+
 function pressFeet(skel: Skeleton, v: Pick<Press, 'd' | 'sledRot' | 'feet'>, s: number): FootTarget[] {
   const origin = add(PRESS_HIP, scale(v.d, s))
   return v.feet.map((f) => {
@@ -482,15 +491,18 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const sledRot = qfromBasis([1, 0, 0], neg(d))
   const half = stanceWidth(skel, p.stance) / 2
   const shift = pressShift(skel)
+  const work: 'l' | 'r' = p.side === 'left' ? 'l' : 'r'
+  const one = p.laterality === 'unilateral'
   const q = zeroQ(skel)
   pressPelvis(skel, q, shift)
+  if (one) freeLeg(skel, q, work === 'l' ? 'r' : 'l')
   const placed = (e: number) => ({
     d,
     sledRot,
-    feet: (['l', 'r'] as const).map((side) => ({
+    feet: (one ? [work] : (['l', 'r'] as const)).map((side: 'l' | 'r') => ({
       side,
       rot: qmul(qaxis(neg(d), (side === 'l' ? p.toeOut : -p.toeOut) * DEG), sledRot),
-      local: [side === 'l' ? half : -half, 0, e] as V3,
+      local: [(side === 'l' ? 1 : -1) * (one ? PRESS_ONE_X : half), 0, e] as V3,
     })),
   })
   const legAt = (e: number, s: number) => pressLegs(skel, q, pressFeet(skel, placed(e), s))[0]
@@ -561,8 +573,8 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     ...feet.flatMap((f) => ['heel', 'ball'].map((site) => ({ site: `${site}_${f.side}`, kind: 'grip' as const, target: { implement: 'sled', grip: `${site}_${f.side}` } }))),
     ...gripContacts('handles'),
   ]
-  const setup: Setup = { implements: [sled, frame, handles], contacts, tempo, symmetric: true }
-  return { tempo, setup, v: { kind: 'press', d, sledRot, feet: v0.feet, s, shift } }
+  const setup: Setup = { implements: [sled, frame, handles], contacts, tempo, symmetric: !one }
+  return { tempo, setup, v: { kind: 'press', d, sledRot, feet: v0.feet, s, shift, free: one ? (work === 'l' ? 'r' : 'l') : undefined } }
 }
 
 function samplePress(u: number, skel: Skeleton, ctx: Ctx, v: Press): Pose {
@@ -570,6 +582,7 @@ function samplePress(u: number, skel: Skeleton, ctx: Ctx, v: Press): Pose {
   const sled = lerp(v.s[0], v.s[1], c)
   const q = zeroQ(skel)
   pressPelvis(skel, q, v.shift)
+  if (v.free) freeLeg(skel, q, v.free)
   pressLegs(skel, q, pressFeet(skel, v, sled))
   const hp: ImplementPose = { id: 'handles', pos: [0, 0, 0], rot: qid() }
   return {

@@ -1,10 +1,10 @@
 import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
 import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, type Capsule, type Solid } from '../collide.ts'
 import { fk, type FK } from '../fk.ts'
-import { barbell, type ImplementSpec } from '../implements.ts'
+import { barbell, dumbbell, type ImplementSpec } from '../implements.ts'
 import { barPad, BAR_PAD, palmRests, thrustBench } from '../implements/hinge.ts'
 import { floorMat, FLOOR_MAT } from '../implements/shared.ts'
-import { add, DEG, dist, lerp, qconj, qfromBasis, qid, qrot, sub, type V3 } from '../math.ts'
+import { add, DEG, dist, lerp, neg, norm, qconj, qfromBasis, qid, qrot, sub, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type ImplementPose, type Pose, type Side, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
@@ -44,6 +44,12 @@ const BAR_PLATES = 20
 const PALM = { abd: 14, reach: 0.703 }
 const ANKLE_Y = 0.07492
 const NECK_SAMPLES = 9
+/** dumbbell thrust: one heavy dumbbell across the hip crease, sunk this far into the hips (no pad), m; the palms hold
+ * its ends */
+const DB_KG = 24
+const DB_SINK = 0.006
+/** left palm on the end face (facing -X), fingers forward along the forearm and a little up over the rim */
+const DB_HAND = qfromBasis([1, 0, 0], neg(norm([0, 0.3, 1])))
 
 type Ctx = {
   support: Support
@@ -58,6 +64,8 @@ type Ctx = {
   bench?: ImplementSpec
   benchSolid?: Solid
   bar?: ImplementSpec
+  /** dumbbell thrust: the dumbbell in place of the bar and its pad, the palms on its end faces */
+  db?: ImplementSpec
   pad?: ImplementSpec
   palms?: ImplementSpec
   mat?: ImplementPose
@@ -70,7 +78,7 @@ const LOW_TRUNK = (c: Capsule) => c.region === 'trunk' && !UPPER_BACK(c)
 const MAT_TOP = FLOOR_MAT.thick
 
 function variant(p: P): Support | string {
-  if (p.implement === 'barbell' && p.support === 'bench') return 'bench'
+  if ((p.implement === 'barbell' || p.implement === 'dumbbell') && p.support === 'bench') return 'bench'
   if (p.implement === 'bodyweight' && p.support === 'floor') return 'floor'
   return `${p.implement} on the ${p.support}`
 }
@@ -125,12 +133,17 @@ function topLegs(skel: Skeleton, q: Float64Array, kneeAngle: number) {
 
 // ---------- hands and bar ----------
 
-/** bar centre resting (through the pad) on the hips, level with the hip crease */
+/** bar centre resting (through the pad) on the hips, level with the hip crease; the dumbbell rests on its heads */
 function barPose(skel: Skeleton, q: Float64Array, ctx: Ctx): ImplementPose {
   const f = fk(skel, q)
   const z = toWorld(skel, f, 'pelvis', skel.data.sites.hip_crease.local)[2]
   const hips = bodyCapsules(skel, f).filter((c) => c.segment === 'pelvis' || c.segment.startsWith('lumbar') || c.region.startsWith('thigh_'))
   const y0 = pos(skel, f, 'pelvis')[1]
+  if (ctx.db) {
+    const solids = (y: number) => placeParts(ctx.db!, { id: ctx.db!.id, pos: [0, y, z], rot: qid() })
+    const gap = (y: number) => Math.min(...hips.flatMap((c) => solids(y).map((sd) => capsuleSolidClearance(c, sd)))) + DB_SINK
+    return { id: ctx.db.id, pos: [0, root1d(gap, y0, y0 + 0.5, { tol: 1e-7 }).x, z], rot: qid() }
+  }
   const clear = (y: number) => Math.min(...hips.map((c) => capsuleClearance(c, { a: [-BAR_PAD.half, y, z], b: [BAR_PAD.half, y, z], r: BAR_PAD.r }))) + PAD_SINK
   const y = root1d(clear, y0, y0 + 0.5, { tol: 1e-7 }).x
   return { id: ctx.bar!.id, pos: [0, y, z], rot: qid() }
@@ -144,7 +157,12 @@ function mirrorArm(skel: Skeleton, q: Float64Array) {
 
 function arms(skel: Skeleton, q: Float64Array, ctx: Ctx, bar?: ImplementPose) {
   setDofs(skel, q, { 'clavicle_*.prot': 4, 'clavicle_*.elev': 0 })
-  if (ctx.support === 'bench') {
+  if (ctx.db) {
+    // palms on the dumbbell's end faces, fingers over the rims
+    const g = add(bar!.pos, ctx.db.sites.l.pos)
+    setDofs(skel, q, { 'grip_*.close': 0.4 })
+    attachHand(skel, q, 'l', { pos: g, axis: [0, 0, 1], palm: [-1, 0, 0], hand: DB_HAND }, { pole: [0.8, -0.6, 0], wristBias: 0, planeHint: 0 })
+  } else if (ctx.support === 'bench') {
     const g = add(bar!.pos, ctx.bar!.sites.l.pos)
     setDofs(skel, q, { 'grip_*.close': 1 })
     attachHand(skel, q, 'l', { pos: g, axis: [1, 0, 0], palm: [0, -1, 0.3] }, { pole: [0.8, -0.6, 0], wristBias: 0, planeHint: 0 })
@@ -173,12 +191,13 @@ function solveFrame(skel: Skeleton, ctx: Ctx, s: number): { q: Float64Array; bar
   if (ctx.support === 'bench') setDofs(skel, q, { 'neck.flex': lerp(NECK.top.neck, NECK.bottom.neck, s), 'head.flex': lerp(NECK.top.head, NECK.bottom.head, s) })
   else setDofs(skel, q, { 'neck.flex': ctx.neckAt!(s), 'head.flex': ctx.neckAt!(s) * HEAD_SHARE })
   solveLegs(skel, q, ctx.feet)
-  const bar = ctx.bar ? barPose(skel, q, ctx) : undefined
+  const bar = ctx.bar || ctx.db ? barPose(skel, q, ctx) : undefined
   arms(skel, q, ctx, bar)
   return { q, bar }
 }
 
 function poses(ctx: Ctx, bar?: ImplementPose): ImplementPose[] {
+  if (ctx.db) return [{ id: ctx.bench!.id, pos: [0, 0, 0], rot: qid() }, bar!]
   if (ctx.support === 'bench') return [{ id: ctx.bench!.id, pos: [0, 0, 0], rot: qid() }, bar!, { ...bar!, id: ctx.pad!.id }]
   return [ctx.mat!, { id: ctx.palms!.id, pos: [0, 0, 0], rot: qid() }]
 }
@@ -240,6 +259,19 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
       return g[skel.dof['hip_l.flex']] - HIP_BOTTOM
     }
     ctx.bottom = root1d(hipAt, ctx.top, ctx.top + 80, { tol: 1e-7, scan: 16 }).x
+    if (p.implement === 'dumbbell') {
+      const db = dumbbell({ id: 'db', mass: DB_KG })
+      // grip sites off the end faces by the palm's thickness, so the palms lie on them
+      const end = Math.max(...db.parts.map((x) => (x.shape === 'cylinder' ? Math.max(x.a[0], x.b[0]) : 0))) + palmHeight(skel)
+      db.sites.l = { pos: [end, 0, 0], axis: [0, 0, 1] }
+      db.sites.r = { pos: [-end, 0, 0], axis: [0, 0, 1] }
+      ctx.db = db
+      implements_.push(ctx.bench!, db)
+      // no pad: the heads sink a little into the hips and the front of the thighs
+      ctx.setup.rests = [{ implement: db.id, regions: ['trunk', 'thigh_l', 'thigh_r'], tol: 8 }]
+      ctx.setup.contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: db.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: db.id, grip: 'r' } })
+      return ctx
+    }
     ctx.bar = barbell({ gripWidth: 2 * GRIP_HALF, plateKg: BAR_PLATES })
     ctx.pad = barPad()
     implements_.push(ctx.bench!, ctx.bar, ctx.pad)

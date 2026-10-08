@@ -37,9 +37,14 @@
     133
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "fly",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "cableHeight": "mid",
+      "stance": "split"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Only the right side moves. The free arm is fixed for all 111 frames (plane 30, elevation 8, elbow 12), its hand open (close 0.3), and thorax/pelvis rotation stay at 0, so the torso is square. The hand ends at x +0.01, 1 cm past the midline at sternum height. Only the working tower is drawn, and the split stance leads with the free-side foot."
   }
 }

@@ -25,7 +25,7 @@ function handleCenter(b: Baked, i: number) {
 
 describe('rotation template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()]).toEqual([809])
+    expect([...baked.keys()].sort()).toEqual([809, 832])
   })
 
   it('809 woodchop: contacts held, loop closes, arms long', () => {
@@ -93,8 +93,48 @@ describe('rotation template', () => {
     }
   })
 
+  it('832 low-to-high lift: contacts held, loop closes, arms long, the bar square in both fists', () => {
+    const b = get(832)
+    const k = b.implements.findIndex((x) => x.id === 'handle')
+    for (let i = 0; i < b.frames; i++) {
+      expect(contactError(skel, b, i)).toBeLessThan(0.005)
+      expect(Math.min(dof(b, i, 'elbow_l.flex'), dof(b, i, 'elbow_r.flex'))).toBeLessThan(18)
+      // long arms: the bent arm of the stacked grip stays as straight as the chop's (809 peaks at 27)
+      expect(Math.max(dof(b, i, 'elbow_l.flex'), dof(b, i, 'elbow_r.flex'))).toBeLessThan(30)
+      const g = fk(skel, frameQ(b, i))
+      const pose = frameImplements(b, i)[k]
+      for (const side of ['l', 'r'] as const) {
+        const bar = siteWorld(b.implements[k], pose, side).axis!
+        const hand = qrot(g.rot[skel.seg[`hand_${side}`]], skel.data.sites[`grip_${side}`].axis!)
+        expect((Math.acos(Math.min(1, Math.abs(dot(bar, hand)))) * 180) / Math.PI).toBeLessThan(3)
+      }
+    }
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
+  })
+
+  it('832 low-to-high lift: low outside the near leg to high above the far shoulder, turning away from the stack', () => {
+    const b = get(832)
+    const s = frameAt(b, START), f = frameAt(b, FINISH)
+    const fs = fk(skel, frameQ(b, s)), ff = fk(skel, frameQ(b, f))
+    // research (motion-authoring): trunk rotation +-30-45 deg; hips and torso turn together, as the chop
+    expect(turn(b, f) - turn(b, s)).toBeGreaterThan(90)
+    expect((dof(b, f, 'pelvis.rot') - dof(b, s, 'pelvis.rot')) / (turn(b, f) - turn(b, s))).toBeGreaterThan(0.4)
+    // start: low by the near thigh (nearer the knee than the hip) and out past the near knee; the trunk sunk and bent towards it
+    const hipY = segPos(skel, fs, 'femur_r')[1], kneeY = segPos(skel, fs, 'tibia_r')[1]
+    expect(handleCenter(b, s)[1]).toBeLessThan(kneeY + 0.45 * (hipY - kneeY))
+    expect(handleCenter(b, s)[0]).toBeLessThan(segPos(skel, fs, 'tibia_r')[0] - 0.2)
+    expect(dof(b, s, 'thorax.flex') + dof(b, s, 'lumbar.flex')).toBeGreaterThan(30)
+    // finish: above the far shoulder with long arms, standing tall, the near heel up
+    expect(handleCenter(b, f)[1]).toBeGreaterThan(segPos(skel, ff, 'humerus_l')[1] + 0.2)
+    expect(handleCenter(b, f)[0]).toBeGreaterThan(segPos(skel, ff, 'humerus_l')[0])
+    expect(segPos(skel, ff, 'femur_l')[1] - segPos(skel, fs, 'femur_l')[1]).toBeGreaterThan(0.08)
+    expect(sitePos(skel, ff, 'heel_r')[1] - sitePos(skel, fs, 'heel_r')[1]).toBeGreaterThan(0.03)
+  })
+
   it('unsupported variants say so', () => {
     const t = getTemplate('rotation')
+    // the lift needs its low pulley, the chop its high one
     expect(() => t.setup(parseParams('rotation', { direction: 'low_to_high' }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => t.setup(parseParams('rotation', { direction: 'horizontal', cableHeight: 'mid' }), skel)).toThrow(/variant not implemented yet/)
   })
 })

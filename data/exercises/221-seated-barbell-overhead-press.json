@@ -41,9 +41,15 @@
     212
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "vertical-press",
+    "params": {
+      "implement": "barbell",
+      "posture": "seated",
+      "benchAngle": 90,
+      "grip": "pronated",
+      "gripWidth": 1.1
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Bar line matches 201 relative to the shoulder (bottom 13 cm above the joint and 21 cm forward of it, lockout over the shoulder), elbow 142→13. The trunk is static on the upright bench. Bottom bar is about 5 cm below the chin and 8 cm in front of the chest, not on the upper chest as the cue says (same as 201). In hero az -48 the near plate covers the near shoulder and front delt from t=0.375 to 0.75. The rack in the equipment list isn't drawn."
   }
 }

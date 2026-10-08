@@ -162,4 +162,15 @@ describe('squat template', () => {
     }
     expect(travel).toBeGreaterThan(0.15)
   })
+
+  it('single-leg press: one foot rides the sled, the resting leg stays still and clear', () => {
+    const v = variants.find((x) => x.id === 429)!
+    const b = bake(getTemplate('squat'), parseParams('squat', v.params, v.laterality), skel)
+    const feet = b.contacts.filter((c) => c.kind === 'grip' && /^(heel|ball)_/.test(c.site))
+    expect(feet.map((c) => c.site).sort()).toEqual(['ball_r', 'heel_r'])
+    const knee = (u: number, s: string) => frameQ(b, at(b, u))[skel.dof[`knee_${s}.flex`]]
+    expect(knee(0.625, 'r') - knee(0, 'r')).toBeGreaterThan(50)
+    expect(Math.abs(knee(0.625, 'l') - knee(0, 'l'))).toBeLessThan(1e-6)
+    for (let i = 0; i < b.frames; i += 3) expect(frameQ(b, i)[skel.dof['hip_r.flex']]).toBeLessThanOrEqual(112.5)
+  })
 })

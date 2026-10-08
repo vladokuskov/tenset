@@ -71,6 +71,14 @@ function arm(skel: Skeleton, q: Float64Array, s: Side, c: number, p: P, ctx: Ctx
     // palms face the thighs, then the floor; elbows a little out so the forearm needs less pronation
     bend = add(ahead, scale(medial, 0.6))
     palm = scale(ahead, -1)
+  } else if (!prone) {
+    // standing thumbs up (scaption): the elbow bends along the path; the palm turns from the thigh (palms in) to
+    // the raise plane's inner side at the top
+    const pr = (plane * Math.PI) / 180
+    const inner = add(scale(fr.right, Math.sin(pr)), scale(fr.fwd, Math.cos(pr)))
+    const want = add(scale(medial, 1 - c), scale(inner, c))
+    bend = ahead
+    palm = norm(sub(want, scale(dir, dot(want, dir))))
   } else {
     // thumbs lead: towards the head at the bottom, up (away from the pad) at the top
     bend = norm(add(scale(fr.up, 1 - c), scale(fr.fwd, -c)))
@@ -146,8 +154,8 @@ function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
 // ---------- prone on an incline bench ----------
 
 /** trunk angle from vertical on a bench this steep, and the lying body (facing -Z, head up the pad) */
-function proneBody(skel: Skeleton, q: Float64Array, p: P, hip: V3, feet?: FootTarget[]) {
-  const trunk = 90 - p.benchAngle
+export function proneBody(skel: Skeleton, q: Float64Array, benchAngle: number, hip: V3, feet?: FootTarget[]) {
+  const trunk = 90 - benchAngle
   setDofs(skel, q, { 'lumbar.flex': 2, 'thorax.flex': 3, 'neck.flex': -4, 'head.flex': -4 })
   setPelvis(skel, q, hip, trunk - 5, 180)
   if (feet) solveLegs(skel, q, feet)
@@ -160,18 +168,20 @@ function proneFeet(skel: Skeleton, hip: V3): FootTarget[] {
   return [plantFoot(skel, 'l', [-x, 0, z], 180 + PRONE_TOE), plantFoot(skel, 'r', [x, 0, z], PRONE_TOE - 180)]
 }
 
-function proneContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
-  const a = (p.benchAngle * Math.PI) / 180
+/**
+ * Chest down on an incline bench (lifter facing -Z): the trunk rests on the pad plane with the pad's top edge just
+ * below the shoulders and the hinge at seat height, feet on the floor either side of the bench
+ */
+export function inclineProne(skel: Skeleton, benchAngle: number) {
+  const a = (benchAngle * Math.PI) / 180
   // lifter faces -Z: the pad rises towards -Z, its surface normal points up and back
   const along: V3 = [0, Math.sin(a), -Math.cos(a)]
   const normal: V3 = [0, Math.cos(a), Math.sin(a)]
-  const ctx0: Ctx = { kind: 'prone', tempo, setup: null as never, bottom: p.benchAngle > 0 ? 90 - p.benchAngle : 0 }
-  // trunk resting on the pad plane: the pad top edge just below the shoulders, the hinge at seat height
   let hip: V3 = [0, 0.8, 0]
   let benchPos: V3 = [0, SEAT_H, 0]
   for (let pass = 0; pass < 4; pass++) {
     const q = zeroQ(skel)
-    proneBody(skel, q, p, hip)
+    proneBody(skel, q, benchAngle, hip)
     const f = fk(skel, q)
     const trunk = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
     const plane = Math.min(...trunk.map((c) => Math.min(dot(normal, c.a), dot(normal, c.b)) - c.r)) + SINK
@@ -182,15 +192,20 @@ function proneContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     const s = dot(along, sub(padTop, gh)) + PAD_BELOW_SHOULDERS
     hip = add(hip, scale(along, s))
   }
-  const feet = proneFeet(skel, hip)
-  const spec = bench({ backAngle: p.benchAngle, seatHeight: SEAT_H })
+  const spec = bench({ backAngle: benchAngle, seatHeight: SEAT_H })
+  return { hip, feet: proneFeet(skel, hip), bench: spec, benchPose: { id: spec.id, pos: benchPos, rot: qid() } as ImplementPose }
+}
+
+function proneContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const ctx0: Ctx = { kind: 'prone', tempo, setup: null as never, bottom: p.benchAngle > 0 ? 90 - p.benchAngle : 0 }
+  const { hip, feet, bench: spec, benchPose } = inclineProne(skel, p.benchAngle)
   const setup: Setup = {
     implements: [...handDumbbells(Y_KG), spec],
     contacts: [...footContacts(skel, feet), ...dumbbellContacts()],
     tempo,
     symmetric: false,
   }
-  return { ...ctx0, setup, hip, feet, benchPose: { id: spec.id, pos: benchPos, rot: qid() } }
+  return { ...ctx0, setup, hip, feet, benchPose }
 }
 
 // ---------- template ----------
@@ -210,7 +225,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
     standing(u, p, skel, ctx, q, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }
   }
-  proneBody(skel, q, p, ctx.hip!, ctx.feet)
+  proneBody(skel, q, p.benchAngle, ctx.hip!, ctx.feet)
   arms(skel, q, u, p, ctx)
   return { q, implements: [...dumbbellPoses(skel, q), ctx.benchPose!], contacts: ctx.setup.contacts }
 }

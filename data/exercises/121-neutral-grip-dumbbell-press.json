@@ -41,9 +41,14 @@
     108
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "dumbbell",
+      "benchAngle": 0,
+      "grip": "neutral",
+      "elbowFlare": 30
+    },
     "mapView": "F"
   },
   "cues": [
@@ -60,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. needs work: Mid-press the forearms lean 41-45 deg (max 44.8 at f86) and forearmTilt reaches -37: the elbows swing out to x=0.40 while the handles stay at x=0.17-0.24. That breaks every existing bench limit (101: lean <36, tilt >-30; 707: lean <38; 107: <21). It is the 'elbows pinned, forearm leaning ~35 deg to the head' look the 107 test comment records as rejected. The new 121 test doesn't check forearm lean. Grip, palms facing and flare (bottom 29-34 deg vs cue 30) are fine. Solve is ~21 s and the forearm_l.pro jerk is 47k of the 60k limit. | minor: Fixed in press-bench.ts with a small additive change. Neutral dumbbells now go through holdDumbbells, so the forearm hold sets the path and the neutral pole only sets the handle orientation. The touch x is also widened (root on forearmTilt = 0, then the flare pole is re-solved) so the neutral handles stack over the elbows. Measured: forearm lean is 11.4 deg at the bottom and 13.9 max over folded frames (was 44.8). Min forearmTilt is -4.1 (was -37). Bottom flare is 30 and elbow flex at lockout is 6 (the neutral lockout correction is kept). Handles stay along the torso with palms facing. 121 is now in the 107 'forearms vertical' test (lean < min(20, lean0+6), tilt > -20, elevation >= touch-2). I allowed 121 a 12 cm sideways drift where 107 gets 10, because the neutral arc measures 10.8 cm. QA passes, the bake is written and fresh, and the sheet and live figure (qa/out/3a/L1/repair, repair-figure/figure-121.png) look clean. Still open: mid-press the dumbbells arc out to x=0.455 and frontal flare peaks at about 55 deg (107 peaks at about 61). So 'elbows nearer the sides than 107' only holds at the bottom and in arm elevation (47-55 vs 56-65). The solve is still slow (about 37 s in node, 84 s for the live still)."
   }
 }

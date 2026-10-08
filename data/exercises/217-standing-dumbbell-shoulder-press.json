@@ -41,9 +41,13 @@
     222
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "vertical-press",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "standing",
+      "grip": "pronated"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: The dumbbell path relative to the shoulder is identical to approved 202 (bottom 28 cm over the shoulder joint, elbow 110, lockout elbow 14, forearms within 9 deg of vertical at the bottom). Hip-width stance (heels ±0.112). Neck sits 1.5 cm behind lumbar1 at the bottom, so the ribs stay down with no layback. Foot slip 0.2 mm. Hero and side sheets are clean."
   }
 }

@@ -42,11 +42,17 @@ const STRETCH: Record<number, [number, number]> = {
   716: [110, 135],
   // kickback: "lower only to about a right angle"
   717: [88, 100],
+  // single arm: the rope's range, forearm just past parallel (cue 4)
+  734: [100, 115],
+  // reverse grip: palms up the bar stops a little lower, short of the bar's chest height
+  736: [98, 112],
+  // dumbbells come down beside the ears, past the EZ bar's stop at the forehead
+  738: [110, 135],
 }
 
 describe('triceps-extension template', () => {
   it('covers every triceps-extension record', () => {
-    expect([...baked.keys()].sort()).toEqual([704, 705, 706, 715, 716, 717])
+    expect([...baked.keys()].sort()).toEqual([704, 705, 706, 715, 716, 717, 734, 736, 738])
   })
 
   it.each([...baked.keys()])('%s: elbow from lockout to its stretch band, upper arm still', (id) => {
@@ -66,13 +72,15 @@ describe('triceps-extension template', () => {
   it('holds the variant shoulder angle', () => {
     const elevation = (id: number) => range(get(id), 'shoulder_*.elev')
     // pushdowns: upper arms at the sides, a little ahead of vertical against the lean
-    for (const id of [704, 715]) expect(elevation(id)[1]).toBeLessThan(30)
+    for (const id of [704, 715, 734, 736]) expect(elevation(id)[1]).toBeLessThan(30)
     // overhead: past 160 deg against the trunk (research ~170)
     for (const id of [705, 716]) expect(elevation(id)[0]).toBeGreaterThan(160)
     // skull crusher: ~110 (research 90-110)
-    const lying = elevation(706)
-    expect(lying[0]).toBeGreaterThan(100)
-    expect(lying[1]).toBeLessThan(120)
+    for (const id of [706, 738]) {
+      const lying = elevation(id)
+      expect(lying[0]).toBeGreaterThan(100)
+      expect(lying[1]).toBeLessThan(120)
+    }
     // kickback: upper arm level with the floor, along the trunk
     const b = get(717)
     const f = fk(skel, frameQ(b, 0))
@@ -118,7 +126,7 @@ describe('triceps-extension template', () => {
   })
 
   it('pushdowns: the body stands still (the approved curls sway at most ~25 mm)', () => {
-    for (const [id, most] of [[704, 0.005], [715, 0.005]] as const) {
+    for (const [id, most] of [[704, 0.005], [715, 0.005], [734, 0.005], [736, 0.005]] as const) {
       const b = get(id)
       const z = Array.from({ length: b.frames }, (_, i) => segPos(skel, fk(skel, frameQ(b, i)), 'head')[2])
       expect(Math.max(...z) - Math.min(...z)).toBeLessThan(most)
@@ -145,6 +153,60 @@ describe('triceps-extension template', () => {
     const grip = sitePos(skel, f, 'grip_l')[1]
     expect(Math.abs(grip - sitePos(skel, f, 'sternum')[1])).toBeLessThan(0.04)
     expect(segPos(skel, f, 'humerus_l')[1] - grip).toBeGreaterThan(0.09)
+  })
+
+  it('single arm: the working hand on the D-handle, the free arm still at the side', () => {
+    const b = get(734)
+    expect(b.symmetric).toBe(false)
+    expect(b.contacts.filter((c) => c.kind === 'grip').map((c) => c.site)).toEqual(['grip_r'])
+    for (const name of ['shoulder_l.elev', 'elbow_l.flex', 'forearm_l.pro']) {
+      let lo = Infinity, hi = -Infinity
+      for (let i = 0; i < b.frames; i++) {
+        const v = frameQ(b, i)[skel.dof[name]]
+        lo = Math.min(lo, v)
+        hi = Math.max(hi, v)
+      }
+      expect(hi - lo).toBeLessThan(0.01)
+    }
+    // the pulley over the working hand: the cable hangs nearly plumb seen from the front at lockout
+    const f = fk(skel, frameQ(b, 0))
+    const cable = b.cables![0]
+    expect(Math.abs(cable.pulley[0] - sitePos(skel, f, 'grip_r')[0])).toBeLessThan(0.05)
+  })
+
+  it('reverse grip: palms up through the rep, the elbows held as the bar rises', () => {
+    const b = get(736)
+    // supinated throughout, inside the variant's limit (a little past the model's 90)
+    const [lo, hi] = range(b, 'forearm_*.pro')
+    expect(hi).toBeLessThan(-60)
+    expect(lo).toBeGreaterThan(-94)
+    expect(b.limits?.['forearm_l.pro']).toEqual([-94, 85])
+    const out = Array.from({ length: b.frames }, (_, i) => {
+      const h = humerus(b, i)
+      return Math.asin(h[0] / Math.hypot(...h)) * RAD
+    })
+    expect(Math.max(...out) - Math.min(...out)).toBeLessThan(1)
+  })
+
+  it('dumbbell skull crusher: forearms neutral (palms in), the dumbbells come down beside the head', () => {
+    const b = get(738)
+    expect(b.contacts.filter((c) => c.kind === 'grip').map((c) => 'implement' in c.target && `${c.target.implement}:${c.target.grip}`)).toEqual(['db_l:c', 'db_r:c'])
+    const [lo, hi] = range(b, 'forearm_*.pro')
+    expect(Math.max(Math.abs(lo), Math.abs(hi))).toBeLessThan(20)
+    const u = (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] / 2) / (b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3])
+    const i = at(b, u)
+    const f = fk(skel, frameQ(b, i))
+    const head = segPos(skel, f, 'head')
+    const impl = frameImplements(b, i)
+    for (const [id, s] of [['db_l', 1], ['db_r', -1]] as const) {
+      const k = b.implements.findIndex((x) => x.id === id)
+      const p = impl[k].pos
+      // beside the ear: out to the side of the head, level with it along the body (the head segment origin is the skull base)
+      expect(s * (p[0] - head[0])).toBeGreaterThan(0.12)
+      expect(Math.abs(p[2] - head[2])).toBeLessThan(0.15)
+      // palms in: the handle stays in the sagittal plane (head to feet, tipped with the forearm), not across the body
+      expect(Math.abs(qrot(impl[k].rot, [1, 0, 0])[0])).toBeLessThan(0.3)
+    }
   })
 
   it('seated overhead: the dumbbell lowers to neck level behind the head (cue 3)', () => {

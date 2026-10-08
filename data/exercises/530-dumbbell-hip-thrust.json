@@ -38,9 +38,14 @@
     532
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hip-thrust",
+    "params": {
+      "implement": "dumbbell",
+      "support": "bench",
+      "stance": "hip",
+      "kneeAngle": 90
+    },
     "mapView": "B"
   },
   "cues": [
@@ -57,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Hip -4 to 74 flex, knee 91 to 111, feet planted. The dumbbell sits across the hip crease (6 mm rest), palms on the end faces, wrists extended 35 to 42. It looks large in the hero, but a 24 kg head of about 17 cm diameter is realistic."
   }
 }

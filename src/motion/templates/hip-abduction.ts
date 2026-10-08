@@ -1,10 +1,11 @@
 import { attachHand, legKinematics, plantFoot, root1d, writeLeg, type FootTarget } from '../constraints.ts'
-import { bodyCapsules, restAgainst } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, restAgainst } from '../collide.ts'
 import { centerOfPressure, fk, localToWorld, segPos, sitePos, type FK } from '../fk.ts'
 import { cableForce, comWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { ankleStrap, GRAB, grabHandle, HIP_MACHINE, hipArm, hipSeat, STRAP_ABOVE_ANKLE } from '../implements/legs-hip-calf.ts'
 import { add, clamp, DEG, lerp, neg, norm, qaxis, qfromBasis, qid, qmul, qrot, reject, scale, sub, type Quat, type V3 } from '../math.ts'
-import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { floorMat, FLOOR_MAT } from '../implements/shared.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -64,7 +65,20 @@ type Cable = {
   grab: { spec: ImplementSpec; pose: ImplementPose; side: Side }
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Machine | Cable }
+type Lying = {
+  kind: 'lying'
+  work: Side
+  /** pelvis height on the mat, trunk side bend, neck bend resting the head on the hand, bottom hip adduction */
+  y: number
+  bend: number
+  neck: number
+  bottomAbd: number
+  /** bottom arm DOFs, the hand under the head (solved once) */
+  pillowArm: [number, number][]
+  mat: ImplementPose
+}
+
+type Ctx = { tempo: Tempo; setup: Setup; v: Machine | Cable | Lying }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
@@ -75,6 +89,7 @@ const ARM_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shou
 function unsupported(p: P): string | null {
   if (p.implement === 'machine') return p.posture === 'seated' ? null : `machine ${p.posture}`
   if (p.implement === 'cable') return p.posture === 'standing' && p.attachment === 'ankle_strap' ? null : `cable ${p.posture}/${p.attachment}`
+  if (p.implement === 'bodyweight') return p.posture === 'side_lying' && p.direction === 'abduction' ? null : `bodyweight ${p.posture}/${p.direction}`
   return `${p.implement}/${p.posture}`
 }
 
@@ -147,7 +162,7 @@ function sampleMachine(c: number, p: P, skel: Skeleton, ctx: Ctx, v: Machine): P
 // ---------- standing cable ----------
 
 /** the strap's cuff round the shank above the ankle, carabiner towards the pulley */
-function strapPose(skel: Skeleton, f: FK, side: Side, pulley: V3): ImplementPose {
+export function strapPose(skel: Skeleton, f: FK, side: Side, pulley: V3): ImplementPose {
   const cuff = localToWorld(skel, f, `tibia_${side}`, [sx(side) * 0.011, -skel.segments[skel.seg[`tibia_${side}`]].length + STRAP_ABOVE_ANKLE, -0.01])
   const axis = qrot(f.rot[skel.seg[`tibia_${side}`]], [0, 1, 0])
   const toward = norm(reject(sub(pulley, cuff), axis))
@@ -157,11 +172,13 @@ function strapPose(skel: Skeleton, f: FK, side: Side, pulley: V3): ImplementPose
 const HAND_ON_HIP: Quat = qfromBasis([1, 0, 0], norm([0, 0.6, -1]))
 
 /** hand on the side of the pelvis, thumb back, fingers forward and down */
-function handOnHip(skel: Skeleton, q: Float64Array, side: Side) {
+function handOnHip(skel: Skeleton, q: Float64Array, side: Side, lying = false) {
   const f = fk(skel, q)
   const pos = localToWorld(skel, f, 'pelvis', [sx(side) * 0.2, 0.075, 0.035])
   setDofs(skel, q, { [`grip_${side}.close`]: 0.35 })
-  attachHand(skel, q, side, { pos, axis: [0, 0, 1], palm: [-sx(side), 0, 0], hand: qmul(f.rot[skel.seg.pelvis], HAND_ON_HIP) }, { pole: [sx(side), -0.2, -0.6], planeHint: 10 })
+  // the target directions are set in the pelvis frame when lying (`lying`), in world when standing
+  const pr = lying ? f.rot[skel.seg.pelvis] : qid()
+  attachHand(skel, q, side, { pos, axis: qrot(pr, [0, 0, 1]), palm: qrot(pr, [-sx(side), 0, 0]), hand: qmul(f.rot[skel.seg.pelvis], HAND_ON_HIP) }, { pole: qrot(pr, [sx(side), -0.2, -0.6]), planeHint: 10 })
 }
 
 const ease5 = (t: number) => {
@@ -312,18 +329,106 @@ function sampleCable(c: number, skel: Skeleton, ctx: Ctx, v: Cable): Pose {
   return { q, implements: implements_, contacts: ctx.setup.contacts }
 }
 
+// ---------- side lying ----------
+
+/**
+ * Side lying on a mat, the pelvis and the bottom shoulder on it (the trunk bends sideways between them, the waist off
+ * the mat), the bottom leg bent forward for balance, the top leg straight in line with the trunk and lifted heel first
+ * (hip abduction ~0 -> 35-40 deg, motion-authoring research); the head rests on the bottom hand, the top hand on the hip.
+ */
+const LYING = { abd: [0, 38], bottomHip: 40, bottomKnee: 75, sink: 0.004 } as const
+const MAT_Y = FLOOR_MAT.thick
+/** bottom arm overhead along the mat, the shoulder shrugged up towards the ear (deg) so the upper arm lies under the
+ * head; its elevation is solved */
+const PILLOW = { arm: { 'shoulder_*.plane': 0, 'shoulder_*.rot': 0, 'elbow_*.flex': 10, 'forearm_*.pro': 60, 'wrist_*.flex': 0, 'grip_*.close': 0.3 }, shrug: 40 }
+const PILLOW_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev', 'grip_*.close']
+
+type LyingBody = Pick<Lying, 'work' | 'y' | 'bend' | 'neck' | 'bottomAbd' | 'pillowArm'>
+
+function lyingBody(skel: Skeleton, q: Float64Array, v: LyingBody, abd: number) {
+  const w = v.work, b = other(w)
+  setPelvis(skel, q, [0, v.y, 0], 0, 0, w === 'r' ? -90 : 90)
+  setDofs(skel, q, {
+    'lumbar.flex': 2, 'thorax.flex': 4, 'lumbar.bend': v.bend / 2, 'thorax.bend': v.bend / 2, 'neck.flex': 4, 'neck.bend': v.neck, 'head.flex': 2,
+    [`hip_${w}.flex`]: 0, [`hip_${w}.abd`]: abd, [`hip_${w}.rot`]: 0, [`knee_${w}.flex`]: 2, [`ankle_${w}.df`]: 0,
+    [`hip_${b}.flex`]: LYING.bottomHip, [`hip_${b}.abd`]: v.bottomAbd, [`knee_${b}.flex`]: LYING.bottomKnee, [`ankle_${b}.df`]: -15,
+  })
+  for (const [i, x] of v.pillowArm) q[i] = x
+}
+
+const lowest = (caps: { a: V3; b: V3; r: number }[]) => Math.min(...caps.map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+
+function lyingContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const work: Side = p.side === 'left' ? 'l' : 'r'
+  const b = other(work)
+  const v: LyingBody = { work, y: 0.3, bend: 0, neck: 0, bottomAbd: 0, pillowArm: [] }
+  const q = zeroQ(skel)
+  const caps = () => bodyCapsules(skel, fk(skel, q))
+  const low = (pred: (c: { region: string; segment: string }) => boolean) => lowest(caps().filter(pred))
+  // the hip: pelvis and the top of the bottom thigh (its capsule is the widest point there)
+  const pelvis = (c: { segment: string; region: string }) => c.segment === 'pelvis' || c.region === `thigh_${b}`
+  const girdle = (c: { region: string }) => c.region === `girdle_${b}`
+  const set = (k: 'y' | 'bend' | 'neck' | 'bottomAbd', f: () => number) => (x: number) => {
+    v[k] = x
+    lyingBody(skel, q, v, LYING.abd[0])
+    return f()
+  }
+  // the trunk bends up from the pelvis until the bottom shoulder is as low as the hip, then both rest on the mat
+  v.bend = root1d(set('bend', () => low(girdle) - low(pelvis)), work === 'r' ? -40 : 0, work === 'r' ? 0 : 40, { tol: 1e-6 }).x
+  v.y = root1d(set('y', () => Math.min(low(girdle), low(pelvis)) - MAT_Y + LYING.sink), 0.05, 0.6, { tol: 1e-7 }).x
+  // the bottom knee and foot come down onto the mat (adduction lifts the bottom leg)
+  v.bottomAbd = root1d(set('bottomAbd', () => low((c) => c.region === `shank_${b}` || c.region === `foot_${b}`) - MAT_Y + LYING.sink), -30, 0, { tol: 1e-6 }).x
+  // the bottom arm reaches overhead along the mat (elevated until the upper arm rests on it), the head rests on it
+  const armAt = (elev: number) => {
+    lyingBody(skel, q, v, LYING.abd[0])
+    setDofs(skel, q, { ...Object.fromEntries(Object.entries(PILLOW.arm).map(([k, x]) => [k.replace('*', b), x])), [`shoulder_${b}.elev`]: elev })
+    setScapula(skel, q, b)
+    setDofs(skel, q, { [`clavicle_${b}.elev`]: PILLOW.shrug })
+    v.pillowArm = PILLOW_DOFS.map((k) => [skel.dof[k.replace('*', b)], q[skel.dof[k.replace('*', b)]]] as [number, number])
+    return low((c) => c.region === `upperarm_${b}`) - MAT_Y + LYING.sink
+  }
+  armAt(root1d(armAt, 120, 180, { tol: 1e-6 }).x)
+  const hand = () => caps().filter((c) => c.region === `upperarm_${b}`)
+  v.neck = root1d(set('neck', () => {
+    const h = caps().filter((c) => c.region === 'head')
+    return Math.min(...h.flatMap((x) => hand().map((a) => capsuleClearance(x, a))), lowest(h) - MAT_Y) + LYING.sink
+  }), -35, 35, { tol: 1e-6 }).x
+  lyingBody(skel, q, v, LYING.abd[0])
+  const f = fk(skel, q)
+  const top = segPos(skel, f, 'head'), feet = segPos(skel, f, `foot_${work}`)
+  const mat: ImplementPose = { id: 'mat', pos: [(top[0] + feet[0]) / 2, 0, 0.1], rot: qaxis([0, 1, 0], Math.PI / 2) }
+  const setup: Setup = {
+    implements: [floorMat()],
+    contacts: [],
+    tempo,
+    symmetric: false,
+    // lying on the padded mat: the shoulder, hip, bottom leg, hand and head sink into it a little
+    rests: [{ implement: 'mat', regions: ['trunk', `girdle_${b}`, `upperarm_${b}`, `forearm_${b}`, `hand_${b}`, `thigh_${b}`, `shank_${b}`, `foot_${b}`, 'head'], tol: 10 }],
+  }
+  return { tempo, setup, v: { kind: 'lying', ...v, mat } }
+}
+
+function sampleLying(c: number, skel: Skeleton, ctx: Ctx, v: Lying): Pose {
+  const q = zeroQ(skel)
+  lyingBody(skel, q, v, lerp(LYING.abd[0], LYING.abd[1], c))
+  handOnHip(skel, q, v.work, true)
+  return { q, implements: [v.mat], contacts: ctx.setup.contacts }
+}
+
 // ---------- template ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`hip-abduction: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.implement === 'bodyweight') return lyingContext(p, skel, tempo)
   return p.implement === 'machine' ? machineContext(p, skel, tempo) : cableContext(p, skel, tempo)
 })
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
+  if (ctx.v.kind === 'lying') return sampleLying(c, skel, ctx, ctx.v)
   return ctx.v.kind === 'machine' ? sampleMachine(c, p, skel, ctx, ctx.v) : sampleCable(c, skel, ctx, ctx.v)
 }
 

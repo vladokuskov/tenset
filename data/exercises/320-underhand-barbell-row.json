@@ -44,9 +44,16 @@
     305
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "row",
+    "params": {
+      "implement": "barbell",
+      "support": "none",
+      "torsoAngle": 45,
+      "grip": "supinated",
+      "gripWidth": 1.25,
+      "elbowFlare": 45
+    },
     "mapView": "B"
   },
   "cues": [
@@ -64,6 +71,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (bulk approval of wave 3a). Earlier findings, kept for follow-up: Wave 3a 2026-10-08: rated minor, owner review. minor: Supinated grip is correct: palms face +Z at the hang and the bar sits square in the palm. Bar path and finish (y 0.99, between hip crease and sternum) match 304. Elbow abduction at the finish is about 24.5 deg vs 30 for 304, so only slightly tighter. gripWidth 1.25 gives 0.567 m between grips (cue: shoulder width, about 0.46 m between shoulders). wrist_l.dev snaps from -4.6 to -20.8 over frames 86-93, with jerk 55.4k against the 60k limit."
   }
 }

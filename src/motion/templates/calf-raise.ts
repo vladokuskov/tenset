@@ -2,9 +2,9 @@ import { attachHand, handFrame, implementFromHand, jointByName, legKinematics, r
 import { eulerAngles, limbRotation, twoBone } from '../ik.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts, restAgainst } from '../collide.ts'
 import { centerOfMass, fk, localToWorld, type FK } from '../fk.ts'
-import { dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { barbell, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { CALF_SEATED, CALF_STANDING, calfStep, calfYoke, footBar, seatedLever } from '../implements/legs-hip-calf.ts'
-import { wallSection, PLYO_BOX } from '../implements/shared.ts'
+import { flatBench, wallSection, PLYO_BOX } from '../implements/shared.ts'
 import { add, cross, DEG, dot, lerp, neg, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
@@ -74,7 +74,12 @@ const PAD_FROM_KNEE = 0.09
 const THIGH_SINK = 0.008
 
 type Stand = {
-  kind: 'machine' | 'step'
+  /** machine: the yoke; step: free on a step (single leg, a hand on the wall); bar: a bar on the back on a step */
+  kind: 'machine' | 'step' | 'bar'
+  /** bar: the bar, its arm DOFs (solved once: the bar rides on the thorax), Smith rails (the hips keep a fixed z) */
+  bar?: ImplementSpec
+  barArms?: [number, number][]
+  rail?: boolean
   feet: { side: Side; ball: V3; yaw: number }[]
   work?: Side
   /** machine: fixed hip midpoint z (the yoke rides a vertical guide) */
@@ -112,7 +117,16 @@ type Tib = {
   wall: ImplementPose
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | Press | Tib }
+type Perch = {
+  kind: 'perch'
+  feet: { side: Side; ball: V3; yaw: number }[]
+  hip: V3
+  bench: ImplementPose
+  /** dumbbell poses in the femur frames (they stand on the lower thighs and ride with them) */
+  dbs: { id: string; side: Side; pos: V3; rot: Quat }[]
+}
+
+type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | Press | Tib | Perch }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
@@ -177,6 +191,8 @@ function unsupported(p: P): string | null {
     return `machine ${p.machine}/${p.posture}`
   }
   if ((p.implement === 'bodyweight' || p.implement === 'dumbbell') && p.stance === 'single_leg' && p.support === 'wall' && p.platform === 'step') return null
+  if (p.implement === 'dumbbell' && p.posture === 'seated' && p.stance === 'hip' && p.platform === 'floor') return null
+  if ((p.implement === 'barbell' || p.implement === 'smith') && p.posture === 'standing' && p.stance === 'hip' && p.support === 'none' && p.platform === 'step') return null
   return `${p.implement}/${p.stance}/${p.support}/${p.platform}`
 }
 
@@ -190,9 +206,12 @@ function standOnBalls(skel: Skeleton, q: Float64Array, v: Stand, pitch: number, 
 
 function comOf(skel: Skeleton, q: Float64Array, v: Stand) {
   const f = fk(skel, q)
-  const loads = v.db ? [{ mass: v.db.mass, pos: handFrame(skel, f, v.work!).pos }] : []
+  const loads = v.db ? [{ mass: v.db.mass, pos: handFrame(skel, f, v.work!).pos }] : v.bar && !v.rail ? [{ mass: v.bar.mass, pos: barAt(skel, f) }] : []
   return centerOfMass(skel, f, loads)
 }
+
+/** bar centre on the upper back (the high-bar site in the thorax frame) */
+const barAt = (skel: Skeleton, f: FK): V3 => localToWorld(skel, f, 'thorax2', skel.data.sites.back_high.local)
 
 /** hip height at which the planted knee sits at STRAIGHT_KNEE (the knee straightens as the hips rise) */
 function hipHeight(skel: Skeleton, q: Float64Array, v: Stand, pitch: number, x: number, z: number) {
@@ -208,15 +227,17 @@ function hipHeight(skel: Skeleton, q: Float64Array, v: Stand, pitch: number, x: 
  * depends only on the inputs. Returns the foot pitch.
  */
 function solveStand(skel: Skeleton, q: Float64Array, v: Stand, df: number): number {
-  const ball = v.feet[0].ball
-  let x = v.kind === 'machine' ? 0 : ball[0] * 1.8
-  let z = v.kind === 'machine' ? v.hipZ! : ball[2] - 0.1
+  // the balls' midpoint (one foot: its ball)
+  const ball = scale(v.feet.reduce((a, f) => add(a, f.ball), [0, 0, 0] as V3), 1 / v.feet.length)
+  const fixed = v.kind === 'machine' || !!v.rail
+  let x = fixed ? 0 : ball[0] * 1.8
+  let z = fixed ? v.hipZ! : ball[2] - 0.1
   const pitchFor = () => root1d((pitch) => {
     hipHeight(skel, q, v, pitch, x, z)
     return legsDf(skel, q, v) - df
   }, -45, 70, { tol: 1e-9 }).x
   let pitch = pitchFor()
-  if (v.kind === 'step') {
+  if (!fixed) {
     // the centre of mass moves almost one to one with the hips
     for (let k = 0; k < 6; k++) {
       const com = comOf(skel, q, v)
@@ -285,6 +306,7 @@ function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     const rests = [{ implement: 'yoke', regions: ['girdle_l', 'girdle_r'], tol: YOKE_REST }]
     return { tempo, v, setup: { implements: [bar, yoke], contacts, tempo, symmetric: true, rests } }
   }
+  if (p.implement === 'barbell' || p.implement === 'smith') return barContext(p, skel, tempo)
   const work: Side = p.side === 'left' ? 'l' : 'r'
   const sgn = work === 'r' ? -1 : 1
   const ball: V3 = [sgn * 0.075, STEP_BOX, 0]
@@ -327,6 +349,86 @@ function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     rests: [{ implement: 'box', regions: [`foot_${work}`], tol: FOREFOOT_REST }],
   }
   return { tempo, v, setup }
+}
+
+// ---------- bar on the back, on a step ----------
+
+/** bar: 60 kg, grip as the back squat's (multiple of shoulder width); the bar may sink this far into the upper back, mm */
+const BAR = { plateKg: 20, grip: 2.1, rest: 20 }
+const BAR_REST = ['trunk', 'girdle_l', 'girdle_r', 'neck', 'upperarm_l', 'upperarm_r']
+
+/** trunk, shoulder girdle and the arms on the bar (solved once, constant) */
+function barUpper(skel: Skeleton, q: Float64Array, v: Stand) {
+  standTrunk(skel, q)
+  setDofs(skel, q, { 'clavicle_*.prot': -12, 'clavicle_*.elev': 4, 'grip_*.close': 1 })
+  if (v.barArms) for (const [i, x] of v.barArms) q[i] = x
+}
+
+/**
+ * Both forefeet on the step edge, the bar on the upper back. Free bar: the body leans until the centre of mass with
+ * the bar sits over the balls. Smith: the rails carry the bar on a fixed line, so the hips keep the z where that
+ * balance falls at mid-rep and only rise and sink.
+ */
+function barContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const half = stanceWidth(skel, 'hip') / 2
+  const feet = (['l', 'r'] as const).map((side) => ({ side, ball: [side === 'l' ? half : -half, STEP_BOX, 0] as V3, yaw: 4 }))
+  const box = calfStep({ id: 'box', height: STEP_BOX })
+  const boxPose: ImplementPose = { id: 'box', pos: [0, 0, -BALL_IN + PLYO_BOX.depth / 2], rot: qid() }
+  box.sites.ball = { pos: sub([0, STEP_BOX, 0], boxPose.pos), normal: [0, 1, 0] }
+  const bar = barbell({ gripWidth: BAR.grip * skel.data.shoulderWidth, plateKg: BAR.plateKg })
+  const rail = p.implement === 'smith'
+  const v: Stand = { kind: 'bar', feet, tilt: 3, df: STANDING_DF, box: { spec: box, pose: boxPose }, bar, rail, hipZ: -0.1 }
+  // arms on the bar in a mid-rep pose, left solved and mirrored (as the back squat's high bar)
+  const q = zeroQ(skel)
+  barUpper(skel, q, v)
+  v.hipZ = undefined
+  v.rail = false
+  solveStand(skel, q, v, dfAt(0.5, v.df))
+  const f = fk(skel, q)
+  const T = (x: number, y: number, z: number) => qrot(f.rot[skel.seg.thorax2], [x, y, z])
+  const g = siteWorld(bar, { id: bar.id, pos: barAt(skel, f), rot: qid() }, 'l')
+  attachHand(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: T(0, 0.3, 1) }, { pole: T(0.4, -0.7, -0.6), wristBias: 10, planeHint: -90 })
+  v.barArms = ARM_DOFS.flatMap((k) => {
+    const x = q[skel.dof[k.replace('*', 'l')]]
+    return [[skel.dof[k.replace('*', 'l')], x], [skel.dof[k.replace('*', 'r')], x]] as [number, number][]
+  })
+  const implements_: ImplementSpec[] = [box, bar]
+  if (rail) {
+    // the balanced mid-rep hips set the rail line
+    barUpper(skel, q, v)
+    solveStand(skel, q, v, dfAt(0.5, v.df))
+    v.hipZ = localToWorld(skel, fk(skel, q), 'pelvis', hipMidLocal(skel))[2]
+    v.rail = true
+    solveStand(skel, q, v, dfAt(0.5, v.df))
+    const z = barAt(skel, fk(skel, q))[2]
+    implements_.push({ id: 'smith', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [cyl([0.6, 0, z], [0.6, 2.25, z], 0.025), cyl([-0.6, 0, z], [-0.6, 2.25, z], 0.025), cyl([-0.6, 2.25, z], [0.6, 2.25, z], 0.03)], sites: {} })
+  }
+  const contacts: Contact[] = [
+    ...feet.map((ft): Contact => ({ site: `ball_${ft.side}`, kind: 'planted', target: { world: ft.ball } })),
+    { site: 'grip_l', kind: 'grip', target: { implement: bar.id, grip: 'l' } },
+    { site: 'grip_r', kind: 'grip', target: { implement: bar.id, grip: 'r' } },
+  ]
+  const setup: Setup = {
+    implements: implements_,
+    contacts,
+    tempo,
+    symmetric: true,
+    // free bar: centre of mass with the bar over the balls; on the Smith rails the bar's line holds the body
+    balance: rail ? undefined : { point: 'com', over: { implement: 'box', sites: ['ball'] }, tol: 0.025, target: STEP_COM },
+    rests: [{ implement: 'box', regions: ['foot_l', 'foot_r'], tol: FOREFOOT_REST }, { implement: bar.id, regions: BAR_REST, tol: BAR.rest }],
+  }
+  return { tempo, v, setup }
+}
+
+function sampleBar(c: number, skel: Skeleton, ctx: Ctx, v: Stand): Pose {
+  const q = zeroQ(skel)
+  barUpper(skel, q, v)
+  const pitch = solveStand(skel, q, v, dfAt(c, v.df))
+  for (const f of v.feet) toes(skel, q, f.side, pitch)
+  gaze(skel, q)
+  const implements_: ImplementPose[] = [v.box!.pose, { id: v.bar!.id, pos: barAt(skel, fk(skel, q)), rot: qid() }]
+  if (v.rail) implements_.push({ id: 'smith', pos: [0, 0, 0], rot: qid() })
+  return { q, implements: implements_, contacts: ctx.setup.contacts }
 }
 
 /** free leg tucked back, working arm with the dumbbell or relaxed, the wall arm at a nominal pose */
@@ -519,6 +621,110 @@ function sampleSeated(c: number, skel: Skeleton, ctx: Ctx, v: Seated): Pose {
   return { q, implements: [{ id: 'calf_seat', pos: [0, 0, 0], rot: qid() }, { id: 'calf_bar', pos: [0, 0, 0], rot: qid() }, lever], contacts: ctx.setup.contacts }
 }
 
+// ---------- seated on a bench end, dumbbells on the thighs ----------
+
+/** perched on the bench end: heels from flat on the floor to a high raise (deg); toes stay on the floor */
+const PERCH_DF_TOP = -34
+const PERCH_DB_KG = 16
+/** dumbbells stand on the thighs this far back from the knee joint, m; the lower head sinks this far into the thigh */
+const PERCH_DB = { back: 0.1, sink: 0.004 }
+const PERCH_POLE: V3 = [0, 1, 0.6]
+
+function perchLegs(skel: Skeleton, q: Float64Array, v: Pick<Perch, 'feet' | 'hip'>, pitch: number) {
+  setPelvis(skel, q, v.hip, 4)
+  return legsTo(skel, q, v.feet.map((f) => footOnBall(skel, f.side, f.ball, pitch, f.yaw)), PERCH_POLE)
+}
+
+function perchPitch(skel: Skeleton, q: Float64Array, v: Pick<Perch, 'feet' | 'hip'>, df: number) {
+  return root1d((pitch) => perchLegs(skel, q, v, pitch)[0].ankle[0] - df, -10, 60, { tol: 1e-8 }).x
+}
+
+/**
+ * Perched on the end of a flat bench, shins upright and the feet flat at the bottom of the rep; the heels rise about
+ * the balls on the floor. The bench height follows from the legs (thighs level with the knees at kneeAngle), and a
+ * dumbbell stands on each lower thigh, held upright by its handle.
+ */
+function perchContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const half = stanceWidth(skel, 'hip') / 2
+  const feet = (['l', 'r'] as const).map((side) => ({ side, ball: [side === 'l' ? half : -half, 0, 0] as V3, yaw: 0 }))
+  const q = zeroQ(skel)
+  seatedUpper(skel, q)
+  // hips level with the knees, the feet flat: the knee angle sets how far behind the balls the hips sit
+  const v: Perch = { kind: 'perch', feet, hip: [0, 0.5, -0.3], bench: { id: 'bench', pos: [0, 0, 0], rot: qid() }, dbs: [] }
+  const level = () => {
+    const f = fk(skel, q)
+    return f.pos[skel.seg.tibia_l][1] - f.pos[skel.seg.femur_l][1]
+  }
+  for (let k = 0; k < 6; k++) {
+    v.hip[1] = root1d((y) => {
+      v.hip[1] = y
+      perchLegs(skel, q, v, 0)
+      return level()
+    }, 0.3, 0.8, { tol: 1e-8 }).x
+    v.hip[2] = root1d((z) => {
+      v.hip[2] = z
+      return perchLegs(skel, q, v, 0)[0].knee - p.kneeAngle
+    }, -0.7, -0.05, { tol: 1e-8 }).x
+  }
+  perchLegs(skel, q, v, 0)
+  const f = fk(skel, q)
+  const caps = bodyCapsules(skel, f)
+  // bench: seat end under the buttocks and thighs (the seat pad runs z 0..0.44 from the bench origin)
+  const under = caps.filter((c) => c.region === 'trunk' || c.region.startsWith('thigh_'))
+  const seatTop = Math.min(...under.filter((c) => c.region === 'trunk').map((c) => Math.min(c.a[1], c.b[1]) - c.r)) + 0.006
+  v.bench = { id: 'bench', pos: [0, seatTop, v.hip[2] - 0.3], rot: qid() }
+  const bench = flatBench({ seatHeight: seatTop })
+  // dumbbells upright on the lower thighs, the lower head's face on the thigh
+  const specs = (['l', 'r'] as const).map((side) => dumbbell({ id: `db_${side}`, mass: PERCH_DB_KG }))
+  const upright = qaxis([0, 0, 1], Math.PI / 2)
+  for (const [k, spec] of specs.entries()) {
+    const side: Side = k === 0 ? 'l' : 'r'
+    const knee = f.pos[skel.seg[`tibia_${side}`]]
+    const thigh = caps.filter((c) => c.region === `thigh_${side}`)
+    const at = (y: number): ImplementPose => ({ id: spec.id, pos: [knee[0], y, knee[2] - PERCH_DB.back], rot: upright })
+    const gap = (y: number) => Math.min(...placeParts(spec, at(y)).flatMap((sd) => thigh.map((c) => capsuleSolidClearance(c, sd)))) + PERCH_DB.sink
+    const pose = at(root1d(gap, knee[1], knee[1] + 0.5, { tol: 1e-7 }).x)
+    const fr = f.rot[skel.seg[`femur_${side}`]], fp = f.pos[skel.seg[`femur_${side}`]]
+    v.dbs.push({ id: spec.id, side, pos: qrot(qconj(fr), sub(pose.pos, fp)), rot: qmul(qconj(fr), pose.rot) })
+  }
+  const contacts: Contact[] = [
+    ...feet.map((ft): Contact => ({ site: `ball_${ft.side}`, kind: 'planted', target: { world: ft.ball } })),
+    { site: 'grip_l', kind: 'grip', target: { implement: 'db_l', grip: 'c' } },
+    { site: 'grip_r', kind: 'grip', target: { implement: 'db_r', grip: 'c' } },
+  ]
+  const setup: Setup = {
+    implements: [bench, ...specs],
+    contacts,
+    tempo,
+    symmetric: true,
+    rests: [{ implement: 'db_l', regions: ['thigh_l'], tol: 8 }, { implement: 'db_r', regions: ['thigh_r'], tol: 8 }],
+    // the forefoot capsule is rigid with the foot and dips into the floor as the heel rises, where the real toes
+    // extend flat on it (as on the standing step, lead decision)
+    tolerances: { floor: FOREFOOT_REST },
+  }
+  return { tempo, setup, v }
+}
+
+function samplePerch(c: number, skel: Skeleton, ctx: Ctx, v: Perch): Pose {
+  const q = zeroQ(skel)
+  seatedUpper(skel, q)
+  perchLegs(skel, q, v, 0)
+  const flat = q[skel.dof['ankle_l.df']]
+  const pitch = perchPitch(skel, q, v, lerp(flat, PERCH_DF_TOP, c))
+  for (const f of v.feet) toes(skel, q, f.side, pitch)
+  const f = fk(skel, q)
+  const dbs: ImplementPose[] = v.dbs.map((d) => {
+    const fr = f.rot[skel.seg[`femur_${d.side}`]], fp = f.pos[skel.seg[`femur_${d.side}`]]
+    return { id: d.id, pos: add(fp, qrot(fr, d.pos)), rot: qmul(fr, d.rot) }
+  })
+  const spec = ctx.setup.implements.find((s) => s.id === 'db_l')!
+  const g = siteWorld(spec, dbs[0], 'c')
+  attachHand(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: [-1, 0, 0] }, { pole: [0.6, -0.3, -1], planeHint: 40 })
+  mirrorArm(skel, q)
+  gaze(skel, q, 10)
+  return { q, implements: [v.bench, ...dbs], contacts: ctx.setup.contacts }
+}
+
 // ---------- leg press ----------
 // The lifter sits as in the leg press squat (squat.ts), so the drawn machine's seat, back pad and handles fit.
 
@@ -674,6 +880,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.direction === 'dorsiflexion') return tibContext(skel, tempo)
   if (p.machine === 'seated_calf') return seatedContext(p, skel, tempo)
   if (p.machine === 'leg_press') return pressContext(skel, tempo)
+  if (p.implement === 'dumbbell' && p.posture === 'seated') return perchContext(p, skel, tempo)
   return standContext(p, skel, tempo)
 })
 
@@ -684,6 +891,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   if (v.kind === 'tib') return sampleTib(c, skel, ctx, v)
   if (v.kind === 'seated') return sampleSeated(c, skel, ctx, v)
   if (v.kind === 'press') return samplePress(c, skel, ctx, v)
+  if (v.kind === 'bar') return sampleBar(c, skel, ctx, v)
+  if (v.kind === 'perch') return samplePerch(c, skel, ctx, v)
   return sampleStand(c, skel, ctx, v)
 }
 

@@ -35,7 +35,7 @@ const load = (b: Baked) => (b.params.implement === 'dumbbell' ? 'db_l' : 'bar')
 
 describe('incline-press template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([102, 103, 109])
+    expect([...baked.keys()].sort()).toEqual([102, 103, 109, 123])
   })
 
   it.each(variants.map((v) => v.id))('%s: finite, feet planted, hands on the implement, body still, seamless loop', (id) => {
@@ -70,7 +70,8 @@ describe('incline-press template', () => {
 
   it.each(variants.map((v) => v.id))('%s: reclined at the bench angle, butt on the seat, upper back and head on the pad', (id) => {
     const b = get(id)
-    expect(b.params.benchAngle).toBe(30)
+    const angle = b.params.benchAngle as number
+    expect([15, 30]).toContain(angle)
     const { f, impl } = pose(b, TOP)
     const k = b.implements.findIndex((s) => s.id === 'bench')
     const seat = solidOf(b.implements[k], impl[k], 0)
@@ -83,11 +84,11 @@ describe('incline-press template', () => {
       expect(v, what).toBeGreaterThan(-0.015)
       expect(v, what).toBeLessThan(0.002)
     }
-    // the upper trunk lies along the pad: ~30 deg plus a little thoracic extension
+    // the upper trunk lies along the pad: the bench angle plus a little thoracic extension
     const up = sub(segPos(skel, f, 'neck1'), segPos(skel, f, 'thorax1'))
     const incline = (Math.atan2(up[1], -up[2]) * 180) / Math.PI
-    expect(incline).toBeGreaterThan(25)
-    expect(incline).toBeLessThan(45)
+    expect(incline).toBeGreaterThan(angle - 5)
+    expect(incline).toBeLessThan(angle + 15)
   })
 
   it('the touch point moves up the chest towards the clavicles on the incline (Rodriguez-Ridao 2020)', () => {
@@ -109,7 +110,7 @@ describe('incline-press template', () => {
   })
 
   it('free weights lock out over the shoulders with a flatter J; the Smith bar stays on its vertical rail', () => {
-    for (const id of [102, 103]) {
+    for (const id of [102, 103, 123]) {
       const b = get(id)
       const top = implPos(b, TOP, load(b))
       expect(Math.abs(top[2] - segPos(skel, pose(b, TOP).f, 'humerus_l')[2]), String(id)).toBeLessThan(0.02)
@@ -128,7 +129,7 @@ describe('incline-press template', () => {
   })
 
   it('barbell and Smith flare the elbows to ~38 deg at the 1.4x grip, dumbbells to 40 (under 45: Green & Comfort 2007)', () => {
-    for (const [id, want] of [[103, 38], [109, 38], [102, 40]] as const) expect(Math.abs(flareOf(skel, pose(get(id), BOTTOM).f) - want), String(id)).toBeLessThan(2)
+    for (const [id, want] of [[103, 38], [109, 38], [102, 40], [123, 40]] as const) expect(Math.abs(flareOf(skel, pose(get(id), BOTTOM).f) - want), String(id)).toBeLessThan(2)
   })
 
   it.each([
@@ -145,9 +146,15 @@ describe('incline-press template', () => {
     }
   })
 
-  it('dumbbells (102) keep the forearms at their touch lean the whole press, elbows opening steadily', () => {
+  it('the low incline (123) touches mid chest, between the flat and the 30 deg points', () => {
+    const y = inThorax(get(123), BOTTOM, implPos(get(123), BOTTOM, 'db_l'))[1]
+    expect(y).toBeGreaterThan(-0.03)
+    expect(y).toBeLessThan(0.03)
+  })
+
+  it.each([102, 123])('dumbbells (%s) keep the forearms at their touch lean the whole press, elbows opening steadily', (id) => {
     // the forearm leaned ~38 deg towards the head mid-press (dumbbells beside the face) with the elbows at 35 deg
-    const b = get(102)
+    const b = get(id)
     const { f: fb, impl } = pose(b, BOTTOM)
     const k = b.implements.findIndex((s) => s.id === 'db_l')
     const [lean0, elev0] = [forearmLean(skel, fb), armElevation(skel, fb)]
@@ -159,8 +166,8 @@ describe('incline-press template', () => {
     for (let i = 0; i < b.frames; i++) expect(frameImplements(b, i)[k].pos[0] - impl[k].pos[0]).toBeLessThan(0.1)
   })
 
-  it('dumbbells (102) clear the chest at the bottom and converge over the shoulders without touching', () => {
-    const b = get(102)
+  it.each([102, 123])('dumbbells (%s) clear the chest at the bottom and converge over the shoulders without touching', (id) => {
+    const b = get(id)
     const ks = ['db_l', 'db_r'].map((id) => b.implements.findIndex((s) => s.id === id))
     const { f, impl } = pose(b, BOTTOM)
     const trunk = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
@@ -175,7 +182,7 @@ describe('incline-press template', () => {
   })
 
   it('unsupported variants throw with a reason', () => {
-    expect(() => run({ implement: 'dumbbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)
+    expect(() => run({ implement: 'barbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'machine' })).toThrow(/variant not implemented yet/)
     expect(() => run({ posture: 'seated' })).toThrow(/variant not implemented yet/)
     expect(() => run({}, 'unilateral')).toThrow(/variant not implemented yet/)

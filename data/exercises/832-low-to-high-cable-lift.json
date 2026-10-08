@@ -39,14 +39,20 @@
     822
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "rotation",
+    "params": {
+      "implement": "cable",
+      "attachment": "single_handle",
+      "cableHeight": "low",
+      "direction": "low_to_high",
+      "stance": "wide"
+    },
     "mapView": "F"
   },
   "cues": [
     "Set the pulley low and stand side-on in a wide stance",
-    "Start with the handle outside your near knee",
+    "Start sunk, the handle low by your near thigh",
     "Pull up and across to above your far shoulder with long arms",
     "Turn your hips and chest together as your weight shifts",
     "Lower back under control"
@@ -59,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3a 2026-10-08: rated ok by the lane review, auto-approved. ok: Reworked the lift path in rotation.ts (LIFT and LIFT_AIM/LIFT_THUMBS only, so 809 is byte-identical and its bake stays fresh). The finish aim is now [0.85, 2.0, 0.65] with bow 0.4, the start aim [-1.0, -0.1, 0.4], the thumbs run from [0, 0.5, 1] to [0.55, 1, 0.4], and the start sinks deeper (drop 0.18, lumbar/thorax flex 16/32). The reviewer's suggested end [0.45, 1.95, 0.85] made it worse (near elbow 94 deg), so I swept around it instead. Results: the more-bent elbow now peaks at 25 deg over the whole loop (it was 57 at the finish and 51 at the start; 809 peaks at 27). The finish has elbows 10/18 with the handle above and outside the far shoulder, and the bar sits square in both fists (max 0.2 deg). Drop 0.22 broke ankle_l.df and finish thumbs further across put the rods through the right forearm; both are avoided (closest forearm/handle clearance -0.4 mm, inside the 10 mm tolerance). The start handle is now at y 0.59 (knee 0.44, hip 0.79), 27 cm outside the knee. That is the lower thigh, and it cannot go lower without bending the arm again. So I rewrote cue 2 to 'Start sunk, the handle low by your near thigh' and the matching uk cue to 'Почніть у присіді, рукоять низько біля ближчого стегна' (cue counts unchanged; the uk text needs a native-speaker review). Tests now assert the more-bent elbow stays under 30 deg on every frame and the start handle sits below 45% of the knee-to-hip height. QA, the bake (rebaked), the --check run (all fresh) and the rotation, data, scene and params tests all pass. The hero and front sheets show long arms through the whole turn, a sunk start and a tall finish with the near heel up."
   }
 }

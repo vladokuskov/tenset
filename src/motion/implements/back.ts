@@ -91,3 +91,20 @@ export function rack(o: { id?: string; hookHeight: number; safetyHeight?: number
     sites: { bar: { pos: [0, o.hookHeight, RACK_REST.z] }, safety: { pos: [0, o.safetyHeight ?? 0.25, 0] } },
   }
 }
+
+/**
+ * Smith machine rails as the gates see them (the composer draws the full frame round the bar, props/smith.ts): two
+ * uprights and a crossbar on the vertical line the bar travels, z = `z`. Same proxy as the Smith squat's.
+ */
+export function smithRails(o: { z: number }): ImplementSpec {
+  const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
+  const z = o.z
+  return {
+    id: 'smith',
+    kind: 'bench',
+    mass: 0,
+    com: [0, 0, 0],
+    parts: [cyl([0.6, 0, z], [0.6, 2.25, z], 0.025), cyl([-0.6, 0, z], [-0.6, 2.25, z], 0.025), cyl([-0.6, 2.25, z], [0.6, 2.25, z], 0.03)],
+    sites: {},
+  }
+}
