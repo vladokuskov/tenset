@@ -36,8 +36,8 @@ export function ropeFerrule(id = 'handle'): ImplementSpec {
 }
 
 /** a free strand: origin at the ferrule cap, hanging along local -Y to the fist (its last `tuck` left out) */
-export function ropeStrand(id: string): ImplementSpec {
-  return { id, kind: 'rope_strand', mass: 0, com: [0, 0, 0], parts: [cyl([0, 0, 0], [0, -(ROPE.free - ROPE.tuck), 0], ROPE.r)], sites: {} }
+export function ropeStrand(id: string, free = ROPE.free): ImplementSpec {
+  return { id, kind: 'rope_strand', mass: 0, com: [0, 0, 0], parts: [cyl([0, 0, 0], [0, -(free - ROPE.tuck), 0], ROPE.r)], sites: {} }
 }
 
 /** the piece of rope in a fist: local X along the hand's little finger -> index line, origin at the grip centre */

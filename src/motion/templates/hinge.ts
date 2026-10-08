@@ -55,7 +55,12 @@ const FLOOR_START_TOL = {
   'thigh_l / trunk': 36, 'thigh_r / trunk': 36, 'thigh_l / trunk (lumbar3)': 72, 'thigh_r / trunk (lumbar3)': 72,
   'forearm_l / thigh_l': 20, 'forearm_r / thigh_r': 20, 'forearm_l / shank_l': 16, 'forearm_r / shank_r': 16,
 }
-export const FLOOR_ARM = 0
+/**
+ * floor start: shoulders a few cm ahead of the bar (straight-arm angle, deg) with the bar against the shins. Resting
+ * the arms on the legs instead stopped the knees short of the bar (the forearms met the thighs first), which left the
+ * shins vertical and the hips level with the shoulders, a stiff-leg start
+ */
+export const FLOOR_ARM = 3
 /** pull-through: low pulley behind the heels, stack load, how far the arms follow the cable towards it */
 export const PULLEY_BACK = 0.7
 const PULLEY_Y = 0.1
@@ -100,6 +105,8 @@ type Ctx = {
   floorY?: number
   /** floor pull: straight-arm angle by eccentric progress, the resting-on-the-legs solve with the knee bump smoothed out */
   phiAt?: (s: number) => number
+  /** floor pull: how far (0-1, by eccentric progress) the arms are held at FLOOR_ARM or more instead of resting on the legs */
+  armFloor?: (s: number) => number
 }
 
 type Grips = { l: V3; r: V3; phi: number }
@@ -276,7 +283,16 @@ function solveGrips(skel: Skeleton, f: FK, ctx: Ctx, s: number): Grips {
     const c = contact(skel, f, caps, ctx, gripsAt(skel, f, ctx, phi))
     return pref === Infinity ? c : softMin([(pref - phi) * 0.002, c])
   }
-  return gripsAt(skel, f, ctx, root1d(res, -45, 60, { tol: 1e-7, scan: 21 }).x)
+  const phi = root1d(res, -45, 60, { tol: 1e-7, scan: 21 }).x
+  const w = ctx.armFloor?.(s) ?? 0
+  return gripsAt(skel, f, ctx, phi + w * Math.max(0, FLOOR_ARM - phi))
+}
+
+/** floor pull: how far the bar is from resting against the shins, m */
+function barToShins(skel: Skeleton, f: FK, ctx: Ctx, g: Grips): number {
+  const bar = barPose(ctx, g).pos
+  const shins = bodyCapsules(skel, f).filter((c) => c.region.startsWith('shank_'))
+  return Math.min(...clears({ a: [-0.655, bar[1], bar[2]], b: [0.655, bar[1], bar[2]], r: 0.014 }, shins, ON_LEGS))
 }
 
 function handleAxis(ctx: Ctx, g: Grips, side: Side): V3 {
@@ -515,14 +531,19 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   ctx.reach = reachOf(skel, ctx)
   if (ctx.floorY !== undefined) {
     // conventional pull: hips first until the bar passes the knees, then the knees; calibrated so the plates sit on
-    // the floor with the bar over the midfoot and the shoulders just in front of it
+    // the floor with the bar over the midfoot and against the shins, the shoulders just in front of it
     const schedule = (kb: number, hb: number) => {
       const p = Math.log((FLOOR_SOFT_KNEE - TOP_KNEE) / (kb - TOP_KNEE)) / Math.log(FLOOR_KNEE_AT)
       ctx.kneeAt = (s) => TOP_KNEE + (kb - TOP_KNEE) * Math.pow(clamp(s, 0, 1), p)
       ctx.hipAt = (s) => TOP_HIP + (hb - TOP_HIP) * s
     }
     const hipFor = (kb: number) => root1d((hb) => solveFrame(skel, ctx, 1, kb, hb).g.l[1] - ctx.floorY!, 40, 130, { tol: 1e-6, scan: 9 }).x
-    const kb = root1d((kb) => solveFrame(skel, ctx, 1, kb, hipFor(kb)).g.phi - FLOOR_ARM, 30, 110, { tol: 1e-4, scan: 8 }).x
+    ctx.armFloor = (s) => ramp((s - FLOOR_KNEE_AT) / (1 - FLOOR_KNEE_AT))
+    const shins = (kb: number) => {
+      const fr = solveFrame(skel, ctx, 1, kb, hipFor(kb))
+      return barToShins(skel, fk(skel, fr.q), ctx, fr.g)
+    }
+    const kb = root1d(shins, 45, 95, { tol: 1e-4, scan: 10 }).x
     schedule(kb, hipFor(kb))
   } else {
     const kb = p.kneeAngle

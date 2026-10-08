@@ -53,7 +53,7 @@
     "params": {
       "implement": "barbell",
       "grip": "pronated",
-      "gripWidth": 1.2,
+      "gripWidth": 1.35,
       "stance": "hip",
       "toeOut": 14,
       "start": "floor"
@@ -76,6 +76,6 @@
   "qa": {
     "data": "pending",
     "motion": "approved",
-    "note": "Approved by the owner 2026-10-01 (bulk approval of every pending exercise). Earlier findings, kept for follow-up: Family review 2026-10-01 rated needs work. review: Reads as a pull from the floor: plates on the floor, knees extend first and the hips drive after the bar passes them, hands closed on the bar. But the start is high-hipped with a flat back (hips ~120 deg, knees 59, trunk only ~15 deg above horizontal). That is forced by bar over midfoot, shoulders over the bar and the bar on the shins with this tall, short-armed figure, and needs the FLOOR_START_TOL soft-tissue override (worst case at the belly -69.7 mm vs a 72 mm tolerance). The owner should judge whether the flat back reads as a stiff-leg pull. | skeptic: Liftoff looks like a stiff-leg start, not a conventional deadlift. In figure-508-side.png at t=0.500 and 0.625 the top of the hips is level with or above the shoulders, and the trunk is about 10 to 20 deg above horizontal (pelvis.tilt 67.6 + lumbar 5 + thorax 6, which is about 79 deg from vertical). Knees are only at 59 deg and the shins are almost vertical (ankle_df max 3.5 deg in 508.qa.json). The coaching standard is hips above the knees and below the shoulders, with the knees forward over the bar. The accepted FLOOR_START_TOL lead decision covers the soft-tissue tolerances and the ~120 deg hip angle, not this. The result is visibly wrong for the record's cues ('Push the floor away, then drive your hips through'), and a first-time user would copy a high-hip start. | skeptic: Reads as a floor pull, with plates on the floor at t=0.5 to 0.625 and the right hand closed on the bar (refute-visual-foot/figure-508-foot_R.png t=0.5). The start is very high-hipped and flat-backed: in refute-visual-side/figure-508-side.png t=0.5 the trunk is almost horizontal and the shins nearly vertical, so at 480 px it looks close to a stiff-leg deadlift. It depends on the applied FLOOR_START_TOL lead decision, so the owner should judge it. No visible penetration"
+    "note": "Approved by the owner 2026-10-08 (delegated to the lead). Earlier: v1.x fix 2026-10-08, re-review. Floor start recalibrated: the bar rests against the shins with the shoulders about 4 cm ahead of it, instead of the arms resting on the legs (the forearms met the thighs first and held the knees back). Knee 59 -> 64, ankle dorsiflexion 3.5 -> 8, knees now over the bar; grip 1.2 -> 1.35 so the knees clear the arms. Hip flexion stays about 120 and the trunk about 18 deg above horizontal: with bar over midfoot and straight arms that is set by this figure's arm length (both skeptics agree)."
   }
 }

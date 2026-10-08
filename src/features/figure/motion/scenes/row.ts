@@ -5,9 +5,9 @@ export const row: SceneSpec = {
     // standing bar row: round towards the side so the hinge and the bar path read beside the back
     if (params.implement === 'barbell' && params.posture !== 'lying_supine') return { az: -120, elev: 0.24 }
     // inverted row: the back faces the floor, and from the side the near front upright hides the hands and the chest at
-    // the bar; from the feet end, a front three-quarter, the grips, the pull and the lats' side edge read between the
-    // uprights
-    if (params.posture === 'lying_supine') return { az: -50, elev: 0.15 }
+    // the bar (at -50 it crossed the head); from the feet end, a front three-quarter, the grips, the pull and the lats'
+    // side edge read between the uprights
+    if (params.posture === 'lying_supine') return { az: -30, elev: 0.2 }
     // chest-supported: the lifter faces -Z on the incline, so this is behind its right shoulder and high enough that the
     // upper back, both flared elbows and the incline read
     if (params.support === 'chest_pad') return { az: 42, elev: 0.38 }

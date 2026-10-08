@@ -7,7 +7,7 @@ import { dist, qconj, qrot, sub, type V3 } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { DEFAULT_TEMPO, loopDuration } from '../timing.ts'
 import { getTemplate, parseParams } from './index.ts'
-import { armElevation, flareOf, forearmLean, forearmTilt, minClear, solidOf } from './press-body.ts'
+import { armElevation, flareOf, forearmLean, forearmSag, forearmTilt, minClear, solidOf } from './press-body.ts'
 
 const skel = testSkeleton()
 const T = 'horizontal-press'
@@ -79,8 +79,8 @@ describe('horizontal-press template', () => {
     expect(segPos(skel, f, 'forearm_l')[1]).toBeLessThan(segPos(skel, f, 'humerus_l')[1])
   })
 
-  it.each([101, 707])('%s: the bar touches the lower chest lightly and presses back in a J to over the shoulders', (id) => {
-    const b = get(id)
+  it('101: the bar touches the lower chest lightly and presses back in a J to over the shoulders', () => {
+    const b = get(101)
     const bottom = implPos(b, BOTTOM, 'bar')
     const top = implPos(b, TOP, 'bar')
     // touch on the lower chest, just below the nipple line
@@ -135,13 +135,11 @@ describe('horizontal-press template', () => {
     const ua = qrot(qconj(f.rot[skel.seg.thorax2]), sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'humerus_l')))
     const below = (Math.asin(-ua[2] / Math.hypot(...ua)) * 180) / Math.PI
     expect(below).toBeGreaterThan(25)
-    expect(below).toBeLessThan(40)
+    // the close grip touches lower on the sternum with the elbows tucked: still inside the passive ~45 deg
+    expect(below).toBeLessThan(id === 707 ? 45 : 40)
   })
 
-  it.each([
-    [101, 40, 36],
-    [707, 20, 43],
-  ])('%s: mid-press the elbows stay off the ribs (upper arm >= %s deg from the trunk) and the forearm leans at most %s deg', (id, elev, lean) => {
+  it.each([[101, 40, 36]])('%s: mid-press the elbows stay off the ribs (upper arm >= %s deg from the trunk) and the forearm leans at most %s deg', (id, elev, lean) => {
     // the frontal-only forearm hold pinned the elbows to the ribs mid-press (101: 33 deg, 707: 14) and flared them
     // back out at the touch, with the forearm leaning ~34 / 40 deg towards the head. On a J path the bar is over the
     // shoulders before the elbows are, so some lean is inherent: it is now split between the planes, the elbows open
@@ -169,6 +167,30 @@ describe('horizontal-press template', () => {
       expect(armElevation(skel, f)).toBeGreaterThan(elev0 - 2)
     }
     for (let i = 0; i < b.frames; i++) expect(frameImplements(b, i)[k].pos[0] - impl[k].pos[0]).toBeLessThan(0.1)
+  })
+
+  it('707: close grip touches low on the sternum with the forearms stacked under the bar, then presses back in the J', () => {
+    // the forearm leaned 17 deg at the touch ("stack your wrists over your elbows"); mid-press some lean is inherent
+    // to the J (the bar is over the shoulders before the elbows are), as on 101
+    const b = get(707)
+    const bottom = implPos(b, BOTTOM, 'bar')
+    const top = implPos(b, TOP, 'bar')
+    expect(inThorax(b, BOTTOM, bottom)[1]).toBeGreaterThan(-0.13)
+    expect(inThorax(b, BOTTOM, bottom)[1]).toBeLessThan(-0.07)
+    const trunk = bodyCapsules(skel, pose(b, BOTTOM).f).filter((c) => c.region === 'trunk')
+    const touch = minClear(trunk, placeParts(b.implements[0], pose(b, BOTTOM).impl[0])[0])
+    expect(touch).toBeGreaterThan(-0.008)
+    expect(touch).toBeLessThan(0.002)
+    expect(Math.abs(forearmSag(skel, pose(b, BOTTOM).f))).toBeLessThan(6)
+    // the bar sits low in the palm: the wrist extends no more than 20 deg
+    expect(-dof(b, BOTTOM, 'wrist_l.flex')).toBeLessThan(20.5)
+    for (const f of folded(b)) {
+      expect(forearmLean(skel, f)).toBeLessThan(38)
+      // elbows tucked near the sides, off the ribs (the rejected hold had 14 deg), not far out past the hands
+      expect(armElevation(skel, f)).toBeGreaterThan(18)
+      expect(forearmTilt(skel, f)).toBeGreaterThan(-20)
+    }
+    expect(bottom[2] - top[2]).toBeGreaterThan(0.1)
   })
 
   it.each([101, 707])('%s: the bar comes down on a straight diagonal (half the horizontal travel at half height)', (id) => {

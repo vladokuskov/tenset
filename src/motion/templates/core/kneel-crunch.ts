@@ -1,15 +1,15 @@
 import { attachHand } from '../../constraints.ts'
 import { bodyCapsules, type Capsule } from '../../collide.ts'
 import { fk } from '../../fk.ts'
-import type { Cable, ImplementSpec } from '../../implements.ts'
-import { coreRope } from '../../implements/core.ts'
+import type { Cable } from '../../implements.ts'
 import { floorMat } from '../../implements/shared.ts'
 import { dls } from '../../ik.ts'
-import { add, cross, dist, lerp, norm, qfromBasis, qid, qmul, qrot, reject, scale, sub, type V3 } from '../../math.ts'
+import { add, cross, lerp, norm, qconj, qfromBasis, qid, qmul, qrot, sub, type V3 } from '../../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
 import type { Tempo } from '../../timing.ts'
 import { setPelvis } from '../standing.ts'
 import type { Setup } from '../types.ts'
+import { ROPE_IDS, ropeContacts, ropeImplements, ropePoses } from '../triceps/rope.ts'
 import { stackSpec } from './cable.ts'
 import { matClearance, mirrorArm, SINK, toWorld } from './floor.ts'
 
@@ -24,9 +24,14 @@ export const KNEEL = { tilt: 16, lumbar: [-2, 28], thorax: [0, 32], neck: [4, 12
 const THIGH = 6
 const TOES = -55
 /** left fist (grip site) beside the temple, head frame, m: the strands pass either side of the head */
-const FIST: V3 = [0.14, 0.03, 0.035]
+const FIST: V3 = [0.15, 0.03, 0.035]
 /** rope grips below the carabiner, m */
 const ROPE_DROP = 0.4
+/** free strand length: a full-length cable rope, its strands running up past the sides of the head */
+const ROPE_FREE = 0.45
+/** the free strands leave the fists this far past the grip centre, m: bent up towards the pulley at the bottom of the
+ * curl they clear the thumbs (the default 5 cm ran them back across the fists) */
+const ROPE_EXIT = 0.08
 /** cable from the rope to the pulley at the top of the rep, deg from vertical towards the stack */
 const CABLE_LEAN = 35
 /** high pulley wheel centre, m (props/cable.ts PULLEY_HEIGHTS.high) */
@@ -43,8 +48,9 @@ export type Kneel = {
   /** root height and knee flexion that rest the knees and toes on the mat */
   ty: number
   knee: number
-  rope: ImplementSpec
   pulley: V3
+  /** rope direction out of the left fist, head frame */
+  strand: V3
   mat: ImplementPose
 }
 
@@ -71,31 +77,19 @@ function kneelBody(skel: Skeleton, q: Float64Array, c: number, v: Pick<Kneel, 't
 
 /** fists by the temples: the left hand fixed in the head frame (palm in, the strand leaving the top of the fist
  * forwards and up), the arm solved to it, the right mirrored */
-function fists(skel: Skeleton, q: Float64Array) {
+function fists(skel: Skeleton, q: Float64Array, strand: V3) {
   const f = fk(skel, q)
   const head = f.rot[skel.seg.head]
   const target = toWorld(skel, f, 'head', FIST)
   // hand axes in the head frame: back of the hand (+X local) out, index side (+Z local) along the strand
-  const hand = qmul(head, qfromBasis([1, 0, 0], cross(STRAND, [1, 0, 0])))
+  const hand = qmul(head, qfromBasis([1, 0, 0], cross(strand, [1, 0, 0])))
   const thorax = f.rot[skel.seg.thorax2]
   attachHand(skel, q, 'l', { pos: target, axis: qrot(hand, [0, 0, 1]), palm: qrot(hand, [-1, 0, 0]), hand }, { pole: qrot(thorax, [0.35, -0.55, 1]), planeHint: 80 })
   mirrorArm(skel, q)
 }
 
-/** rope strand direction through the fist, head frame */
-const STRAND: V3 = norm([-0.25, 0.55, 0.8])
-
-/** the rope hangs from the fists: grips on the fists' grip sites, carabiner on the line towards the pulley */
-function ropePose(skel: Skeleton, q: Float64Array, v: Pick<Kneel, 'rope' | 'pulley'>): ImplementPose {
-  const f = fk(skel, q)
-  const l = toWorld(skel, f, 'hand_l', skel.data.sites.grip_l.local)
-  const r = toWorld(skel, f, 'hand_r', skel.data.sites.grip_r.local)
-  const mid = scale(add(l, r), 0.5)
-  const x = norm(sub(l, r))
-  const y = norm(reject(sub(v.pulley, mid), x))
-  const rot = qfromBasis(x, y)
-  return { id: v.rope.id, pos: sub(mid, qrot(rot, [0, -ROPE_DROP, 0])), rot }
-}
+/** the rope leaves the fist this far in towards the midline (per unit towards the pulley) */
+const STRAND_IN = 0.26
 
 export function kneelContext(skel: Skeleton, tempo: Tempo): Kneel {
   // knees and tucked toes on the mat: root height and knee flexion
@@ -113,29 +107,31 @@ export function kneelContext(skel: Skeleton, tempo: Tempo): Kneel {
   const head = toWorld(skel, f, 'head', [0, FIST[1], FIST[2]])
   const carabiner = add(head, [0, ROPE_DROP * 0.9, ROPE_DROP * 0.4])
   const pulley: V3 = [0, PULLEY_Y, carabiner[2] + (PULLEY_Y - carabiner[1]) * Math.tan((CABLE_LEAN * Math.PI) / 180)]
-  fists(skel, q)
-  const hands = dist(toWorld(skel, fk(skel, q), 'hand_l', skel.data.sites.grip_l.local), toWorld(skel, fk(skel, q), 'hand_r', skel.data.sites.grip_r.local))
-  const rope = coreRope({ half: hands / 2, drop: ROPE_DROP })
+  // the rope leaves the fists towards the pulley as it lies mid-rep (head frame): the free strands bend at the fists by
+  // about half the head's turn either side of that
+  const qm = zeroQ(skel)
+  kneelBody(skel, qm, 0.5, v0)
+  const fm = fk(skel, qm)
+  const toPulley = qrot(qconj(fm.rot[skel.seg.head]), norm(sub(pulley, toWorld(skel, fm, 'head', [0, FIST[1], FIST[2]]))))
+  const strand = norm(add(norm([0, toPulley[1], toPulley[2]]), [-STRAND_IN, 0, 0]))
+  fists(skel, q, strand)
   // mat under the knees and feet, the knees well inside its front edge
   const knees = toWorld(skel, f, 'tibia_l', [0, 0, 0])
   const toes = toWorld(skel, f, 'foot_l', skel.data.sites.toe_l.local)
   const matSpec = floorMat({ length: MAT.length })
   const mat: ImplementPose = { id: matSpec.id, pos: [0, 0, (knees[2] + MAT.front + toes[2] - MAT.back) / 2], rot: qid() }
-  const contacts: Contact[] = [
-    { site: 'grip_l', kind: 'grip', target: { implement: rope.id, grip: 'l' } },
-    { site: 'grip_r', kind: 'grip', target: { implement: rope.id, grip: 'r' } },
-  ]
+  const contacts: Contact[] = ropeContacts()
   for (const side of ['l', 'r'] as const) for (const site of ['ball', 'toe']) {
     contacts.push({ site: `${site}_${side}`, kind: 'planted', target: { world: toWorld(skel, f, `foot_${side}`, skel.data.sites[`${site}_${side}`].local) } })
   }
-  const cables: Cable[] = [{ pulley, implement: rope.id, point: [0, 0, 0], kg: CABLE_KG }]
-  const setup: Setup = { implements: [rope, stackSpec(pulley, [0, 0, 1]), matSpec], contacts, tempo, symmetric: true, cables }
-  return { kind: 'kneel', tempo, setup, ...v0, rope, pulley, mat }
+  const cables: Cable[] = [{ pulley, implement: ROPE_IDS.handle, point: [0, 0, 0], kg: CABLE_KG }]
+  const setup: Setup = { implements: [...ropeImplements(ROPE_FREE), stackSpec(pulley, [0, 0, 1]), matSpec], contacts, tempo, symmetric: true, cables }
+  return { kind: 'kneel', tempo, setup, ...v0, pulley, strand, mat }
 }
 
 export function sampleKneel(skel: Skeleton, ctx: Kneel, c: number): Pose {
   const q = zeroQ(skel)
   kneelBody(skel, q, c, ctx)
-  fists(skel, q)
-  return { q, implements: [ropePose(skel, q, ctx), { id: 'stack', pos: [0, 0, 0], rot: qid() }, ctx.mat], contacts: ctx.setup.contacts }
+  fists(skel, q, ctx.strand)
+  return { q, implements: [...ropePoses(skel, fk(skel, q), ctx.pulley, ROPE_FREE, ROPE_EXIT), { id: 'stack', pos: [0, 0, 0], rot: qid() }, ctx.mat], contacts: ctx.setup.contacts }
 }

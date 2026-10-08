@@ -1,12 +1,14 @@
 // Baked exercise media (loop + poster): render settings, input hashing and the stale-media check shared by
 // bake-loops.ts and check-media.ts. A media hash covers everything the render reads from the repo: the figure
 // assets (public/models), the skeleton, the exercise record (template, params, highlight roles, camera hint),
-// the shipped baked motion and the render settings. Code changes that alter the look bump RENDER.version.
+// the shipped baked motion, the hero camera its scene picks and the render settings. Code changes that alter the look
+// bump RENDER.version.
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { CompactMotion } from '../../src/motion/bake.ts'
 import { skeletonHash, type SkeletonData } from '../../src/motion/skeleton.ts'
+import { sceneFor } from '../../src/features/figure/motion/scenes/index.ts'
 import { DATA, PUBLIC, ROOT } from '../lib/paths.ts'
 
 /**
@@ -55,7 +57,7 @@ export type MediaEntry = {
 }
 export type Manifest = Record<string, MediaEntry>
 
-type InputName = 'body' | 'skeleton' | 'record' | 'motion' | 'renderer'
+type InputName = 'body' | 'skeleton' | 'record' | 'motion' | 'camera' | 'renderer'
 
 export type MediaJob = {
   id: number
@@ -95,7 +97,7 @@ type Rec = {
   slug: string
   laterality: string
   groups: Record<string, string>
-  media: { template: string | null; params: Record<string, unknown>; mapView: string }
+  media: { template: string | null; params: Record<string, unknown>; mapView: 'F' | 'B' }
 }
 
 function midConcentric([ecc, pb, con, pt]: CompactMotion['tempo']) {
@@ -120,7 +122,9 @@ export function mediaJobs(): MediaJob[] {
       laterality: rec.laterality,
       mapView: rec.media.mapView,
     }))
-    const parts = { body, skeleton: sha(skeleton), record, motion: sha(stableJson(motion)), renderer }
+    // the scene's camera: a camera-only change must reach a new file name (media is served immutable)
+    const camera = sha(stableJson(sceneFor(motion.template).camera(motion.params, rec.media.mapView)))
+    const parts = { body, skeleton: sha(skeleton), record, motion: sha(stableJson(motion)), camera, renderer }
     const frames = Math.max(2, Math.round(motion.duration * RENDER.fps))
     jobs.push({
       id,
