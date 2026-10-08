@@ -30,7 +30,7 @@ Tenset (repo `gym-builder`): no-backend, phone-first PWA for planning a weekly g
 
 ## v1.x backlog (from the review)
 - Flat-palm and toes collision capsules, so the hand and forefoot allowances can shrink to a few mm.
-- The 5 needs-work exercises were reworked on 2026-10-08 (PLAN.md "v1.x motion fixes"); they wait for the owner on /dev/review. The press grip idea was measured and dropped.
+- The 5 needs-work exercises were reworked on 2026-10-08 (PLAN.md "v1.x motion fixes"); approved 2026-10-08. The press grip idea was measured and dropped.
 
 ## Working notes
 - Long agent commands must stream progress (the harness kills agents silent for 3 minutes). Account session limits can stop workflows; resume from the journal.

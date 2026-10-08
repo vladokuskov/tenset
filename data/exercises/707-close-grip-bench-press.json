@@ -70,7 +70,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "v1.x fix 2026-10-08, re-review. Close grip touches lower on the sternum with the forearm stacked under the bar at the touch (side lean 4 deg, was 17); the wrist extends 20 deg (bar low in the palm). The press follows the same J as 101, so the forearm leans toward the head mid-press (max 37, the 101 level); the front-view tilt stays within 18 deg and the upper arm 19+ deg off the ribs. The elbows sit about 12 cm below the pad top at the touch: real geometry for a tucked close grip, but it reads low from the side. The planned low-in-the-palm press grip was dropped: measured, it made the forearms lean more."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (delegated to the lead). Earlier: v1.x fix 2026-10-08, re-review. Close grip touches lower on the sternum with the forearm stacked under the bar at the touch (side lean 4 deg, was 17); the wrist extends 20 deg (bar low in the palm). The press follows the same J as 101, so the forearm leans toward the head mid-press (max 37, the 101 level); the front-view tilt stays within 18 deg and the upper arm 19+ deg off the ribs. The elbows sit about 12 cm below the pad top at the touch: real geometry for a tucked close grip, but it reads low from the side. The planned low-in-the-palm press grip was dropped: measured, it made the forearms lean more."
   }
 }

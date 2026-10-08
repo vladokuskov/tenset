@@ -71,7 +71,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "v1.x fix 2026-10-08, re-review. Camera moved to the feet end (az -30, elev 0.2): at -50 the near upright crossed the head for half the loop (a scene test now checks hands and head). The rack is framed by its base, so the figure is larger and the uprights run out of the top (407 precedent). Unchanged: the upper back faces the floor, so the lats show as an edge; the top elbow is 141 deg (1.3x grip)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (delegated to the lead). Earlier: v1.x fix 2026-10-08, re-review. Camera moved to the feet end (az -30, elev 0.2): at -50 the near upright crossed the head for half the loop (a scene test now checks hands and head). The rack is framed by its base, so the figure is larger and the uprights run out of the top (407 precedent). Unchanged: the upper back faces the floor, so the lats show as an edge; the top elbow is 141 deg (1.3x grip)."
   }
 }

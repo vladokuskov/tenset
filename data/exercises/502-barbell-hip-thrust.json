@@ -64,7 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "v1.x fix 2026-10-08, re-review. Camera moved low to the feet end (az -30, elev 0.12): from the side the near plate covered the pelvis. glute_max now reads under the hips through the bottom half of the rep. At lockout no camera above the floor shows it (the glutes face the bench); the alternative is a 502-only glute highlight boost, which overrides the locked shorts tint. Owner call."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-08 (delegated to the lead). 502: the camera stands, no highlight override. Earlier: v1.x fix 2026-10-08, re-review. Camera moved low to the feet end (az -30, elev 0.12): from the side the near plate covered the pelvis. glute_max now reads under the hips through the bottom half of the rep. At lockout no camera above the floor shows it (the glutes face the bench); the alternative is a 502-only glute highlight boost, which overrides the locked shorts tint. Owner call."
   }
 }
