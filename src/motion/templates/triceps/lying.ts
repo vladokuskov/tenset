@@ -68,7 +68,7 @@ function lyingBar(skel: Skeleton, f: FK, spec: ImplementSpec): ImplementPose {
  * dumbbells: the EZ arm's reference path, the hand straight over its elbow (forearm in the sagittal plane), the
  * handle head to feet across the forearm and the palms facing in; the arm solved onto it as the bar's is, mirrored
  */
-function lyingDumbbells(skel: Skeleton, q: Float64Array, p: P, dbs: ImplementSpec[], elbow: number): ImplementPose[] {
+export function lyingDumbbells(skel: Skeleton, q: Float64Array, p: P, dbs: ImplementSpec[], elbow: number): ImplementPose[] {
   setArm(skel, q, { flex: p.shoulderFlexion, abd: LYING.abd, rot: 0, elbow, pro: LYING.pro, wrist: 0 })
   const r = fk(skel, q)
   const e = segPos(skel, r, 'forearm_l'), g = sitePos(skel, r, 'grip_l')

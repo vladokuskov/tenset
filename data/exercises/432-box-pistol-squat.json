@@ -41,8 +41,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "bodyweight",
+      "hold": "hands",
+      "stance": "single_leg",
+      "box": true,
+      "depth": "parallel"
+    },
     "mapView": "F"
   },
   "cues": [

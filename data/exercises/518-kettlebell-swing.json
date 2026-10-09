@@ -43,8 +43,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "swing",
+    "params": {
+      "stance": "wide",
+      "toeOut": 30,
+      "kneeAngle": 32
+    },
     "mapView": "B"
   },
   "cues": [

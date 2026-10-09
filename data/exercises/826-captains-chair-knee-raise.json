@@ -40,8 +40,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "leg-raise",
+    "params": {
+      "support": "elbow_pads",
+      "kneeAngle": 90,
+      "topHipAngle": 120
+    },
     "mapView": "F"
   },
   "cues": [

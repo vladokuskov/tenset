@@ -54,7 +54,25 @@ function toeAwareFoot(f: FK, s: 'l' | 'r'): Capsule[] {
 
 describe('calf-raise template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([601, 602, 603, 604, 605, 606, 607, 609, 610, 611, 612])
+    expect([...baked.keys()].sort()).toEqual([601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612])
+  })
+
+  it('hack squat calf raise (608): back on the sled, knees straight, the sled rides up the rails as the heels rise', () => {
+    const b = get(608)
+    const [top, stretch] = [at(b, TOP), at(b, STRETCH)]
+    expect(dof(b, stretch, 'ankle_l.df')).toBeCloseTo(22, 0)
+    expect(dof(b, top, 'ankle_l.df')).toBeCloseTo(-32, 0)
+    for (let i = 0; i < b.frames; i += 4) expect(Math.abs(dof(b, i, 'knee_l.flex') - 4)).toBeLessThan(0.05)
+    const k = b.implements.findIndex((s) => s.kind === 'hack_sled')
+    const sled = (i: number) => frameImplements(b, i)[k].pos[1]
+    expect(sled(top) - sled(stretch)).toBeGreaterThan(0.05)
+    // the heels drop below the plate's surface at the stretch, the balls stay on it
+    const plate = b.implements.find((s) => s.kind === 'hack_squat')!
+    const n = plate.sites.plate.normal!, p0 = plate.sites.plate.pos
+    const f = fk(skel, frameQ(b, stretch))
+    const above = (site: string) => { const p = sitePos(skel, f, site); return (p[0] - p0[0]) * n[0] + (p[1] - p0[1]) * n[1] + (p[2] - p0[2]) * n[2] }
+    expect(above('heel_l')).toBeLessThan(-0.03)
+    expect(Math.abs(above('ball_l'))).toBeLessThan(0.002)
   })
 
   it.each([...baked.keys()])('%s: finite, contacts held, the loop closes', (id) => {

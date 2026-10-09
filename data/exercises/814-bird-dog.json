@@ -39,8 +39,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "floor-core",
+    "params": {
+      "kind": "bird_dog"
+    },
     "mapView": "B"
   },
   "cues": [

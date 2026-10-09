@@ -4,12 +4,18 @@ export const row: SceneSpec = {
   camera: (params, mapView) => {
     // Smith row: from behind and high, so the view runs between the uprights onto the back (as the Smith squat)
     if (params.implement === 'smith') return { az: -165, elev: 0.32 }
+    // T-bar on a landmine: from the side, so the bar's run from the pivot behind, the handle under the chest and the
+    // plates coming up read beside the body (from behind the hips hide all three)
+    if (params.implement === 'landmine' && params.attachment === 'v_bar') return { az: -100, elev: 0.22 }
     // standing bar row: round towards the side so the hinge and the bar path read beside the back
     if (params.implement === 'barbell' && params.posture !== 'lying_supine') return { az: -120, elev: 0.24 }
     // inverted row: the back faces the floor, and from the side the near front upright hides the hands and the chest at
     // the bar (at -50 it crossed the head); from the feet end, a front three-quarter, the grips, the pull and the lats'
     // side edge read between the uprights
     if (params.posture === 'lying_supine') return { az: -30, elev: 0.2 }
+    // T-bar station: the lifter faces +Z on the pad; from the right side and a little behind, so the hanging arms, the
+    // lever's arc and the elbows passing the trunk read beside the pad
+    if (params.implement === 'machine' && params.support === 'chest_pad') return { az: -112, elev: 0.3 }
     // chest-supported: the lifter faces -Z on the incline, so this is behind its right shoulder and high enough that the
     // upper back, both flared elbows and the incline read
     if (params.support === 'chest_pad') return { az: 42, elev: 0.38 }

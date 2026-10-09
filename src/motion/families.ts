@@ -24,12 +24,12 @@ export const FAMILIES: Record<FamilyName, Family> = {
     code: 'F3',
     templates: { fly: [105, 110, 111, 112, 129, 130, 131, 132, 133], 'front-raise': [207, 209, 234, 236], 'rear-raise': [205, 210, 213, 228, 230, 231], 'external-rotation': [211, 215, 232] },
   },
-  back: { code: 'F4', templates: { row: [206, 229, 304, 305, 306, 307, 312, 313, 315, 320, 321, 323, 324], shrug: [308, 314, 335, 336, 337, 341] } },
+  back: { code: 'F4', templates: { row: [206, 229, 304, 305, 306, 307, 312, 313, 315, 320, 321, 323, 324], shrug: [308, 314, 335, 336, 337, 341], pullover: [] } },
   'legs-knee': { code: 'F5', templates: { lunge: [403, 409, 410, 411, 423, 424, 425, 426, 430, 431, 433, 434], 'leg-extension': [404, 412, 435], 'leg-curl': [503, 504, 512, 539, 540, 541] } },
   'legs-hip-calf': { code: 'F6', templates: { 'hip-abduction': [506, 507, 514, 515, 536], 'calf-raise': [601, 602, 603, 604, 605, 606, 607, 609, 610, 611, 612] } },
-  hinge: { code: 'F7', templates: { hinge: [501, 508, 509, 510, 513, 519, 520, 521, 522, 523, 524, 525, 542], 'hip-thrust': [502, 511, 529, 530, 531, 533], 'back-extension': [505] } },
+  hinge: { code: 'F7', templates: { hinge: [501, 508, 509, 510, 513, 519, 520, 521, 522, 523, 524, 525, 542], 'hip-thrust': [502, 511, 529, 530, 531, 533], 'back-extension': [505], swing: [], 'hip-kickback': [] } },
   arms: { code: 'F8', templates: { 'triceps-extension': [704, 705, 706, 715, 716, 717, 734, 736, 738, 741, 742, 744], 'wrist-curl': [708, 709, 746, 747, 749, 750] } },
-  core: { code: 'F9', templates: { crunch: [801, 805, 818, 834, 838, 840], 'leg-raise': [802, 806, 807, 819, 825, 827], hold: [803, 804, 808, 815, 823, 824, 828, 829, 830, 841], rotation: [809, 821, 832, 833] } },
+  core: { code: 'F9', templates: { crunch: [801, 805, 818, 834, 838, 840], 'leg-raise': [802, 806, 807, 819, 825, 827], hold: [803, 804, 808, 815, 823, 824, 828, 829, 830, 841], rotation: [809, 821, 832, 833], rollout: [], 'floor-core': [] } },
 }
 
 export const FAMILY_NAMES = Object.keys(FAMILIES) as FamilyName[]

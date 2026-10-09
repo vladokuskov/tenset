@@ -8,4 +8,6 @@ export const frontRaise: SceneSpec = {
     // standing: nearer the side than the default so the arc in the sagittal plane reads, front delts still in view
     return { az: -55, elev: 0.22 }
   },
+  // the cable rope's fist pieces close the hand like the rope attachment
+  grip: (ctx) => (ctx.spec.kind === 'rope_end' ? 'rope' : undefined),
 }

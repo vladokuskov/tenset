@@ -38,8 +38,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hold",
+    "params": {
+      "kind": "copenhagen_plank"
+    },
     "mapView": "F"
   },
   "cues": [

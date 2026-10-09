@@ -42,8 +42,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "rotation",
+    "params": {
+      "implement": "barbell",
+      "direction": "horizontal"
+    },
     "mapView": "F"
   },
   "cues": [

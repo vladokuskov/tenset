@@ -12,6 +12,8 @@ import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic } from './solve.ts'
 import { clearNode } from './press-cable.ts'
+import { ringContacts, ringPoses, ringRig, ringSpread, type RingRig } from './rings.ts'
+import { RING_HEIGHT } from '../implements/index.ts'
 import { memo, type Setup, type Template } from './types.ts'
 
 // Push-up, root driver: palms flat and the balls of the feet planted (on the floor, or on a box under the hands or
@@ -28,6 +30,10 @@ import { memo, type Setup, type Template } from './types.ts'
 // the trunk (shoulder flexion ~150 deg at the top; a vertical press against body weight).
 // Diamond (grip under 0.5): the hands together under the chest, fingers turned in. Band: a band across the upper back
 // (over the shoulder blades and the back of the shoulders), its ends pinned under the palms.
+// Rings: the hands close on gymnastic rings hanging just above the floor (RING_HEIGHT.push_up), palms in and thumbs
+// forward, wrists straight; the hands sit under the shoulders at the top, the elbows stay close to the sides
+// (RING_PUSH.flare) and the thumbs turn out a little at lockout (RING_PUSH.turn). The plank and its pitch curve are the
+// push-up's.
 
 type P = ParamsOf<'push-up'>
 
@@ -128,6 +134,11 @@ const BAND_PALM = { mid: [0, 0.001, -0.045] as V3, edge: [0.05, 0.001, -0.045] a
 /** pike: hip flexion, ankle dorsiflexion (heels up, toes turned under) and neck flexion (head in line, eyes back
  * between the hands), deg */
 const PIKE = { hip: 88, ankle: 6, neck: [4, 4] }
+/**
+ * Ring push-up: upper-arm angle from the torso at the bottom (seen from above), deg (rings close to the sides); the
+ * thumbs turn out this far at lockout, deg; wrist extension bias, deg (a straight wrist on the ring)
+ */
+const RING_PUSH = { flare: 18, turn: 20, wrist: 8 }
 /** root-find ranges of the trunk pitch (deg above horizontal) for the lockout, the rep and the bottom, and of the hands'
  * distance from the balls of the feet (m): a plank lies near level, a pike tips head down */
 const RANGES = {
@@ -157,6 +168,7 @@ function unsupported(p: P) {
   if (p.laterality !== 'bilateral') return `laterality ${p.laterality}`
   if (p.pike && (p.kneeling || p.elevation !== 'floor' || p.plus || p.implement !== 'bodyweight')) return 'pike variant'
   if (p.kneeling && p.elevation !== 'floor') return `kneeling ${p.elevation}`
+  if (p.implement === 'rings' && (p.kneeling || p.pike || p.plus || p.elevation !== 'floor')) return 'rings variant'
   return null
 }
 
@@ -278,6 +290,85 @@ function flare(skel: Skeleton, q: Float64Array, signed = false): number {
 
 const elbowOf = (skel: Skeleton, q: Float64Array) => q[skel.dof['elbow_l.flex']]
 
+// ---------- rings ----------
+
+type RingCtx = { tempo: Tempo; setup: Setup; balls: [V3, V3]; rig: RingRig; grip: V3; pole: V3; pitch: (c: number) => number }
+
+/** both hands on the rings (left solved, right mirrored): the left grip at `grip`, thumbs forward turning out towards lockout */
+function ringArms(skel: Skeleton, q: Float64Array, grip: V3, pole: V3, c: number) {
+  const thorax = fk(skel, q).rot[skel.seg.thorax2]
+  const turn = RING_PUSH.turn * ramp(c, 0.4, 1) * DEG
+  attachHand(skel, q, 'l', { pos: grip, axis: [Math.sin(turn), 0, Math.cos(turn)], palm: [-1, 0, 0] }, { pole: qrot(thorax, pole), wristBias: RING_PUSH.wrist, planeHint: 90 })
+  for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
+}
+
+function ringFrame(skel: Skeleton, p: P, ctx: Pick<RingCtx, 'balls' | 'grip' | 'pole'>, c: number, pitch: number): Float64Array {
+  const q = zeroQ(skel)
+  plank(skel, q, p, ctx, c, pitch)
+  ringArms(skel, q, ctx.grip, ctx.pole, c)
+  return q
+}
+
+const ringContext = memo((p: P, skel: Skeleton): RingCtx => {
+  const tempo = p.tempo ?? DEFAULT_TEMPO
+  const f0 = fk(skel, zeroQ(skel))
+  const bx = sitePos(skel, f0, 'ball_l')[0]
+  const balls: [V3, V3] = [[bx, 0, 0], [-bx, 0, 0]]
+  const half = (p.gripWidth * skel.data.shoulderWidth) / 2
+  const h = RING_HEIGHT.push_up
+  // elbow pole in the thorax frame: back towards the feet, out by `t`, lifted off the floor
+  const poleAt = (t: number): V3 => norm([Math.sin(t * DEG), -Math.cos(t * DEG), -0.3])
+  const v = { balls, grip: [half, h, 1.3] as V3, pole: poleAt(20) }
+  const R = RANGES.plank
+  const elbowOf2 = (c: number, a: number) => elbowOf(skel, ringFrame(skel, p, v, c, a))
+  const topPitch = () => root1d((a) => elbowOf2(1, a) - ELBOW_TOP, R.top[0], R.top[1], { tol: 1e-6, scan: 11 }).x
+  // bottom: the chest CHEST_GAP above the hands' height
+  const chest = (a: number) => {
+    const caps = bodyCapsules(skel, fk(skel, ringFrame(skel, p, v, 0, a)))
+    return Math.min(...caps.filter((k) => /^thorax/.test(k.segment)).map((k) => Math.min(k.a[1], k.b[1]) - k.r)) - h - CHEST_GAP
+  }
+  const bottomPitch = () => root1d(chest, R.bottom[0], R.bottom[1], { tol: 1e-6, scan: 20 }).x
+  // the hands under the shoulders at the top, the elbows RING_PUSH.flare out at the bottom
+  for (let pass = 0; pass < 6; pass++) {
+    const z0 = v.grip[2]
+    v.grip = [half, h, root1d((z) => {
+      v.grip = [half, h, z]
+      const f = fk(skel, ringFrame(skel, p, v, 1, topPitch()))
+      return segPos(skel, f, 'humerus_l')[2] - z
+    }, R.hands[0], R.hands[1], { tol: 1e-5, scan: 7 }).x]
+    v.pole = poleAt(root1d((t) => {
+      v.pole = poleAt(t)
+      return flare(skel, ringFrame(skel, p, v, 0, bottomPitch())) - RING_PUSH.flare
+    }, 0, 70, { tol: 1e-4, scan: 8 }).x)
+    if (pass && Math.abs(v.grip[2] - z0) < 1e-4) break
+  }
+  const elbowBottom = elbowOf2(0, bottomPitch())
+  const pitchFor = (c: number) => root1d((a) => elbowOf2(c, a) - lerp(elbowBottom, ELBOW_TOP, c), R.rep[0], R.rep[1], { tol: 1e-6, scan: 17 }).x
+  const cs = Array.from({ length: KNOTS }, (_, i) => i / (KNOTS - 1))
+  const pitch = monotoneCubic(cs, cs.map(pitchFor))
+  // the straps hang from a beam overhead (a rig's uprights would stand across the plank), just outside the arms
+  const rig = ringRig({ z: v.grip[2], spread: ringSpread(half), mount: 'beam' })
+  const setup: Setup = {
+    implements: rig.implements,
+    contacts: [
+      { site: 'ball_l', kind: 'planted', target: { world: balls[0] } },
+      { site: 'ball_r', kind: 'planted', target: { world: balls[1] } },
+      ...ringContacts(),
+    ],
+    tempo,
+    symmetric: true,
+    tolerances: { floor: FOOT_SINK },
+  }
+  return { tempo, setup, balls, rig, grip: v.grip, pole: v.pole, pitch }
+})
+
+function sampleRings(u: number, p: P, skel: Skeleton): Pose {
+  const ctx = ringContext(p, skel)
+  const c = phaseAt(u, ctx.tempo).c
+  const q = ringFrame(skel, p, ctx, c, ctx.pitch(c))
+  return { q, implements: ringPoses(skel, fk(skel, q), ctx.rig), contacts: ctx.setup.contacts }
+}
+
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`push-up: variant not implemented yet (${why})`)
@@ -376,6 +467,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 })
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
+  if (p.implement === 'rings') return sampleRings(u, p, skel)
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
   const q = frame(skel, p, ctx, ctx.pole, c, ctx.pitch(c))
@@ -409,9 +501,13 @@ export const pushUp: Template<P> = {
   driver: 'root',
   params: SCHEMAS['push-up'],
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
+  setup: (p, skel) => {
+    const why = unsupported(p)
+    if (why) throw new Error(`push-up: variant not implemented yet (${why})`)
+    return p.implement === 'rings' ? ringContext(p, skel).setup : context(p, skel).setup
+  },
   sample,
 }
 
 /** internals for the unit tests */
-export const _pushUp = { context, flare }
+export const _pushUp = { context, ringContext, flare }

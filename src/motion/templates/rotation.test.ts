@@ -25,7 +25,7 @@ function handleCenter(b: Baked, i: number) {
 
 describe('rotation template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([809, 821, 832, 833])
+    expect([...baked.keys()].sort()).toEqual([809, 821, 822, 831, 832, 833])
   })
 
   it('809 woodchop: contacts held, loop closes, arms long', () => {
@@ -183,5 +183,37 @@ describe('rotation template', () => {
       const lean = sub(segPos(skel, f, 'thorax2'), segPos(skel, f, 'lumbar1'))
       expect((Math.atan2(-lean[2], lean[1]) * 180) / Math.PI).toBeGreaterThan(30)
     }
+  })
+
+  it('822 landmine rotation: both hands on the bar end, swept from one hip to the other through chest height', () => {
+    const b = get(822)
+    for (let i = 0; i < b.frames; i++) expect(contactError(skel, b, i)).toBeLessThan(0.005)
+    const k = b.implements.findIndex((s) => s.kind === 'landmine_bar')
+    const tip = (i: number) => siteWorld(b.implements[k], frameImplements(b, i)[k], 'tip').pos
+    const a = tip(frameAt(b, 0.625)), z = tip(frameAt(b, 0))
+    // the far hip (left) at the bottom, the working (right) hip at the top
+    expect(a[0]).toBeGreaterThan(0.15)
+    expect(z[0]).toBeLessThan(-0.15)
+    let high = -Infinity
+    for (let i = 0; i < b.frames; i++) high = Math.max(high, tip(i)[1])
+    expect(high).toBeGreaterThan(Math.max(a[1], z[1]) + 0.12)
+    expect(turn(b, frameAt(b, 0)) * turn(b, frameAt(b, 0.625))).toBeLessThan(0)
+  })
+
+  it('831 half-kneeling chop: hips square and still, near knee down, the rope from above the near shoulder to the far hip', () => {
+    const b = get(831)
+    for (let i = 0; i < b.frames; i++) {
+      expect(contactError(skel, b, i)).toBeLessThan(0.005)
+      for (const n of ['pelvis.rot', 'pelvis.tilt', 'pelvis.ty']) expect(dof(b, i, n)).toBeCloseTo(dof(b, 0, n), 9)
+    }
+    const f = fk(skel, frameQ(b, 0))
+    // the working (right) knee on the mat, the far knee up
+    expect(segPos(skel, f, 'tibia_r')[1]).toBeLessThan(0.1)
+    expect(segPos(skel, f, 'tibia_l')[1]).toBeGreaterThan(0.35)
+    const fists = (i: number) => sitePos(skel, fk(skel, frameQ(b, i)), 'grip_l')
+    const start = fists(frameAt(b, 0.625)), end = fists(frameAt(b, 0))
+    expect(start[1] - end[1]).toBeGreaterThan(0.5)
+    expect(start[0]).toBeLessThan(end[0])
+    expect(dof(b, frameAt(b, 0), 'thorax.rot') - dof(b, frameAt(b, 0.625), 'thorax.rot')).toBeGreaterThan(40)
   })
 })

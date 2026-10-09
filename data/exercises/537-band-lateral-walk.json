@@ -35,8 +35,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hip-abduction",
+    "params": {
+      "implement": "band",
+      "posture": "standing"
+    },
     "mapView": "B"
   },
   "cues": [

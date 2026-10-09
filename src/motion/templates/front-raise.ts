@@ -1,15 +1,19 @@
-import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
-import { centerOfMass, fk, segPos } from '../fk.ts'
-import { bench, type ImplementSpec } from '../implements.ts'
+import { attachHand, handFrame, implementFromHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } from '../collide.ts'
+import { centerOfMass, fk, segPos, type FK } from '../fk.ts'
+import { bench, type Cable, type ImplementSpec } from '../implements.ts'
+import { ROPE } from '../implements/arms.ts'
 import { weightPlate } from '../implements/index.ts'
-import { add, DEG, dot, lerp, norm, qaxis, qid, qrot, scale, sub, type V3 } from '../math.ts'
+import { add, DEG, dist, dot, lerp, norm, qaxis, qid, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, shoulderRhythm, zeroQ, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { monotoneCubic } from './row/common.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells, isWorking, sidePhase } from './arms.ts'
 import { armDir, footContacts, forSide, mirrorArm, poseArm, SIDES, thoraxFrame, type Side } from './isolation.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
+import { frameY } from './triceps/common.ts'
+import { cablePressure } from './triceps/pushdown.ts'
+import { ROPE_IDS, ropeContacts, ropeImplements, stackSpec } from './triceps/rope.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, setPelvis, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
 
@@ -23,6 +27,10 @@ import { memo, type Setup, type Template } from './types.ts'
 // from in front of the thighs to eye level with nearly straight arms (elbow ~10, solved by IK to the rims). The plate
 // turns with the forearms: vertical at the top, its top edge tipped forward at the bottom (wrists in radial deviation
 // take part of the turn), so it clears the thighs.
+// Cable rope (233): back to a low pulley, the cable running forward between the legs to the spreading rope (the
+// pushdowns' ferrule, free strands and fist pieces, held the other way up: the strands leave the fists on the little
+// finger side, the stops above the thumbs). The fists stay a fixed distance apart, thumbs up, and rise on an arc round
+// the shoulders as the plate's do; the ankles balance body, rope and cable pull over the midfoot.
 
 type P = ParamsOf<'front-raise'>
 
@@ -43,7 +51,7 @@ const PRONE_FEET = [0.44, 0.42]
 const PRONE_TOE = 0
 
 type Ctx = {
-  kind: 'stand' | 'prone' | 'plate'
+  kind: 'stand' | 'prone' | 'plate' | 'rope'
   tempo: Tempo
   setup: Setup
   stance?: StanceSetup
@@ -56,7 +64,17 @@ type Ctx = {
   measure?: (q: Float64Array) => number
   /** plate: distance from the shoulder midpoint to the plate centre by elevation (m) */
   plate?: { spec: ImplementSpec; r: (elev: number) => number }
+  /** rope: distance from the shoulder midpoint to the fists' midpoint by elevation (m), the pulley */
+  rope?: { r: (elev: number) => number; pulley: V3 }
 }
+
+/**
+ * cable rope: stack load, kg; the fists' centres this far apart, m (the rope ends side by side); pulley height and its
+ * distance behind the midfoot, m; the lowest start keeps the fists and the rope this far off the thighs and the upper
+ * arms no further than `armRest` into the chest (less the same clearance; the fists at the midline bring the hanging
+ * upper arms in against it), m; stance
+ */
+const ROPE_RAISE = { kg: 5, spacing: 0.2, pulley: { y: 0.1, back: 0.6 }, thighClear: 0.008, armRest: 0.028, stance: 'shoulder' as const }
 
 const PLATE_KG = 20
 /** plate arc: share of the forearms' turn the plate keeps and an offset (deg), clearance from the thighs (m) */
@@ -309,11 +327,107 @@ function plateContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   return ctx
 }
 
+// ---------- cable rope ----------
+
+function ropeArms(skel: Skeleton, q: Float64Array, ctx: Ctx, elev: number) {
+  const g = shoulderRhythm(elev, 90)
+  setDofs(skel, q, { 'clavicle_*.elev': g.elev, 'clavicle_*.prot': g.prot, 'grip_*.close': 1 })
+  const f = fk(skel, q)
+  const sm = scale(add(segPos(skel, f, 'humerus_l'), segPos(skel, f, 'humerus_r')), 0.5)
+  const e = elev * DEG
+  const r = ctx.rope!.r(elev)
+  // thumbs up the arc: the little finger towards the floor at the bottom (thumbs forward), the thumbs up at shoulder height
+  const pos = add(sm, [ROPE_RAISE.spacing / 2, -r * Math.cos(e), r * Math.sin(e)])
+  attachHand(skel, q, 'l', { pos, axis: [0, Math.sin(e), Math.cos(e)], palm: [-1, 0, 0] }, { pole: [1, -0.5, -0.2], planeHint: 80, uprot: g.uprot })
+  mirrorArm(skel, q)
+}
+
+/**
+ * The spreading rope held the other way up: each fist piece turned end for end (strand in at the little finger, stop
+ * past the thumb), the free strands from there to the ferrule, which hangs towards the pulley where the two fixed
+ * strand lengths meet (ropePoses in triceps/rope.ts, for the cable pulling from below)
+ */
+export function raiseRopePoses(skel: Skeleton, f: FK, pulley: V3): ImplementPose[] {
+  const hands = (['l', 'r'] as const).map((s) => handFrame(skel, f, s)).map((h) => ({ ...h, axis: scale(h.axis, -1) }))
+  const entry = hands.map((h) => add(h.pos, scale(h.axis, ROPE.entry)))
+  const mid = scale(add(entry[0], entry[1]), 0.5)
+  const u = norm(sub(pulley, mid))
+  const half = dist(entry[0], entry[1]) / 2
+  const cap = add(mid, scale(u, Math.sqrt(Math.max(ROPE.free * ROPE.free - half * half, 1e-4))))
+  return [
+    { id: ROPE_IDS.handle, pos: add(cap, scale(u, -ROPE.cap.bottom)), rot: frameY(u) },
+    ...entry.map((e, k) => ({ id: ROPE_IDS.strands[k], pos: cap, rot: frameY(norm(sub(cap, e))) })),
+    ...hands.map((h, k) => ({ id: ROPE_IDS.ends[k], pos: h.pos, rot: implementFromHand(h.axis, h.palm) })),
+  ]
+}
+
+function ropeStand(elev: number, skel: Skeleton, ctx: Ctx, q: Float64Array, sway?: Sway) {
+  trunkPose(skel, q)
+  const pulley = ctx.rope!.pulley
+  const measure = (qq: Float64Array) => {
+    const f = fk(skel, qq)
+    return cablePressure(skel, f, raiseRopePoses(skel, f, pulley)[0].pos, pulley, 0.6, ROPE_RAISE.kg)
+  }
+  return standBalanced(skel, q, ctx.stance!, { knee: 8, tilt: 6 }, measure, (qq) => ropeArms(skel, qq, ctx, elev), undefined, sway)
+}
+
+const ropeElev = (u: number, p: P, ctx: Ctx) => lerp(ctx.bottom, p.topElevation, phaseAt(u, ctx.tempo).c)
+
+function ropeContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const stance = makeStance(skel, stanceWidth(skel, ROPE_RAISE.stance), 8)
+  const pulley: V3 = [0, ROPE_RAISE.pulley.y, stance.midfoot[2] - ROPE_RAISE.pulley.back]
+  const rope = ropeImplements()
+  const cables: Cable[] = [{ pulley, implement: ROPE_IDS.handle, point: [0, 0, 0], kg: ROPE_RAISE.kg }]
+  const setup: Setup = {
+    implements: [...rope, stackSpec(pulley, true)],
+    contacts: [...plantedContacts(skel, stance), ...ropeContacts()],
+    tempo,
+    symmetric: true,
+    cables,
+    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+  }
+  const ctx: Ctx = { kind: 'rope', tempo, setup, stance, bottom: 20, rope: { r: () => 0.6, pulley } }
+  const at = (elev: number) => {
+    const q = zeroQ(skel)
+    trunkPose(skel, q)
+    ropeArms(skel, q, ctx, elev)
+    return q
+  }
+  // the fists' distance that keeps the elbows at elbowAngle, solved at a few elevations
+  const es = Array.from({ length: 9 }, (_, k) => lerp(0, p.topElevation + 5, k / 8))
+  const rs = es.map((e) => root1d((r) => {
+    ctx.rope!.r = () => r
+    return at(e)[skel.dof['elbow_l.flex']] - p.elbowAngle
+  }, 0.3, 0.9, { tol: 1e-6 }).x)
+  ctx.rope!.r = monotoneCubic(es, rs)
+  // start: the lowest elevation that keeps the fists and the rope off the thighs (standing, as in the rep)
+  const gap = (elev: number) => {
+    const q = zeroQ(skel)
+    ropeStand(elev, skel, ctx, q)
+    const f = fk(skel, q)
+    const thighs = bodyCapsules(skel, f).filter((c) => c.region.startsWith('thigh_'))
+    const poses = raiseRopePoses(skel, f, pulley)
+    let g = Infinity
+    for (const [k, spec] of rope.entries()) for (const sd of placeParts(spec, poses[k])) for (const c of thighs) g = Math.min(g, capsuleSolidClearance(c, sd))
+    const hands = bodyCapsules(skel, f).filter((c) => c.region.startsWith('hand_'))
+    for (const h of hands) for (const c of thighs) g = Math.min(g, capsuleClearance(h, c))
+    // the fists meet at the midline, so the upper arms come in against the chest: they may rest on it (soft tissue)
+    const caps = bodyCapsules(skel, f)
+    const arms = caps.filter((c) => c.region.startsWith('upperarm_')), trunk = caps.filter((c) => c.region === 'trunk')
+    for (const a of arms) for (const t of trunk) g = Math.min(g, capsuleClearance(a, t) + ROPE_RAISE.armRest)
+    return g - ROPE_RAISE.thighClear
+  }
+  ctx.bottom = root1d(gap, 0, 60, { tol: 1e-4 }).x
+  ctx.sway = limitSway((uu, sway) => ropeStand(ropeElev(uu, p, ctx), skel, ctx, zeroQ(skel), sway))
+  return ctx
+}
+
 // ---------- template ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if (p.implement === 'plate' && p.posture === 'standing' && p.laterality === 'bilateral') return plateContext(p, skel, tempo)
+  if (p.implement === 'cable' && p.attachment === 'rope' && p.posture === 'standing' && p.laterality === 'bilateral') return ropeContext(p, skel, tempo)
   if (p.implement !== 'dumbbell') throw new Error(`front-raise: variant not implemented yet (${p.implement})`)
   if (p.posture === 'standing') return standContext(p, skel, tempo)
   if (p.posture === 'lying_prone') return proneContext(p, skel, tempo)
@@ -323,6 +437,10 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const q = zeroQ(skel)
+  if (ctx.kind === 'rope') {
+    ropeStand(ropeElev(u, p, ctx), skel, ctx, q, ctx.sway)
+    return { q, implements: [...raiseRopePoses(skel, fk(skel, q), ctx.rope!.pulley), { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
+  }
   if (ctx.kind === 'plate') {
     const { pose } = plateStand(u, p, skel, ctx, q, ctx.sway)
     return { q, implements: [pose], contacts: ctx.setup.contacts }

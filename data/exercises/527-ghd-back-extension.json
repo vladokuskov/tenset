@@ -41,8 +41,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "back-extension",
+    "params": {
+      "support": "ghd"
+    },
     "mapView": "B"
   },
   "cues": [

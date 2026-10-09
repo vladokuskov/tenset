@@ -41,8 +41,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "pullover",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "lying_supine",
+      "hold": "two_hand",
+      "elbowAngle": 20
+    },
     "mapView": "B"
   },
   "cues": [

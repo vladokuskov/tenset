@@ -43,8 +43,16 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "barbell",
+      "posture": "lying_prone",
+      "support": "bench",
+      "torsoAngle": 90,
+      "grip": "pronated",
+      "gripWidth": 1.4,
+      "elbowFlare": 55
+    },
     "mapView": "B"
   },
   "cues": [

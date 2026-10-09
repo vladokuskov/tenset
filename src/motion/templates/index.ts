@@ -5,10 +5,12 @@ import { crunch } from './crunch.ts'
 import { curl } from './curl.ts'
 import { dip } from './dip.ts'
 import { externalRotation } from './external-rotation.ts'
+import { floorCore } from './floor-core.ts'
 import { fly } from './fly.ts'
 import { frontRaise } from './front-raise.ts'
 import { hinge } from './hinge.ts'
 import { hipAbduction } from './hip-abduction.ts'
+import { hipKickback } from './hip-kickback.ts'
 import { hipThrust } from './hip-thrust.ts'
 import { hold } from './hold.ts'
 import { horizontalPress } from './horizontal-press.ts'
@@ -18,13 +20,16 @@ import { legCurl } from './leg-curl.ts'
 import { legExtension } from './leg-extension.ts'
 import { legRaise } from './leg-raise.ts'
 import { lunge } from './lunge.ts'
+import { pullover } from './pullover.ts'
 import { pushUp } from './push-up.ts'
 import { rearRaise } from './rear-raise.ts'
+import { rollout } from './rollout.ts'
 import { rotation } from './rotation.ts'
 import { row } from './row.ts'
 import { SCHEMAS, TEMPLATE_IDS, type TemplateId } from './schemas.ts'
 import { shrug } from './shrug.ts'
 import { squat } from './squat.ts'
+import { swing } from './swing.ts'
 import { tricepsExtension } from './triceps-extension.ts'
 import type { AnyTemplate } from './types.ts'
 import { verticalPress } from './vertical-press.ts'
@@ -39,7 +44,7 @@ export type { AnyTemplate, BalanceSpec, Cable, Driver, Rest, Setup, Template, To
 const MODULES = [
   horizontalPress, inclinePress, verticalPress, dip, pushUp, fly, lateralRaise, frontRaise, rearRaise, externalRotation, row,
   verticalPull, shrug, squat, lunge, legExtension, hinge, hipThrust, legCurl, backExtension, hipAbduction, calfRaise, curl,
-  tricepsExtension, wristCurl, crunch, legRaise, hold, rotation,
+  tricepsExtension, wristCurl, crunch, legRaise, hold, rotation, rollout, floorCore, pullover, swing, hipKickback,
 ] as unknown as AnyTemplate[]
 
 const byId = new Map(MODULES.map((t) => [t.id, t]))

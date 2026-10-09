@@ -35,12 +35,18 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "wrist-curl",
+    "params": {
+      "implement": "cable",
+      "grip": "supinated",
+      "posture": "kneeling",
+      "support": "thigh",
+      "attachment": "straight_bar"
+    },
     "mapView": "F"
   },
   "cues": [
-    "Attach a straight bar to a low pulley, kneel facing it and sit back on your heels",
+    "Attach a straight bar to a low pulley, kneel facing it and sit back towards your heels",
     "Rest your forearms on your thighs, palms up",
     "Let the cable pull your wrists back into a stretch",
     "Curl your wrists up without lifting your forearms"

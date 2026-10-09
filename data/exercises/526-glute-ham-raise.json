@@ -42,8 +42,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "leg-curl",
+    "params": {
+      "implement": "bodyweight",
+      "posture": "kneeling",
+      "support": "ghd"
+    },
     "mapView": "B"
   },
   "cues": [

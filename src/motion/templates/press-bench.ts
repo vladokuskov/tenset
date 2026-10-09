@@ -3,9 +3,10 @@ import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { fk, localToWorld, segPos } from '../fk.ts'
 import { barbell, dumbbell, type ImplementSpec, type Part } from '../implements.ts'
 import { benchRack, pressBench, PRESS_BENCH } from '../implements/press-horizontal.ts'
+import { declineBench, declineFrame, DECLINE_BENCH } from '../implements/stations.ts'
 import { dls } from '../ik.ts'
-import { add, lerp, norm, qid, qrot, scale, type V3 } from '../math.ts'
-import { zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { add, lerp, norm, qid, qrot, RAD, scale, sub, type V3 } from '../math.ts'
+import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { phaseAt, type Tempo } from '../timing.ts'
 import {
   armElevation, BACK_CAPS, flareLean, flareOf, forearmSag, forearmTilt, holdArm, holdFade, minClear, naturalCubic, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, solidOf,
@@ -29,6 +30,9 @@ import type { Setup } from './types.ts'
 // record's flare with the forearms vertical over the elbows (elbow ~90 deg); dumbbells or kettlebells (the bell on the
 // back of the forearm, press-kettlebell.ts). Squeeze press: neutral dumbbells side by side, pressed together the whole
 // rep, lowered as one onto the chest.
+// Decline (benchAngle < 0): supine on the decline bench with leg hooks (implements/stations.ts), head down the pad,
+// the backs of the knees over the knee roller and the ankles behind the ankle roller; the bar or the dumbbells touch
+// low on the chest and press back over the shoulders (vertical at lockout), the uprights at the head end for the bar.
 
 export type PressParams = ParamsOf<'horizontal-press'> | ParamsOf<'incline-press'>
 
@@ -86,6 +90,13 @@ const FEET_HALF = 0.3
 const FLOOR = { knee: 95, feetHalf: 0.12, lumbar: -2, pelvis: 2, sink: 0.003 }
 /** squeeze press: the dumbbells' heads this far apart (pressed together), and their sink into the chest at the bottom, m */
 const SQUEEZE = { gap: 0.0005, sink: 0.003 }
+/**
+ * Decline: the hips this far down the pad from its top edge, m; the thighs rise this far above level towards the knees
+ * (over the knee roller), knee flexion (the shins hang about vertical), ankle dorsiflexion, hip abduction (the knees
+ * either side of the brace), deg; how far the rollers press into the legs, m; the touch this far below the flat one
+ * (the bottom of the chest), m
+ */
+const DECLINE = { hipDown: 0.1, thighRise: 10, knee: 92, ankle: -12, abd: 4, roll: 0.004, touch: -0.02 }
 /** a floor plane to rest on (placement only, not an implement) */
 const FLOOR_SOLID = placeParts({ id: 'floor', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [{ shape: 'box', center: [0, -0.5, 0], size: [6, 1, 6] }], sites: {} }, { id: 'floor', pos: [0, 0, 0], rot: qid() })[0]
 
@@ -122,7 +133,7 @@ export function unsupportedBench(p: PressParams): string | null {
   if (o.support === 'floor' && (p.benchAngle !== 0 || (p.implement !== 'dumbbell' && p.implement !== 'kettlebell'))) return `floor ${p.implement} ${p.benchAngle}`
   if (o.support !== 'floor' && p.implement === 'kettlebell') return 'kettlebell on a bench'
   if (o.squeeze && (p.implement !== 'dumbbell' || p.grip !== 'neutral' || p.benchAngle !== 0 || o.support === 'floor')) return `squeeze ${p.implement} ${p.grip}`
-  if (p.benchAngle < 0) return `decline ${p.benchAngle}`
+  if (p.benchAngle < 0 && (o.support === 'floor' || o.squeeze || (p.implement !== 'barbell' && p.implement !== 'dumbbell') || p.benchAngle > -10)) return `decline ${p.implement} ${p.benchAngle}`
   if (p.benchAngle > 0 && p.benchAngle < 10) return `bench angle ${p.benchAngle}`
   const free = p.implement === 'dumbbell' || p.implement === 'kettlebell'
   if (free && p.grip !== 'pronated' && p.grip !== 'neutral') return `${p.implement} grip ${p.grip}`
@@ -168,6 +179,49 @@ function placeFloor(skel: Skeleton): { hip: V3; s: Posture } {
   }
   const r = dls(res, [0.1, s0.tilt], { tol: 1e-7, iters: 60 })
   return { hip: [0, r.x[0], 0], s: { ...s0, tilt: r.x[1] } }
+}
+
+/** decline: the pelvis tilt and height that rest the butt and the upper back on the pad, the hips DECLINE.hipDown below its top */
+function placeDecline(skel: Skeleton, a: number, pad: ReturnType<typeof solidOf>, top: V3): { hip: V3; s: Posture } {
+  const s0 = posture(a)
+  const z = top[2] + declineFrame(-a).along[2] * DECLINE.hipDown
+  const res = (x: number[]) => {
+    const c = seatedCaps(skel, [0, x[0], z], { ...s0, tilt: x[1] })
+    return [(minClear(c.filter((k) => k.segment === 'pelvis'), pad) + SINK) * 100, (minClear(c.filter(BACK_CAPS), pad) + SINK) * 100]
+  }
+  const r = dls(res, [top[1] + 0.08, s0.tilt], { tol: 1e-7, iters: 60 })
+  return { hip: [0, r.x[0], z], s: { ...s0, tilt: r.x[1] } }
+}
+
+/**
+ * Decline legs: the thighs rise DECLINE.thighRise towards the knees, the shins hang; returns the knee and ankle roller
+ * axes (frame y, z) fitted to the legs: the knee roller in the bend under the backs of the knees, the ankle roller over
+ * the fronts of the ankles, each pressing DECLINE.roll into them
+ */
+function hookLegs(skel: Skeleton, q: Float64Array): { knee: { z: number; y: number }; ankle: { z: number; y: number } } {
+  setDofs(skel, q, { 'hip_*.abd': DECLINE.abd, 'knee_*.flex': DECLINE.knee, 'ankle_*.df': DECLINE.ankle })
+  root1d((h) => {
+    setDofs(skel, q, { 'hip_*.flex': h })
+    const f = fk(skel, q)
+    const d = sub(segPos(skel, f, 'tibia_l'), segPos(skel, f, 'femur_l'))
+    return Math.atan2(d[1], d[2]) * RAD - DECLINE.thighRise
+  }, -40, 60, { tol: 1e-6 })
+  const f = fk(skel, q)
+  const legs = bodyCapsules(skel, f).filter((c) => /^(thigh|shank|foot)_/.test(c.region))
+  const { r, half } = DECLINE_BENCH.roller
+  const fit = (from: V3, dir: V3) => {
+    const at = (d: number): V3 => add(from, scale(dir, d))
+    const gap = (d: number) => {
+      const c = at(d)
+      const roller = placeParts({ id: 'roller', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [{ shape: 'cylinder', a: [-half, c[1], c[2]], b: [half, c[1], c[2]], r }], sites: {} }, { id: 'roller', pos: [0, 0, 0], rot: qid() })[0]
+      return minClear(legs, roller) + DECLINE.roll
+    }
+    const c = at(root1d(gap, 0.02, 0.3, { tol: 1e-6 }).x)
+    return { z: c[2], y: c[1] }
+  }
+  const knee = segPos(skel, f, 'tibia_l'), ankle = segPos(skel, f, 'foot_l')
+  const thigh = norm(sub(segPos(skel, f, 'femur_l'), knee)), shin = norm(sub(ankle, knee))
+  return { knee: fit(knee, norm(add(thigh, shin))), ankle: fit(add(ankle, [0, 0.04, 0]), [0, 0, 1]) }
 }
 
 /**
@@ -242,19 +296,22 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   const floor = o.support === 'floor'
   const squeeze = !!o.squeeze
   const incline = a >= 10
-  const close = hold === 'barbell' && !incline && p.gripWidth <= CLOSE_GRIP
-  const bench = pressBench({ backAngle: a, seatHeight: SEAT_H })
-  const benchPose: ImplementPose = { id: 'bench', pos: [0, SEAT_H, 0], rot: qid() }
-  const { hip, s } = floor ? placeFloor(skel) : placeBody(skel, a, bench, benchPose)
+  const decline = a < 0
+  const close = hold === 'barbell' && !incline && !decline && p.gripWidth <= CLOSE_GRIP
+  let bench = decline ? declineBench({ decline: -a, knee: null, ankle: null }) : pressBench({ backAngle: a, seatHeight: SEAT_H })
+  const benchPose: ImplementPose = decline ? { id: bench.id, pos: [0, 0, 0], rot: qid() } : { id: 'bench', pos: [0, SEAT_H, 0], rot: qid() }
+  const { hip, s } = floor ? placeFloor(skel) : decline ? placeDecline(skel, a, solidOf(bench, benchPose, 0), bench.sites.top.pos) : placeBody(skel, a, bench, benchPose)
   const base = zeroQ(skel)
   trunkPose(skel, base, hip, s)
   if (floor) restHead(skel, base, FLOOR_SOLID, FLOOR.sink)
-  else restHead(skel, base, solidOf(bench, benchPose, 1))
-  const legs = floor ? plantSupineFeet(skel, base, hip[2], FLOOR.knee, FLOOR.feetHalf, 0, 0) : plantFeet(skel, base, hip, incline ? KNEE.incline : KNEE.flat, FEET_HALF)
+  else restHead(skel, base, solidOf(bench, benchPose, decline ? 0 : 1))
+  let legs: { contacts: Contact[] } = { contacts: [] }
+  if (decline) bench = declineBench({ decline: -a, ...hookLegs(skel, base) })
+  else legs = floor ? plantSupineFeet(skel, base, hip[2], FLOOR.knee, FLOOR.feetHalf, 0, 0) : plantFeet(skel, base, hip, incline ? KNEE.incline : KNEE.flat, FEET_HALF)
   const f0 = fk(skel, base)
   const gh = scale(add(segPos(skel, f0, 'humerus_l'), segPos(skel, f0, 'humerus_r')), 0.5)
   // a low incline touches between the flat and the 30 deg points
-  const touchY = incline ? lerp(TOUCH_Y.flat, TOUCH_Y.incline, Math.min(1, a / 30)) : close ? TOUCH_Y.close : TOUCH_Y.flat
+  const touchY = incline ? lerp(TOUCH_Y.flat, TOUCH_Y.incline, Math.min(1, a / 30)) : close ? TOUCH_Y.close : decline ? TOUCH_Y.flat + DECLINE.touch : TOUCH_Y.flat
   const touch = localToWorld(skel, f0, 'thorax2', [0, touchY, 0.1])
 
   const implements_: ImplementSpec[] = []

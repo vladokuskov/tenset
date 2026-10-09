@@ -37,8 +37,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lunge",
+    "params": {
+      "implement": "bodyweight",
+      "hold": "hands",
+      "direction": "cossack",
+      "torsoAngle": 45
+    },
     "mapView": "F"
   },
   "cues": [

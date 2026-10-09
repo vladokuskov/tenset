@@ -39,8 +39,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "machine",
+      "machine": "hack_squat"
+    },
     "mapView": "F"
   },
   "cues": [

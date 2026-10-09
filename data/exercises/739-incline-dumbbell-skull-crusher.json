@@ -34,8 +34,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "posture": "lying_supine",
+      "benchAngle": 30,
+      "shoulderFlexion": 125
+    },
     "mapView": "B"
   },
   "cues": [

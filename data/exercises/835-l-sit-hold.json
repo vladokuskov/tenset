@@ -41,8 +41,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hold",
+    "params": {
+      "kind": "l_sit",
+      "support": "hand"
+    },
     "mapView": "F"
   },
   "cues": [

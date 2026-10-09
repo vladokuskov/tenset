@@ -39,8 +39,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "shrug",
+    "params": {
+      "implement": "cable",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "movement": "upright_row"
+    },
     "mapView": "F"
   },
   "cues": [

@@ -40,8 +40,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hip-kickback",
+    "params": {
+      "attachment": "ankle_strap",
+      "kneeAngle": 15
+    },
     "mapView": "B"
   },
   "cues": [

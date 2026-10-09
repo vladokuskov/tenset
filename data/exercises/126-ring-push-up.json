@@ -41,8 +41,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "push-up",
+    "params": {
+      "implement": "rings",
+      "gripWidth": 1
+    },
     "mapView": "F"
   },
   "cues": [

@@ -44,8 +44,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "horizontal-press",
+    "params": {
+      "benchAngle": -20
+    },
     "mapView": "F"
   },
   "cues": [

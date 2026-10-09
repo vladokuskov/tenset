@@ -31,8 +31,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "front-raise",
+    "params": {
+      "implement": "cable",
+      "attachment": "rope",
+      "grip": "neutral"
+    },
     "mapView": "F"
   },
   "cues": [

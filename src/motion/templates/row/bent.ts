@@ -19,13 +19,13 @@ import { elbowPole, gripContacts, lerp, mirrorArm, phases, PROT, reach, shoulder
 // line through the finish (lower stomach), so it hangs a little behind the shoulders at the bottom.
 
 const KNEE = 22
-const PLATE_KG = 20
-const BOTTOM_ELBOW = 8
+export const PLATE_KG = 20
+export const BOTTOM_ELBOW = 8
 /** bar surface to the trunk at the top, m (touching, not in it) */
-const RIB_GAP = 0.006
+export const RIB_GAP = 0.006
 /** upper-abdomen level the bar rows to (segment-local, m) */
-const RIB_SEG = 'thorax1'
-const RIB_LOCAL: V3 = [0, -0.05, 0]
+export const RIB_SEG = 'thorax1'
+export const RIB_LOCAL: V3 = [0, -0.05, 0]
 const BALANCE_TOL = 0.025
 
 export type Bent = {
@@ -45,7 +45,7 @@ export type Bent = {
   sway?: Sway
 }
 
-function trunk(skel: Skeleton, q: Float64Array, s: number) {
+export function trunk(skel: Skeleton, q: Float64Array, s: number) {
   setDofs(skel, q, {
     'lumbar.flex': 0,
     'thorax.flex': 4,
@@ -76,7 +76,7 @@ function barPoseAt(skel: Skeleton, q: Float64Array, v: Pick<Bent, 'bar' | 'botto
   return { id: v.bar.id, pos, rot: [0, 0, 0, 1] }
 }
 
-function arms(skel: Skeleton, q: Float64Array, p: P, bar: ImplementSpec, pose: ImplementPose) {
+export function arms(skel: Skeleton, q: Float64Array, p: P, bar: ImplementSpec, pose: ImplementPose) {
   const g = add(pose.pos, bar.sites.l.pos)
   // underhand: palms forward (towards the toes) with the bar a little oblique across the palm (the forearm is at full
   // supination), elbows tucked and pointed down at the hips, so the finish sits behind the trunk (plane past -90)

@@ -35,8 +35,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "band",
+      "hold": "hands",
+      "depth": "parallel"
+    },
     "mapView": "F"
   },
   "cues": [

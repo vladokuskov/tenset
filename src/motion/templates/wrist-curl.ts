@@ -12,6 +12,7 @@ import { setPelvis } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
 import { behindContext, sampleBehind } from './wrist/behind.ts'
 import { halfKneelContext, sampleHalfKneel } from './wrist/half-kneel.ts'
+import { kneelSitContext, sampleKneelSit } from './wrist/kneel-sit.ts'
 
 // Wrist curl (F8): kneeling on a mat behind a flat bench that stands across the lifter, forearms resting on the pad
 // and the wrists just past its far edge. Only the wrists move; upper arms, forearms and body stay still. Palms up
@@ -20,7 +21,8 @@ import { halfKneelContext, sampleHalfKneel } from './wrist/half-kneel.ts'
 // flexion/extension +-70) less a margin; the rest is coaching standard (forearms flat, wrists over the edge).
 // Barbell (746, 747): the same pose with an unloaded bar across both hands instead of two dumbbells.
 // Standing behind-the-back barbell (749, wrist/behind.ts) and half-kneeling band extension, forearm on the front thigh
-// (750, wrist/half-kneel.ts) have their own bodies.
+// (750, wrist/half-kneel.ts) have their own bodies, as does the kneeling cable wrist curl, forearms on the thighs
+// (748, wrist/kneel-sit.ts).
 
 type P = ParamsOf<'wrist-curl'>
 
@@ -214,6 +216,10 @@ const variant = memo((p: P, skel: Skeleton): Variant => {
   if (p.implement === 'band' && p.posture === 'kneeling' && p.support === 'thigh' && p.grip === 'pronated' && p.laterality === 'unilateral') {
     const v = halfKneelContext(p, skel, tempo)
     return { setup: v.setup, sample: (u) => sampleHalfKneel(u, skel, v) }
+  }
+  if (p.implement === 'cable' && p.posture === 'kneeling' && p.support === 'thigh' && p.grip === 'supinated' && p.laterality === 'bilateral') {
+    const v = kneelSitContext(p, skel, tempo)
+    return { setup: v.setup, sample: (u) => sampleKneelSit(u, skel, v) }
   }
   throw new Error(`wrist-curl: variant not implemented yet (${p.implement}/${p.posture}/${p.support})`)
 })

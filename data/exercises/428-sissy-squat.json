@@ -34,8 +34,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "bodyweight",
+      "hold": "hands",
+      "sissy": true
+    },
     "mapView": "F"
   },
   "cues": [

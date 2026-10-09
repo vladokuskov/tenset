@@ -131,7 +131,7 @@ function flatWrist(skel: Skeleton, q: Float64Array, side: Side): Quat {
 const FREE = { limits: { pro: [-179, 179] as [number, number], flex: [-179, 179] as [number, number], dev: [-179, 179] as [number, number] }, devBand: [-179, 179] as [number, number] }
 
 /** the arm reaches its palm on the mat, the wrist lays it flat, and again (the hand's tip moves the wrist a little) */
-function flatArm(skel: Skeleton, q: Float64Array, side: Side, pos: V3, pole: V3) {
+export function flatArm(skel: Skeleton, q: Float64Array, side: Side, pos: V3, pole: V3) {
   const thorax = fk(skel, q).rot[skel.seg.thorax2]
   const p: V3 = side === 'l' ? pole : [-pole[0], pole[1], pole[2]]
   let hand = palmHand(skel, side)
@@ -149,7 +149,7 @@ function palmSites(skel: Skeleton, f: FK): Record<Side, V3> {
 }
 
 /** toe flexion that lays the turned-under toes flat */
-function flatToes(skel: Skeleton, q: Float64Array): number {
+export function flatToes(skel: Skeleton, q: Float64Array): number {
   return root1d((t) => {
     q[skel.dof['toe_l.flex']] = t
     return qrot(fk(skel, q).rot[skel.seg.toes_l], [0, 0, 1])[1]

@@ -38,8 +38,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "crunch",
+    "params": {
+      "implement": "machine",
+      "posture": "seated"
+    },
     "mapView": "F"
   },
   "cues": [

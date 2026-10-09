@@ -37,8 +37,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "floor-core",
+    "params": {
+      "kind": "superman"
+    },
     "mapView": "B"
   },
   "cues": [

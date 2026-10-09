@@ -38,8 +38,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "floor-core",
+    "params": {
+      "kind": "mountain_climber"
+    },
     "mapView": "F"
   },
   "cues": [

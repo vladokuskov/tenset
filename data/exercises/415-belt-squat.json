@@ -38,8 +38,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "machine",
+      "machine": "belt_squat"
+    },
     "mapView": "F"
   },
   "cues": [

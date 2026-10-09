@@ -40,8 +40,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "incline-press",
+    "params": {
+      "implement": "machine",
+      "posture": "seated",
+      "grip": "neutral",
+      "benchAngle": 35,
+      "elbowFlare": 45
+    },
     "mapView": "F"
   },
   "cues": [

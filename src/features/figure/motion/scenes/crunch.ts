@@ -6,6 +6,8 @@ export const crunch: SceneSpec = {
   camera: (params) => {
     // standing cable crunch: from the side and a little in front, the rounding back and the rope to the stack behind
     if (params.posture === 'standing') return { az: -70, elev: 0.2 }
+    // GHD sit-up: from the side and a little in front, where the lean back past the pad and the sit-up read
+    if (params.posture === 'seated') return { az: -75, elev: 0.2 }
     return params.posture === 'kneeling' ? { az: -55, elev: 0.22 } : { az: -58, elev: 0.36 }
   },
   // the spreading rope's fist pieces close the hand like the rope attachment; hands on the plate's rim

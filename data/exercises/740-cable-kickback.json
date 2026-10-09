@@ -37,8 +37,17 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "single_handle",
+      "cableHeight": "low",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 60,
+      "stance": "split",
+      "shoulderFlexion": -20
+    },
     "mapView": "B"
   },
   "cues": [

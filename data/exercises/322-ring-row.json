@@ -43,8 +43,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "rings",
+      "posture": "lying_supine",
+      "grip": "neutral",
+      "gripWidth": 1.2,
+      "elbowFlare": 30
+    },
     "mapView": "B"
   },
   "cues": [

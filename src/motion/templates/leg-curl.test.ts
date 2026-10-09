@@ -17,7 +17,7 @@ const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[
 
 describe('leg-curl template', () => {
   it('covers the seated, lying, single-leg lying, standing cable, dumbbell and Nordic curls', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([503, 504, 512, 539, 540, 541])
+    expect(variants.map((v) => v.id).sort()).toEqual([503, 504, 512, 526, 539, 540, 541])
   })
 
   it.each([503, 504, 539])('%s: knee ~5 -> 110-130 (research), hips held, hands on the handles', (id) => {

@@ -1,7 +1,9 @@
 import type { Pose, Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt } from '../timing.ts'
+import { copenhagenContext, sampleCopenhagen, type Copenhagen } from './core/copenhagen.ts'
 import { handPlankContext, sampleHandPlank, type HandPlank } from './core/hand-plank.ts'
 import { hollowContext, sampleHollow, type Hollow } from './core/hollow.ts'
+import { lSitContext, sampleLSit, type LSit } from './core/l-sit.ts'
 import { pallofContext, samplePallof, type Pallof } from './core/pallof.ts'
 import { dipFor, frontContext, samplePlank, sideContext, type Plank } from './core/plank.ts'
 import { sampleSuitcase, suitcaseContext, type Suitcase } from './core/suitcase.ts'
@@ -15,7 +17,7 @@ import { memo, type Template } from './types.ts'
 // with the pause at arm's length (core/pallof.ts).
 
 type P = ParamsOf<'hold'>
-type Ctx = Plank | Pallof | Hollow | HandPlank | Suitcase
+type Ctx = Plank | Pallof | Hollow | HandPlank | Suitcase | Copenhagen | LSit
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
@@ -25,8 +27,10 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     if (p.hipDip) v.dip = dipFor(skel, v, p.hipDip)
     return v
   }
+  if (p.kind === 'copenhagen_plank' && p.implement === 'bodyweight' && p.support === 'forearm' && p.laterality === 'unilateral') return copenhagenContext(p, skel, tempo)
   if (p.kind === 'pallof_press' && (p.implement === 'cable' || p.implement === 'band') && p.pressOut) return pallofContext(p, skel, tempo)
   if (p.kind === 'hollow_hold' && p.implement === 'bodyweight') return hollowContext(skel, tempo)
+  if (p.kind === 'l_sit' && p.implement === 'bodyweight' && p.support === 'hand') return lSitContext(skel, tempo)
   if (p.kind === 'suitcase_hold' && p.implement === 'dumbbell' && p.laterality === 'unilateral') return suitcaseContext(p, skel, tempo)
   if (p.implement === 'bodyweight' && p.support === 'hand' && (p.kind === 'bear_plank' || (p.kind === 'front_plank' && p.tap))) return handPlankContext(p, skel, tempo)
   throw new Error(`hold: variant not implemented yet (${p.kind}/${p.implement}/${p.support}/${p.legs}${p.kind === 'pallof_press' ? `/pressOut ${p.pressOut}` : ''})`)
@@ -41,6 +45,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
     case 'hollow': return sampleHollow(skel, ctx, c)
     case 'hand_plank': return sampleHandPlank(skel, ctx, c)
     case 'suitcase': return sampleSuitcase(skel, ctx, c)
+    case 'copenhagen': return sampleCopenhagen(skel, ctx, c)
+    case 'l_sit': return sampleLSit(skel, ctx, c)
   }
 }
 

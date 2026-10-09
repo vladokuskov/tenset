@@ -37,8 +37,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "seated",
+      "support": "preacher"
+    },
     "mapView": "F"
   },
   "cues": [

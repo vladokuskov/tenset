@@ -41,8 +41,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "rollout",
+    "params": {
+      "direction": "oblique",
+      "reach": 140
+    },
     "mapView": "F"
   },
   "cues": [

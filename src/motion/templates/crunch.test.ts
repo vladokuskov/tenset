@@ -23,7 +23,7 @@ function spineFlex(b: Baked, i: number) {
 
 describe('crunch template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([801, 805, 818, 834, 838, 840])
+    expect([...baked.keys()].sort()).toEqual([801, 805, 817, 818, 834, 838, 840])
   })
 
   it.each([801, 805])('%s: contacts held, loop seam closes, flexion comes from the spine', (id) => {
@@ -147,5 +147,21 @@ describe('crunch template', () => {
     const k = b.implements.findIndex((s) => s.id === 'handle')
     expect(pulley[2]).toBeLessThan(segPos(skel, fk(skel, frameQ(b, bottom)), 'head')[2])
     expect(dist(frameImplements(b, top)[k].pos, pulley)).toBeGreaterThan(dist(frameImplements(b, bottom)[k].pos, pulley) + 0.1)
+  })
+
+  it('817 GHD sit-up: thighs held level on the pad, the trunk from about parallel back to upright, arms swing forward', () => {
+    const b = get(817)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    for (const i of [top, bottom]) {
+      const f = fk(skel, frameQ(b, i))
+      const hip = segPos(skel, f, 'femur_l'), knee = segPos(skel, f, 'tibia_l')
+      expect(Math.abs(hip[1] - knee[1])).toBeLessThan(0.03)
+    }
+    // pelvis tilt: about -86 leaned back (trunk level), about upright at the top
+    expect(dof(b, bottom, 'pelvis.tilt')).toBeLessThan(-75)
+    expect(dof(b, top, 'pelvis.tilt')).toBeGreaterThan(-15)
+    expect(dof(b, bottom, 'shoulder_l.elev')).toBeGreaterThan(150)
+    expect(dof(b, top, 'shoulder_l.elev')).toBeLessThan(110)
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
   })
 })

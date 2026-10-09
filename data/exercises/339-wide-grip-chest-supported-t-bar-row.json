@@ -41,8 +41,15 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "machine",
+      "posture": "lying_prone",
+      "support": "chest_pad",
+      "torsoAngle": 50,
+      "grip": "pronated",
+      "elbowFlare": 70
+    },
     "mapView": "B"
   },
   "cues": [

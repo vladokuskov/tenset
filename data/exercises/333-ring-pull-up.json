@@ -41,8 +41,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "vertical-pull",
+    "params": {
+      "implement": "rings",
+      "grip": "pronated",
+      "gripWidth": 1.3
+    },
     "mapView": "B"
   },
   "cues": [

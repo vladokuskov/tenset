@@ -34,7 +34,7 @@ function contactError(b: Baked, i: number) {
 
 describe('hip-abduction template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([506, 507, 514, 515, 536])
+    expect([...baked.keys()].sort()).toEqual([506, 507, 514, 515, 536, 537])
   })
 
   it.each([...baked.keys()])('%s: finite, contacts held, the loop closes', (id) => {
@@ -201,7 +201,7 @@ describe('hip-abduction template', () => {
 
   it('throws for variants it does not draw', () => {
     const t = getTemplate('hip-abduction')
-    for (const raw of [{ implement: 'bodyweight', posture: 'side_lying', direction: 'adduction' }, { implement: 'bodyweight', posture: 'standing' }, { implement: 'machine', posture: 'standing' }, { implement: 'band', posture: 'standing' }, { implement: 'band', direction: 'adduction' }]) {
+    for (const raw of [{ implement: 'bodyweight', posture: 'side_lying', direction: 'adduction' }, { implement: 'bodyweight', posture: 'standing' }, { implement: 'machine', posture: 'standing' }, { implement: 'band', posture: 'side_lying' }, { implement: 'band', direction: 'adduction' }]) {
       expect(() => t.setup(parseParams('hip-abduction', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

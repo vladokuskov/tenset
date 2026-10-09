@@ -43,8 +43,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "rollout",
+    "params": {
+      "posture": "standing",
+      "reach": 150
+    },
     "mapView": "F"
   },
   "cues": [

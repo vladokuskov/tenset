@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts, solidClearance } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, solidClearance } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, qconj, qrot, sub } from '../math.ts'
@@ -19,7 +19,7 @@ const BENCH = [...baked.keys()].filter((id) => get(id).params.support === 'bench
 
 describe('wrist-curl template', () => {
   it('covers every wrist-curl record', () => {
-    expect([...baked.keys()].sort()).toEqual([708, 709, 746, 747, 749, 750])
+    expect([...baked.keys()].sort()).toEqual([708, 709, 746, 747, 748, 749, 750])
   })
 
   it('only the wrists move (the barbell adds a little deviation to keep the hands on its spacing)', () => {
@@ -200,6 +200,37 @@ describe('wrist-curl template', () => {
     // the rear knee on the mat, the band under the front foot
     const mat = b.implements.findIndex((s) => s.kind === 'mat')
     expect(dist(segPos(skel, f, 'tibia_l'), [frameImplements(b, 0)[mat].pos[0], segPos(skel, f, 'tibia_l')[1], frameImplements(b, 0)[mat].pos[2]])).toBeLessThan(0.2)
+    handsOn(b)
+  })
+
+  it('kneeling cable wrist curl: sitting back towards the heels, forearms on the thighs, only the wrists move', () => {
+    const b = get(748)
+    expect(b.symmetric).toBe(true)
+    const moving = skel.dofs.filter((d) => {
+      let lo = Infinity, hi = -Infinity
+      for (let i = 0; i < b.frames; i++) {
+        const v = b.q[i * b.nDof + d.index]
+        lo = Math.min(lo, v)
+        hi = Math.max(hi, v)
+      }
+      return hi - lo > 1e-3
+    })
+    expect(moving.map((d) => d.name).sort()).toEqual(['wrist_l.dev', 'wrist_l.flex', 'wrist_r.dev', 'wrist_r.flex'])
+    // palms up: extended at the stretch, flexed at the top
+    expect(flex(b, midBottom(b))).toBeLessThan(-15)
+    expect(flex(b, 0)).toBeGreaterThan(45)
+    const f = fk(skel, frameQ(b, 0))
+    // knees deep (past the model's 150 stop, allowed for this variant), the wrists past the knees
+    expect(frameQ(b, 0)[skel.dof['knee_l.flex']]).toBeGreaterThan(145)
+    expect(b.limits?.['knee_l.flex']?.[1]).toBeLessThanOrEqual(160)
+    expect(segPos(skel, f, 'hand_l')[2]).toBeGreaterThan(segPos(skel, f, 'tibia_l')[2])
+    // the forearms lie along the thighs (about 2 cm off the capsules, so the hands clear the floor at the stretch)
+    const caps = bodyCapsules(skel, f)
+    const fore = caps.filter((c) => c.region === 'forearm_l'), thigh = caps.filter((c) => c.region === 'thigh_l')
+    expect(Math.min(...fore.flatMap((a) => thigh.map((t) => capsuleClearance(a, t))))).toBeLessThan(0.03)
+    // a straight bar on a low pulley in front
+    expect(b.cables?.[0].pulley[1]).toBeLessThan(0.2)
+    expect(b.cables![0].pulley[2]).toBeGreaterThan(segPos(skel, f, 'hand_l')[2])
     handsOn(b)
   })
 

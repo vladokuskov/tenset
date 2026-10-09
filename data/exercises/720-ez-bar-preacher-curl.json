@@ -37,8 +37,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "ez_bar",
+      "grip": "supinated",
+      "gripWidth": 1,
+      "posture": "seated",
+      "support": "preacher"
+    },
     "mapView": "F"
   },
   "cues": [

@@ -32,8 +32,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "calf-raise",
+    "params": {
+      "implement": "machine",
+      "machine": "hack_squat"
+    },
     "mapView": "B"
   },
   "cues": [

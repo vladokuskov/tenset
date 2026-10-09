@@ -12,6 +12,7 @@ import { floorMat, FLOOR_MAT } from '../implements/shared.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
+import { sampleWalk, walkContext } from './hip-abduction/walk.ts'
 import { memo, type Setup, type Template } from './types.ts'
 
 // Hip abduction and adduction, joint space. Seated machine: the pelvis sits on the seat, hips flexed hipAngle, and the
@@ -190,7 +191,7 @@ export function strapPose(skel: Skeleton, f: FK, side: Side, pulley: V3): Implem
 const HAND_ON_HIP: Quat = qfromBasis([1, 0, 0], norm([0, 0.6, -1]))
 
 /** hand on the side of the pelvis, thumb back, fingers forward and down */
-function handOnHip(skel: Skeleton, q: Float64Array, side: Side, lying = false) {
+export function handOnHip(skel: Skeleton, q: Float64Array, side: Side, lying = false) {
   const f = fk(skel, q)
   const pos = localToWorld(skel, f, 'pelvis', [sx(side) * 0.2, 0.075, 0.035])
   setDofs(skel, q, { [`grip_${side}.close`]: 0.35 })
@@ -557,6 +558,9 @@ function sampleBand(c: number, p: P, skel: Skeleton, ctx: Ctx, v: Banded): Pose 
 
 // ---------- template ----------
 
+/** standing with a mini band: the lateral walk */
+const isWalk = (p: P) => p.implement === 'band' && p.posture === 'standing' && p.direction === 'abduction' && p.laterality === 'bilateral'
+
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`hip-abduction: variant not implemented yet (${why})`)
@@ -579,6 +583,7 @@ export const hipAbduction: Template<P> = {
   driver: 'joint',
   params: SCHEMAS['hip-abduction'],
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
-  sample,
+  // band lateral walk (hip-abduction/walk.ts)
+  setup: (p, skel) => (isWalk(p) ? walkContext(p, skel).setup : context(p, skel).setup),
+  sample: (u, p, skel) => (isWalk(p) ? sampleWalk(u, p, skel) : sample(u, p, skel)),
 }

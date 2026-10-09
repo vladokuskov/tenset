@@ -34,8 +34,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "pullover",
+    "params": {
+      "implement": "band"
+    },
     "mapView": "B"
   },
   "cues": [

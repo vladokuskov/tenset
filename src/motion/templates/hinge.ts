@@ -4,7 +4,7 @@ import { centerOfPressure, fk, localToWorld, type FK } from '../fk.ts'
 import { dls } from '../ik.ts'
 import { barbell, cableForce, cableHandle, dumbbell, PLATE_20_RADIUS, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { rack } from '../implements/back.ts'
-import { kettlebell, kettlebellDims } from '../implements/free-weights.ts'
+import { kettlebell, kettlebellDims, PLATE, TRAP_BAR, trapBar } from '../implements/free-weights.ts'
 import { floorSpot } from '../implements/hinge.ts'
 import { add, clamp, DEG, lerp, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, reject, scale, sub, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Side, type Skeleton } from '../skeleton.ts'
@@ -23,12 +23,12 @@ import { memo, type Setup, type Template } from './types.ts'
 // 32 cm, toe-out 14, grip 55 cm (Escamilla 2000); lockout with no hyperextension beyond ~5 deg.
 
 type P = ParamsOf<'hinge'>
-type Kind = 'bar' | 'db' | 'single' | 'cable' | 'kb' | 'back'
+type Kind = 'bar' | 'db' | 'single' | 'cable' | 'kb' | 'back' | 'trap'
 
 export const TOP_KNEE = 3
 export const TOP_HIP = 2
 /** hip flexion at the bottom of a hang-start rep, deg (RDL ~70-90; the single leg reaches about horizontal) */
-export const BOTTOM_HIP: Record<Kind, number> = { bar: 82, db: 82, single: 86, cable: 74, kb: 82, back: 80 }
+export const BOTTOM_HIP: Record<Kind, number> = { bar: 82, db: 82, single: 86, cable: 74, kb: 82, back: 80, trap: 82 }
 /** neutral spine: lumbar and thoracic flexion at the bottom, deg (inside the 10 deg band) */
 export const SPINE = { lumbar: 5, thorax: 6 }
 /** bar and dumbbells slide down the front of the legs: capsule clearance, m */
@@ -126,6 +126,12 @@ export const PINS = { below: 0.03, rack: 0.45, hooks: 1.4 }
  * heel (any closer and its bent knee sticks out past the front thigh), its heel lifted `pitch` deg, toes flat
  */
 export const SPLIT = { x: 0.08, backX: 0.1, behind: 0.06, pitch: 32, floorTol: 40 }
+/**
+ * trap bar: plates per side (kg), and the floor pull's knee flexion at the start (deg). The handles sit beside the
+ * body, so the arms hang plumb, the hips sit lower and the knees bend more than in the conventional pull (knees and
+ * hips together, `lag` as the sumo pull's); the bar stays over the midfoot
+ */
+export const TRAP = { plateKg: 40, knee: 84, lag: 0.4 }
 
 type Ctx = {
   kind: Kind
@@ -174,7 +180,7 @@ const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
 
 function kindOf(p: P): Kind | string {
   const sumoKb = p.implement === 'kettlebell' && p.hold === 'hands' && p.stance === 'wide'
-  if (p.start === 'floor' && p.implement !== 'barbell' && !sumoKb) return `floor start with ${p.implement}`
+  if (p.start === 'floor' && p.implement !== 'barbell' && p.implement !== 'trap_bar' && !sumoKb) return `floor start with ${p.implement}`
   if (p.start === 'pins' && !(p.implement === 'barbell' && p.hold === 'hands' && p.stance !== 'single_leg' && p.stance !== 'split')) return `pins start with ${p.implement} ${p.hold} / ${p.stance}`
   if (p.implement === 'barbell') {
     if (p.hold === 'back_high') return p.start === 'hang' && p.stance !== 'single_leg' && p.stance !== 'split' ? 'back' : `good morning ${p.start} / ${p.stance}`
@@ -188,6 +194,7 @@ function kindOf(p: P): Kind | string {
     if (p.stance === 'single_leg') return p.hold === 'opposite_hand' ? 'single' : `single-leg kettlebell hold ${p.hold}`
     return p.hold === 'hands' && p.stance !== 'split' ? 'kb' : `kettlebell hold ${p.hold} / ${p.stance}`
   }
+  if (p.implement === 'trap_bar') return p.hold === 'sides' && (p.stance === 'hip' || p.stance === 'narrow' || p.stance === 'shoulder') ? 'trap' : `trap bar hold ${p.hold} / ${p.stance}`
   if (p.implement === 'cable') return p.attachment === 'rope' && p.cableHeight === 'low' && p.stance !== 'single_leg' && p.stance !== 'split' ? 'cable' : `cable ${p.attachment ?? 'no attachment'} / ${p.cableHeight}`
   return `implement ${p.implement}`
 }
@@ -295,6 +302,11 @@ function gripsAt(skel: Skeleton, f: FK, ctx: Ctx, phi: number): Grips {
 
 function barPose(ctx: Ctx, g: Grips): ImplementPose {
   return { id: ctx.load!.id, pos: [0, (g.l[1] + g.r[1]) / 2, (g.l[2] + g.r[2]) / 2], rot: qid() }
+}
+
+/** trap bar: the handles in the hands, the frame level */
+function trapPose(ctx: Ctx, g: Grips): ImplementPose {
+  return { id: ctx.load!.id, pos: [0, (g.l[1] + g.r[1]) / 2 - ctx.load!.sites.l.pos[1], (g.l[2] + g.r[2]) / 2], rot: qid() }
 }
 
 /** two hands on the kettlebell's handle, the bell hanging below */
@@ -408,6 +420,7 @@ function barToShins(skel: Skeleton, f: FK, ctx: Ctx, g: Grips): number {
 }
 
 function handleAxis(ctx: Ctx, g: Grips, side: Side): V3 {
+  if (ctx.kind === 'trap') return [0, 0, 1]
   if (ctx.kind !== 'cable') return [1, 0, 0]
   return siteWorld(ctx.load!, ropePose(ctx, g), side).axis!
 }
@@ -429,7 +442,7 @@ function hangArm(skel: Skeleton, q: Float64Array, side: Side, dir: V3, elbow = 4
 
 /** elbow direction for the hanging arms: back and out on a bar; hands held in towards the midline point the elbows
  * out, so the carrying angle swings the forearms forward instead of tucking the elbows into the waist */
-const POLE: Record<Kind, [number, number]> = { bar: [0.75, -0.65], db: [1, -0.25], single: [1, -0.25], cable: [1, -0.3], kb: [0.92, -0.38], back: [0.4, -0.7] }
+const POLE: Record<Kind, [number, number]> = { bar: [0.75, -0.65], db: [1, -0.25], single: [1, -0.25], cable: [1, -0.3], kb: [0.92, -0.38], back: [0.4, -0.7], trap: [0.8, -0.6] }
 
 function armTo(skel: Skeleton, q: Float64Array, ctx: Ctx, g: Grips, side: Side) {
   const lat = side === 'l' ? 1 : -1
@@ -467,6 +480,7 @@ function midfoot(skel: Skeleton, foot: FootTarget): V3 {
 function implementPoses(skel: Skeleton, q: Float64Array, ctx: Ctx, g: Grips): ImplementPose[] {
   if (ctx.kind === 'bar') return ctx.rack ? [barPose(ctx, g), ctx.rack] : [barPose(ctx, g)]
   if (ctx.kind === 'back') return [barPose(ctx, g)]
+  if (ctx.kind === 'trap') return [trapPose(ctx, g)]
   if (ctx.kind === 'kb') return [kbPose(ctx, g)]
   if (ctx.kind === 'cable') return [ropePose(ctx, g), { id: 'stack', pos: [0, 0, 0], rot: qid() }]
   const f = fk(skel, q)
@@ -497,7 +511,7 @@ function loads(ctx: Ctx, g: Grips) {
 /** sideways and forward offset of the balance point from its support, m */
 function offset(skel: Skeleton, q: Float64Array, ctx: Ctx, g: Grips): [number, number] {
   const mid = oneFoot(ctx) ? midfoot(skel, ctx.feet[0]) : ctx.stance.midfoot
-  if (ctx.kind === 'bar') return [0, barPose(ctx, g).pos[2] - mid[2]]
+  if (ctx.kind === 'bar' || ctx.kind === 'trap') return [0, (g.l[2] + g.r[2]) / 2 - mid[2]]
   const forces = []
   if (ctx.kind === 'cable') {
     const pose = ropePose(ctx, g)
@@ -621,7 +635,7 @@ function palmFor(p: P, kind: Kind) {
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const kind = kindOf(p)
-  if (!['bar', 'db', 'single', 'cable', 'kb', 'back'].includes(kind)) throw new Error(`hinge: variant not implemented yet (${kind})`)
+  if (!['bar', 'db', 'single', 'cable', 'kb', 'back', 'trap'].includes(kind)) throw new Error(`hinge: variant not implemented yet (${kind})`)
   const k = kind as Kind
   const tempo = p.tempo ?? DEFAULT_TEMPO
   const side: Side = p.side === 'left' ? 'l' : 'r'
@@ -679,6 +693,21 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
       // the bell stands on the floor between the heels, the arms hang straight down to its handle
       ctx.floorY = kettlebellDims(bell.mass).base + bell.sites.handle.pos[1] + 0.001
       ctx.overMid = true
+    }
+  } else if (k === 'trap') {
+    // the handles at the sides: the arms hang plumb from the shoulders, the bar over the midfoot
+    const bar = trapBar({ id: 'trap', plateKg: TRAP.plateKg })
+    ctx.load = bar
+    ctx.gripX = TRAP_BAR.handleX
+    implements_.push(bar)
+    contacts.push(grip(bar.id, 'l', 'l'), grip(bar.id, 'r', 'r'))
+    ctx.setup.balance = { point: { implement: bar.id }, over: 'midfoot', tol: 0.025 }
+    ctx.phiAt = () => 0
+    if (p.start === 'floor') {
+      ctx.floorY = PLATE[20].r + bar.sites.l.pos[1] + 0.001
+      // the hips fold as deep as the conventional pull's floor start (thighs into the belly, ~20 mm past the 15 mm
+      // tolerance), so the same soft-tissue allowance applies
+      ctx.setup.tolerances = { body: FLOOR_START_TOL }
     }
   } else if (k === 'back') {
     const bar = barbell({ gripWidth: p.gripWidth * skel.data.shoulderWidth, plateKg: BAR_PLATES })
@@ -755,7 +784,12 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     }
     const hipFor = (kb: number) => root1d((hb) => solveFrame(skel, ctx, 1, kb, hb).g.l[1] - ctx.floorY!, 40, 130, { tol: 1e-6, scan: 9 }).x
     ctx.armFloor = (s) => ramp((s - FLOOR_KNEE_AT) / (1 - FLOOR_KNEE_AT))
-    if (sumo) {
+    if (k === 'trap') {
+      const top = TOP_KNEE, kb = TRAP.knee
+      ctx.kneeAt = (s) => top + (kb - top) * lerp(s, s * s, TRAP.lag)
+      const hb = hipFor(kb)
+      ctx.hipAt = (s) => TOP_HIP + (hb - TOP_HIP) * s
+    } else if (sumo) {
       // the upright trunk keeps the shoulders over the bar on their own: the bar stays resting on the shins (the
       // kettlebell hangs between them)
       ctx.armFloor = undefined

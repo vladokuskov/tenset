@@ -34,8 +34,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "floor-core",
+    "params": {
+      "kind": "bicycle"
+    },
     "mapView": "F"
   },
   "cues": [

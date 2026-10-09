@@ -36,12 +36,20 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "v_bar",
+      "cableHeight": "high",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
     "mapView": "B"
   },
   "cues": [
-    "Hold the V-bar with thumbs on top and palms angled in",
+    "Hold the V-bar handles with your hands close together",
     "Lean forward slightly and tuck your elbows in",
     "Press the bar down toward your thighs until your elbows lock",
     "Let it rise to chest height without moving your elbows"

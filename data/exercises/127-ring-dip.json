@@ -41,8 +41,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "dip",
+    "params": {
+      "implement": "rings"
+    },
     "mapView": "F"
   },
   "cues": [

@@ -36,8 +36,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "floor-core",
+    "params": {
+      "kind": "v_up"
+    },
     "mapView": "F"
   },
   "cues": [

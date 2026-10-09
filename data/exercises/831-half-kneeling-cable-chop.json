@@ -40,8 +40,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "rotation",
+    "params": {
+      "attachment": "rope",
+      "posture": "kneeling"
+    },
     "mapView": "F"
   },
   "cues": [

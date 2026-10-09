@@ -12,6 +12,7 @@ import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { hipMidLocal, setPelvis, stanceWidth } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
+import { hackCalf } from './calf/hack.ts'
 
 // Calf raise, root space: the balls of the feet stay on the support edge and the foot pitches about them, so the
 // ankle travels from a stretch below the edge (dorsiflexion) to a high heel raise (plantarflexion) while the knees
@@ -140,7 +141,10 @@ type LongSit = {
   poses: ImplementPose[]
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | Press | Tib | Perch | LongSit }
+/** on the hack squat sled (calf/hack.ts): samples itself */
+type HackSled = { kind: 'hack'; sample: (c: number) => Pose }
+
+type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | Press | Tib | Perch | LongSit | HackSled }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
@@ -205,6 +209,7 @@ function unsupported(p: P): string | null {
     if (p.machine === 'calf_machine' && p.posture === 'standing' && p.stance === 'hip') return null
     if (p.machine === 'seated_calf' && p.posture === 'seated') return null
     if (p.machine === 'leg_press') return null
+    if (p.machine === 'hack_squat' && p.posture === 'standing' && p.stance === 'hip') return null
     return `machine ${p.machine}/${p.posture}`
   }
   if ((p.implement === 'bodyweight' || p.implement === 'dumbbell') && p.stance === 'single_leg' && p.support === 'wall' && p.platform === 'step') return null
@@ -1107,6 +1112,10 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.support === 'bench') return donkeyContext(p, skel, tempo)
   if (p.machine === 'seated_calf') return seatedContext(p, skel, tempo)
   if (p.machine === 'leg_press') return pressContext(skel, tempo)
+  if (p.machine === 'hack_squat') {
+    const h = hackCalf(skel, tempo)
+    return { tempo, setup: h.setup, v: { kind: 'hack', sample: h.sample } }
+  }
   if (p.implement === 'dumbbell' && p.posture === 'seated') return perchContext(p, skel, tempo)
   return standContext(p, skel, tempo)
 })
@@ -1118,6 +1127,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   if (v.kind === 'tib') return sampleTib(c, skel, ctx, v)
   if (v.kind === 'seated') return sampleSeated(c, skel, ctx, v)
   if (v.kind === 'press') return samplePress(c, skel, ctx, v)
+  if (v.kind === 'hack') return v.sample(c)
   if (v.kind === 'bar') return sampleBar(c, skel, ctx, v)
   if (v.kind === 'perch') return samplePerch(c, skel, ctx, v)
   if (v.kind === 'longsit') return sampleLong(c, skel, ctx, v)

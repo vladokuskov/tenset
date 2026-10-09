@@ -46,8 +46,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "barbell",
+      "torsoAngle": 88,
+      "grip": "pronated",
+      "gripWidth": 1.4,
+      "start": "floor"
+    },
     "mapView": "B"
   },
   "cues": [

@@ -49,8 +49,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hinge",
+    "params": {
+      "implement": "trap_bar",
+      "hold": "sides",
+      "grip": "neutral",
+      "start": "floor"
+    },
     "mapView": "B"
   },
   "cues": [

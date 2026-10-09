@@ -3,6 +3,7 @@ import { bodyCapsules, capsuleSolidClearance, placeParts, type Capsule } from '.
 import { fk, type FK } from '../fk.ts'
 import type { ImplementSpec } from '../implements.ts'
 import { backExtensionBench, palmRests } from '../implements/hinge.ts'
+import { ghd } from '../implements/stations.ts'
 import { add, DEG, lerp, norm, qfromBasis, qid, qmul, qrot, scale, type Quat, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Side, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
@@ -30,7 +31,7 @@ const NECK = { neck: 6, head: 4 }
  * crossed arms, thorax2 frame (X left, Y up the spine, Z forward): palm centres on the opposite shoulders, the right
  * forearm crossing over the left
  */
-const PALMS: Record<Side, V3> = { l: [-0.13, 0.1, 0.23], r: [0.13, 0.065, 0.28] }
+export const PALMS: Record<Side, V3> = { l: [-0.13, 0.1, 0.23], r: [0.13, 0.065, 0.28] }
 
 type Ctx = {
   tempo: Tempo
@@ -40,8 +41,81 @@ type Ctx = {
   /** pelvis tilt of the legs' line (hip flexion 0) */
   tilt: number
   bench: ImplementSpec
+  /** where the bench sits (the GHD is fitted in its own frame, plate face at z = 0) */
+  benchAt: V3
   palms: ImplementSpec
 }
+
+// ---------- GHD (90-degree back extension) ----------
+
+/** contact sinks on the GHD, m: thighs into the round pad, lower shins into the rollers, soles into the plate */
+const GHD_SINK = { pad: 0.008, roller: 0.004, plate: 0.003 }
+/** the round pad's front edge sits this far short of the hip joints (just below the hip crease), m; the rollers this
+ * far up the shins from the ankle joints */
+const GHD_FIT = { nose: 0.24, roller: 0.06 }
+/**
+ * Folding over the round pad, the lower belly and the fronts of the hips wrap its nose (padded; soft tissue, lead
+ * decision)
+ */
+const GHD_REST_TOL = 30
+
+function legsLine(skel: Skeleton, q: Float64Array, tilt: number) {
+  setPelvis(skel, q, [0, 1, 0], tilt)
+  setDofs(skel, q, { 'knee_*.flex': KNEE, 'ankle_*.df': -KNEE / 2 })
+}
+
+/**
+ * Horizontal body: the legs in one line at the pad's height, the GHD fitted round them (plate on the soles, round pad
+ * under the upper thighs, the rollers above and below the lower shins). `hip` is the point the pad's front edge sits
+ * `nose` m short of (the glute-ham raise passes the knees, a negative nose puts the pad past them), `onPad` the regions
+ * the pad's top rests on. Returns the GHD in its own frame and where it sits.
+ */
+export function fitGhd(skel: Skeleton, f: FK, hip: V3, ankle: V3, nose = GHD_FIT.nose, onPad = /^thigh_/): { spec: ImplementSpec; at: V3 } {
+  const caps = bodyCapsules(skel, f)
+  const plateZ = Math.min(...caps.filter(REGION(/^foot_/)).map((c) => Math.min(c.a[2], c.b[2]) - c.r)) + GHD_SINK.plate
+  const at: V3 = [0, 0, plateZ]
+  const o = { padTop: 0.98, reach: hip[2] - plateZ - nose, ankle: { z: ankle[2] - plateZ + GHD_FIT.roller, y: ankle[1] }, gap: 0.08 }
+  const clear = (part: number, test: (c: Capsule) => boolean) => {
+    const sd = placeParts(ghd(o), { id: '', pos: at, rot: qid() })[part]
+    return Math.min(...caps.filter(test).map((c) => capsuleSolidClearance(c, sd)))
+  }
+  o.padTop = root1d((y) => ((o.padTop = y), Math.min(clear(0, REGION(onPad)), clear(1, REGION(onPad))) + GHD_SINK.pad), 0.7, 1.3, { tol: 1e-7 }).x
+  o.gap = root1d((g) => ((o.gap = g), Math.min(clear(3, REGION(/^shank_/)), clear(4, REGION(/^shank_/))) + GHD_SINK.roller), 0.02, 0.2, { tol: 1e-7 }).x
+  return { spec: ghd(o), at }
+}
+
+function ghdContext(skel: Skeleton, tempo: Tempo): Ctx {
+  const tilt = 90
+  const q = zeroQ(skel)
+  legsLine(skel, q, tilt)
+  const f = fk(skel, q)
+  const feet: FootTarget[] = (['l', 'r'] as Side[]).map((side) => ({ side, rot: f.rot[skel.seg[`foot_${side}`]], ankle: f.pos[skel.seg[`foot_${side}`]] }))
+  const hip = scale(add(f.pos[skel.seg.femur_l], f.pos[skel.seg.femur_r]), 0.5)
+  const ankle = scale(add(feet[0].ankle, feet[1].ankle), 0.5)
+  const { spec, at } = fitGhd(skel, f, hip, ankle)
+  const ctx: Ctx = { tempo, feet, hip, tilt, bench: spec, benchAt: at, palms: palmRests({ id: 'palms', ...PALMS }), setup: { implements: [], contacts: [], tempo, symmetric: false } }
+  ctx.setup = {
+    implements: [spec, ctx.palms],
+    contacts: [...plantedFeet(skel, feet), ...palmContacts],
+    tempo,
+    symmetric: false,
+    rests: [{ implement: spec.id, regions: ['thigh_l', 'thigh_r', 'trunk'], tol: GHD_REST_TOL }],
+  }
+  return ctx
+}
+
+export function plantedFeet(skel: Skeleton, feet: FootTarget[]): Contact[] {
+  const out: Contact[] = []
+  for (const foot of feet) {
+    for (const site of ['heel', 'ball']) {
+      const name = `${site}_${foot.side}`
+      out.push({ site: name, kind: 'planted', target: { world: add(foot.ankle, qrot(foot.rot, skel.data.sites[name].local)) } })
+    }
+  }
+  return out
+}
+
+const palmContacts: Contact[] = [{ site: 'grip_l', kind: 'grip', target: { implement: 'palms', grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: 'palms', grip: 'r' } }]
 
 function variant(p: P): string | null {
   if (p.implement !== 'bodyweight') return `${p.implement} load`
@@ -71,7 +145,8 @@ function hands(skel: Skeleton, f: FK): Record<Side, { pos: V3; hand: Quat }> {
   return out
 }
 
-function arms(skel: Skeleton, q: Float64Array) {
+/** arms crossed, palms on the opposite shoulders (also the glute-ham raise's, leg-curl/ghr.ts) */
+export function arms(skel: Skeleton, q: Float64Array) {
   const f = fk(skel, q)
   const h = hands(skel, f)
   const t = f.rot[skel.seg.thorax2]
@@ -95,6 +170,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = variant(p)
   if (why) throw new Error(`back-extension: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.support === 'ghd') return ghdContext(skel, tempo)
   const tilt = 90 - p.benchAngle
   const u: V3 = [0, Math.cos(tilt * DEG), Math.sin(tilt * DEG)]
   const n: V3 = [0, -Math.sin(tilt * DEG), Math.cos(tilt * DEG)]
@@ -128,7 +204,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   fit('roller', 2, REGION(/^shank_/), SINK.roller)
 
   const ctx: Ctx = {
-    tempo, feet, hip, tilt, bench: bench(), palms: palmRests({ id: 'palms', ...PALMS }),
+    tempo, feet, hip, tilt, bench: bench(), benchAt: [0, 0, 0], palms: palmRests({ id: 'palms', ...PALMS }),
     setup: { implements: [], contacts: [], tempo, symmetric: false },
   }
   const contacts: Contact[] = []
@@ -147,7 +223,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const s = 1 - phaseAt(u, ctx.tempo).c
   const fr = solveFrame(skel, ctx, lerp(TOP_HIP, BOTTOM_HIP, s))
-  return { q: fr.q, implements: [{ id: ctx.bench.id, pos: [0, 0, 0], rot: qid() }, fr.palms], contacts: ctx.setup.contacts }
+  return { q: fr.q, implements: [{ id: ctx.bench.id, pos: ctx.benchAt, rot: qid() }, fr.palms], contacts: ctx.setup.contacts }
 }
 
 export const backExtension: Template<P> = {

@@ -43,8 +43,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "vertical-press",
+    "params": {
+      "implement": "landmine",
+      "posture": "standing",
+      "grip": "neutral",
+      "stance": "split"
+    },
     "mapView": "F"
   },
   "cues": [

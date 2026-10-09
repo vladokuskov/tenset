@@ -42,8 +42,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "landmine",
+      "hold": "goblet"
+    },
     "mapView": "F"
   },
   "cues": [

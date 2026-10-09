@@ -35,8 +35,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "pullover",
+    "params": {
+      "implement": "cable",
+      "attachment": "straight_bar"
+    },
     "mapView": "B"
   },
   "cues": [

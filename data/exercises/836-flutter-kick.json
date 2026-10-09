@@ -36,8 +36,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "leg-raise",
+    "params": {
+      "posture": "lying_supine",
+      "topHipAngle": 32,
+      "bottomHipAngle": 10
+    },
     "mapView": "F"
   },
   "cues": [

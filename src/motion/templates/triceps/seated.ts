@@ -18,7 +18,7 @@ import { armDir, footContacts, lowest, mirrorArm, setOverheadShoulder, type Base
  * direction; its roll (the elbows' bend plane) is solved so both hands stay on the one dumbbell, and the forearm turn
  * and wrist follow the dumbbell's lean.
  */
-const SEATED = {
+export const SEATED = {
   hip: [0, 0.56, 0] as V3,
   sink: 0.006,
   tilt: -4,
@@ -64,7 +64,7 @@ const HAND_IN_DB: Quat = (() => {
   return qfromBasis(axis, palm)
 })()
 
-function seatedBase(skel: Skeleton, feet?: FootTarget[]) {
+export function seatedBase(skel: Skeleton, feet?: FootTarget[]) {
   const q = zeroQ(skel)
   setDofs(skel, q, { 'lumbar.flex': 2, 'thorax.flex': 1, 'neck.flex': 8, 'head.flex': 2, 'clavicle_*.prot': 2, 'clavicle_*.elev': 6, 'grip_*.close': 1 })
   setPelvis(skel, q, SEATED.hip, SEATED.tilt)

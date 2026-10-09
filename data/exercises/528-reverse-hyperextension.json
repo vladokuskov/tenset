@@ -42,13 +42,17 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hip-kickback",
+    "params": {
+      "implement": "bodyweight",
+      "posture": "lying_prone",
+      "support": "bench"
+    },
     "mapView": "B"
   },
   "cues": [
     "Lie face down with your hips at the bench edge and legs hanging",
-    "Hold the bench sides to keep your chest down",
+    "Hold the bench handles to keep your chest down",
     "Lift your straight legs until they line up with your body",
     "Squeeze your glutes at the top and lower without swinging"
   ],

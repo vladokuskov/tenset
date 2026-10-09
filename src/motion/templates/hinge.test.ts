@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
-import { kettlebellDims } from '../implements/free-weights.ts'
+import { kettlebellDims, PLATE, TRAP_BAR } from '../implements/free-weights.ts'
 import { PLATE_20_RADIUS, siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
-import { BOTTOM_HIP, KB, PINS, SPINE, SPLIT, TOP_HIP, TOP_KNEE } from './hinge.ts'
+import { BOTTOM_HIP, KB, PINS, SPINE, SPLIT, TOP_HIP, TOP_KNEE, TRAP } from './hinge.ts'
 import { getTemplate, parseParams } from './index.ts'
 
 const skel = testSkeleton()
@@ -26,7 +26,7 @@ const legClear = (b: Baked, i: number, id: string) => {
 
 describe('hinge template', () => {
   it('covers every hinge record in the family', () => {
-    expect([...baked.keys()].sort()).toEqual([501, 508, 509, 510, 513, 519, 520, 521, 522, 523, 524, 525, 542])
+    expect([...baked.keys()].sort()).toEqual([501, 508, 509, 510, 513, 516, 517, 519, 520, 521, 522, 523, 524, 525, 542])
   })
 
   it.each([...baked.keys()])('%i: feet planted, hands on the load, finite frames, seamless loop', (id) => {
@@ -228,8 +228,47 @@ describe('hinge template', () => {
     for (let i = 0; i < b.frames; i += 3) expect(legClear(b, i, 'kb')).toBeGreaterThan(-0.003)
   })
 
+  it('trap bar: handles beside the body, arms plumb, the bar over the midfoot all rep', () => {
+    for (const id of [516, 517]) {
+      const b = get(id)
+      for (let i = 0; i < b.frames; i += 4) {
+        const f = fk(skel, frameQ(b, i))
+        const bar = frameImplements(b, i).find((p) => p.id === 'trap')!.pos
+        const mid = (sitePos(skel, f, 'midfoot_l')[2] + sitePos(skel, f, 'midfoot_r')[2]) / 2
+        expect(Math.abs(bar[2] - mid)).toBeLessThan(0.025)
+        for (const s of ['l', 'r'] as const) {
+          const grip = sitePos(skel, f, `grip_${s}`)
+          expect(Math.abs(Math.abs(grip[0]) - TRAP_BAR.handleX)).toBeLessThan(0.006)
+          // plumb arms: the grip straight below the shoulder joint fore and aft
+          expect(Math.abs(grip[2] - segPos(skel, f, `humerus_${s}`)[2])).toBeLessThan(0.03)
+        }
+      }
+    }
+  })
+
+  it('trap-bar deadlift: plates on the floor at the bottom, knees and hips bent together (squat-like start)', () => {
+    const b = get(516)
+    const bar = frameImplements(b, at(b, 0.625)).find((p) => p.id === 'trap')!.pos
+    expect(bar[1]).toBeCloseTo(PLATE[20].r, 2)
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeCloseTo(TRAP.knee, 0)
+    // the handles sit low (high handles, 20 kg plates): with plumb arms the hips fold ~114 deg, a little less than the
+    // conventional pull's ~120 on this figure
+    expect(dof(b, 0.625, 'hip_l.flex')).toBeGreaterThan(95)
+    expect(dof(b, 0.625, 'hip_l.flex')).toBeLessThan(dof(get(508), 0.625, 'hip_l.flex'))
+    expect(dof(b, 0, 'knee_l.flex')).toBeLessThan(TOP_KNEE + 0.5)
+  })
+
+  it('trap-bar RDL: knees held near kneeAngle while the hips flex to BOTTOM_HIP', () => {
+    const b = get(517)
+    expect(dof(b, 0.625, 'hip_l.flex')).toBeCloseTo(BOTTOM_HIP.trap, 0)
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeCloseTo(Number(b.params.kneeAngle), 0)
+  })
+
   it('throws for variants it does not draw yet', () => {
     const t = getTemplate('hinge')
+    for (const raw of [{ implement: 'trap_bar', hold: 'hands' }, { implement: 'trap_bar', hold: 'sides', stance: 'single_leg' }]) {
+      expect(() => t.sample(0, parseParams('hinge', raw), skel)).toThrow(/variant not implemented yet/)
+    }
     for (const raw of [{ implement: 'dumbbell', start: 'floor', hold: 'front_of_thighs' }, { implement: 'barbell', stance: 'single_leg' }, { implement: 'cable', attachment: 'single_handle' }, { implement: 'kettlebell', stance: 'split' }, { implement: 'dumbbell', start: 'pins', hold: 'front_of_thighs' }]) {
       expect(() => t.sample(0, parseParams('hinge', raw), skel)).toThrow(/variant not implemented yet/)
     }
