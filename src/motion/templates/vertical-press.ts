@@ -16,6 +16,7 @@ import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic, secant } from './solve.ts'
 import { makeStance, plantedContacts, setPelvis, stand, stanceWidth, type StanceSetup } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
+import { landmineContext, sampleLandmine, type LandmineCtx } from './press-landmine.ts'
 
 // Vertical press, implement driver: the bar (or handle) path is keyed and the arms are solved onto it.
 // Standing barbell: the bar rises straight up in front of the face, then drifts back over the midfoot once past the
@@ -720,13 +721,19 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   return 'stance' in v ? sampleStand(u, skel, ctx, v) : sampleSeated(u, skel, ctx, v)
 }
 
+/** landmine press, one hand (press-landmine.ts): standing staggered or half kneeling */
+const landmineCtx = memo((p: P, skel: Skeleton): LandmineCtx => {
+  if (p.laterality !== 'unilateral' || (p.posture !== 'standing' && p.posture !== 'kneeling')) throw new Error(`vertical-press: variant not implemented yet (landmine ${p.posture} ${p.laterality})`)
+  return landmineContext({ hands: 'one', base: p.posture === 'kneeling' ? 'half_kneel' : 'split', side: p.side }, skel, p.tempo ?? DEFAULT_TEMPO)
+})
+
 export const verticalPress: Template<P> = {
   id: 'vertical-press',
   driver: 'implement',
   params: SCHEMAS['vertical-press'],
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
-  sample,
+  setup: (p, skel) => (p.implement === 'landmine' ? landmineCtx(p, skel).setup : context(p, skel).setup),
+  sample: (u, p, skel) => (p.implement === 'landmine' ? sampleLandmine(u, skel, landmineCtx(p, skel)) : sample(u, p, skel)),
 }
 
 /** internals for the unit tests */

@@ -4,6 +4,7 @@ import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { cableHandle, pullupBar, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { around, band, bandAnchor, bandNode, bandPose, segmentPose } from '../implements/index.ts'
 import { drape, fistContacts, fistGrips, fistId, fistPoses } from './band-pose.ts'
+import { ringsContext, sampleRings, type RingsHang } from './vertical-pull/rings.ts'
 import { matClearance, SINK } from './core/floor.ts'
 import { floorMat } from '../implements/shared.ts'
 import { dls } from '../ik.ts'
@@ -30,6 +31,7 @@ import { memo, type Setup, type Template } from './types.ts'
 // Band pulldown (332, implement band, kneeling): tall kneeling on a mat facing a wall anchor high in front, an end of
 // the band in each fist (pronated); the fists travel on a line from arms up and forward towards the anchor to beside
 // the upper chest, elbows driving down to the sides, the chest lifting a little as in the seated pulldown.
+// Ring pull-up (333, implement rings): the pull-up hanging from gymnastic rings, the palms turning in (vertical-pull/rings.ts).
 
 type P = ParamsOf<'vertical-pull'>
 
@@ -93,7 +95,7 @@ type Seated = {
   /** single-arm pulldown: the resting hand's grip-site target on the thigh pad */
   rest?: V3
 }
-type Ctx = { tempo: Tempo; setup: Setup; v: Hang | Seated | Kneel }
+type Ctx = { tempo: Tempo; setup: Setup; v: Hang | Seated | Kneel | RingsHang }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 
@@ -568,6 +570,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if ((p.implement === 'bodyweight' || p.implement === 'band') && p.posture === 'hanging') return hangContext(p, skel, tempo)
   if (p.implement === 'band' && p.posture === 'kneeling') return kneelContext(p, skel, tempo)
+  if (p.implement === 'rings' && p.posture === 'hanging' && p.laterality === 'bilateral' && p.range !== 'scapular') return ringsContext(p, skel, tempo)
   if (p.implement === 'machine' && p.machine === 'assisted_pullup') return hangContext(p, skel, tempo)
   if ((p.implement === 'cable' || p.machine === 'lat_pulldown') && p.posture === 'seated') return seatedContext(p, skel, tempo)
   throw new Error(`vertical-pull: variant not implemented yet (${p.implement}/${p.machine ?? '-'}/${p.posture})`)
@@ -576,6 +579,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   if (ctx.v.kind === 'kneel') return sampleKneel(u, p, skel, ctx, ctx.v)
+  if (ctx.v.kind === 'rings') return sampleRings(u, p, skel, ctx, ctx.v)
   return ctx.v.kind === 'hang' ? sampleHang(u, p, skel, ctx, ctx.v) : sampleSeated(u, p, skel, ctx, ctx.v)
 }
 

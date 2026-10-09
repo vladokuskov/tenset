@@ -62,8 +62,22 @@ function ezAttachment(kit: Kit, spec: ImplementSpec): Record<string, GripSocket>
   }
 }
 
+/** angled pushdown V-bar: a stem to a hub, two knurled handles sloping down and out from it (implements/arms.ts pushdownV) */
+function angledV(kit: Kit, stem: Cyl, handles: Cyl[]) {
+  kit.rod(stem.a, stem.b, stem.r, 'steel', 16)
+  kit.sphere(stem.b, stem.r + 0.006, 'steel')
+  for (const h of handles) {
+    const a = vec(h.a), b = vec(h.b)
+    const d = b.clone().sub(a).normalize()
+    kit.rod(stem.b, a, 0.009, 'steel', 12)
+    kit.knurl(a, b, h.r)
+    kit.rod(b, b.clone().addScaledVector(d, 0.01), h.r + 0.004, 'steel', 20)
+  }
+}
+
 function vBar(kit: Kit, spec: ImplementSpec) {
   const [stem, ...handles] = cyls(spec)
+  if (handles.some((h) => Math.abs(h.a[0] - h.b[0]) + Math.abs(h.a[1] - h.b[1]) > 1e-6)) return angledV(kit, stem, handles)
   const top = -0.04
   kit.rod(stem.a, [0, top, 0], stem.r, 'steel', 16)
   const hx = Math.abs(handles[0].a[0])

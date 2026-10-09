@@ -44,8 +44,10 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "horizontal-press",
+    "params": {
+      "benchAngle": -20
+    },
     "mapView": "F"
   },
   "cues": [
@@ -62,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Decline set-up reads right: head 0.15 m below the hips, bar from 1.24 m to the low chest (touch, -4 mm) and back over the shoulders (bar z equals shoulder z at lockout), elbow 134 deg at the bottom like flat 101 (137). Three problems. The record has no elbowFlare, so the default 55 applies where flat 101 uses 45, which puts shoulder horizontal abduction at 44.36 of the 45 deg gate (99%). The rack base visibly overlaps the decline bench base rail in the side view (a known fixed-vs-fixed follow-up, same class as 531). In the hero the near plate covers the head and upper chest at t=0.5 to 0.625."
   }
 }

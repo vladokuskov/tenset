@@ -7,6 +7,9 @@ export const horizontalPress: SceneSpec = {
     // standing cable or band press: front three-quarter at chest height, as the standing cable fly, so the chest and
     // both arms read between the towers (or in front of the band's post)
     if (params.posture === 'standing') return { az: -35, elev: 0.22 }
+    // decline: the raised legs hide the chest from past the feet, so from nearer the side and higher, where the chest,
+    // the bar path and the leg hooks all read
+    if (Number(params.benchAngle) < 0) return { az: -52, elev: 0.66 }
     // squeeze press: further round to the side, so the chest shows under the dumbbells pressed together over it
     if (params.squeeze) return { az: -60, elev: 0.45 }
     // lying: from past the feet on the lifter's right, raised, so the chest and both arms read between the plates

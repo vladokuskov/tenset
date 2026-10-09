@@ -12,6 +12,7 @@ Approved by the owner (2026-10-03). Growing the catalog from 106 to 300 (decisio
 - Totals: A 65, B 75, C 54.
 - Wave 3a (2026-10-08) animated 48 of the 65 A rows. The other 17 (116, 117, 122, 135, 233, 319, 421, 732, 735, 737, 739, 740, 745, 748, 826, 827, 831) move to 3b/3c; reasons are in `docs/PLAN.md` "Wave 3a".
 - Wave 3b (2026-10-09) animated 75 of 79 (the B tier plus 135, 421, 732 and 827). Deferred: 318, 532, 535 and 730 (PLAN.md "Wave 3b"). The other 3a leftovers wait for 3c.
+- Wave 3c (2026-10-09) animated 66 of 68 (the C tier, the 3a prop leftovers and 318). 316 and 427 stay cards, as do 532, 535 and 730 (PLAN.md "Wave 3c").
 
 ## New templates (tier C)
 

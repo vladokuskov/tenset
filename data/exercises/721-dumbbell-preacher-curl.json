@@ -37,8 +37,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "seated",
+      "support": "preacher"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -55,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: The humerus is perfectly still (elev 67.1, rot 0, upper arm to pad 0.3 mm on every frame), elbow 15 to 120, and the free hand lies flat and relaxed on the pad (close-up checked). The one issue is that the working elbow sits at x -0.253 on a 0.28 m half-width pad, so about 40% of the upper arm hangs over the pad edge and the forearm drops beside the pad in the hero."
   }
 }

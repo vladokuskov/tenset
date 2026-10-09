@@ -10,9 +10,10 @@ import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose
 import { DEFAULT_TEMPO, loopDuration, phaseAt, type Tempo } from '../timing.ts'
 import type { ParamsOf } from './schemas.ts'
 import { SCHEMAS } from './schemas.ts'
-import { hipMidLocal, hipsFor, makeStance, plantedContacts, setPelvis, stanceWidth, stand, standBalanced, type StanceSetup } from './standing.ts'
+import { hipMidLocal, hipsFor, makeStance, plantedContacts, setPelvis, stanceWidth, stand, standBalanced, type StanceName, type StanceSetup } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
 import { kbGoblet, kbGobletArms, kbGobletPose, kbRackArmPairs, kbRackInHand, kbRackPair, kbRackPoses } from './squat/holds.ts'
+import { isVariant, variant } from './squat/variants.ts'
 
 // Squat family. Standing variants key knee flexion and ankle dorsiflexion by depth; the hips follow from the planted
 // feet (knees bend in the plane of the toes) and the trunk lean is solved each frame so the bar stays over the
@@ -165,7 +166,10 @@ type Press = {
   free?: 'l' | 'r'
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Press }
+/** tier C variants (squat/variants.ts) sample themselves */
+type Extra = { kind: 'extra'; sample: (u: number) => Pose }
+
+type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Press | Extra }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 
@@ -198,8 +202,8 @@ function rackContacts(id: string): Contact[] {
 function standContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const smith = p.implement === 'smith'
   const railZ = smith ? 0 : undefined
-  const heels = p.heelsElevated ? heelStance(skel, stanceWidth(skel, p.stance), p.toeOut) : undefined
-  const stance = heels?.stance ?? makeStance(skel, stanceWidth(skel, p.stance), p.toeOut, smith ? SMITH_FEET[p.footPosition] : 0)
+  const heels = p.heelsElevated ? heelStance(skel, stanceWidth(skel, p.stance as StanceName), p.toeOut) : undefined
+  const stance = heels?.stance ?? makeStance(skel, stanceWidth(skel, p.stance as StanceName), p.toeOut, smith ? SMITH_FEET[p.footPosition] : 0)
   const contacts: Contact[] = plantedContacts(skel, stance)
   const impls: ImplementSpec[] = []
   const v: Stand = { kind: 'stand', stance, holdKey: 'none', topDf: TOP_ANKLE }
@@ -706,7 +710,7 @@ function pressContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const up: V3 = [0, Math.cos(a), -Math.sin(a)]
   // sled frame: X across, Y = plate normal towards the lifter, Z up the plate
   const sledRot = qfromBasis([1, 0, 0], neg(d))
-  const half = stanceWidth(skel, p.stance) / 2
+  const half = stanceWidth(skel, p.stance as StanceName) / 2
   const shift = pressShift(skel)
   const work: 'l' | 'r' = p.side === 'left' ? 'l' : 'r'
   const one = p.laterality === 'unilateral'
@@ -810,6 +814,10 @@ function samplePress(u: number, skel: Skeleton, ctx: Ctx, v: Press): Pose {
 }
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
+  if (isVariant(p)) {
+    const x = variant(p, skel)
+    return { tempo: x.tempo, setup: x.setup, v: { kind: 'extra', sample: x.sample } }
+  }
   const why = unsupported(p)
   if (why) throw new Error(`squat: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? (p.box ? BOX_TEMPO : DEFAULT_TEMPO)
@@ -818,6 +826,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
+  if (ctx.v.kind === 'extra') return ctx.v.sample(u)
   return ctx.v.kind === 'press' ? samplePress(u, skel, ctx, ctx.v) : sampleStand(u, p, skel, ctx, ctx.v)
 }
 

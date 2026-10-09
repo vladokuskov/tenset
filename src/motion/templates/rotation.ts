@@ -7,6 +7,11 @@ import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Side,
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { band, bandAnchor, bandGrip, bandPose, poseHandle } from '../implements/bands.ts'
 import { stackSpec } from './core/cable.ts'
+import { floorMat } from '../implements/shared.ts'
+import { footContacts, legToward, MAT_TOP } from './core/floor.ts'
+import { landmineContext, sampleLandmine, type Landmine } from './core/landmine.ts'
+import { base as kneelBase, kneel } from './floor-core/quadruped.ts'
+import { ROPE_IDS, ropeContacts, ropeImplements, ropePoses } from './triceps/rope.ts'
 import { sampleTwist, twistContext, type Twist } from './core/twist.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { naturalCubic } from './solve.ts'
@@ -22,7 +27,8 @@ import { memo, type Setup, type Template } from './types.ts'
 // and finishing tall with long arms above the far shoulder (the chop's spine flexion and hip drop run the other way).
 // Band woodchop (833): the chop with a loop band anchored high on a post where the pulley stands, both fists stacked
 // on the band's end where they hold the cable handle (the band runs from the anchor into the upper fist, out of the
-// lower one and back), its pull in the balance as the cable's. Russian twist (821): seated, core/twist.ts.
+// lower one and back), its pull in the balance as the cable's. Russian twist (821): seated, core/twist.ts. Landmine
+// rotation (822, implement barbell): core/landmine.ts. Half-kneeling rope chop (831): kneelChop.
 
 type P = ParamsOf<'rotation'>
 
@@ -81,7 +87,8 @@ const THUMBS = { start: [-0.25, 1, 0] as V3, end: [1, 0.5, 1] as V3 }
  * in both fists, the handle's rods off the lower forearm) */
 const LIFT_THUMBS = { start: [0, 0.5, 1] as V3, end: [0.55, 1, 0.4] as V3 }
 
-type Path = { body: typeof CHOP | typeof LIFT; aim: typeof AIM; thumbs: typeof THUMBS; neck: [number, number]; clav: { prot: [number, number]; elev: [number, number] }; pulleyY: number }
+type Body = { [K in keyof typeof CHOP]: (typeof CHOP)[K] extends readonly number[] ? readonly [number, number] : number }
+type Path = { body: Body; aim: typeof AIM; thumbs: typeof THUMBS; neck: [number, number]; clav: { prot: [number, number]; elev: [number, number] }; pulleyY: number }
 const PATHS: Record<'high_to_low' | 'low_to_high', Path> = {
   high_to_low: { body: CHOP, aim: AIM, thumbs: THUMBS, neck: [-4, 12], clav: { prot: [12, 8], elev: [8, 4] }, pulleyY: 2.0 },
   low_to_high: { body: LIFT, aim: LIFT_AIM, thumbs: LIFT_THUMBS, neck: [10, -6], clav: { prot: [8, 12], elev: [4, 8] }, pulleyY: 0.1 },
@@ -103,6 +110,8 @@ type Ctx = {
   reach: (c: number) => number
   /** band: the anchor's pose (its hook where the pulley would be) and the two fists' band grips (upper, lower) */
   band?: { anchor: ImplementPose; hook: V3; grips: [ImplementSpec, ImplementSpec] }
+  /** half kneeling: the lower body held still (root and leg angles of this pose), the rope drawn from the fists */
+  kneel?: { q: Float64Array; mat: ImplementPose }
 }
 
 /** band grips: the left fist on the upper one */
@@ -134,6 +143,13 @@ function body(skel: Skeleton, q: Float64Array, ctx: Ctx, c: number) {
     'clavicle_*.elev': lerp(clav.elev[0], clav.elev[1], c),
     'grip_*.close': 1,
   })
+  if (ctx.kneel) {
+    // half kneeling: the hips stay square and still, so the whole turn is the spine's; no side bend (the compact
+    // motion's size budget, with the rope's moving pieces)
+    for (const n of KNEEL_DOFS) q[skel.dof[n]] = ctx.kneel.q[skel.dof[n]]
+    setDofs(skel, q, { 'lumbar.bend': 0, 'thorax.bend': 0 })
+    return
+  }
   const hip: V3 = [s * lerp(CHOP.shift[0], CHOP.shift[1], c), ctx.hipY - lerp(CHOP.drop[0], CHOP.drop[1], c), 0]
   setPelvis(skel, q, hip, 4, s * lerp(CHOP.yaw[0], CHOP.yaw[1], c))
   const k = Math.max(0, Math.min(1, (c - 0.35) / 0.65))
@@ -183,10 +199,75 @@ function solveFrame(skel: Skeleton, ctx: Ctx, c: number, d: number): { q: Float6
   return { q, pose: h.pose }
 }
 
-const context = memo((p: P, skel: Skeleton): Ctx | Twist => {
+/** half kneeling: root and leg DOFs copied from the kneeling pose every frame */
+const KNEEL_DOFS = ['pelvis.tx', 'pelvis.ty', 'pelvis.tz', 'pelvis.rot', 'pelvis.tilt', 'pelvis.list', ...['hip', 'knee', 'ankle', 'toe'].flatMap((j) => ['l', 'r'].flatMap((sd) => (j === 'hip' ? ['flex', 'abd', 'rot'] : j === 'ankle' ? ['df', 'inv'] : ['flex']).map((k) => `${j}_${sd}.${k}`)))]
+/** half kneeling: the front foot this far ahead of the hips and out from the midline, m; rope strand length, m */
+const HALF_KNEEL = { ahead: 0.42, out: 0.14 } as const
+const ROPE_FREE = 0.32
+/** the strands leave the fists this far past the grip centre, m (the kneeling cable crunch's ROPE_EXIT) */
+const ROPE_EXIT = 0.08
+/** half kneeling: the fists further apart on the rope's two ends (m), the chop turned more in the spine and aimed less
+ * far across (the hips cannot turn), the pulley set lower for the lower shoulders (m) */
+const ROPE_GAP = 0.15
+const KNEEL_PATH: Path = {
+  ...PATHS.high_to_low,
+  body: { ...CHOP, thoraxRot: [-28, 30], lumbarRot: [-10, 12] },
+  aim: { ...AIM, start: [-0.85, 1.7, 0.45], end: [0.62, 0.55, 0.75] },
+  pulleyY: 1.6,
+}
+
+/**
+ * Half-kneeling chop (831): side-on to a high pulley with the near knee down (the working side's: thigh straight down,
+ * toes tucked on a mat) and the far foot planted ahead, both hips square; both fists on a rope. The chop's path and
+ * spine turn are the standing chop's (the pelvis neither turns nor drops), the rope drawn from the fists to the
+ * pulley as in the kneeling cable crunch (triceps/rope.ts).
+ */
+function kneelChop(p: P, skel: Skeleton): Ctx {
+  const tempo = p.tempo ?? DEFAULT_TEMPO
+  const work: Side = p.side === 'left' ? 'l' : 'r'
+  const s = work === 'r' ? 1 : -1
+  const far: Side = work === 'r' ? 'l' : 'r'
+  const k = kneel(skel, 0)
+  const q = zeroQ(skel)
+  kneelBase(skel, q, { tilt: 0, ...k })
+  // the far leg forward: the foot flat on the mat ahead of its hip
+  const f0 = fk(skel, q)
+  const farHip = f0.pos[skel.seg[`femur_${far}`]]
+  const foot = plantFoot(skel, far, [farHip[0] + (far === 'l' ? 1 : -1) * (HALF_KNEEL.out - Math.abs(farHip[0])), 0, farHip[2] + HALF_KNEEL.ahead], 6, MAT_TOP)
+  legToward(skel, q, foot, [0, 1, 0.5])
+  const fk1 = fk(skel, q)
+  const hipY = fk1.pos[skel.seg.femur_l][1]
+  const handle = twoHandHandle({ gap: ROPE_GAP })
+  const path = KNEEL_PATH
+  const pulley: V3 = [-s * PULLEY_OUT, path.pulleyY, PULLEY_Z]
+  const nearToe = fk1.pos[skel.seg[`foot_${work}`]]
+  const mat = floorMat({ length: 1.1, width: 0.7 })
+  const matPose: ImplementPose = { id: mat.id, pos: [0, 0, (nearToe[2] - 0.15 + foot.ankle[2] + 0.25) / 2], rot: qid() }
+  const ctx: Ctx = { kind: 'chop', tempo, setup: undefined as unknown as Setup, work, s, path, feet: { near: foot, far: foot }, nearBall: [0, 0, 0], handle, pulley, hipY, reach: () => 0.6, kneel: { q, mat: matPose } }
+  const cs = Array.from({ length: 13 }, (_, i) => 0.5 - 0.5 * Math.cos((Math.PI * i) / 12))
+  const ds = cs.map((c) => root1d((d) => {
+    const { q: qq } = solveFrame(skel, ctx, c, d)
+    const [a, b] = [qq[skel.dof['elbow_l.flex']], qq[skel.dof['elbow_r.flex']]]
+    return -10 * Math.log(Math.exp(-a / 10) + Math.exp(-b / 10)) - LONG_ELBOW
+  }, 0.3, 0.8, { tol: 1e-5 }).x)
+  ctx.reach = naturalCubic(cs, ds)
+  const contacts: Contact[] = [
+    ...footContacts(skel, [{ side: work, rot: fk1.rot[skel.seg[`foot_${work}`]], ankle: fk1.pos[skel.seg[`foot_${work}`]] }], ['ball', 'toe']),
+    ...footContacts(skel, [foot]),
+    ...ropeContacts(),
+  ]
+  const cable: Cable = { pulley, implement: ROPE_IDS.handle, point: [0, 0, 0], kg: CABLE_KG }
+  ctx.setup = { implements: [...ropeImplements(ROPE_FREE), stackSpec(pulley, [-s, 0, 0]), mat], contacts, tempo, symmetric: false, cables: [cable] }
+  return ctx
+}
+
+const context = memo((p: P, skel: Skeleton): Ctx | Twist | Landmine => {
+  if (p.implement === 'barbell' && p.posture === 'standing' && p.direction === 'horizontal' && p.laterality !== 'bilateral' && p.stance !== 'split') return landmineContext(p, skel, p.tempo ?? DEFAULT_TEMPO)
   if (p.implement === 'plate' && p.posture === 'seated' && p.direction === 'horizontal' && p.laterality !== 'bilateral') return twistContext(p, skel, p.tempo ?? DEFAULT_TEMPO)
   // the pulley sits where the handle starts: high for the chop, low for the lift
   const height = p.direction === 'low_to_high' ? 'low' : 'high'
+  const kneeling = p.implement === 'cable' && p.posture === 'kneeling' && p.attachment === 'rope' && p.direction === 'high_to_low' && p.cableHeight === 'high' && p.laterality === 'unilateral'
+  if (kneeling) return kneelChop(p, skel)
   if ((p.implement !== 'cable' && !(p.implement === 'band' && p.direction === 'high_to_low')) || p.direction === 'horizontal' || p.cableHeight !== height || p.posture !== 'standing' || p.stance === 'split' || (p.attachment ?? 'single_handle') !== 'single_handle') {
     throw new Error(`rotation: variant not implemented yet (${p.implement}/${p.direction}/${p.cableHeight}/${p.posture}/${p.stance}/${p.attachment ?? '-'})`)
   }
@@ -244,7 +325,9 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
   if (ctx.kind === 'twist') return sampleTwist(skel, ctx, c)
+  if (ctx.kind === 'landmine') return sampleLandmine(skel, ctx, c)
   const { q, pose } = solveFrame(skel, ctx, c, ctx.reach(c))
+  if (ctx.kneel) return { q, implements: [...ropePoses(skel, fk(skel, q), ctx.pulley, ROPE_FREE, ROPE_EXIT), { id: 'stack', pos: [0, 0, 0], rot: qid() }, ctx.kneel.mat], contacts: ctx.setup.contacts }
   if (!ctx.band) return { q, implements: [pose, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
   // the band grips sit on the handle's grips, their +Y towards the anchor
   const grips = (['l', 'r'] as const).map((side, i) => {

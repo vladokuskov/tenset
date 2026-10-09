@@ -10,6 +10,8 @@ import { getTemplate, parseParams } from './index.ts'
 const skel = testSkeleton()
 const variants = motionRecords('shrug')
 const baked = new Map(variants.map((v) => [v.slug, bake(getTemplate('shrug'), parseParams('shrug', v.params, v.laterality), skel)]))
+/** the shrugs proper; the cable upright row (227) has its own arm path and tests */
+const shrugs = [...baked.keys()].filter((slug) => !slug.startsWith('227-'))
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const TOP = 0
 const BOTTOM = 0.625
@@ -27,10 +29,10 @@ function range(b: Baked, fn: (i: number) => number) {
 
 describe('shrug template', () => {
   it('covers every shrug record', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([308, 314, 335, 336, 337, 341])
+    expect(variants.map((v) => v.id).sort()).toEqual([227, 308, 314, 335, 336, 337, 341])
   })
 
-  it.each([...baked.keys()])('%s: clavicles rise ~0 -> 25 deg straight up, no rolling, arms still', (slug) => {
+  it.each(shrugs)('%s: clavicles rise ~0 -> 25 deg straight up, no rolling, arms still', (slug) => {
     const b = baked.get(slug)!
     expect(b.q.every(Number.isFinite)).toBe(true)
     for (const s of ['l', 'r']) {
@@ -53,7 +55,7 @@ describe('shrug template', () => {
     expect(range(b, (i) => dof(b, i, 'lumbar.flex') + dof(b, i, 'thorax.flex'))).toBeLessThan(0.5)
   })
 
-  it.each([...baked.keys()])('%s: the load rises with the shoulders, hands on it, feet planted, loop closes', (slug) => {
+  it.each(shrugs)('%s: the load rises with the shoulders, hands on it, feet planted, loop closes', (slug) => {
     const b = baked.get(slug)!
     const first = fk(skel, frameQ(b, 0))
     for (let i = 0; i < b.frames; i++) {
@@ -118,6 +120,33 @@ describe('shrug template', () => {
     const poses = frameImplements(b, at(b, TOP))
     const path = bandPath(spec, new Map(b.implements.map((s) => [s.id, s])), new Map(b.implements.map((s, k) => [s.id, poses[k]])))
     expect(path.filter((v) => v.pos[1] < 0.005).length).toBe(4)
+  })
+
+  it('cable upright row (227): the bar rises close up the body from the thighs to the chest, elbows leading to shoulder height', () => {
+    const b = [...baked.entries()].find(([slug]) => slug.startsWith('227-'))![1]
+    const k = b.implements.findIndex((s) => s.id === 'handle')
+    const first = fk(skel, frameQ(b, 0))
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      for (const c of b.contacts) {
+        if (c.kind === 'planted') expect(dist(sitePos(skel, f, c.site), sitePos(skel, first, c.site))).toBeLessThan(0.002)
+        if (c.kind === 'grip' && 'implement' in c.target) expect(dist(sitePos(skel, f, c.site), siteWorld(b.implements[k], frameImplements(b, i)[k], c.target.grip).pos)).toBeLessThan(0.005)
+      }
+      // the wrists stay on one forearm rotation branch through the rep (no flip near the top)
+      expect(Math.abs(dof(b, i, 'forearm_l.pro') - dof(b, at(b, BOTTOM), 'forearm_l.pro'))).toBeLessThan(25)
+    }
+    const top = fk(skel, frameQ(b, at(b, TOP))), bottom = fk(skel, frameQ(b, at(b, BOTTOM)))
+    // arms long at the hang, the bar in front of the thighs; at the top the elbows at shoulder height (elevation ~85),
+    // above the hands, the bar at the chest
+    expect(dof(b, at(b, BOTTOM), 'elbow_l.flex')).toBeLessThan(15)
+    expect(dof(b, at(b, TOP), 'shoulder_l.elev')).toBeGreaterThan(75)
+    expect(segPos(skel, top, 'forearm_l')[1]).toBeGreaterThan(sitePos(skel, top, 'grip_l')[1])
+    const bar = (i: number) => frameImplements(b, i)[k].pos[1]
+    expect(bar(at(b, BOTTOM))).toBeLessThan(segPos(skel, bottom, 'femur_l')[1])
+    expect(bar(at(b, TOP))).toBeGreaterThan(segPos(skel, top, 'thorax1')[1] - 0.1)
+    // the girdle lifts in the top third (upper traps), the trunk stays still
+    expect(dof(b, at(b, TOP), 'clavicle_l.elev') - dof(b, at(b, BOTTOM), 'clavicle_l.elev')).toBeGreaterThan(12)
+    expect(range(b, (i) => dof(b, i, 'lumbar.flex') + dof(b, i, 'thorax.flex'))).toBeLessThan(0.5)
   })
 
   it('unsupported variants throw', () => {

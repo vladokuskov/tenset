@@ -36,9 +36,15 @@
     720
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "curl",
+    "params": {
+      "implement": "ez_bar",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "posture": "seated",
+      "support": "preacher"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -55,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. needs work: The upper arm floats off the pad, which contradicts cue 1 ('upper arms flat on the pad'). The elbow moves 31 mm along the pad normal (sh·n 0.921 fixed, el·n 0.920 to 0.890), so after the 5 mm sink it sits about 26 mm above the pad for the top half of the rep. Humeral rotation also swings -6 to 38 deg (44 deg) and the elevation moves 5 deg. It has the same half-off-edge elbow placement as 720 (x ±0.26 on a 0.28 half-width pad). The author self-rated this ok. | ok: Fixed in curl/preacher.ts. barArms no longer runs full-arm IK. The humerus is pinned (plane and elevation from the pad, elbow exactly on its 15 to 120 path). A damped least-squares solve now handles humeral twist (weighted), forearm turn, wrist flex/dev and the bar's height and roll. Measured: elbow travel along the pad normal is 0 mm (el·n is constant). True humeral twist is 1.6 deg (was 46) and swing is 0. Wrist flex is -1 to -4 and dev 3 to 9, so cue 3 (wrists in line) now holds. Grip error is 1.8 mm max and the bottom elbow reaches 15 (was 23). Elbows are pulled in to x ±0.202 (PRE.abd -5 for bar and dumbbell; was ±0.26). To keep the outer bends under the hands, the pronated bar uses inner 0.19 with the grip at the bend start. The same change applies to 720 (twist 1.3, wrist 3/-5, grip 0.3 mm) and 721 (dumbbell elbow at x -0.202). The curl test is tightened: pad gap under 8 mm (was 2.5 cm), elbow |x| under 0.22, rot range under 15, bar bottom elbow under 18. QA passes 720/721/728 and the figure sheets show the upper arms flat on the pad. Remaining: 728's forearm pronation reaches its 85 deg limit for the bottom third of the rep. The geometry needs it, and the jerk and acceleration gates pass."
   }
 }

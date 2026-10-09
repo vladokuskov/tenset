@@ -40,8 +40,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "incline-press",
+    "params": {
+      "implement": "machine",
+      "posture": "seated",
+      "grip": "neutral",
+      "benchAngle": 35,
+      "elbowFlare": 45
+    },
     "mapView": "F"
   },
   "cues": [
@@ -60,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Grip path rises 34 deg (dz 0.44, dy 0.30). Thoracohumeral elevation at lockout is 90 deg, against 69 on flat machine 108, so the incline reads. The lever is collided and clears the upper arm by 47 mm. In the hero bottom frames (t=0.5 to 0.625) the near lever crosses the lower chest and near forearm. The scene comment in incline-press.ts (az -72) says the lever 'passes below the chest instead of across it', which is false. The front-low pivot is the same layout as approved 108."
   }
 }

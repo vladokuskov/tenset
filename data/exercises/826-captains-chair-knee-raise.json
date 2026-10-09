@@ -39,9 +39,13 @@
     807
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "leg-raise",
+    "params": {
+      "support": "elbow_pads",
+      "kneeAngle": 90,
+      "topHipAngle": 120
+    },
     "mapView": "F"
   },
   "cues": [
@@ -58,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Forearms on the pads, closed neutral fists on the handles, back on the pad. Knees go from 8-10 deg hanging to hip 100 + posterior pelvic tilt 20 + lumbar flexion 18 at the top (thigh ~30 deg above horizontal, matching 'tilt your pelvis up'). Feet clear the floor by 107 mm. They hang at |x| 0.15 m, inside the side steps (inner edge |x| 0.23, y 0.36), so there is no foot/step overlap despite how the hero projects."
   }
 }

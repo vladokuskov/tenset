@@ -37,9 +37,12 @@
     840
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "crunch",
+    "params": {
+      "implement": "machine",
+      "posture": "seated"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Feet are fixed between the rollers (knee 48, ankle df 30). The trunk goes from upright with flexion (lumbar 16, thorax 18, reaching forward) to parallel (pelvis tilt -86, hip 4-9 deg, lumbar -4), with arms overhead at 1.32 m. The GHD frame is static and in the approved light-frame/black-pad style. Contact tolerance is 22 mm."
   }
 }

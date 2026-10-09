@@ -6,6 +6,7 @@ import { siteWorld } from '../implements.ts'
 import { dist, qconj, qrot, RAD, sub } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { dip } from './dip.ts'
+import { RING_LEAN, ringLean } from './rings.ts'
 import { SCHEMAS } from './schemas.ts'
 import type { AnyTemplate } from './types.ts'
 
@@ -30,7 +31,7 @@ const trunkLean = (b: Baked, u: number) => dof(b, u, 'pelvis.tilt') + dof(b, u, 
 
 describe('dip template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([104, 718, 733])
+    expect([...baked.keys()].sort()).toEqual([104, 127, 718, 733])
   })
 
   it.each(bars)('%s: elbow ~8 -> ~90-100, shoulder extension ~45-65 at the bottom', (id) => {
@@ -43,7 +44,7 @@ describe('dip template', () => {
     expect(ext).toBeLessThan(65)
   })
 
-  it.each(bars)('%s: hands stay on the bars, the body balanced over them, seamless loop', (id) => {
+  it.each(bars.filter((id) => baked.get(id)!.params.implement !== 'rings'))('%s: hands stay on the bars, the body balanced over them, seamless loop', (id) => {
     const b = baked.get(id)!
     expect(b.q.every(Number.isFinite)).toBe(true)
     for (let i = 0; i < b.frames; i++) {
@@ -102,7 +103,45 @@ describe('dip template', () => {
     expect(hip(BOTTOM)).toBeLessThan(0.44)
   })
 
+  it('ring dip (127): the rings stay put by the hips, the body balanced over them, the rings turn out at the top', () => {
+    const b = baked.get(127)!
+    expect(b.q.every(Number.isFinite)).toBe(true)
+    const ids = ['ring_l', 'ring_r'].map((id) => b.implements.findIndex((s) => s.id === id))
+    const grip0 = ids.map((k) => siteWorld(b.implements[k], frameImplements(b, 0)[k], 'grip').pos)
+    const anchor = b.implements.find((s) => s.id === 'rings')!
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      ids.forEach((k, j) => {
+        const g = siteWorld(b.implements[k], impl[k], 'grip').pos
+        // the hand on the ring's grip, the ring where it hangs (it does not swing about with the body)
+        expect(dist(sitePos(skel, f, `grip_${j ? 'r' : 'l'}`), g)).toBeLessThan(0.005)
+        expect(dist(g, grip0[j])).toBeLessThan(0.002)
+        // the ring hangs along its strap, leaning off it only where the forearm pushes it round, RING_LEAN off the forearm
+        // (a few degrees more off the strap when that runs just to the other side of the forearm; rings.ts)
+        expect(ringLean({ anchor: anchor as never, anchorPose: impl[b.implements.indexOf(anchor)], implements: b.implements }, impl[k], j ? 'r' : 'l')).toBeLessThan(RING_LEAN + 9)
+      })
+      expect(Math.abs(centerOfMass(skel, f)[2] - grip0[0][2])).toBeLessThan(0.025)
+      // the straps hang outside the shoulders
+      expect(siteWorld(anchor, impl[b.implements.indexOf(anchor)], 'strap_l').pos[0]).toBeGreaterThan(segPos(skel, f, 'humerus_l')[0] + 0.1)
+    }
+    // by the hips: the grips just outside the pelvis at the top
+    const f0 = fk(skel, frameQ(b, at(b, TOP)))
+    const hips = bodyCapsules(skel, f0).filter((c) => c.segment === 'pelvis')
+    const outer = Math.max(...hips.flatMap((c) => [c.a[0] + c.r, c.b[0] + c.r]))
+    expect(grip0[0][0] - outer).toBeLessThan(0.2)
+    // thumbs out at the top: the hand's grip axis turns from straight ahead towards the side
+    const yaw = (u: number) => {
+      const f = fk(skel, frameQ(b, at(b, u)))
+      const ax = qrot(f.rot[skel.seg.hand_l], skel.data.sites.grip_l.axis!)
+      return Math.atan2(ax[0], ax[2]) * RAD
+    }
+    expect(yaw(TOP) - yaw(BOTTOM)).toBeGreaterThan(10)
+  })
+
   it('unsupported variants throw', () => {
+    expect(() => bake(t, parse({ implement: 'rings', support: 'bench' }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => bake(t, parse({ implement: 'rings' }, 'unilateral'), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ support: 'bench', implement: 'machine' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ grip: 'pronated' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ implement: 'machine' }), skel)).toThrow(/variant not implemented yet/)

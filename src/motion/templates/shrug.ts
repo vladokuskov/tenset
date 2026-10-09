@@ -13,6 +13,7 @@ import { pressureZ } from './isolation.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
+import { sampleUpright, uprightContext, type UprightRow } from './shrug/upright-row.ts'
 
 // Shrug, joint space: the arms hang straight and still while the shoulder girdle lifts straight up. Clavicle
 // elevation runs from a little depression under the load to ~26 deg (research: 0 -> ~25, SC joint), with a small
@@ -25,6 +26,7 @@ import { memo, type Setup, type Template } from './types.ts'
 // Band (341): standing on the middle of the band, an end in each fist at the sides (the dumbbell arms, no load in the
 // balance: the band runs from the hands to the feet). Trap bar (335): standing inside the hexagon, hands on the
 // neutral side handles, the bar hanging from the shoulders as the free bar does.
+// Cable upright row (227, movement upright_row): its own arm path, shrug/upright-row.ts.
 
 type P = ParamsOf<'shrug'>
 
@@ -282,7 +284,15 @@ function standBar(skel: Skeleton, q: Float64Array, u: number, ctx: Ctx, sway?: S
   return { bal, pose }
 }
 
+const upright = memo((p: P, skel: Skeleton): UprightRow => {
+  if (p.implement !== 'cable' || p.posture !== 'standing' || p.grip !== 'pronated' || p.laterality !== 'bilateral') {
+    throw new Error(`shrug: variant not implemented yet (upright row ${p.implement}/${p.posture}/${p.grip})`)
+  }
+  return uprightContext(p, skel, p.tempo ?? DEFAULT_TEMPO)
+})
+
 function sample(u: number, p: P, skel: Skeleton): Pose {
+  if (p.movement === 'upright_row') return sampleUpright(u, p, skel, upright(p, skel))
   const ctx = context(p, skel)
   const q = standingBase(skel)
   if (ctx.band) {
@@ -303,6 +313,6 @@ export const shrug: Template<P> = {
   driver: 'joint',
   params: SCHEMAS.shrug,
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
+  setup: (p, skel) => (p.movement === 'upright_row' ? upright(p, skel).setup : context(p, skel).setup),
   sample,
 }

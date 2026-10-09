@@ -8,6 +8,9 @@ export const hipAbduction: SceneSpec = {
       // pads outside them and the outer hip (abduction), or looks down between the knees at the inner thighs (adduction)
       return abduction ? { az: -52, elev: 0.45 } : { az: -24, elev: 0.36 }
     }
+    // band lateral walk: from behind and a little to the right, so the glute med on both sides, the band round the
+    // knees and the sideways steps read
+    if (params.implement === 'band' && params.posture === 'standing') return { az: -160, elev: 0.22 }
     // seated band: from the front-left and above, the knees press apart round the band and the outer hips read
     if (params.implement === 'band') return { az: -40, elev: 0.42 }
     // side lying: from behind and above, so the top hip's glutes and the leg's lift read along the body

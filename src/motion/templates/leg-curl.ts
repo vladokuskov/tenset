@@ -9,6 +9,7 @@ import { add, lerp, norm, qalign, qfromBasis, qid, qrot, scale, sub, type Quat, 
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
 import { strapPose } from './hip-abduction.ts'
+import { ghrSample, ghrSetup } from './leg-curl/ghr.ts'
 import { kneeAxis, leverPose, mirroredArms, rollerOnShins, ROLLER_ALONG, seatedMachine, seatedPose, SINK, type SeatedMachine } from './knee-machine.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -548,6 +549,7 @@ export const legCurl: Template<P> = {
   driver: 'joint',
   params: SCHEMAS['leg-curl'],
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
-  sample,
+  // glute-ham raise on the GHD (leg-curl/ghr.ts)
+  setup: (p, skel) => (p.support === 'ghd' ? ghrSetup(p, skel) : context(p, skel).setup),
+  sample: (u, p, skel) => (p.support === 'ghd' ? ghrSample(u, p, skel) : sample(u, p, skel)),
 }

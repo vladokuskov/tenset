@@ -8,6 +8,9 @@ export const lunge: SceneSpec = {
     if (params.implement === 'smith') return { az: -65, elev: 0.24 }
     // lateral lunge: nearly from the front, so the wide stance and the hips sitting over the right foot read
     if (params.direction === 'lateral') return { az: -20, elev: 0.2 }
+    // cossack: front three-quarter, so the wide stance, the straight left leg with its raised toes and the arms reaching
+    // forward all read
+    if (params.direction === 'cossack') return { az: -35, elev: 0.2 }
     // curtsy: from behind, so the rear leg crossing behind the front one reads
     if (params.direction === 'curtsy') return { az: -160, elev: 0.22 }
     return { az: -115, elev: 0.24 }

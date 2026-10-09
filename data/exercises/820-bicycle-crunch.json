@@ -33,9 +33,11 @@
     831
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "floor-core",
+    "params": {
+      "kind": "bicycle"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -52,6 +54,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Contralateral checked by FK: thorax rot +18 (sternum x +0.066) while the left knee is in (hip 60 / knee 105) and the right leg is long (14/8 deg). The right hand moves to x -0.056 toward the left knee. Shoulders are off the mat (thorax flexion 32 deg), heels stay >= 0.21 m off the floor, and lumbar rot stays within +-4 deg."
   }
 }

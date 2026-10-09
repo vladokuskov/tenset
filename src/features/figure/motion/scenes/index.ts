@@ -5,10 +5,12 @@ import { crunch } from './crunch.ts'
 import { curl } from './curl.ts'
 import { dip } from './dip.ts'
 import { externalRotation } from './external-rotation.ts'
+import { floorCore } from './floor-core.ts'
 import { fly } from './fly.ts'
 import { frontRaise } from './front-raise.ts'
 import { hinge } from './hinge.ts'
 import { hipAbduction } from './hip-abduction.ts'
+import { hipKickback } from './hip-kickback.ts'
 import { hipThrust } from './hip-thrust.ts'
 import { hold } from './hold.ts'
 import { horizontalPress } from './horizontal-press.ts'
@@ -18,12 +20,15 @@ import { legCurl } from './leg-curl.ts'
 import { legExtension } from './leg-extension.ts'
 import { legRaise } from './leg-raise.ts'
 import { lunge } from './lunge.ts'
+import { pullover } from './pullover.ts'
 import { pushUp } from './push-up.ts'
 import { rearRaise } from './rear-raise.ts'
+import { rollout } from './rollout.ts'
 import { rotation } from './rotation.ts'
 import { row } from './row.ts'
 import { shrug } from './shrug.ts'
 import { squat } from './squat.ts'
+import { swing } from './swing.ts'
 import { tricepsExtension } from './triceps-extension.ts'
 import { pendingScene, type SceneSpec } from './types.ts'
 import { verticalPress } from './vertical-press.ts'
@@ -63,6 +68,11 @@ export const SCENES: Record<TemplateId, SceneSpec> = {
   'leg-raise': legRaise,
   hold,
   rotation,
+  rollout,
+  'floor-core': floorCore,
+  pullover,
+  swing,
+  'hip-kickback': hipKickback,
 }
 
 const fallback = pendingScene()

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { handFrame } from '../constraints.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
+import { bodyCapsules, capsuleSolidClearance, placeParts, segmentDistance } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
-import { siteWorld } from '../implements.ts'
-import { dist, dot, sub } from '../math.ts'
+import { cableForce, siteWorld } from '../implements.ts'
+import { dist, dot, sub, type V3 } from '../math.ts'
 import { shoulderRhythm } from '../skeleton.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -31,7 +31,7 @@ const spread = (v: number[]) => Math.max(...v) - Math.min(...v)
 
 describe('front-raise template', () => {
   it('covers every front-raise record', () => {
-    expect([...baked.keys()]).toEqual(['207-prone-y-raise', '209-dumbbell-front-raise', '234-plate-front-raise', '236-dumbbell-scaption-raise'])
+    expect([...baked.keys()]).toEqual(['207-prone-y-raise', '209-dumbbell-front-raise', '233-cable-front-raise', '234-plate-front-raise', '236-dumbbell-scaption-raise'])
   })
 
   it('dumbbell front raise: straight forward from in front of the thighs to shoulder height, soft fixed elbow, no shrug, still trunk', () => {
@@ -141,11 +141,45 @@ describe('front-raise template', () => {
     expect(spread(series(b, 'lumbar.flex')) + spread(series(b, 'thorax.flex'))).toBeLessThan(1)
   })
 
+  it('cable rope (233): back to a low pulley, the cable between the legs to the rope, fists a fixed width apart, thumbs up', () => {
+    const b = get('233-cable-front-raise')
+    const top = arm(b, TOP), bottom = arm(b, BOTTOM)
+    // straight forward to shoulder height (research: plane ~90, elevation to ~85-90), from in front of the thighs
+    expect(top.elev).toBeGreaterThan(80)
+    expect(top.elev).toBeLessThan(100)
+    expect(bottom.elev).toBeLessThan(35)
+    for (const u of [TOP, BOTTOM]) expect(dof(b, u, 'elbow_l.flex')).toBeLessThan(20)
+    const cable = b.cables![0]
+    let gap = Infinity
+    for (let i = 0; i < b.frames; i += 2) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      // the pulley sits low and behind the heels
+      expect(cable.pulley[1]).toBeLessThan(0.2)
+      expect(cable.pulley[2]).toBeLessThan(sitePos(skel, f, 'heel_l')[2] - 0.4)
+      // the fists keep the rope ends' spacing
+      const d = dist(handFrame(skel, f, 'l').pos, handFrame(skel, f, 'r').pos)
+      expect(Math.abs(d - 0.2)).toBeLessThan(0.01)
+      // the cable runs between the legs: where it crosses the legs' plane it is inside both thighs and shanks
+      const { at } = cableForce(cable, impl[b.implements.findIndex((s) => s.id === cable.implement)])
+      const legs = bodyCapsules(skel, f).filter((c) => /^(thigh|shank)_/.test(c.region))
+      for (const c of legs) gap = Math.min(gap, segmentDistance(c.a, c.b, at, cable.pulley).d - c.r)
+    }
+    expect(gap).toBeGreaterThan(0.005)
+    // the rope's strands leave the fists at the little fingers, towards the pulley
+    const f = fk(skel, frameQ(b, at(b, TOP)))
+    const h = handFrame(skel, f, 'l')
+    const ferrule = frameImplements(b, at(b, TOP))[b.implements.findIndex((s) => s.id === 'handle')].pos as V3
+    expect(dot(sub(ferrule, h.pos), h.axis)).toBeLessThan(0)
+    expect(spread(series(b, 'lumbar.flex')) + spread(series(b, 'thorax.flex'))).toBeLessThan(1)
+  })
+
   it('unsupported variants throw', () => {
     const t = getTemplate('front-raise')
     const run = (params: Record<string, unknown>) => () => t.setup(parseParams('front-raise', params), skel)
     expect(run({ implement: 'barbell' })).toThrow(/variant not implemented yet/)
     expect(run({ implement: 'cable' })).toThrow(/variant not implemented yet/)
+    expect(run({ implement: 'cable', attachment: 'rope', posture: 'seated' })).toThrow(/variant not implemented yet/)
     expect(run({ implement: 'dumbbell', posture: 'seated' })).toThrow(/variant not implemented yet/)
   })
 })

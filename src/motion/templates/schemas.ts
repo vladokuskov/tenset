@@ -13,14 +13,18 @@ const machineDefault = <T extends { implement: string; machine?: string }>(pick:
 
 const press = (benchDefault: number, benchMin: number, benchMax: number) =>
   z.strictObject({
-    implement: ImplementId.extract(['barbell', 'dumbbell', 'machine', 'smith']).default('barbell'),
+    /** landmine = standing, both hands cupped round the tip of a landmine bar at the upper chest */
+    implement: ImplementId.extract(['barbell', 'dumbbell', 'machine', 'smith', 'landmine']).default('barbell'),
     machine: MachineId.extract(['chest_press_machine']).optional(),
-    posture: Posture.extract(['lying_supine', 'seated']).default('lying_supine'),
+    posture: Posture.extract(['lying_supine', 'seated', 'standing']).default('lying_supine'),
+    /** machine: the press line's angle above horizontal at mid-stroke */
     benchAngle: angle(benchMin, benchMax).default(benchDefault),
     grip: Grip.extract(['pronated', 'neutral']).default('pronated'),
     gripWidth: GripWidth.default(1.4),
     /** upper-arm abduction from the torso at the bottom */
     elbowFlare: angle(0, 90).default(55),
+    /** standing (landmine): split = staggered, one foot forward; omitted = the variant's usual */
+    stance: Stance.extract(['hip', 'split']).optional(),
     ...common,
   }).transform(machineDefault(() => 'chest_press_machine'))
 
@@ -44,9 +48,11 @@ export const SCHEMAS = {
   }).transform(machineDefault(() => 'chest_press_machine')),
   'incline-press': press(30, 10, 60),
   'vertical-press': z.strictObject({
-    implement: ImplementId.extract(['barbell', 'dumbbell', 'machine', 'smith', 'kettlebell', 'band']).default('barbell'),
+    /** landmine = one end of a barbell in a floor pivot in front, the other pressed up and forward from the shoulder */
+    implement: ImplementId.extract(['barbell', 'dumbbell', 'machine', 'smith', 'kettlebell', 'band', 'landmine']).default('barbell'),
     machine: MachineId.extract(['shoulder_press_machine']).optional(),
-    posture: Posture.extract(['standing', 'seated']).default('standing'),
+    /** kneeling = half kneeling (landmine): the pressing side's knee down, the other foot flat in front */
+    posture: Posture.extract(['standing', 'seated', 'kneeling']).default('standing'),
     benchAngle: BenchAngle.default(90),
     /** supinated = palms facing you at the start (Arnold press, with `rotate`) */
     grip: Grip.extract(['pronated', 'neutral', 'supinated']).default('pronated'),
@@ -55,10 +61,13 @@ export const SCHEMAS = {
     support: Support.extract(['bench', 'floor']).optional(),
     /** dumbbells turn from the start grip to palms forward on the way up and back on the way down (Arnold press) */
     rotate: z.boolean().optional(),
+    /** standing (landmine): split = staggered, the pressing side's foot back; omitted = the variant's usual */
+    stance: Stance.extract(['hip', 'split']).optional(),
     ...common,
   }).transform(machineDefault(() => 'shoulder_press_machine')),
   dip: z.strictObject({
-    implement: ImplementId.extract(['bodyweight', 'machine']).default('bodyweight'),
+    /** rings = on gymnastic rings, the rings by the hips */
+    implement: ImplementId.extract(['bodyweight', 'machine', 'rings']).default('bodyweight'),
     torsoAngle: angle(0, 60).default(20),
     grip: Grip.extract(['neutral', 'pronated']).default('neutral'),
     kneeAngle: angle(0, 120).default(70),
@@ -67,8 +76,8 @@ export const SCHEMAS = {
     ...common,
   }),
   'push-up': z.strictObject({
-    /** band = a band across the upper back, its ends under the hands */
-    implement: ImplementId.extract(['bodyweight', 'band']).default('bodyweight'),
+    /** band = a band across the upper back, its ends under the hands; rings = the hands on gymnastic rings just above the floor */
+    implement: ImplementId.extract(['bodyweight', 'band', 'rings']).default('bodyweight'),
     elevation: z.enum(['floor', 'hands', 'feet']).default('floor'),
     plus: z.boolean().default(false),
     /** below 0.5 the hands touch, fingers turned in (diamond) */
@@ -113,6 +122,8 @@ export const SCHEMAS = {
     plane: angle(20, 100).default(90),
     topElevation: angle(60, 180).default(90),
     elbowAngle: angle(0, 45).default(10),
+    /** cable: rope = both hands on the rope ends, the cable from a low pulley behind running between the legs */
+    attachment: Attachment.extract(['rope']).optional(),
     ...common,
   }),
   'rear-raise': z.strictObject({
@@ -136,7 +147,8 @@ export const SCHEMAS = {
     ...common,
   }),
   row: z.strictObject({
-    implement: ImplementId.extract(['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight', 'smith', 'band', 'kettlebell']).default('barbell'),
+    /** machine = the chest-supported T-bar station; landmine = a bar pivoting in a floor landmine (T-bar, Meadows row) */
+    implement: ImplementId.extract(['barbell', 'dumbbell', 'cable', 'machine', 'bodyweight', 'smith', 'band', 'kettlebell', 'landmine', 'rings']).default('barbell'),
     posture: Posture.extract(['standing', 'seated', 'lying_prone', 'lying_supine', 'kneeling']).default('standing'),
     support: Support.extract(['none', 'bench', 'chest_pad', 'floor']).default('none'),
     /** trunk angle from vertical: 0 upright, 90 horizontal */
@@ -150,11 +162,14 @@ export const SCHEMAS = {
     elbowFlare: angle(0, 90).default(30),
     finish: z.enum(['none', 'external_rotation']).default('none'),
     barHeight: z.enum(['low', 'mid', 'high']).default('mid'),
-    stance: Stance.extract(['hip', 'shoulder', 'split']).default('hip'),
+    stance: Stance.extract(['hip', 'shoulder', 'split', 'wide']).default('hip'),
+    /** floor = the bar returns to the floor and rests there each rep (Pendlay row); omitted = rows from the hang */
+    start: z.enum(['hang', 'floor']).optional(),
     ...common,
   }),
   'vertical-pull': z.strictObject({
-    implement: ImplementId.extract(['bodyweight', 'cable', 'machine', 'band']).default('bodyweight'),
+    /** rings = hanging from gymnastic rings (the palms turn in as the body rises) */
+    implement: ImplementId.extract(['bodyweight', 'cable', 'machine', 'band', 'rings']).default('bodyweight'),
     machine: MachineId.extract(['lat_pulldown', 'assisted_pullup']).optional(),
     posture: Posture.extract(['hanging', 'seated', 'kneeling']).default('hanging'),
     grip: Grip.extract(['pronated', 'supinated', 'neutral']).default('pronated'),
@@ -170,15 +185,20 @@ export const SCHEMAS = {
     posture: Posture.extract(['standing', 'seated']).default('standing'),
     grip: Grip.extract(['pronated', 'neutral', 'mixed']).default('neutral'),
     gripWidth: GripWidth.default(1.1),
+    /** upright_row = the bar rises close up the body, elbows leading to shoulder height; omitted = the shrug */
+    movement: z.enum(['shrug', 'upright_row']).optional(),
     ...common,
   }),
   squat: z.strictObject({
-    implement: ImplementId.extract(['barbell', 'dumbbell', 'smith', 'machine', 'bodyweight', 'kettlebell']).default('barbell'),
-    machine: MachineId.extract(['leg_press']).optional(),
+    /** landmine = both hands cupped round the tip of a landmine bar at the chest; band = a band behind the knees anchored
+     * ahead (Spanish squat) */
+    implement: ImplementId.extract(['barbell', 'dumbbell', 'smith', 'machine', 'bodyweight', 'kettlebell', 'landmine', 'band']).default('barbell'),
+    machine: MachineId.extract(['leg_press', 'hack_squat', 'pendulum_squat', 'belt_squat']).optional(),
     /** two_hand = one dumbbell hanging upright between the legs, its top head cupped in both hands (sumo squat) */
     hold: Hold.extract(['back_high', 'back_low', 'front_rack', 'goblet', 'sides', 'hands', 'two_hand']).default('back_high'),
     posture: Posture.extract(['standing', 'seated', 'lying_supine']).default('standing'),
-    stance: Stance.extract(['narrow', 'hip', 'shoulder', 'wide']).default('shoulder'),
+    /** single_leg = pistol: one foot planted, the other leg reaching forward */
+    stance: Stance.extract(['narrow', 'hip', 'shoulder', 'wide', 'single_leg']).default('shoulder'),
     toeOut: angle(0, 45).default(15),
     depth: Depth.default('full'),
     gripWidth: GripWidth.default(2.1),
@@ -191,13 +211,18 @@ export const SCHEMAS = {
     heelsElevated: z.boolean().optional(),
     /** sit back onto a box at the bottom (box squat; depth sets the box height) */
     box: z.boolean().optional(),
+    /** hack squat facing the machine, the chest on the pad (reverse hack squat) */
+    reverse: z.boolean().optional(),
+    /** sissy squat: on the balls of the feet, the knees travel forward with the hips straight, a hand on a wall */
+    sissy: z.boolean().optional(),
     ...common,
   }).transform(machineDefault(() => 'leg_press')),
   lunge: z.strictObject({
     implement: ImplementId.extract(['dumbbell', 'barbell', 'bodyweight', 'smith', 'kettlebell']).default('dumbbell'),
     hold: Hold.extract(['sides', 'goblet', 'back_high', 'front_rack', 'hands']).default('sides'),
-    /** lateral = the working leg steps out to the side; curtsy = the rear leg steps back and across */
-    direction: z.enum(['forward', 'reverse', 'in_place', 'step_up', 'lateral', 'curtsy']).default('reverse'),
+    /** lateral = the working leg steps out to the side; curtsy = the rear leg steps back and across; cossack = a very
+     * wide stance, sinking deep over one foot with the other leg straight, its toes up */
+    direction: z.enum(['forward', 'reverse', 'in_place', 'step_up', 'lateral', 'curtsy', 'cossack']).default('reverse'),
     rearFootElevated: z.boolean().default(false),
     /** in place: the front foot on a low step (deficit split squat) */
     frontFootElevated: z.boolean().optional(),
@@ -217,7 +242,8 @@ export const SCHEMAS = {
     ...common,
   }),
   hinge: z.strictObject({
-    implement: ImplementId.extract(['barbell', 'dumbbell', 'cable', 'bodyweight', 'kettlebell']).default('barbell'),
+    /** trap_bar = standing inside the hexagon, hands on the handles at the sides (hold sides, grip neutral) */
+    implement: ImplementId.extract(['barbell', 'dumbbell', 'cable', 'bodyweight', 'kettlebell', 'trap_bar']).default('barbell'),
     /** back_high = good morning (bar on the upper back) */
     hold: Hold.extract(['hands', 'front_of_thighs', 'opposite_hand', 'sides', 'back_high']).default('hands'),
     grip: Grip.default('pronated'),
@@ -245,6 +271,9 @@ export const SCHEMAS = {
     machine: MachineId.extract(['leg_curl_seated', 'leg_curl_lying']).optional(),
     posture: Posture.extract(['seated', 'lying_prone', 'kneeling', 'standing']).default('seated'),
     hipAngle: angle(-10, 120).default(90),
+    /** bodyweight kneeling: ghd = glute-ham raise on a glute-ham developer (knees behind the round pad, ankles between
+     * the rollers); omitted = the floor Nordic */
+    support: z.enum(['ghd']).optional(),
     ...common,
   }).transform(machineDefault((v) => (v.posture === 'lying_prone' ? 'leg_curl_lying' : 'leg_curl_seated'))),
   'back-extension': z.strictObject({
@@ -252,6 +281,9 @@ export const SCHEMAS = {
     benchAngle: angle(0, 45).default(45),
     armPosition: z.enum(['crossed', 'behind_head', 'extended']).default('crossed'),
     spine: z.enum(['neutral', 'flexion']).default('neutral'),
+    /** ghd = on a glute-ham developer: horizontal, the upper thighs over the round pad, ankles between the rollers
+     * (90-degree back extension; benchAngle is ignored) */
+    support: z.enum(['ghd']).optional(),
     ...common,
   }),
   'hip-abduction': z.strictObject({
@@ -267,7 +299,7 @@ export const SCHEMAS = {
   }).transform(machineDefault((v) => (v.direction === 'adduction' ? 'hip_adduction' : 'hip_abduction'))),
   'calf-raise': z.strictObject({
     implement: ImplementId.extract(['machine', 'dumbbell', 'bodyweight', 'smith', 'barbell', 'band']).default('machine'),
-    machine: MachineId.extract(['calf_machine', 'seated_calf', 'leg_press']).optional(),
+    machine: MachineId.extract(['calf_machine', 'seated_calf', 'leg_press', 'hack_squat']).optional(),
     direction: z.enum(['plantarflexion', 'dorsiflexion']).default('plantarflexion'),
     posture: Posture.extract(['standing', 'seated']).default('standing'),
     kneeAngle: angle(0, 110).default(0),
@@ -288,8 +320,9 @@ export const SCHEMAS = {
     lowerGrip: Grip.extract(['supinated', 'neutral', 'pronated']).optional(),
     /** hand path: omitted = the usual arc; drag = bar against the torso, elbows travel back; cross_body = towards the opposite shoulder */
     path: z.enum(['drag', 'cross_body']).optional(),
-    /** thigh = concentration curl: seated, the working upper arm braced on the inner thigh */
-    support: Support.extract(['thigh']).optional(),
+    /** thigh = concentration curl: seated, the working upper arm braced on the inner thigh; preacher = seated, the
+     * upper arms on a preacher bench's sloping pad */
+    support: z.enum(['thigh', 'preacher']).optional(),
     /** two_hand = one dumbbell held upright by its top head in both palms (waiter curl) */
     hold: Hold.extract(['two_hand']).optional(),
     /** abducted = upper arms level out to the sides between two pulleys (high cable curl) */
@@ -304,7 +337,8 @@ export const SCHEMAS = {
     ...common,
   }),
   'triceps-extension': z.strictObject({
-    implement: ImplementId.extract(['cable', 'dumbbell', 'ez_bar', 'barbell', 'band']).default('cable'),
+    /** rings = standing, leaning into gymnastic rings at chest height (bodyweight extension) */
+    implement: ImplementId.extract(['cable', 'dumbbell', 'ez_bar', 'barbell', 'band', 'rings']).default('cable'),
     attachment: Attachment.extract(['rope', 'straight_bar', 'v_bar', 'single_handle', 'ez_bar']).optional(),
     cableHeight: CableHeight.default('high'),
     grip: Grip.extract(['neutral', 'pronated', 'supinated']).default('neutral'),
@@ -326,15 +360,19 @@ export const SCHEMAS = {
     grip: Grip.extract(['supinated', 'pronated']).default('supinated'),
     /** standing = bar behind the thighs, arms hanging (pronated: palms back, the wrists flex the bar up behind) */
     posture: Posture.extract(['kneeling', 'seated', 'standing']).default('kneeling'),
-    /** kneeling on thigh = half kneeling, the working forearm along the front thigh */
+    /** kneeling on thigh = half kneeling, the working forearm along the front thigh (bilateral cable: kneeling, sitting
+     * back, both forearms along the thighs) */
     support: Support.extract(['bench', 'thigh', 'none']).default('bench'),
+    /** cable: the attachment on the low pulley */
+    attachment: Attachment.extract(['straight_bar']).optional(),
     ...common,
   }),
   crunch: z.strictObject({
     implement: ImplementId.extract(['bodyweight', 'cable', 'machine', 'plate']).default('bodyweight'),
     attachment: Attachment.extract(['rope']).optional(),
     cableHeight: CableHeight.default('high'),
-    posture: Posture.extract(['kneeling', 'lying_supine', 'standing']).default('lying_supine'),
+    /** seated (with implement machine) = on a GHD pad, feet under its rollers (GHD sit-up) */
+    posture: Posture.extract(['kneeling', 'lying_supine', 'standing', 'seated']).default('lying_supine'),
     kneeAngle: angle(0, 130).default(90),
     /** sit_up: the trunk rises from the hips to nearly upright; omitted = crunch (shoulder blades off the floor) */
     range: z.enum(['crunch', 'sit_up']).optional(),
@@ -350,8 +388,9 @@ export const SCHEMAS = {
     posture: Posture.extract(['hanging', 'lying_supine']).default('hanging'),
     support: Support.extract(['none', 'elbow_pads']).default('none'),
     kneeAngle: angle(0, 120).default(0),
-    /** hip flexion at the top (total between thighs and thorax; past 130 only for toes-to-bar) */
-    topHipAngle: angle(45, 160).default(100),
+    /** hip flexion at the top (total between thighs and thorax; past 130 only for toes-to-bar; below 45 only for
+     * lying alternating kicks) */
+    topHipAngle: angle(20, 160).default(100),
     /** hanging: the trunk leans back until the toes touch the bar (toes-to-bar) */
     toBar: z.boolean().optional(),
     /** lying: thigh angle above the mat at the bottom; omitted = legs just off the mat */
@@ -363,7 +402,9 @@ export const SCHEMAS = {
     ...common,
   }),
   hold: z.strictObject({
-    kind: z.enum(['front_plank', 'side_plank', 'pallof_press', 'hollow_hold', 'bear_plank', 'suitcase_hold']).default('front_plank'),
+    /** copenhagen_plank = side plank on the forearm with the working (top) leg across a flat bench, the bottom leg hanging */
+    /** l_sit = on straight arms between dip bars, legs straight out level with the hips */
+    kind: z.enum(['front_plank', 'side_plank', 'pallof_press', 'hollow_hold', 'bear_plank', 'suitcase_hold', 'copenhagen_plank', 'l_sit']).default('front_plank'),
     implement: ImplementId.extract(['bodyweight', 'cable', 'band', 'dumbbell']).default('bodyweight'),
     support: z.enum(['forearm', 'hand']).default('forearm'),
     legs: z.enum(['stacked', 'staggered']).default('stacked'),
@@ -380,13 +421,79 @@ export const SCHEMAS = {
     ...common,
   }),
   rotation: z.strictObject({
-    implement: ImplementId.extract(['cable', 'bodyweight', 'dumbbell', 'band', 'plate']).default('cable'),
+    /** barbell = one end of a bar in a landmine, the free end held in both hands (landmine rotation) */
+    implement: ImplementId.extract(['cable', 'bodyweight', 'dumbbell', 'band', 'plate', 'barbell']).default('cable'),
     attachment: Attachment.extract(['single_handle', 'rope']).optional(),
     cableHeight: CableHeight.default('high'),
     direction: z.enum(['high_to_low', 'low_to_high', 'horizontal']).default('high_to_low'),
     stance: Stance.extract(['hip', 'shoulder', 'wide', 'split']).default('wide'),
     /** seated: on the mat leaning back, heels down (Russian twist) */
     posture: Posture.extract(['standing', 'kneeling', 'seated']).default('standing'),
+    ...common,
+  }),
+  // tier C templates (wave 3c): always on the ab wheel, so no implement key
+  rollout: z.strictObject({
+    /** kneeling = from the knees on a pad; standing = from the feet, legs straight */
+    posture: Posture.extract(['kneeling', 'standing']).default('kneeling'),
+    /** oblique = the wheel rolls out on a diagonal towards the working side and back to the centre */
+    direction: z.enum(['straight', 'oblique']).default('straight'),
+    /** oblique: the path's angle from straight ahead; omitted = the template's usual diagonal */
+    diagonal: angle(10, 45).optional(),
+    /** shoulder flexion at full extension (~170 = arms in line with the trunk) */
+    reach: angle(90, 180).default(160),
+    ...common,
+  }),
+  'floor-core': z.strictObject({
+    kind: z.enum(['dead_bug', 'bird_dog', 'mountain_climber', 'bicycle', 'v_up', 'dragon_flag', 'superman']).default('dead_bug'),
+    /** bench = lying on a flat bench, hands gripping it behind the head (dragon flag); omitted = the kind's usual (the floor) */
+    support: Support.extract(['floor', 'bench']).optional(),
+    /** knee flexion of the extending leg(s) at full reach; omitted = the kind's usual */
+    kneeAngle: angle(0, 120).optional(),
+    ...common,
+  }),
+  pullover: z.strictObject({
+    implement: ImplementId.extract(['cable', 'dumbbell', 'band']).default('cable'),
+    /** standing = straight-arm pulldown (cable, band); lying_supine = on a flat bench (dumbbell pullover) */
+    posture: Posture.extract(['standing', 'lying_supine']).default('standing'),
+    attachment: Attachment.extract(['straight_bar', 'rope']).optional(),
+    cableHeight: CableHeight.default('high'),
+    grip: Grip.extract(['pronated', 'neutral']).default('pronated'),
+    gripWidth: GripWidth.default(1),
+    /** two_hand = one dumbbell held upright by its top head in both palms */
+    hold: Hold.extract(['hands', 'two_hand']).default('hands'),
+    /** standing: trunk angle from vertical, hinged forward */
+    torsoAngle: angle(0, 45).default(15),
+    /** elbow flexion held through the rep */
+    elbowAngle: angle(0, 45).default(10),
+    /** shoulder flexion at the stretch; omitted = the variant's usual */
+    topElevation: angle(60, 180).optional(),
+    stance: Stance.extract(['hip', 'split']).default('hip'),
+    ...common,
+  }),
+  swing: z.strictObject({
+    implement: ImplementId.extract(['kettlebell', 'dumbbell']).default('kettlebell'),
+    /** chest = the bell floats to chest height (Russian swing); overhead = arms vertical at the top */
+    height: z.enum(['chest', 'overhead']).default('chest'),
+    stance: Stance.extract(['hip', 'shoulder', 'wide']).default('shoulder'),
+    toeOut: angle(0, 45).default(15),
+    /** knee flexion at the bottom of the hike; omitted = the template's usual */
+    kneeAngle: angle(0, 60).optional(),
+    ...common,
+  }),
+  'hip-kickback': z.strictObject({
+    implement: ImplementId.extract(['cable', 'bodyweight', 'band']).default('cable'),
+    /** standing = one leg kicks back against a low cable; lying_prone = reverse hyperextension, hips at the bench end,
+     * both legs swing up; kneeling = on all fours (donkey kick) */
+    posture: Posture.extract(['standing', 'lying_prone', 'kneeling']).default('standing'),
+    attachment: Attachment.extract(['ankle_strap']).optional(),
+    cableHeight: CableHeight.default('low'),
+    /** lying_prone: what the trunk lies on; omitted = a flat bench; bench = a high padded bench with handles (the
+     * reverse hyper station's frame, unloaded), so the straight legs hang free */
+    support: Support.extract(['bench']).optional(),
+    /** knee flexion of the working leg(s), held through the rep */
+    kneeAngle: angle(0, 100).default(0),
+    /** standing: trunk lean from vertical, hands on the cable frame */
+    torsoAngle: angle(0, 60).default(20),
     ...common,
   }),
 } as const

@@ -17,7 +17,7 @@ const dof = (u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
 
 describe('back-extension template', () => {
   it('covers every back-extension record in the family', () => {
-    expect([...baked.keys()]).toEqual([505])
+    expect([...baked.keys()]).toEqual([505, 527])
   })
 
   it('feet planted, palms on the shoulders, finite frames, seamless loop', () => {
@@ -61,6 +61,26 @@ describe('back-extension template', () => {
       expect(clear(s, re)).toBeLessThan(0)
       expect(clear(s, re)).toBeGreaterThan(-0.015)
     }
+  })
+
+  it('GHD (527): level legs, the trunk folds 0 -> 80 deg over the round pad; thighs, shins and soles on the station', () => {
+    const g = baked.get(527)!
+    const d = (u: number, name: string) => frameQ(g, at(g, u))[skel.dof[name]]
+    expect(d(0, 'pelvis.tilt')).toBeCloseTo(90, 3)
+    expect(d(0, 'hip_l.flex')).toBeCloseTo(TOP_HIP, 0)
+    expect(d(0.625, 'hip_l.flex')).toBeCloseTo(BOTTOM_HIP, 0)
+    const spec = g.implements.find((s) => s.kind === 'ghd')!
+    const pose = frameImplements(g, 0).find((p) => p.id === spec.id)!
+    const [nose, pad, plate, top, low] = placeParts(spec, pose)
+    const caps = bodyCapsules(skel, fk(skel, frameQ(g, 0)))
+    const clear = (s: typeof pad, re: RegExp) => Math.min(...caps.filter((c) => re.test(c.region)).map((c) => capsuleSolidClearance(c, s)))
+    expect(Math.min(clear(nose, /^thigh_/), clear(pad, /^thigh_/))).toBeGreaterThan(-0.015)
+    expect(Math.min(clear(nose, /^thigh_/), clear(pad, /^thigh_/))).toBeLessThan(0)
+    expect(clear(plate, /^foot_/)).toBeGreaterThan(-0.015)
+    for (const r of [top, low]) expect(clear(r, /^shank_/)).toBeGreaterThan(-0.015)
+    // the head stays off the floor at the bottom
+    const bottom = bodyCapsules(skel, fk(skel, frameQ(g, at(g, 0.625)))).filter((c) => c.region === 'head')
+    expect(Math.min(...bottom.map((c) => Math.min(c.a[1], c.b[1]) - c.r))).toBeGreaterThan(0.05)
   })
 
   it('throws for variants it does not draw yet', () => {

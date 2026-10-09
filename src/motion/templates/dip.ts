@@ -3,12 +3,14 @@ import { bodyCapsules, placeParts } from '../collide.ts'
 import { centerOfMass, fk } from '../fk.ts'
 import { crossBench, DRAWN_BENCH } from '../implements/arms.ts'
 import { dipBars, DIP, palmRest } from '../implements/press-vertical-bodyweight.ts'
+import { RING_HEIGHT } from '../implements/index.ts'
 import { siteWorld, type ImplementSpec } from '../implements.ts'
-import { DEG, lerp, norm, qaxis, qid, type V3 } from '../math.ts'
+import { DEG, lerp, norm, qaxis, qid, qrot, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { armElevation, minClear, plantFeet } from './press-body.ts'
 import { PALM_SINK, PALM_WRIST_LIMITS } from './push-up.ts'
+import { ringContacts, ringPoses, ringRig, ringSpread, type RingRig } from './rings.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic, secant } from './solve.ts'
 import { setPelvis } from './standing.ts'
@@ -23,6 +25,9 @@ import { memo, type Setup, type Template } from './types.ts'
 // Bench dip (support bench): the palms flat on the front edge of a flat bench across the lifter, beside the hips with
 // the fingers forward, the feet planted in front with the knees bent; the hips slide down just clear of the bench while
 // the elbows bend straight back from ~8 deg to ~90 deg (upper arms about level), the trunk upright.
+// Ring dip (implement rings): the same dip on gymnastic rings held by the hips (RING_DIP.half, narrower than the bars),
+// the rings turning out a little at the top (thumbs out, RING_DIP.turn) and each ring leaning on its forearm
+// (rings.ts).
 
 type P = ParamsOf<'dip'>
 
@@ -31,7 +36,14 @@ const BOTTOM_ELBOW = 98
 /** lean at the top as a share of the lean at the bottom */
 const TOP_LEAN = 0.75
 
-type Ctx = { tempo: Tempo; setup: Setup; bars: ImplementSpec; pose: ImplementPose; height: (c: number) => number }
+type Ctx = { tempo: Tempo; setup: Setup; bars: ImplementSpec; pose: ImplementPose; height: (c: number) => number; rig?: RingRig }
+
+/**
+ * ring dip: the grips' half spread beside the hips, m (narrower and the straight arms press into the lats at the top);
+ * how far the hands turn out (thumbs out) at the top, deg; clavicle elevation at the top, deg (the bars' depressed -6
+ * draws the upper arms into the trunk with the hands this close)
+ */
+const RING_DIP = { half: 0.28, turn: 15, shrug: 0 }
 
 /**
  * Bench dip: pad top height, m; the back's clearance off the bench, m; the hands' half spread (beside the hips), m,
@@ -64,7 +76,7 @@ const MIRRORED = ['clavicle_*.elev', 'clavicle_*.prot', 'scapula_*.uprot', 'shou
 function unsupported(p: P) {
   if (p.laterality !== 'bilateral') return `laterality ${p.laterality}`
   if (p.support === 'bench') return p.implement === 'bodyweight' ? null : `bench ${p.implement}`
-  if (p.implement !== 'bodyweight') return `implement ${p.implement}`
+  if (p.implement !== 'bodyweight' && p.implement !== 'rings') return `implement ${p.implement}`
   if (p.grip !== 'neutral') return `grip ${p.grip}`
   return null
 }
@@ -82,7 +94,7 @@ function body(skel: Skeleton, q: Float64Array, p: P, c: number) {
     'ankle_*.df': -30,
     'neck.flex': -0.35 * lean,
     'head.flex': 4,
-    'clavicle_*.elev': lerp(8, -6, c),
+    'clavicle_*.elev': lerp(8, p.implement === 'rings' ? RING_DIP.shrug : -6, c),
     'clavicle_*.prot': lerp(4 + 6 * chest, -2, c),
     'grip_*.close': 1,
   })
@@ -93,7 +105,9 @@ function body(skel: Skeleton, q: Float64Array, p: P, c: number) {
 function arms(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Ctx, 'bars' | 'pose'>, c: number) {
   const g = siteWorld(ctx.bars, ctx.pose, 'l')
   const out = lerp(0.1, 0.4, p.torsoAngle / 45)
-  attachHand(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: [-1, 0, 0] }, { pole: norm([out, lerp(0.1, 0.4, c), -1]), wristBias: lerp(30, 18, c), planeHint: 0 })
+  // rings: the hands turn out (index towards the side) as the arms straighten
+  const axis = p.implement === 'rings' ? qrot(qaxis([0, 1, 0], RING_DIP.turn * c * c * DEG), g.axis!) : g.axis!
+  attachHand(skel, q, 'l', { pos: g.pos, axis, palm: [-1, 0, 0] }, { pole: norm([out, lerp(0.1, 0.4, c), -1]), wristBias: lerp(30, 18, c), planeHint: 0 })
   for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
 }
 
@@ -111,6 +125,12 @@ function pose(skel: Skeleton, p: P, ctx: Pick<Ctx, 'bars' | 'pose'>, c: number, 
   q[skel.dof['pelvis.tz']] = z
   arms(skel, q, p, ctx, c)
   return q
+}
+
+/** the ring dip's grips: no parts (the rings are their own implements), the hands' sites at the rings' height */
+function ringGrips(): ImplementSpec {
+  const x = RING_DIP.half, y = RING_HEIGHT.dip
+  return { id: 'ring_grips', kind: 'floor_contact', mass: 0, com: [0, 0, 0], parts: [], sites: { l: { pos: [x, y, 0], axis: [0, 0, 1] }, r: { pos: [-x, y, 0], axis: [0, 0, 1] } } }
 }
 
 // ---------- bench dip ----------
@@ -217,12 +237,26 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`dip: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
-  const bars = dipBars()
+  const rings = p.implement === 'rings'
+  // rings: where the hands hold them, as the bars' grip sites (the rings are posed in the hands each frame)
+  const bars = rings ? ringGrips() : dipBars()
   const base = { bars, pose: { id: bars.id, pos: [0, 0, 0] as V3, rot: qid() } }
   const elbow = (c: number, y: number) => pose(skel, p, base, c, y)[skel.dof['elbow_l.flex']]
   // body height along the rep: solved at a few points so the elbow follows TOP -> BOTTOM linearly in c
   const cs = Array.from({ length: 7 }, (_, k) => k / 6)
   const ys = cs.map((c) => root1d((y) => elbow(c, y) - lerp(BOTTOM_ELBOW, TOP_ELBOW, c), DIP.height - 0.3, DIP.height + 0.4, { tol: 1e-6, scan: 4 }).x)
+  if (rings) {
+    // the straps hang just outside the arms
+    const rig = ringRig({ z: 0, spread: ringSpread(RING_DIP.half) })
+    const setup: Setup = {
+      implements: rig.implements,
+      contacts: ringContacts(),
+      tempo,
+      symmetric: true,
+      balance: { point: 'com', over: { implement: rig.anchor.id, sites: ['strap_l', 'strap_r'] }, tol: 0.025 },
+    }
+    return { tempo, setup, ...base, height: monotoneCubic(cs, ys), rig }
+  }
   const contacts: Contact[] = [
     { site: 'grip_l', kind: 'grip', target: { implement: bars.id, grip: 'l' } },
     { site: 'grip_r', kind: 'grip', target: { implement: bars.id, grip: 'r' } },
@@ -245,7 +279,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   }
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
-  return { q: pose(skel, p, ctx, c, ctx.height(c)), implements: [ctx.pose], contacts: ctx.setup.contacts }
+  const q = pose(skel, p, ctx, c, ctx.height(c))
+  return { q, implements: ctx.rig ? ringPoses(skel, fk(skel, q), ctx.rig) : [ctx.pose], contacts: ctx.setup.contacts }
 }
 
 export const dip: Template<P> = {

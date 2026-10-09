@@ -73,7 +73,7 @@ describe('machine collision descriptors', () => {
       expect(machineColliders(b).map((m) => m.key).sort(), slug).toEqual(drawn)
       drawn.forEach((k) => seen.add(k))
     }
-    expect([...seen].sort()).toEqual(['anchor', 'assisted-pullup', 'band', 'bench', 'bg_l', 'bg_r', 'box', 'cable-stack', 'crossover-l', 'crossover-r', 'handle_l', 'handle_r', 'kb', 'kb_l', 'kb_r', 'lat-pulldown', 'leg-press', 'mat', 'plate', 'pullup', 'smith'])
+    expect([...seen].sort()).toEqual(['anchor', 'assisted-pullup', 'band', 'bar', 'belt_lever', 'belt_squat', 'bench', 'bg_l', 'bg_r', 'box', 'cable-stack', 'crossover-l', 'crossover-r', 'hack', 'hack_sled', 'handle_l', 'handle_r', 'kb', 'kb_l', 'kb_r', 'landmine', 'lat-pulldown', 'leg-press', 'mat', 'pendulum', 'pendulum_arm', 'plate', 'preacher', 'pullup', 'ring_l', 'ring_r', 'rings', 'smith', 'strap_l', 'strap_r'])
   })
 
   it('lay the machines out exactly where the composer draws them', () => {
@@ -95,8 +95,9 @@ describe('machine collision descriptors', () => {
           // colliding pieces leave out only the held implements and attachments
           const solid = layout.solid(poses).pieces
           expect(solid.length, `${slug} ${layout.key}`).toBeLessThan(pieces.length + 1)
-          // portable implements (band, kettlebell, plate) are drawn here but collide through their implement parts
-          if (layout.fixed || solid.length) expect(solid.length, `${slug} ${layout.key}`).toBeGreaterThan(pieces.length * 0.6)
+          // portable implements (band, kettlebell, plate) are drawn here but collide through their implement parts;
+          // the belt squat's hip belt and chain are drawn only
+          if ((layout.fixed || solid.length) && layout.key !== 'belt_lever') expect(solid.length, `${slug} ${layout.key}`).toBeGreaterThan(pieces.length * 0.6)
         }
       }
       const bench = props.find((p) => p.type === 'bench')

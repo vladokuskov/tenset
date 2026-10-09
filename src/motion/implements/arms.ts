@@ -83,3 +83,28 @@ export function drawnFlatBench(o: { id?: string; seatHeight: number }): Implemen
 export function crossBench(o: { id?: string; seatHeight: number }): ImplementSpec {
   return { ...drawnFlatBench({ id: o.id ?? 'xbench', seatHeight: o.seatHeight }), kind: 'cross_bench' }
 }
+
+/** angled pushdown V-bar: hub `hub` m below the carabiner, handles `len` long sloping `slope` deg below horizontal from `inner` m either side */
+export const PUSHDOWN_V = { hub: 0.06, inner: 0.07, len: 0.12, slope: 40, r: 0.015 }
+
+/**
+ * The angled V-bar for pushdowns (wave 3c): a cable attachment (kind cable_handle, drawn by props/cable.ts as the
+ * v_bar with sloping handles) whose two handles run down and out from a hub under the stem, so the hands hold it
+ * thumbs up, palms angled in. Sites `l` / `r` at the handle middles, axis little finger to index for a hand closing
+ * from outside: up the handle towards the hub (left hand on +X).
+ */
+export function pushdownV(id = 'handle'): ImplementSpec {
+  const { hub, inner, len, slope, r } = PUSHDOWN_V
+  const s = (slope * Math.PI) / 180
+  const d: V3 = [Math.cos(s), -Math.sin(s), 0]
+  const end = (x: number, t: number): V3 => [x * (inner + d[0] * t), -hub + d[1] * t, 0]
+  return {
+    ...cableHandle({ id, attachment: 'v_bar' }),
+    com: [0, -hub, 0],
+    parts: [cyl([0, 0, 0], [0, -hub, 0], 0.012), cyl(end(1, 0), end(1, len), r), cyl(end(-1, 0), end(-1, len), r)],
+    sites: {
+      l: { pos: end(1, len / 2), axis: [-d[0], -d[1], 0] },
+      r: { pos: end(-1, len / 2), axis: [d[0], -d[1], 0] },
+    },
+  }
+}

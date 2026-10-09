@@ -27,7 +27,7 @@ function lineBreak(b: Baked, i: number) {
 
 describe('hold template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([803, 804, 808, 815, 823, 824, 828, 829, 830, 841])
+    expect([...baked.keys()].sort()).toEqual([538, 803, 804, 808, 815, 823, 824, 828, 829, 830, 835, 841])
   })
 
   it.each([803, 804, 808])('%s: contacts held, the loop closes', (id) => {
@@ -227,5 +227,19 @@ describe('hold template', () => {
       for (const n of ['elbow_l.flex', 'elbow_r.flex', 'thorax.rot', 'pelvis.rot']) expect(dof(b, i, n)).toBeCloseTo(dof(cable, i, n), 6)
     }
     expect(b.implements.some((s) => s.kind === 'band_anchor')).toBe(true)
+  })
+
+  it('835 L-sit: hands on the bars with straight arms, legs level with the hips, the body over the hands', () => {
+    const b = get(835)
+    for (let i = 0; i < b.frames; i++) {
+      expect(contactError(skel, b, i)).toBeLessThan(0.005)
+      expect(frameQ(b, i)[skel.dof['elbow_l.flex']]).toBeLessThan(12)
+      const f = fk(skel, frameQ(b, i))
+      const hip = segPos(skel, f, 'femur_l'), ankle = segPos(skel, f, 'foot_l')
+      expect(Math.abs(ankle[1] - hip[1])).toBeLessThan(0.08)
+      expect(ankle[2] - hip[2]).toBeGreaterThan(0.7)
+      expect(Math.abs(centerOfMass(skel, f)[2])).toBeLessThan(0.02)
+    }
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
   })
 })

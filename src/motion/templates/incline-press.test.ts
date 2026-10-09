@@ -3,7 +3,7 @@ import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, placeParts } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, qconj, qrot, sub, type V3 } from '../math.ts'
+import { add, dist, qconj, qrot, sub, type V3 } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { DEFAULT_TEMPO, loopDuration } from '../timing.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -11,8 +11,10 @@ import { armElevation, flareOf, forearmLean, forearmTilt, minClear, solidOf } fr
 
 const skel = testSkeleton()
 const T = 'incline-press'
-const variants = motionRecords(T)
-const baked = new Map(variants.map((v) => [v.id, bake(getTemplate(T), parseParams(T, v.params, v.laterality), skel)]))
+const records = motionRecords(T)
+/** the bench presses (the machine and landmine variants have their own checks) */
+const variants = records.filter((v) => v.params.implement !== 'machine' && v.params.implement !== 'landmine')
+const baked = new Map(records.map((v) => [v.id, bake(getTemplate(T), parseParams(T, v.params, v.laterality), skel)]))
 const get = (id: number) => baked.get(id)!
 const run = (raw: Record<string, unknown>, laterality = 'bilateral') => bake(getTemplate(T), parseParams(T, raw, laterality), skel)
 /** the flat barbell bench, for comparison */
@@ -35,7 +37,7 @@ const load = (b: Baked) => (b.params.implement === 'dumbbell' ? 'db_l' : 'bar')
 
 describe('incline-press template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([102, 103, 109, 123])
+    expect([...baked.keys()].sort()).toEqual([102, 103, 109, 122, 123, 136])
   })
 
   it.each(variants.map((v) => v.id))('%s: finite, feet planted, hands on the implement, body still, seamless loop', (id) => {
@@ -181,7 +183,61 @@ describe('incline-press template', () => {
     expect(closest).toBeLessThan(0.4)
   })
 
+  it('incline machine (122): seated on the reclined pad, the handles from the upper chest up and forward on the lever arc to soft elbows', () => {
+    const b = get(122)
+    const k = b.implements.findIndex((s) => s.id === 'handles')
+    const arms = b.implements[k]
+    const { f } = pose(b, TOP)
+    // handles start at the upper chest (above the flat machine's mid-chest start) and finish up and forward
+    const start = siteWorld(arms, pose(b, BOTTOM).impl[k], 'l').pos, end = siteWorld(arms, pose(b, TOP).impl[k], 'l').pos
+    expect(inThorax(b, BOTTOM, start)[1]).toBeGreaterThan(-0.02)
+    const rise = (Math.atan2(end[1] - start[1], end[2] - start[2]) * 180) / Math.PI
+    expect(rise).toBeGreaterThan(25)
+    expect(rise).toBeLessThan(45)
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(80)
+    // the handles stay on a circle round the pivot below and in front of mid-stroke
+    let r0 = -1
+    for (let i = 0; i < b.frames; i += 4) {
+      const p = siteWorld(arms, frameImplements(b, i)[k], 'l').pos
+      const pivot = add(frameImplements(b, i)[k].pos as V3, qrot(frameImplements(b, i)[k].rot, arms.sites.pivot.pos))
+      const r = Math.hypot(p[1] - pivot[1], p[2] - pivot[2])
+      if (r0 < 0) r0 = r
+      expect(Math.abs(r - r0)).toBeLessThan(1e-6)
+      expect(pivot[2]).toBeGreaterThan(start[2])
+      expect(pivot[1]).toBeLessThan(start[1])
+    }
+    // butt and back on the pads, still
+    const frame = b.implements.findIndex((s) => s.id === 'machine')
+    const caps = bodyCapsules(skel, f)
+    expect(minClear(caps.filter((c) => c.segment === 'pelvis'), solidOf(b.implements[frame], pose(b, TOP).impl[frame], 0))).toBeLessThan(0.002)
+    expect(minClear(caps.filter((c) => c.segment === 'thorax2'), solidOf(b.implements[frame], pose(b, TOP).impl[frame], 1))).toBeLessThan(0.002)
+  })
+
+  it('landmine (136): both hands round the bar\'s tip at the upper chest, pressed up and forward to straight arms, body still', () => {
+    const b = get(136)
+    const bar = b.implements.findIndex((s) => s.id === 'bar')
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(90)
+    const tip = (u: number) => siteWorld(b.implements[bar], pose(b, u).impl[bar], 'tip').pos
+    // the tip starts in front of the upper chest and rises ~25-50 cm up and forward
+    expect(inThorax(b, BOTTOM, tip(BOTTOM))[1]).toBeGreaterThan(0)
+    expect(inThorax(b, BOTTOM, tip(BOTTOM))[2]).toBeGreaterThan(0.15)
+    expect(tip(TOP)[1] - tip(BOTTOM)[1]).toBeGreaterThan(0.2)
+    expect(tip(TOP)[2] - tip(BOTTOM)[2]).toBeGreaterThan(0.1)
+    // the hands mirror each other across the bar, a fist's width apart
+    for (let i = 0; i < b.frames; i += 4) {
+      const f = fk(skel, frameQ(b, i))
+      const d = dist(sitePos(skel, f, 'grip_l'), sitePos(skel, f, 'grip_r'))
+      expect(d).toBeGreaterThan(0.1)
+      expect(d).toBeLessThan(0.12)
+      expect(Math.abs(frameQ(b, i)[skel.dof['pelvis.tz']] - frameQ(b, 0)[skel.dof['pelvis.tz']])).toBeLessThan(1e-6)
+    }
+  })
+
   it('unsupported variants throw with a reason', () => {
+    expect(() => run({ implement: 'landmine', posture: 'lying_supine' })).toThrow(/variant not implemented yet/)
+    expect(() => run({ implement: 'landmine', posture: 'standing' }, 'unilateral')).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'barbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'machine' })).toThrow(/variant not implemented yet/)
     expect(() => run({ posture: 'seated' })).toThrow(/variant not implemented yet/)

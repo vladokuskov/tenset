@@ -34,7 +34,7 @@ const folded = (b: Baked) => Array.from({ length: b.frames }, (_, i) => frameQ(b
 
 describe('horizontal-press template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([101, 107, 108, 118, 119, 120, 121, 124, 128, 135, 707])
+    expect([...baked.keys()].sort()).toEqual([101, 107, 108, 116, 117, 118, 119, 120, 121, 124, 128, 135, 707])
   })
 
   it.each(variants.filter((v) => v.params.posture !== 'standing').map((v) => v.id))('%s: finite, feet planted, hands on the implement, body still, seamless loop', (id) => {
@@ -409,11 +409,55 @@ describe('horizontal-press template', () => {
     expect(() => run({ implement: 'barbell', support: 'floor' })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'dumbbell', grip: 'pronated', squeeze: true })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'cable', posture: 'standing' })).toThrow(/variant not implemented yet/)
-    expect(() => run({ benchAngle: -15 })).toThrow(/variant not implemented yet/)
+    expect(() => run({ benchAngle: -5 })).toThrow(/variant not implemented yet/)
+    expect(() => run({ benchAngle: -20, implement: 'smith' })).toThrow(/variant not implemented yet/)
+    expect(() => run({ benchAngle: -20, implement: 'dumbbell', squeeze: true, grip: 'neutral' })).toThrow(/variant not implemented yet/)
     expect(() => run({ benchAngle: 5 })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'barbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'machine', posture: 'lying_supine' })).toThrow(/variant not implemented yet/)
     expect(() => bake(getTemplate(T), parseParams(T, {}, 'unilateral'), skel)).toThrow(/variant not implemented yet/)
+  })
+
+  it.each([116, 117])('decline (%s): head down the pad with the legs hooked on the rollers, the load to the low chest and back over the shoulders', (id) => {
+    const b = get(id)
+    const k = b.implements.findIndex((s) => s.kind === 'decline_bench')
+    const bench = b.implements[k]
+    const { f, impl } = pose(b, TOP)
+    const caps = bodyCapsules(skel, f)
+    const [pad, kneeRoller, ankleRoller] = placeParts(bench, impl[k])
+    // butt, upper back and head on the pad; the head lower than the hips by the decline
+    for (const [what, re] of [['butt', /^pelvis$/], ['upper back', /^thorax2$/]] as const) {
+      const v = minClear(caps.filter((c) => re.test(c.segment)), pad)
+      expect(v, what).toBeGreaterThan(-0.015)
+      expect(v, what).toBeLessThan(0.002)
+    }
+    const head = minClear(caps.filter((c) => c.region === 'head'), pad)
+    expect(head).toBeGreaterThan(-0.01)
+    expect(head).toBeLessThan(0.003)
+    const down = segPos(skel, f, 'pelvis')[1] - segPos(skel, f, 'head')[1]
+    expect(down).toBeGreaterThan(0.15)
+    // the knee roller in the bend behind the knees, the ankle roller over the fronts of the ankles: both press lightly
+    const legs = caps.filter((c) => /^(thigh|shank|foot)_/.test(c.region))
+    for (const roller of [kneeRoller, ankleRoller]) {
+      const v = minClear(legs, roller)
+      expect(v).toBeGreaterThan(-0.008)
+      expect(v).toBeLessThan(0.001)
+    }
+    expect(segPos(skel, f, 'tibia_l')[2]).toBeGreaterThan(bench.sites.knee.pos[2])
+    expect(segPos(skel, f, 'foot_l')[2]).toBeLessThan(bench.sites.ankle.pos[2])
+    // soft lockout over the shoulders, elbows folded at the bottom; the touch below the flat bench's, on the low chest
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(id === 116 ? 120 : 90)
+    const load = id === 116 ? 'bar' : 'db_l'
+    expect(Math.abs(implPos(b, TOP, load)[2] - segPos(skel, f, 'humerus_l')[2])).toBeLessThan(0.02)
+    if (id === 116) {
+      expect(inThorax(b, BOTTOM, implPos(b, BOTTOM, 'bar'))[1]).toBeLessThan(inThorax(get(101), BOTTOM, implPos(get(101), BOTTOM, 'bar'))[1] - 0.01)
+      // uprights at the head end, the cups just under the locked-out bar
+      const rack = b.implements.find((s) => s.kind === 'bench_rack')!
+      expect(rack.sites.l.pos[1]).toBeLessThan(implPos(b, TOP, 'bar')[1])
+    }
+    // within passive horizontal abduction at the bottom
+    expect(armElevation(skel, pose(b, BOTTOM).f)).toBeGreaterThan(30)
   })
 
   it('dumbbells and machine never touch the body beyond soft contact', () => {

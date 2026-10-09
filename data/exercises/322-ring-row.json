@@ -43,8 +43,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "rings",
+      "posture": "lying_supine",
+      "grip": "neutral",
+      "gripWidth": 1.2,
+      "elbowFlare": 30
+    },
     "mapView": "B"
   },
   "cues": [
@@ -62,6 +68,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: The ring row is straight-bodied, the palms turn in, elbow 8 to 129, all gates pass. The hero looks from the head end at the front of the body, so the primaries (lats, upper back) face the floor and mostly hide. At t=0 and 0.875 the near ring sits right over the face (perspective overlap, ring clearance 85 mm). Rig uprights cropped at the top."
   }
 }

@@ -39,15 +39,22 @@
     738
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "gripWidth": 1,
+      "posture": "lying_supine",
+      "benchAngle": 0,
+      "shoulderFlexion": 90
+    },
     "mapView": "B"
   },
   "cues": [
     "Unrack the bar with a shoulder-width grip",
     "Bend your elbows and let them drift toward your feet",
-    "Lower the bar to about a hand above your chin",
+    "Lower the bar toward your throat, stopping about a hand above it",
     "Press back to straight arms over your shoulders"
   ],
   "basis": [
@@ -58,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: FK matches the constants. At the bottom the elbow is 125 deg flexion, the upper arm leans 45 deg toward the feet, and the bar comes 16 cm toward the head on a straight line to 11.7 cm above the chin, over the throat, as cue 3 says ('a hand above'). Lockout is over the shoulders (bar z within 1 cm). Bar clears the head by 129 mm and the rack by 93 mm."
   }
 }

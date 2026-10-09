@@ -9,10 +9,15 @@ export const hold: SceneSpec = {
     if (params.kind === 'front_plank') return { az: -68, elev: 0.1 }
     // side plank: the body lies across the frame facing the camera, low enough to see the working side's flank
     if (params.kind === 'side_plank') return { az: -22, elev: 0.12 }
+    // Copenhagen plank: low and nearly in front, so the underside of the top thigh (the working adductors) shows below
+    // the body line, with the bench at the feet
+    if (params.kind === 'copenhagen_plank') return { az: params.side === 'left' ? 12 : -12, elev: 0.04 }
     // suitcase hold: in front, turned towards the free side, so the far flank's obliques and the load both read
     if (params.kind === 'suitcase_hold') return { az: params.side === 'left' ? -25 : 25, elev: 0.2 }
     // hollow hold: from the side and a little above, where the curve from the shoulders to the feet reads
     if (params.kind === 'hollow_hold') return { az: -72, elev: 0.22 }
+    // L-sit: from the side and a little in front, past the near bar, where the level legs and straight arms read
+    if (params.kind === 'l_sit') return { az: -62, elev: 0.12 }
     return { az: -35, elev: 0.3 }
   },
   grip: (ctx) => {

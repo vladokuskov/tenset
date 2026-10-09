@@ -9,6 +9,7 @@ import { naturalCubic, secant } from './solve.ts'
 import { DEG, dist, eulerFrom, lerp, qaxis, qid, qmul, qnorm, RAD, smoothstep, type Axis, type Quat, type V3 } from '../math.ts'
 import { jointRotation, setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
+import { chairContext, sampleChair, type Chair } from './core/captains-chair.ts'
 import { MAT_TOP, matClearance, mirrorArm, palmDown, palmHeight, restHead, restOnMat, segPosOf, SINK } from './core/floor.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -20,7 +21,8 @@ import { memo, type Setup, type Template } from './types.ts'
 // held under the grips every frame (so the trunk moves back and leans a little as the legs rise, it never swings);
 // straight legs together (knees soft) or knees bending to the param on the way up. Lying (807): supine on a mat, palms down
 // beside the hips, straight legs from just off the mat to the param, the lower back pressed down (posterior tilt
-// growing towards the top, the lumbar spine flattening so the upper back stays still).
+// growing towards the top, the lumbar spine flattening so the upper back stays still). Flutter kick (836, lying,
+// alternating): flutterBody. Captain's chair (826, support elbow_pads): core/captains-chair.ts.
 
 type P = ParamsOf<'leg-raise'>
 
@@ -74,7 +76,7 @@ type Hang = {
 type Top = { lean: number }
 const HANG_TOP: Top = { lean: HANG.lean }
 type Lying = { kind: 'lying'; tempo: Tempo; setup: Setup; tilt0: number; neck0: number; mat: ImplementPose; palms: ImplementSpec }
-type Ctx = Hang | Lying
+type Ctx = Hang | Lying | Chair
 
 const bent = (p: P) => p.kneeAngle > 30
 
@@ -299,6 +301,7 @@ const TRUNK = (c: Capsule) => c.region === 'trunk'
 const TRUNK_SEAT = (c: Capsule) => c.region === 'trunk' || c.region === 'thigh_l' || c.region === 'thigh_r'
 
 function lyingBody(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Lying, 'tilt0'>, c: number) {
+  if (p.laterality === 'alternating') return flutterBody(skel, q, p, ctx, c)
   const curl = p.pelvisCurl ? REVERSE.tilt : LYING.tilt
   const tilt = ctx.tilt0 - curl * c
   // the legs' elevation from the mat is hip flexion minus the pelvis's turn away from lying flat
@@ -316,6 +319,33 @@ function lyingBody(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Lying, 'tilt
   // the reverse crunch rolls the pelvis up off the mat: the lumbar spine takes up the tilt, the upper back stays down;
   // at the bottom the buttocks (the thighs' proximal capsules with the hips at 90) rest on the mat too
   restOnMat(skel, q, p.pelvisCurl ? TRUNK_SEAT : TRUNK)
+}
+
+/** flutter kick: short quick strokes, a leg up and down in about 1 s (about 2 strokes a s): the strength tempo's 2 s
+ * eccentric reads as a slow scissor (template-own when params.tempo is unset, the swing precedent; lead decision pending) */
+export const FLUTTER_TEMPO: Tempo = [0.5, 0, 0.5, 0.1]
+
+/**
+ * Flutter kick (lying, alternating): straight legs kick in opposite directions between bottomHipAngle and topHipAngle
+ * above the mat, the working leg rising on the concentric (one stroke each way per loop); the lower back stays pressed
+ * down (the posterior tilt held at its middle value) and the arms stay beside the hips.
+ */
+function flutterBody(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Lying, 'tilt0'>, c: number) {
+  const tilt = ctx.tilt0 - LYING.tilt * 0.6
+  const lo = p.bottomHipAngle ?? LYING.low
+  const work = p.side === 'left' ? 'l' : 'r', other = work === 'l' ? 'r' : 'l'
+  setDofs(skel, q, {
+    'lumbar.flex': LYING.lumbar + LYING.tilt * 0.6,
+    'thorax.flex': 0,
+    [`hip_${work}.flex`]: lerp(lo, p.topHipAngle, c) + 90 + tilt,
+    [`hip_${other}.flex`]: lerp(p.topHipAngle, lo, c) + 90 + tilt,
+    'hip_*.abd': 0,
+    'knee_*.flex': SOFT_KNEE,
+    'ankle_*.df': ANKLE - 10,
+    'grip_*.close': 0,
+  })
+  setPelvis(skel, q, [0, 0.3, 0], tilt)
+  restOnMat(skel, q, TRUNK)
 }
 
 function lyingArms(skel: Skeleton, q: Float64Array, palms: ImplementSpec) {
@@ -354,7 +384,7 @@ function lyingContext(p: P, skel: Skeleton, tempo: Tempo): Lying {
     { site: 'grip_l', kind: 'grip', target: { implement: palms.id, grip: 'l' } },
     { site: 'grip_r', kind: 'grip', target: { implement: palms.id, grip: 'r' } },
   ]
-  const setup: Setup = { implements: [matSpec, palms], contacts, tempo, symmetric: true }
+  const setup: Setup = { implements: [matSpec, palms], contacts, tempo, symmetric: p.laterality !== 'alternating' }
   return { kind: 'lying', tempo, setup, tilt0, neck0, mat, palms }
 }
 
@@ -370,14 +400,16 @@ function sampleLying(skel: Skeleton, p: P, ctx: Lying, c: number): Pose {
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.support === 'elbow_pads' && p.posture === 'hanging' && !p.toBar && !p.twist) return chairContext(p, skel, tempo)
   if (p.support !== 'none') throw new Error(`leg-raise: variant not implemented yet (support ${p.support})`)
   if (p.posture === 'hanging') return hangContext(p, skel, tempo)
-  return lyingContext(p, skel, tempo)
+  return lyingContext(p, skel, p.tempo ?? (p.laterality === 'alternating' ? FLUTTER_TEMPO : tempo))
 })
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
+  if (ctx.kind === 'chair') return sampleChair(skel, p, ctx, c)
   return ctx.kind === 'hang' ? sampleHang(skel, p, ctx, c) : sampleLying(skel, p, ctx, c)
 }
 

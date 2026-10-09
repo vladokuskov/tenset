@@ -7,6 +7,8 @@ import { dist, qrot, RAD } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { armElevation } from './press-body.ts'
 import { _pushUp, pushUp } from './push-up.ts'
+import { RING_LEAN, ringLean } from './rings.ts'
+import { RING_HEIGHT } from '../implements/index.ts'
 import { SCHEMAS } from './schemas.ts'
 import type { AnyTemplate } from './types.ts'
 
@@ -27,7 +29,7 @@ const KNEES = /^(shank_[lr]1|thigh_[lr][23])/
 
 describe('push-up template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([106, 113, 114, 115, 125, 134, 223, 732])
+    expect([...baked.keys()].sort()).toEqual([106, 113, 114, 115, 125, 126, 134, 223, 732])
   })
 
   it.each([...baked.keys()].filter((id) => !baked.get(id)!.params.pike))('%s: elbow ~6 at the top to the chest a fist above the support, plank rigid', (id) => {
@@ -43,7 +45,7 @@ describe('push-up template', () => {
     }
     // bottom: the chest a fist (8 cm) over the support under the hands, or the head 4 cm off the floor where that
     // comes first (feet on a box tip the head down; the neck extends there, so the chest still binds first)
-    const support = b.params.elevation === 'hands' ? 0.45 : 0
+    const support = b.params.elevation === 'hands' ? 0.45 : b.params.implement === 'rings' ? RING_HEIGHT.push_up : 0
     const caps = bodyCapsules(skel, fk(skel, frameQ(b, at(b, BOTTOM))))
     const low = (re: RegExp) => Math.min(...caps.filter((c) => re.test(c.segment)).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
     const chest = low(/^thorax/) - support, head = low(/^head$/)
@@ -53,7 +55,7 @@ describe('push-up template', () => {
     expect(Math.min(chest - 0.08, head - 0.04)).toBeCloseTo(0, 3)
   })
 
-  it.each([...baked.keys()])('%s: palms and balls of the feet planted, palms near flat, wrists in range, seamless', (id) => {
+  it.each([...baked.keys()].filter((id) => baked.get(id)!.params.implement !== 'rings'))('%s: palms and balls of the feet planted, palms near flat, wrists in range, seamless', (id) => {
     const b = baked.get(id)!
     expect(b.q.every(Number.isFinite)).toBe(true)
     const [lo, hi] = b.limits!['wrist_l.flex']
@@ -241,7 +243,51 @@ describe('push-up template', () => {
     expect(segPos(skel, f, 'head')[2]).toBeGreaterThan(sitePos(skel, f, 'grip_l')[2])
   })
 
+  it('rings (126): the hands close on rings that stay put, under the shoulders at the top, elbows by the sides, thumbs turning out', () => {
+    const b = baked.get(126)!
+    expect(b.q.every(Number.isFinite)).toBe(true)
+    const ids = ['ring_l', 'ring_r'].map((id) => b.implements.findIndex((s) => s.id === id))
+    const anchor = b.implements.find((s) => s.id === 'rings')!
+    const ai = b.implements.indexOf(anchor)
+    const grip0 = ids.map((k) => siteWorld(b.implements[k], frameImplements(b, 0)[k], 'grip').pos)
+    // the grips just above the floor
+    expect(grip0[0][1]).toBeCloseTo(RING_HEIGHT.push_up, 3)
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      for (const c of b.contacts) {
+        const target = 'world' in c.target ? c.target.world : siteWorld(b.implements[b.implements.findIndex((s) => s.id === (c.target as { implement: string }).implement)], impl[b.implements.findIndex((s) => s.id === (c.target as { implement: string }).implement)], (c.target as { grip: string }).grip).pos
+        expect(dist(sitePos(skel, f, c.site), target), `${c.site} @${i}`).toBeLessThan(0.005)
+      }
+      ids.forEach((k, j) => {
+        expect(dist(siteWorld(b.implements[k], impl[k], 'grip').pos, grip0[j])).toBeLessThan(0.002)
+        expect(ringLean({ anchor: anchor as never, anchorPose: impl[ai], implements: b.implements }, impl[k], j ? 'r' : 'l')).toBeLessThan(RING_LEAN + 9)
+      })
+      // a straight wrist on the ring
+      expect(Math.abs(frameQ(b, i)[skel.dof['wrist_l.flex']])).toBeLessThan(30)
+    }
+    const top = fk(skel, frameQ(b, at(b, TOP)))
+    expect(Math.abs(segPos(skel, top, 'humerus_l')[2] - grip0[0][2])).toBeLessThan(0.02)
+    // the straps hang from a beam overhead, outside the arms
+    expect(siteWorld(anchor, frameImplements(b, 0)[ai], 'strap_l').pos[0]).toBeGreaterThan(segPos(skel, top, 'humerus_l')[0] + 0.08)
+    // "keep the rings close to your sides": the elbows ~18 deg out at the bottom, tucked tighter than the floor push-up
+    const flareAt = (bb: Baked) => _pushUp.flare(skel, frameQ(bb, at(bb, BOTTOM)))
+    expect(Math.abs(flareAt(b) - 18)).toBeLessThan(3)
+    expect(flareAt(b)).toBeLessThan(flareAt(baked.get(106)!) - 5)
+    // thumbs turn out at the top
+    const yaw = (u: number) => {
+      const f = fk(skel, frameQ(b, at(b, u)))
+      const ax = qrot(f.rot[skel.seg.hand_l], skel.data.sites.grip_l.axis!)
+      return Math.atan2(ax[0], ax[2]) * RAD
+    }
+    expect(yaw(TOP) - yaw(BOTTOM)).toBeGreaterThan(12)
+    const first = frameQ(b, 0), last = frameQ(b, b.frames - 1)
+    for (const d of skel.dofs) expect(Math.abs(first[d.index] - last[d.index]), d.name).toBeLessThan(d.unit === 'm' ? 0.002 : 1)
+  })
+
   it('unsupported variants throw', () => {
+    expect(() => bake(t, parse({ implement: 'rings', kneeling: true }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => bake(t, parse({ implement: 'rings', elevation: 'feet' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ pike: true, kneeling: true }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ kneeling: true, elevation: 'hands' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({}, 'unilateral'), skel)).toThrow(/variant not implemented yet/)

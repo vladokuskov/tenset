@@ -36,8 +36,16 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "v_bar",
+      "cableHeight": "high",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -54,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. needs work: The params say grip: neutral, but the hands end up nearly palms-down: forearm pronation runs 29 at lockout to 82 at the stretch (53 deg of turn per rep), and humeral rotation also swings 54 to 17. The author worked around this by rewording cue 1 instead of fixing the motion. The V slopes only 12 deg, so the attachment reads as a short straight bar, which goes against the exercise name. Grip centres are 0.278 m apart, not the reported 0.18. Lockout stops at 10 deg, but cue 3 still says 'until your elbows lock'. | minor: V steepened to 40 deg (PUSHDOWN_V hub 0.06, inner 0.07, len 0.12; grip centres 0.23 m apart). The solve in triceps/vbar.ts is now damped least squares over humeral rot, elbow abduction, forearm turn (held near 45), wrist dev and the V's roll on its swivel. Pronation runs 34 to 49 (was 29 to 82), true humeral twist 2.8 deg (was 37) and grip error is under 5 mm. Lockout is now 3 deg, so the LOCK exception is removed. Cue 1 is restored to the original 'thumbs on top and palms angled in' (EN and UK), and cue 3 'until your elbows lock' is now true. New costs: (1) Close hands plus a straight lockout pull the elbows about 4 cm in against the ribs at lockout (humerus swing 8.4 deg, DRIFT exception 735: 12 in the test). Pinning the elbows was infeasible (grip errors up to 80 mm, pronation flips). (2) This needs a lead-decision body tolerance (VB.ribs = 30 mm for trunk/upperarm_l/r, including the thorax2 labels; clearance -28 mm vs default 12). (3) The V tilts up to 51 deg off vertical at lockout as it rolls on its swivel, so from the front it reads partly like a flat T-bar near lockout. QA passes, the unit tests pass and the figure renders show no visible flank penetration."
   }
 }

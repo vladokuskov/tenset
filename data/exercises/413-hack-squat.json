@@ -38,9 +38,12 @@
     401
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "squat",
+    "params": {
+      "implement": "machine",
+      "machine": "hack_squat"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: FK: trunk sits on the pad at 44 deg back the whole rep, legs about 55 deg from vertical at lockout, ankle -32 on a plate tilted 20 deg. Bottom: knee 112, hip 73, thigh 28 deg above horizontal. The hips travel along the 45 deg rail (dy = dz = 0.295 m), the loaded horns ride on the sled, the feet don't slip (0.15 mm) and the loop closes. Side handles at hip height are a reasonable lead call."
   }
 }

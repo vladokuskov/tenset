@@ -20,7 +20,7 @@ const total = (b: Baked, i: number) => dof(b, i, 'hip_l.flex') + dof(b, i, 'lumb
 
 describe('leg-raise template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([802, 806, 807, 819, 825, 827])
+    expect([...baked.keys()].sort()).toEqual([802, 806, 807, 819, 825, 826, 827, 836])
   })
 
   it.each([802, 806, 807])('%s: contacts held, loop closes, hips flex to the param with the pelvis curling up', (id) => {
@@ -88,7 +88,8 @@ describe('leg-raise template', () => {
 
   it('unsupported variants say so', () => {
     const t = getTemplate('leg-raise')
-    expect(() => t.setup(parseParams('leg-raise', { posture: 'hanging', support: 'elbow_pads' }), skel)).toThrow(/variant not implemented yet/)
+    // the captain's chair (elbow pads) has no toes-to-bar or lying variant
+    expect(() => t.setup(parseParams('leg-raise', { posture: 'lying_supine', support: 'elbow_pads' }), skel)).toThrow(/variant not implemented yet/)
   })
 
   it.each([819, 825, 827])('%s: contacts held, the loop closes', (id) => {
@@ -145,5 +146,29 @@ describe('leg-raise template', () => {
   it('825 oblique knee raise: both arms stay straight (the body swings and rolls under the bar instead)', () => {
     const b = get(825)
     for (let i = 0; i < b.frames; i++) for (const s of ['l', 'r']) expect(dof(b, i, `elbow_${s}.flex`)).toBeLessThan(10)
+  })
+
+  it('826 captain\'s chair: hands on the handles, elbows on the pads, knees above the hips at the top, legs hanging at the bottom', () => {
+    const b = get(826)
+    for (let i = 0; i < b.frames; i++) expect(contactError(skel, b, i)).toBeLessThan(0.005)
+    const k = b.implements.findIndex((s) => s.kind === 'captains_chair')
+    const pad = siteWorld(b.implements[k], frameImplements(b, 0)[k], 'forearm_l').pos
+    const f = fk(skel, frameQ(b, frameAt(b, TOP)))
+    expect(Math.abs(segPos(skel, f, 'forearm_l')[1] - pad[1])).toBeLessThan(0.06)
+    expect(segPos(skel, f, 'tibia_l')[1]).toBeGreaterThan(segPos(skel, f, 'femur_l')[1])
+    expect(dof(b, frameAt(b, TOP), 'knee_l.flex')).toBeGreaterThan(80)
+    expect(total(b, frameAt(b, BOTTOM))).toBeLessThan(15)
+    // the pelvis curls up at the top
+    expect(dof(b, frameAt(b, TOP), 'lumbar.flex')).toBeGreaterThan(12)
+  })
+
+  it('836 flutter kick: straight legs scissor in opposite directions, the lower back stays down', () => {
+    const b = get(836)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    for (const i of [top, bottom]) expect(dof(b, i, 'knee_l.flex')).toBeLessThan(6)
+    expect(dof(b, top, 'hip_r.flex') - dof(b, top, 'hip_l.flex')).toBeGreaterThan(14)
+    expect(dof(b, bottom, 'hip_l.flex') - dof(b, bottom, 'hip_r.flex')).toBeGreaterThan(14)
+    expect(dof(b, top, 'pelvis.tilt')).toBeCloseTo(dof(b, bottom, 'pelvis.tilt'), 6)
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
   })
 })

@@ -37,8 +37,17 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "cable",
+      "attachment": "single_handle",
+      "cableHeight": "low",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 60,
+      "stance": "split",
+      "shoulderFlexion": -20
+    },
     "mapView": "B"
   },
   "cues": [
@@ -56,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: The upper arm is still (elev 21.5, plane -68) and the elbow runs 95 to 5. The free hand stays planted on the front thigh (-1.8 mm) and the feet don't slip. At lockout the hand is at x -0.375, 10 cm outside the elbow (-0.272) and 15 cm outside the shoulder, so the arm points back and out rather than 'straight back' (cue 3). The cable runs past the working hip with 8.6 mm clearance to the forearm. The side sheet has a blank t=0.625 frame."
   }
 }

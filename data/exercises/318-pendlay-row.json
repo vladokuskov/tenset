@@ -46,8 +46,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "barbell",
+      "torsoAngle": 88,
+      "grip": "pronated",
+      "gripWidth": 1.4,
+      "start": "floor"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -65,6 +71,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: The bar rests dead on the floor (hand y 0.225 = plate radius). The hips hold within 7 mm, and the top humerus z is -0.57 (above the back). The top elbow is 137 deg, high but consistent with a vertical forearm and the bar touching the lower chest. The test bound was widened to 140 for this, and the 'retraction leads' exclusion is reasonable. The trunk swings 83 to 93 deg, so the shoulders drop 8.5 cm to reach the floor."
   }
 }

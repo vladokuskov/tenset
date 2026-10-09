@@ -9,6 +9,7 @@ import { dls } from '../ik.ts'
 import { add, lerp, norm, qfromBasis, qid, qmul, qrot, scale, smoothstep, type Quat, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
+import { ghdSitContext, sampleGhdSit, type GhdSit } from './core/ghd-sit-up.ts'
 import { kneelContext, sampleKneel, type Kneel } from './core/kneel-crunch.ts'
 import { sampleStandCrunch, standCrunchContext, type StandCrunch } from './core/stand-crunch.ts'
 import { legsToward, MAT_TOP, matClearance, mirrorArm, plantFeet, restHead, restOnMat, segPosOf, SINK, toWorld } from './core/floor.ts'
@@ -23,6 +24,7 @@ import { memo, type Setup, type Template } from './types.ts'
 // (834): the floor crunch with a plate held on the chest by its rim. Sit-up (838): the curl, then the trunk rises from the
 // hips with the feet planted, arms folded across the chest; decline sit-up (818): the same on a decline board, feet
 // under its rollers (the floor solution moved rigidly onto the pad). Standing cable crunch (840): core/stand-crunch.ts.
+// GHD sit-up (817, implement machine, seated): core/ghd-sit-up.ts.
 
 type P = ParamsOf<'crunch'>
 
@@ -64,7 +66,7 @@ type Floor = {
   board?: { spec: ImplementSpec; a: number; rot: Quat; at: V3 }
 }
 
-type Ctx = Floor | Kneel | StandCrunch
+type Ctx = Floor | Kneel | StandCrunch | GhdSit
 
 const PELVIS = (c: Capsule) => c.segment === 'pelvis' || c.segment === 'lumbar1'
 const UPPER_BACK = (c: Capsule) => c.segment === 'thorax1' || c.segment === 'thorax2'
@@ -74,7 +76,7 @@ function spine(skel: Skeleton, q: Float64Array, c: number) {
 }
 
 /** left fingertips at the temple: the index edge of the hand against the head, palm towards the face side, fingers up */
-function templeHand(skel: Skeleton, q: Float64Array) {
+export function templeHand(skel: Skeleton, q: Float64Array) {
   const f = fk(skel, q)
   const head = f.rot[skel.seg.head]
   // hand axes in the head frame: palm (-X local) faces forward, fingers (-Y local) point up and a little back
@@ -227,6 +229,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if ((p.implement === 'bodyweight' || p.implement === 'plate') && p.posture === 'lying_supine' && (p.benchAngle === undefined || (p.range === 'sit_up' && p.implement === 'bodyweight'))) return floorContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'kneeling' && p.attachment === 'rope') return kneelContext(skel, tempo)
   if (p.implement === 'cable' && p.posture === 'standing' && p.attachment === 'rope') return standCrunchContext(skel, tempo)
+  if (p.implement === 'machine' && p.posture === 'seated') return ghdSitContext(skel, tempo)
   throw new Error(`crunch: variant not implemented yet (${p.implement}/${p.posture}/${p.attachment ?? '-'})`)
 })
 
@@ -235,6 +238,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const c = phaseAt(u, ctx.tempo).c
   if (ctx.kind === 'kneel') return sampleKneel(skel, ctx, c)
   if (ctx.kind === 'stand') return sampleStandCrunch(skel, ctx, c)
+  if (ctx.kind === 'ghd') return sampleGhdSit(skel, ctx, c)
   const q = floorFrame(skel, ctx, c)
   if (ctx.board) return { q, implements: [{ id: ctx.board.spec.id, pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
   const held = ctx.plate ? [platePose(skel, fk(skel, q), ctx.plate)] : []

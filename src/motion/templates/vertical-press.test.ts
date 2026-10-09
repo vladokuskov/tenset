@@ -3,7 +3,7 @@ import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts, segmentDistance } from '../collide.ts'
 import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, qconj, qrot, type V3 } from '../math.ts'
+import { add, dist, qconj, qrot, type V3 } from '../math.ts'
 import type { Skeleton } from '../skeleton.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { SCHEMAS } from './schemas.ts'
@@ -23,10 +23,10 @@ const TOP = 0, BOTTOM = 0.635
 
 describe('vertical-press template', () => {
   it('covers every record of the template', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([201, 202, 208, 212, 216, 217, 220, 221, 222, 235])
+    expect(variants.map((v) => v.id).sort()).toEqual([201, 202, 208, 212, 216, 217, 218, 219, 220, 221, 222, 235])
   })
 
-  it.each([...baked.keys()])('%s: elbow and arm elevation inside the research ranges at both ends', (slug) => {
+  it.each([...baked.keys()].filter((slug) => baked.get(slug)!.params.implement !== 'landmine'))('%s: elbow and arm elevation inside the research ranges at both ends', (slug) => {
     const b = baked.get(slug)!
     // the working arm (one-arm work: the record's side)
     const s = b.params.laterality === 'unilateral' && b.params.side === 'right' ? 'r' : 'l'
@@ -255,7 +255,40 @@ describe('vertical-press template', () => {
     expect(base[skel.dof['hip_l.flex']]).toBeGreaterThan(80)
   })
 
+  it.each([218, 219])('landmine press (%s): one hand from the shoulder up and forward along the bar\'s arc to a straight arm, body still', (id) => {
+    const b = get(id)
+    const bar = b.implements.findIndex((s) => s.id === 'bar')
+    const pivot = b.implements.find((s) => s.id === 'landmine')!
+    const pivotAt = add(frameImplements(b, 0)[b.implements.indexOf(pivot)].pos as V3, pivot.sites.pivot.pos)
+    // top: the arm straight up and forward (in line with the bar, ~100-140 deg of elevation); bottom: the hand at the
+    // shoulder, the elbow folded under it
+    expect(dof(b, TOP, 'elbow_r.flex')).toBeLessThan(10)
+    expect(dof(b, TOP, 'shoulder_r.elev')).toBeGreaterThan(95)
+    expect(dof(b, TOP, 'shoulder_r.elev')).toBeLessThan(145)
+    expect(dof(b, BOTTOM, 'elbow_r.flex')).toBeGreaterThan(110)
+    const fb = fk(skel, frameQ(b, at(b, BOTTOM)))
+    expect(dist(sitePos(skel, fb, 'grip_r'), segPos(skel, fb, 'humerus_r'))).toBeLessThan(0.3)
+    const base = frameQ(b, 0)
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      const pose = frameImplements(b, i)[bar]
+      // rigid about the pivot on the floor
+      expect(dist(pose.pos as V3, pivotAt)).toBeLessThan(1e-6)
+      // no twist: pelvis, spine and the free arm hold still
+      for (const n of ['pelvis.tx', 'pelvis.tz', 'pelvis.rot', 'pelvis.tilt', 'lumbar.rot', 'thorax.rot', 'thorax.flex', 'shoulder_l.elev', 'elbow_l.flex']) expect(Math.abs(q[skel.dof[n]] - base[skel.dof[n]]), n).toBeLessThan(1e-6)
+    }
+    // up and forward: the grip rises and moves towards the pivot from the bottom to the top
+    const grip = (u: number) => sitePos(skel, fk(skel, frameQ(b, at(b, u))), 'grip_r')
+    expect(grip(TOP)[1] - grip(BOTTOM)[1]).toBeGreaterThan(0.2)
+    expect(grip(TOP)[2] - grip(BOTTOM)[2]).toBeGreaterThan(0.15)
+    // the pressing side's knee (half kneeling) or foot (staggered) back
+    const f = fk(skel, base)
+    expect(segPos(skel, f, 'tibia_r')[2]).toBeLessThan(segPos(skel, f, 'tibia_l')[2])
+  })
+
   it('unsupported variants throw', () => {
+    expect(() => bake(t, parse({ implement: 'landmine', posture: 'standing' }), skel)).toThrow(/variant not implemented yet/)
+    expect(() => bake(t, parse({ implement: 'landmine', posture: 'seated' }, 'unilateral'), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ implement: 'kettlebell', posture: 'standing', grip: 'neutral' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ implement: 'dumbbell', posture: 'standing', support: 'floor' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ implement: 'dumbbell', posture: 'seated', grip: 'supinated' }), skel)).toThrow(/variant not implemented yet/)

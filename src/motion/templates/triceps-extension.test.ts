@@ -56,18 +56,36 @@ const STRETCH: Record<number, [number, number]> = {
   742: [125, 140],
   // Tate press: the dumbbells meet over the chest
   744: [105, 130],
+  // V-bar: hands close, the bar to chest height (cue 4)
+  735: [92, 105],
+  // single arm overhead: the hand deep behind the head, as the rope's stretch
+  737: [125, 140],
+  // incline skull crusher: the dumbbells beside and behind the head (research ~110-135)
+  739: [110, 135],
+  // cable kickback: the forearm hanging, about a right angle (cue 4)
+  740: [88, 100],
+  // seated EZ overhead: the bar behind the head (research ~110-135)
+  745: [110, 135],
+  // JM press: the bar a hand above the throat, upper arms ~45 deg towards the feet (JM.elbow 125)
+  731: [118, 132],
+  // ring extension: the forehead between the rings
+  743: [100, 120],
 }
+/** lockout short of straight, deg */
+const LOCK: Record<number, number> = { 743: 12 }
+/** the upper arm moves on purpose, deg: the JM press's elbows drift towards the feet, the ring extension's body tips forward, the V-bar's close hands tuck the elbows against the ribs at lockout */
+const DRIFT: Record<number, number> = { 731: 50, 743: 30, 735: 12 }
 /** the Tate press flares the elbows as they bend (its upper arm is checked on its own below) */
 const FLARES = new Set([744])
 
 describe('triceps-extension template', () => {
   it('covers every triceps-extension record', () => {
-    expect([...baked.keys()].sort()).toEqual([704, 705, 706, 715, 716, 717, 734, 736, 738, 741, 742, 744])
+    expect([...baked.keys()].sort()).toEqual([704, 705, 706, 715, 716, 717, 731, 734, 735, 736, 737, 738, 739, 740, 741, 742, 743, 744, 745])
   })
 
   it.each([...baked.keys()])('%s: elbow from lockout to its stretch band, upper arm still', (id) => {
     const b = get(id)
-    expect(dof(b, 0, 'elbow_*.flex')).toBeLessThan(8)
+    expect(dof(b, 0, 'elbow_*.flex')).toBeLessThan(LOCK[id] ?? 8)
     const u = (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] / 2) / (b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3])
     const [lo, hi] = STRETCH[id]
     expect(dof(b, u, 'elbow_*.flex')).toBeGreaterThan(lo)
@@ -76,7 +94,7 @@ describe('triceps-extension template', () => {
     const h0 = humerus(b, 0)
     let drift = 0
     for (let i = 0; i < b.frames; i++) drift = Math.max(drift, angleBetween(h0, humerus(b, i)) * RAD)
-    expect(drift).toBeLessThan(FLARES.has(id) ? 55 : 6)
+    expect(drift).toBeLessThan(FLARES.has(id) ? 55 : (DRIFT[id] ?? 6))
   })
 
   it('holds the variant shoulder angle', () => {
@@ -304,8 +322,53 @@ describe('triceps-extension template', () => {
     expect(dof(b, u, 'shoulder_*.rot')).toBeGreaterThan(60)
   })
 
+  it('wave 3c: V-bar hands close, single-arm overhead and kickback cables low, incline bench reclined, EZ hands on the bends', () => {
+    // V-bar: the hands close together, the attachment's handles sloping down and out from its hub
+    const v = get(735)
+    for (const u of [0, 0.625]) {
+      const f = fk(skel, frameQ(v, at(v, u)))
+      expect(dist(sitePos(skel, f, 'grip_l'), sitePos(skel, f, 'grip_r'))).toBeLessThan(0.3)
+    }
+    const h = v.implements.find((s) => s.id === 'handle')!
+    expect(h.sites.l.axis![1]).toBeGreaterThan(0.5)
+    // thumbs on top, palms angled in: the forearm turn stays within 30-55 deg all rep, the humerus twisting little
+    const turn = Array.from({ length: v.frames }, (_, i) => frameQ(v, i)[skel.dof['forearm_l.pro']])
+    expect(Math.min(...turn)).toBeGreaterThan(30)
+    expect(Math.max(...turn)).toBeLessThan(55)
+    expect(Math.max(...turn) - Math.min(...turn)).toBeLessThan(16)
+    const twist = Array.from({ length: v.frames }, (_, i) => frameQ(v, i)[skel.dof['shoulder_l.rot']])
+    expect(Math.max(...twist) - Math.min(...twist)).toBeLessThan(20)
+    // single arm overhead and cable kickback: one D-handle, the pulley low; the overhead one behind, the kickback in front
+    for (const [id, behind] of [[737, true], [740, false]] as const) {
+      const b = get(id)
+      expect(b.symmetric).toBe(false)
+      const pulley = b.cables![0].pulley
+      expect(pulley[1]).toBeLessThan(0.2)
+      const f = fk(skel, frameQ(b, 0))
+      expect(pulley[2] < segPos(skel, f, 'pelvis')[2]).toBe(behind)
+    }
+    // the kickback's upper arm about level with the floor: the hinge plus the arm just past the trunk line
+    const k = get(740)
+    const fk0 = fk(skel, frameQ(k, 0))
+    const ua = sub(segPos(skel, fk0, 'forearm_r'), segPos(skel, fk0, 'humerus_r'))
+    expect(Math.abs(Math.atan2(ua[1], Math.hypot(ua[0], ua[2])) * RAD)).toBeLessThan(20)
+    // incline: the trunk reclined along the bench, the upper arms about vertical at lockout
+    const inc = get(739)
+    const fi = fk(skel, frameQ(inc, 0))
+    const trunk = sub(segPos(skel, fi, 'neck1'), segPos(skel, fi, 'pelvis'))
+    expect(Math.atan2(trunk[1], -trunk[2]) * RAD).toBeGreaterThan(20)
+    expect(angleBetween(sub(segPos(skel, fi, 'forearm_l'), segPos(skel, fi, 'humerus_l')), [0, 1, 0]) * RAD).toBeLessThan(20)
+    // seated EZ: the grips on the inner bends every frame
+    const ez = get(745)
+    for (let i = 0; i < ez.frames; i += 5) {
+      const f = fk(skel, frameQ(ez, i))
+      const pose = frameImplements(ez, i)[0]
+      expect(dist(sitePos(skel, f, 'grip_l'), siteWorld(ez.implements[0], pose, 'l_in').pos)).toBeLessThan(0.005)
+    }
+  })
+
   it('unsupported variants throw', () => {
-    const p = parseParams('triceps-extension', { implement: 'cable', attachment: 'v_bar', posture: 'standing', shoulderFlexion: 0 })
+    const p = parseParams('triceps-extension', { implement: 'cable', attachment: 'v_bar', posture: 'standing', cableHeight: 'low', shoulderFlexion: 0 })
     expect(() => getTemplate('triceps-extension').setup(p, skel)).toThrow(/variant not implemented yet/)
   })
 })

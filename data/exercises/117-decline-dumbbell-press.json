@@ -42,9 +42,13 @@
     114
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "dumbbell",
+      "benchAngle": -20,
+      "elbowFlare": 45
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Symmetric (gate 0 deg). Dumbbells go from x 0.17 at lockout to 0.36 beside the low chest and back in, which matches 'up and slightly together'. Bottom elbow 125 to 131 deg flexion, lockout over the shoulders, loop closes. Forearms lean about 19 deg off vertical at the bottom (flat 107: about 12), within reason. The uneven near and far dumbbells in the hero at t=0.25 are perspective."
   }
 }
