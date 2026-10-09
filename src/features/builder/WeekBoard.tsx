@@ -72,7 +72,7 @@ function BoardCard({
         onFocus={() => onHover(primaries)}
         onBlur={() => onHover(null)}
         className={cx(
-          'block cursor-grab rounded-lg border border-line bg-raised px-2 py-2 transition-[opacity,box-shadow] duration-150 hover:border-line-strong active:cursor-grabbing',
+          'block cursor-grab rounded-lg border border-line bg-raised px-2 py-1.5 transition-[opacity,box-shadow] duration-150 hover:border-line-strong active:cursor-grabbing',
           isDragging && 'shadow-float',
           lit === 'primary' && 'ring-2 ring-accent',
           lit === 'secondary' && 'ring-2 ring-accent/45',
@@ -116,7 +116,6 @@ function BoardColumn({
   const { catalog } = useCatalog()
   const locale = useLocale()
   const m = builderMessages[locale]
-  const c = common[locale]
   const { ref, isDropTarget } = useSortableList(String(day), drops ? DRAWER_ITEM : undefined)
   const { program, week, days } = view
   const d = program.days[day]
@@ -126,6 +125,7 @@ function BoardColumn({
   const groups = Object.fromEntries(Object.entries(week.daily).map(([g, v]) => [g, v[day]]))
   const labels = supersetLabels(d.entries)
   const supersetOf = new Map(d.entries.map((e, i) => [e.id, labels[i]]))
+  const summary = formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes)
 
   return (
     <section
@@ -134,39 +134,37 @@ function BoardColumn({
       data-drop-target={isDropTarget || undefined}
       {...{ [SORT_LABEL]: dayName(day, 'long', locale) }}
       className={cx(
-        '@container flex min-h-[30rem] min-w-0 flex-col rounded-xl bg-surface transition-shadow',
+        '@container flex min-h-0 min-w-0 flex-col rounded-xl bg-surface transition-shadow',
         isDropTarget && 'ring-2 ring-accent',
       )}
     >
-      <Link to="/day/$dow" params={{ dow: daySlug(day) }} className="block rounded-t-xl px-3 pb-1 pt-3 hover:bg-surface-2/60">
+      <Link to="/day/$dow" params={{ dow: daySlug(day) }} className="block shrink-0 rounded-t-xl px-3 pb-1 pt-2.5 hover:bg-surface-2/60">
         <span className="flex items-baseline justify-between gap-1">
           <span className={cx('text-base font-semibold', rest && 'text-ink-3')}>{dayName(day, 'short', locale)}</span>
           {day === todayIndex() && <span className="text-[0.6875rem] text-ink-3">{m.today}</span>}
         </span>
         <span className={cx('block truncate text-sm', rest ? 'text-ink-3' : 'text-ink')}>{rest ? m.rest : (sessionLabel(d.label, locale) ?? m.training)}</span>
         {!rest && (
-          <span className="num block text-xs text-ink-2">
+          <span className="num block truncate text-xs text-ink-2" title={summary}>
             {s.exercises === 0 ? (
-              formatDaySummary(0, 0, locale)
+              summary
             ) : (
               <>
-                <span className="whitespace-nowrap">{c.exercises(s.exercises)}</span> ·{' '}
-                <span className="whitespace-nowrap">{setsLabel(s.hardSets, locale)}</span>
-                {s.estMinutes > 0 && (
-                  <>
-                    {' '}
-                    · <span className="whitespace-nowrap">{c.aboutMinutes(s.estMinutes)}</span>
-                  </>
-                )}
+                <span aria-hidden>
+                  {setsLabel(s.hardSets, locale)}
+                  {s.estMinutes > 0 && ` · ${m.minutesShort(s.estMinutes)}`}
+                </span>
+                <span className="sr-only">{summary}</span>
               </>
             )}
           </span>
         )}
       </Link>
-      <div className="flex h-16 items-center justify-center px-2">
-        {!rest && s.exercises > 0 && <PulseMini view="both" groups={groups} scale="day" height={56} pulseScope={day} />}
+      {/* Short laptop screens give the mini map's height to the list; the week panel shows the same map. */}
+      <div className="flex h-12 shrink-0 items-center justify-center px-2 [@media(max-height:52rem)]:hidden">
+        {!rest && s.exercises > 0 && <PulseMini view="both" groups={groups} scale="day" height={44} pulseScope={day} />}
       </div>
-      <ul className="flex flex-1 flex-col gap-1.5 px-1.5 pb-2">
+      <ul className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-1.5 pb-1 pt-1">
         {ids.map((id, index) => {
           const entry = byId.get(id)
           const ex = entry ? exerciseFor(entry.exerciseId, catalog, program) : null
@@ -183,7 +181,7 @@ function BoardColumn({
       <button
         type="button"
         onClick={() => onAdd(day)}
-        className="mx-2 mb-2 flex h-10 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-ink-2 hover:bg-surface-2 hover:text-ink"
+        className="mx-2 mb-1.5 flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-ink-2 hover:bg-surface-2 hover:text-ink"
       >
         <Plus size={16} strokeWidth={2} aria-hidden />
         {m.add}
@@ -232,6 +230,9 @@ export function WeekBoard({ view, onAdd, onHover, highlight = null, drawer, onDr
   const { program, order } = view
   const lists = Object.fromEntries(order.map((d) => [String(d), program.days[d].entries.map((e) => e.id)]))
   const drops = Boolean(drawer && onDropExercise)
+  const columns = order
+    .map((d) => (program.days[d].kind === 'rest' && program.days[d].entries.length === 0 ? 'minmax(0,0.6fr)' : 'minmax(0,1fr)'))
+    .join(' ')
 
   const onMove = (mv: SortMove) => {
     const from = Number(mv.fromList)
@@ -262,9 +263,10 @@ export function WeekBoard({ view, onAdd, onHover, highlight = null, drawer, onDr
             tabIndex={-1}
             role="group"
             aria-label={m.weekBoard}
-            className="min-w-0 rounded-xl focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            className="flex min-h-0 min-w-0 flex-1 flex-col rounded-xl focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
           >
-            <div className="grid grid-cols-7 gap-2">
+            {/* Empty rest days take less width so training days wrap their names less. */}
+            <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-2" style={{ gridTemplateColumns: columns }}>
               {order.map((d) => (
                 <BoardColumn
                   key={d}
