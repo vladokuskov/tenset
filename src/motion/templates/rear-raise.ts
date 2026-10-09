@@ -1,8 +1,11 @@
 import type { FootTarget } from '../constraints.ts'
-import { lerp, norm, sub, type V3 } from '../math.ts'
+import { siteWorld } from '../implements.ts'
+import { band, bandNode, bandPose } from '../implements/index.ts'
+import { lerp, norm, scale, sub, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
+import { detour, fistContacts, fistGrips, fistId, fistPoses } from './band-pose.ts'
 import { crossoverBody, crossoverContext, crossoverSway, handlePoses, type CrossoverCtx } from './crossover.ts'
 import { inclineProne, proneBody } from './front-raise.ts'
 import { armDir, footContacts, mirrorArm, planeElevOf, poseArm, thoraxFrame } from './isolation.ts'
@@ -18,6 +21,10 @@ import { memo, type Setup, type Template } from './types.ts'
 // crossover towers, each hand on the opposite tower's cable at shoulder height. Reverse pec deck: seated, chest on
 // the pad, handles on arcs round the shoulders. Prone: chest down on an incline bench (the prone Y-raise's setup), the
 // same arc from the hang; neutral grip there is the T-raise, thumbs turning up as the arms rise (external rotation).
+// Band pull-apart (228): standing tall, a light band between the fists (pronated: palms down, the band along the
+// knuckles; neutral: thumbs up) with the arms straight out in front at shoulder height; the arms open to just in front
+// of the shoulder line, where the band meets the chest (a free path point keeps the band on the chest's surface), the
+// shoulder blades setting back.
 
 type P = ParamsOf<'rear-raise'>
 
@@ -50,6 +57,15 @@ type Ctx =
   | { kind: 'prone'; tempo: Tempo; setup: Setup; hip: V3; feet: FootTarget[]; benchPose: ImplementPose }
   | { kind: 'cable'; tempo: Tempo; setup: Setup; x: CrossoverCtx }
   | { kind: 'machine'; tempo: Tempo; setup: Setup; x: PecDeckCtx }
+  | { kind: 'band'; tempo: Tempo; setup: Setup; stance: StanceSetup; sway?: Sway; measure: (q: Float64Array) => number }
+
+/**
+ * pull-apart: hands a little wider than the shoulders in front -> just in front of the shoulder line, deg (the band
+ * stretches about 2.2x over the rep)
+ */
+const APART_START = { plane: 74, elev: 88 }
+const APART_END = { plane: 6, elev: 88 }
+const BAND_MID = 'band_mid'
 
 /** the direction back along the arm path (towards the start of the concentric) at c */
 function backwards(plane: (c: number) => number, elev: (c: number) => number, c: number, fr: ReturnType<typeof thoraxFrame>): V3 {
@@ -144,11 +160,56 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   return { kind: 'cable', tempo, setup: x.setup, x }
 }
 
+// ---------- band pull-apart ----------
+
+function apartArms(skel: Skeleton, c: number, p: P) {
+  return (q: Float64Array) => {
+    const fr = thoraxFrame(skel, q)
+    const plane = (x: number) => lerp(APART_START.plane, APART_END.plane, x)
+    const elev = (x: number) => lerp(APART_START.elev, APART_END.elev, x)
+    const back = backwards(plane, elev, c, fr)
+    // pronated: palms down through the arc, so the band runs along the knuckle line; neutral: thumbs up
+    const palm = p.grip === 'pronated' ? scale(fr.up, -1) : back
+    poseArm(skel, q, 'l', { plane: plane(c), elev: elev(c), elbow: p.elbowAngle, bend: back, palm, girdle: { prot: lerp(4, -14, c) }, shrug: 0.4 })
+    mirrorArm(skel, q)
+  }
+}
+
+function apartStand(u: number, p: P, skel: Skeleton, ctx: Extract<Ctx, { kind: 'band' }>, q: Float64Array, sway?: Sway) {
+  setDofs(skel, q, { 'lumbar.flex': 0, 'thorax.flex': 0, 'neck.flex': -4, 'head.flex': -2 })
+  return standBalanced(skel, q, ctx.stance, { knee: 6, tilt: 2 }, ctx.measure, apartArms(skel, phaseAt(u, ctx.tempo).c, p), undefined, sway)
+}
+
+function bandContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
+  // the band leaves each fist on the index side, towards the other fist
+  const strip = band({ path: [{ implement: fistId('l'), site: 'b' }, { implement: fistId('l'), site: 'a' }, BAND_MID, { implement: fistId('r'), site: 'a' }, { implement: fistId('r'), site: 'b' }], size: 'light' })
+  const setup: Setup = {
+    implements: [...fistGrips(), bandNode(BAND_MID), strip],
+    contacts: [...plantedContacts(skel, stance), ...fistContacts()],
+    tempo,
+    symmetric: true,
+    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+  }
+  const ctx: Extract<Ctx, { kind: 'band' }> = { kind: 'band', tempo, setup, stance, measure: comWithDumbbells(skel, 0) }
+  ctx.sway = limitSway((u, sway) => apartStand(u, p, skel, ctx, zeroQ(skel), sway))
+  return ctx
+}
+
+function bandPoses(skel: Skeleton, q: Float64Array): ImplementPose[] {
+  const specs = fistGrips()
+  const fists = fistPoses(skel, q)
+  const ends = specs.map((s, k) => siteWorld(s, fists[k], 'a').pos)
+  const mid = detour(skel, q, ends[0], ends[1], (c) => c.region === 'trunk' || c.region === 'head' || c.region.startsWith('girdle'))
+  return [...fists, { id: BAND_MID, pos: mid, rot: [0, 0, 0, 1] }, bandPose()]
+}
+
 // ---------- template ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if (p.laterality !== 'bilateral') throw new Error(`rear-raise: variant not implemented yet (${p.laterality})`)
+  if (p.implement === 'band' && p.posture === 'standing' && p.torsoAngle === 0) return bandContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && p.posture === 'standing') return dbContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && p.posture === 'lying_prone') return proneContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'standing' && p.torsoAngle === 0) return cableContext(p, skel, tempo)
@@ -167,6 +228,10 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
     return { q: r.q, implements: r.implements, contacts: ctx.setup.contacts }
   }
   const q = zeroQ(skel)
+  if (ctx.kind === 'band') {
+    apartStand(u, p, skel, ctx, q, ctx.sway)
+    return { q, implements: bandPoses(skel, q), contacts: ctx.setup.contacts }
+  }
   if (ctx.kind === 'db') {
     dbStand(u, p, skel, ctx, q, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }

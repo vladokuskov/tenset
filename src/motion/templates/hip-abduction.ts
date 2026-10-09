@@ -1,7 +1,10 @@
 import { attachHand, legKinematics, plantFoot, root1d, writeLeg, type FootTarget } from '../constraints.ts'
 import { bodyCapsules, capsuleClearance, restAgainst } from '../collide.ts'
 import { centerOfPressure, fk, localToWorld, segPos, sitePos, type FK } from '../fk.ts'
+import { dls } from '../ik.ts'
 import { cableForce, comWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { around, band, bandNode, bandPose, flatBench, segmentPose } from '../implements/index.ts'
+import { palmRests } from '../implements/hinge.ts'
 import { ankleStrap, GRAB, grabHandle, HIP_MACHINE, hipArm, hipSeat, STRAP_ABOVE_ANKLE } from '../implements/legs-hip-calf.ts'
 import { add, clamp, DEG, lerp, neg, norm, qaxis, qfromBasis, qid, qmul, qrot, reject, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
@@ -78,7 +81,21 @@ type Lying = {
   mat: ImplementPose
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Machine | Cable | Lying }
+type Banded = {
+  kind: 'band'
+  hipY: number
+  /** |x| of the knee joints at the start */
+  kneeX: number
+  /** planted heels */
+  heels: Record<Side, V3>
+  /** leg DOFs at the stretch (warm start for each frame's solve), per side */
+  guess: Record<Side, number[]>
+  bench: ImplementPose
+  /** hand DOFs on the bench sides, solved once */
+  arms: [number, number][]
+}
+
+type Ctx = { tempo: Tempo; setup: Setup; v: Machine | Cable | Lying | Banded }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
@@ -90,6 +107,7 @@ function unsupported(p: P): string | null {
   if (p.implement === 'machine') return p.posture === 'seated' ? null : `machine ${p.posture}`
   if (p.implement === 'cable') return p.posture === 'standing' && p.attachment === 'ankle_strap' ? null : `cable ${p.posture}/${p.attachment}`
   if (p.implement === 'bodyweight') return p.posture === 'side_lying' && p.direction === 'abduction' ? null : `bodyweight ${p.posture}/${p.direction}`
+  if (p.implement === 'band') return p.posture === 'seated' && p.direction === 'abduction' ? null : `band ${p.posture}/${p.direction}`
   return `${p.implement}/${p.posture}`
 }
 
@@ -415,6 +433,128 @@ function sampleLying(c: number, skel: Skeleton, ctx: Ctx, v: Lying): Pose {
   return { q, implements: [v.mat], contacts: ctx.setup.contacts }
 }
 
+// ---------- seated band ----------
+
+/**
+ * Seated on the end of a flat bench, trunk upright, hips flexed hipAngle, feet flat and together on the floor, a mini
+ * band round the thighs just above the knees. The knees press apart against the band (hip abduction of the flexed hips
+ * with external rotation, 0 -> 18 deg: with the feet together the shins tilt out and the feet roll onto their outer
+ * edges a little, which is as far as the knees go) and come back in slowly.
+ * Hands hold the sides of the bench beside the hips.
+ */
+const BAND_SEAT = {
+  /** knees pressed out this far each (m) */
+  out: [0, 0.09],
+  knee: 95,
+  /** feet together: heels this far off the midline, m */
+  footX: 0.07,
+  /** band round the thigh this far above the knee joint (m), radius (m) */
+  above: 0.075,
+  r: 0.068,
+  /** bench: the pelvis sinks this far into the pad (m), the bench end this far in front of the hip joints (m) */
+  sink: 0.008,
+  front: 0.06,
+  /** hands round the pad's sides: grip this far behind the hip joints, below the pad top and out from its side, m */
+  hand: { back: 0.04, down: 0.025, out: 0.03 },
+} as const
+/** leg DOFs solved per frame (the hip abduction is keyed) */
+const BAND_LEG = ['hip_*.flex', 'hip_*.abd', 'hip_*.rot', 'knee_*.flex', 'ankle_*.df', 'ankle_*.inv']
+/**
+ * With the knee a hinge and two ankle DOFs, a flat planted foot fixes the whole leg: the knees open as the feet turn
+ * out on their heels, soles flat (the heels stay planted, the toes swing out)
+ */
+function bandBody(skel: Skeleton, q: Float64Array, p: P, hipY: number) {
+  setDofs(skel, q, { 'lumbar.flex': 2, 'thorax.flex': 2, 'neck.flex': 6, 'head.flex': 2, 'hip_*.flex': p.hipAngle, 'hip_*.abd': 0, 'hip_*.rot': 0, 'knee_*.flex': BAND_SEAT.knee, 'ankle_*.df': BAND_SEAT.knee - p.hipAngle, 'toe_*.flex': 0 })
+  setPelvis(skel, q, [0, hipY, 0], 0)
+}
+
+/** the leg on `side` with its sole's outer edge on the floor and the knee `out` m further out than at the start */
+function bandLeg(skel: Skeleton, q: Float64Array, v: Banded, side: Side, out: number) {
+  const ids = BAND_LEG.map((k) => skel.dof[k.replace('*', side)])
+  const t = v.heels[side]
+  const kx = v.kneeX * sx(side) + out * sx(side)
+  const res = (x: number[]) => {
+    ids.forEach((d, i) => (q[d] = x[i]))
+    const f = fk(skel, q)
+    const up = qrot(f.rot[skel.seg[`foot_${side}`]], [0, 1, 0])
+    return [...sub(sitePos(skel, f, `heel_${side}`), t), 0.1 * up[0], 0.1 * up[2], segPos(skel, f, `tibia_${side}`)[0] - kx]
+  }
+  const r = dls(res, v.guess[side], { tol: 1e-10, iters: 300 })
+  res(r.x)
+}
+
+/** the band round both thighs above the knees: a node on each femur, the strip round the outsides, crossing between */
+function bandNodes(skel: Skeleton, f: FK): ImplementPose[] {
+  return (['l', 'r'] as const).map((s) => segmentPose(skel, f, `knee_${s}`, `femur_${s}`, [0, -(skel.segments[skel.seg[`femur_${s}`]].length - BAND_SEAT.above), 0]))
+}
+
+function bandContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const q = zeroQ(skel)
+  // feet flat under the knees: the hip height that puts the soles on the floor
+  bandBody(skel, q, p, 0.6)
+  const sole0 = Math.min(...(['heel', 'ball'] as const).map((n) => sitePos(skel, fk(skel, q), `${n}_l`)[1]))
+  const hipY = 0.6 - sole0
+  bandBody(skel, q, p, hipY)
+  const f0 = fk(skel, q)
+  const heels = {} as Banded['heels']
+  for (const s of ['l', 'r'] as const) {
+    const w = sitePos(skel, f0, `heel_${s}`)
+    heels[s] = [sx(s) * BAND_SEAT.footX, 0, w[2]]
+  }
+  const v: Banded = { kind: 'band', hipY, kneeX: segPos(skel, f0, 'tibia_l')[0], heels, guess: { l: [], r: [] }, bench: { id: 'bench', pos: [0, 0, 0], rot: qid() }, arms: [] }
+  for (const s of ['l', 'r'] as const) {
+    v.guess[s] = BAND_LEG.map((k) => q[skel.dof[k.replace('*', s)]])
+    bandLeg(skel, q, v, s, BAND_SEAT.out[0])
+    v.guess[s] = BAND_LEG.map((k) => q[skel.dof[k.replace('*', s)]])
+  }
+  // the bench end just in front of the hips, its pad under the pelvis
+  const f = fk(skel, q)
+  const caps = bodyCapsules(skel, f)
+  const seatTop = lowest(caps.filter((c) => c.segment === 'pelvis')) + BAND_SEAT.sink
+  const benchSpec = flatBench({ seatHeight: seatTop })
+  v.bench = { id: benchSpec.id, pos: [0, seatTop, BAND_SEAT.front - 0.44], rot: qid() }
+  // hands round the sides of the pad beside the hips, left solved and mirrored
+  const hipZ = segPos(skel, f, 'femur_l')[2]
+  const grip: V3 = [0.14 + BAND_SEAT.hand.out, seatTop - BAND_SEAT.hand.down, hipZ - BAND_SEAT.hand.back]
+  setDofs(skel, q, { 'clavicle_*.prot': 0, 'clavicle_*.elev': 0, 'grip_*.close': 1 })
+  attachHand(skel, q, 'l', { pos: grip, axis: [0, 0, 1], palm: [-1, 0, 0] }, { pole: [0.3, 0, -1], planeHint: 20 })
+  v.arms = ARM_DOFS.flatMap((k) => {
+    const x = q[skel.dof[k.replace('*', 'l')]]
+    return [[skel.dof[k.replace('*', 'l')], x], [skel.dof[k.replace('*', 'r')], x]] as [number, number][]
+  })
+  const hands = palmRests({ id: 'hands', l: grip, r: [-grip[0], grip[1], grip[2]] })
+  const nodes = [bandNode('knee_l'), bandNode('knee_r')]
+  const loop = band({
+    path: [...around('knee_l', { r: BAND_SEAT.r, from: -90, to: 90 }), ...around('knee_r', { r: BAND_SEAT.r, from: 90, to: 270 })],
+    closed: true,
+    size: 'mini',
+  })
+  const contacts: Contact[] = [
+    ...(['l', 'r'] as const).map((s): Contact => ({ site: `heel_${s}`, kind: 'planted', target: { world: heels[s] } })),
+    { site: 'grip_l', kind: 'grip', target: { implement: 'hands', grip: 'l' } },
+    { site: 'grip_r', kind: 'grip', target: { implement: 'hands', grip: 'r' } },
+  ]
+  const setup: Setup = {
+    implements: [benchSpec, hands, ...nodes, loop],
+    contacts,
+    tempo,
+    symmetric: true,
+    // seated on the pad: the pelvis and the backs of the thighs sink into it a little
+    rests: [{ implement: 'bench', regions: ['trunk', 'thigh_l', 'thigh_r', 'hand_l', 'hand_r'], tol: 12 }],
+  }
+  return { tempo, setup, v }
+}
+
+function sampleBand(c: number, p: P, skel: Skeleton, ctx: Ctx, v: Banded): Pose {
+  const q = zeroQ(skel)
+  const out = lerp(BAND_SEAT.out[0], BAND_SEAT.out[1], c)
+  bandBody(skel, q, p, v.hipY)
+  for (const [i, x] of v.arms) q[i] = x
+  for (const s of ['l', 'r'] as const) bandLeg(skel, q, v, s, out)
+  const f = fk(skel, q)
+  return { q, implements: [v.bench, { id: 'hands', pos: [0, 0, 0], rot: qid() }, ...bandNodes(skel, f), bandPose()], contacts: ctx.setup.contacts }
+}
+
 // ---------- template ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
@@ -422,6 +562,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (why) throw new Error(`hip-abduction: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if (p.implement === 'bodyweight') return lyingContext(p, skel, tempo)
+  if (p.implement === 'band') return bandContext(p, skel, tempo)
   return p.implement === 'machine' ? machineContext(p, skel, tempo) : cableContext(p, skel, tempo)
 })
 
@@ -429,6 +570,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
   if (ctx.v.kind === 'lying') return sampleLying(c, skel, ctx, ctx.v)
+  if (ctx.v.kind === 'band') return sampleBand(c, p, skel, ctx, ctx.v)
   return ctx.v.kind === 'machine' ? sampleMachine(c, p, skel, ctx, ctx.v) : sampleCable(c, skel, ctx, ctx.v)
 }
 

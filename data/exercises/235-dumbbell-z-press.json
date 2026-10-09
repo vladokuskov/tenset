@@ -42,8 +42,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "vertical-press",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "seated",
+      "support": "floor",
+      "grip": "pronated"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Floor sit is right: legs straight and apart, butt and heels sink 3-4 mm, trunk still. The press reuses the 202 path and bottoms at ear level (elbow max 110). The 235 cues say 'dumbbells at shoulder height' and 'Lower with control to shoulder height', while 202's cue says 'about ear level'. Cue and motion disagree."
   }
 }

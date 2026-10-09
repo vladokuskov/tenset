@@ -44,9 +44,15 @@
     525
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hinge",
+    "params": {
+      "implement": "barbell",
+      "hold": "back_high",
+      "gripWidth": 2.1,
+      "stance": "hip",
+      "kneeAngle": 15
+    },
     "mapView": "B"
   },
   "cues": [
@@ -64,6 +70,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Hip flexion 2-80 deg and knee 3-15 deg. The trunk reaches 64.5 deg from vertical at the bottom while the hips travel back 39 cm (hip crease z 0.146 to -0.244). The bar stays locked to back_high (girdle/bar -0.2 mm under the 20 mm rest). Shins rake back about 6 deg (ankle df -6.5), the same as the RDL precedent. Glutes and hamstrings read clearly from the rear hero view."
   }
 }

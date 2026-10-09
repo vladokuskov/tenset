@@ -42,9 +42,14 @@
     317
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "row",
+    "params": {
+      "implement": "kettlebell",
+      "support": "bench",
+      "torsoAngle": 76,
+      "grip": "neutral"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -62,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Same as the 307 bench row: elbow 8 to 89, shoulder elevation 21 to 66. The bell hangs straight under a neutral handle (turned -90 about y) at x -0.23 to -0.38, outside the bench (bench spans x 0.04 to 0.32), and its base stays 5.5 cm off the floor at the bottom. Left knee and left hand stay on the bench, and only the right arm moves."
   }
 }

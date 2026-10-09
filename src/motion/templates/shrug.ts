@@ -3,10 +3,12 @@ import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } fro
 import { centerOfMass, fk, segPos } from '../fk.ts'
 import { barbell, cableHandle, type Cable, type ImplementSpec, type Part } from '../implements.ts'
 import { smithRails } from '../implements/back.ts'
+import { band, bandPose, trapBar } from '../implements/index.ts'
 import { add, lerp, norm, qfromBasis, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
+import { fistContacts, fistGrips, fistId, fistPoses, floorNode, floorPose, underFeet } from './band-pose.ts'
 import { pressureZ } from './isolation.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
@@ -20,6 +22,9 @@ import { memo, type Setup, type Template } from './types.ts'
 // does, but on the rails' vertical line (its z fixed where it hangs at the bottom of the rep). Cable: a straight bar
 // on a low pulley just in front of the feet hangs as the free bar does; it turns towards the pulley, and its pull
 // joins the balance.
+// Band (341): standing on the middle of the band, an end in each fist at the sides (the dumbbell arms, no load in the
+// balance: the band runs from the hands to the feet). Trap bar (335): standing inside the hexagon, hands on the
+// neutral side handles, the bar hanging from the shoulders as the free bar does.
 
 type P = ParamsOf<'shrug'>
 
@@ -43,6 +48,8 @@ const BAR_CLEAR = 8
  * carabiner on the bar (m) */
 const CABLE = { pulleyY: 0.08, ahead: 0.5, kg: 20 }
 const CABLE_BAR_Y = -0.05
+/** trap bar plates per side, kg */
+const TRAP_PLATE_KG = 40
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 
@@ -77,6 +84,8 @@ type Ctx = {
   sway?: Sway
   /** dumbbells: arm abduction that clears the thighs, deg */
   abd?: number
+  /** band: the fists hold band ends instead of dumbbells */
+  band?: boolean
   /** bar: centre relative to the shoulder midpoint (constant), and the bar spec; Smith: the rails' z; cable: its cable */
   bar?: { spec: ImplementSpec; offset: V3; railZ?: number; cable?: Cable }
 }
@@ -112,8 +121,8 @@ function dbArms(skel: Skeleton, q: Float64Array, c: number, abd: number) {
   }
 }
 
-/** smallest clearance of the dumbbells and hands from the thighs over the rep, m */
-function dbThighGap(skel: Skeleton, stance: StanceSetup, abd: number, dbs: ImplementSpec[]) {
+/** smallest clearance of the dumbbells (or band fists) and hands from the thighs over the rep, m */
+function dbThighGap(skel: Skeleton, stance: StanceSetup, abd: number, dbs: ImplementSpec[], posesOf: (skel: Skeleton, q: Float64Array) => ImplementPose[] = dumbbellPoses) {
   let gap = Infinity
   for (const c of [0, 0.5, 1]) {
     const q = standingBase(skel)
@@ -121,7 +130,7 @@ function dbThighGap(skel: Skeleton, stance: StanceSetup, abd: number, dbs: Imple
     const caps = bodyCapsules(skel, fk(skel, q))
     const thighs = caps.filter((k) => k.region.startsWith('thigh_'))
     const hands = caps.filter((k) => k.region.startsWith('hand_'))
-    const poses = dumbbellPoses(skel, q)
+    const poses = posesOf(skel, q)
     const solids = dbs.flatMap((spec, i) => placeParts(spec, poses[i]))
     for (const t of thighs) {
       for (const sd of solids) gap = Math.min(gap, capsuleSolidClearance(t, sd))
@@ -153,7 +162,9 @@ function barArms(skel: Skeleton, q: Float64Array, c: number, spec: ImplementSpec
   setDofs(skel, q, { 'grip_*.close': 1 })
   const pose = barPose(skel, q, spec, offset, railZ, cable)
   const g = add(pose.pos, qrot(pose.rot, spec.sites.l.pos))
-  attachHand(skel, q, 'l', { pos: g, axis: [1, 0, 0], palm: [0, 0, -1] }, { pole: [0.8, 0, -1], planeHint: 60, uprot: up })
+  // trap bar: neutral handles beside the thighs, palms in, elbows back
+  if (spec.kind === 'trap_bar') attachHand(skel, q, 'l', { pos: g, axis: [0, 0, 1], palm: [-1, 0, 0] }, { pole: [0.3, 0, -1], planeHint: 0, uprot: up })
+  else attachHand(skel, q, 'l', { pos: g, axis: [1, 0, 0], palm: [0, 0, -1] }, { pole: [0.8, 0, -1], planeHint: 60, uprot: up })
   for (const k of ['scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev']) {
     q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
   }
@@ -197,6 +208,18 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
   const contacts: Contact[] = plantedContacts(skel, stance)
   const balance = { point: 'com' as const, over: 'midfoot' as const, tol: ARM_BALANCE_TOL }
+  if (p.implement === 'band') {
+    const strip = band({
+      path: [{ implement: fistId('l'), site: 'a' }, { implement: fistId('l'), site: 'b' }, ...underFeet(skel, stance.feet), { implement: fistId('r'), site: 'b' }, { implement: fistId('r'), site: 'a' }],
+      size: 'heavy',
+    })
+    const fists = fistGrips()
+    const setup: Setup = { implements: [...fists, floorNode(), strip], contacts: [...contacts, ...fistContacts()], tempo, symmetric: p.laterality === 'bilateral', balance }
+    const abd = root1d((a) => dbThighGap(skel, stance, a, fists, (sk, q) => fistPoses(sk, q)) - DB_OFF_THIGHS, 0, 25, { tol: 1e-4 }).x
+    const ctx: Ctx = { tempo, setup, stance, measure: comWithDumbbells(skel, 0), abd, band: true }
+    ctx.sway = limitSway((u, sway) => standDb(skel, standingBase(skel), u, ctx, sway))
+    return ctx
+  }
   if (p.implement === 'dumbbell') {
     const dbs = handDumbbells(DB_KG)
     const setup: Setup = { implements: dbs, contacts: [...contacts, ...dumbbellContacts()], tempo, symmetric: p.laterality === 'bilateral', balance }
@@ -206,7 +229,8 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     return ctx
   }
   const cable = p.implement === 'cable' ? { pulley: [0, CABLE.pulleyY, stance.midfoot[2] + CABLE.ahead] as V3, implement: 'handle', point: [0, 0, 0] as V3, kg: CABLE.kg } : undefined
-  const spec = cable ? cableBar(p.gripWidth * skel.data.shoulderWidth) : barbell({ gripWidth: p.gripWidth * skel.data.shoulderWidth, plateKg: BAR_PLATE_KG })
+  const trap = p.implement === 'trap_bar'
+  const spec = trap ? trapBar({ plateKg: TRAP_PLATE_KG }) : cable ? cableBar(p.gripWidth * skel.data.shoulderWidth) : barbell({ gripWidth: p.gripWidth * skel.data.shoulderWidth, plateKg: BAR_PLATE_KG })
   contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: spec.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: spec.id, grip: 'r' } })
   const setup: Setup = {
     implements: [spec],
@@ -214,20 +238,22 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     tempo,
     symmetric: true,
     balance,
-    rests: [{ implement: spec.id, regions: ['thigh_l', 'thigh_r'], tol: -BAR_CLEAR }],
+    rests: trap ? [] : [{ implement: spec.id, regions: ['thigh_l', 'thigh_r'], tol: -BAR_CLEAR }],
   }
   if (cable) {
     setup.cables = [cable]
     setup.implements.push(barStack(cable.pulley))
   }
-  // the bar hangs from nearly straight arms (elbow ~ELBOW) just in front of the thighs
-  let offset: V3 = [0, -0.62, 0.05]
-  for (let pass = 0; pass < 3; pass++) {
+  // the bar hangs from nearly straight arms (elbow ~ELBOW) just in front of the thighs; the trap bar's handles hang
+  // straight under the shoulders
+  let offset: V3 = [0, -0.62, trap ? 0 : 0.05]
+  for (let pass = 0; pass < (trap ? 0 : 3); pass++) {
     const dz = root1d((z) => barThighGap(skel, stance, spec, [0, offset[1], z], cable).gap - BAR_OFF_THIGHS, -0.05, 0.25, { tol: 1e-5 }).x
     offset = [0, offset[1], dz]
     const dy = root1d((y) => barThighGap(skel, stance, spec, [0, y, offset[2]], cable).elbow - BAR_ELBOW, -0.75, -0.5, { tol: 1e-5 }).x
     offset = [0, dy, offset[2]]
   }
+  if (trap) offset = [0, root1d((y) => barThighGap(skel, stance, spec, [0, y, 0]).elbow - ELBOW, -0.75, -0.5, { tol: 1e-5 }).x, 0]
   const ctx: Ctx = { tempo, setup, stance, measure: barMeasure(skel, spec, offset, undefined, cable), bar: { spec, offset, cable } }
   if (p.implement === 'smith') {
     // the rails' line: where the free bar hangs at the bottom of the rep, held there for the whole rep
@@ -259,6 +285,10 @@ function standBar(skel: Skeleton, q: Float64Array, u: number, ctx: Ctx, sway?: S
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const q = standingBase(skel)
+  if (ctx.band) {
+    standDb(skel, q, u, ctx, ctx.sway)
+    return { q, implements: [...fistPoses(skel, q), floorPose(), bandPose()], contacts: ctx.setup.contacts }
+  }
   if (!ctx.bar) {
     standDb(skel, q, u, ctx, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }

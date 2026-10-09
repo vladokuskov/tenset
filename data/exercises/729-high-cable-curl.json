@@ -38,8 +38,15 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "cable",
+      "grip": "supinated",
+      "attachment": "single_handle",
+      "cableHeight": "mid",
+      "armPosition": "abducted",
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Pulleys at y 1.48 m, x ±1.2. Shoulder elevation holds 88 and rotation -88 with elbow 10 to 125. The hands go from x -0.915/y 1.60 to beside the ears (x -0.32, y 1.78), and the stacks lift correctly at the top. The figure is small between the towers and the ankles are locked (sway follow 0), which are owner calls."
   }
 }

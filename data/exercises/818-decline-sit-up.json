@@ -36,8 +36,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "crunch",
+    "params": {
+      "posture": "lying_supine",
+      "kneeAngle": 90,
+      "range": "sit_up",
+      "arms": "crossed",
+      "benchAngle": -20
+    },
     "mapView": "F"
   },
   "cues": [
@@ -54,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Same solution as 838 placed on the board (pelvis tilt -109 to -86, lumbar 2-18, thorax 0-24), so the trunk turns about 64 deg relative to the board and ends about 45 deg back from vertical. It reads more like a big decline crunch than a full decline sit-up. The board, roller over the ankles (feet -11.8 mm into the pad, tol 15) and foot slip 0.15 mm are fine."
   }
 }

@@ -38,9 +38,14 @@
     812
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hold",
+    "params": {
+      "kind": "front_plank",
+      "support": "hand",
+      "stance": "shoulder",
+      "tap": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. needs work: During the tap (frames ~40-88) the CoM stays at x=+0.006, z=0.844 because pelvis rot and list stay exactly 0. The support edge from the left hand (0.22, 1.346) to the right foot (-0.21, 0) crosses that depth at x=+0.060, so the CoM sits 54 mm outside the tripod and the figure would tip toward the lifted hand. The balance gate is 'not judged' for hand support, so this was not caught. Feet at ±0.21 are also not clearly 'wider than hips' as the cue says. | ok: Feet widened (HIGH.abd 6 to 12 deg, balls at +-0.306 m). While the hand is up, the pelvis slides 4 cm towards the support hand with list and rot exactly 0 (hips level and square). A leg solve over both hip abductions, both ankles and pelvis ty/tz/tilt keeps the balls planted (0.03 mm). Small least-change regularization stops the solve wandering between frames. A per-frame bracketed root on the shoulder-to-palm distance holds the support elbow at exactly 8.0 deg. The 5 deg target sat on a discontinuity of the flat-palm arm solve and failed the jerk gate, so the tap plank's support elbow is now 8 deg (the bear keeps 5). The slide starts in the first 30% of the lift. With the hand more than 1.2 cm off the mat, the CoM stays at least 15.7 mm inside the left-hand/two-feet triangle (it was 54 mm outside). New test asserts this on every hand-up frame, plus feet wider than 0.27 m. The figure sheet shows a subtle slide and no rocking. QA passes, bake is fresh."
   }
 }

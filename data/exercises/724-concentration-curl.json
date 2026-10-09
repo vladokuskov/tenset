@@ -36,8 +36,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "posture": "seated",
+      "support": "thigh"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -54,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Elbow goes 10 to 135 with the upper arm braced on the inner thigh, and the grip closes correctly (close-up checked). The free left hand hovers about 5 to 10 cm above the left knee in the hero and close-up views. The thigh/trunk overlap is -58.5 mm against a 60 mm tolerance, and the stance is wide."
   }
 }

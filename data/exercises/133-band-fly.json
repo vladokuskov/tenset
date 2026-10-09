@@ -35,13 +35,19 @@
     110
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "fly",
+    "params": {
+      "implement": "band",
+      "posture": "standing",
+      "stance": "split",
+      "cableHeight": "mid",
+      "elbowAngle": 20
+    },
     "mapView": "F"
   },
   "cues": [
-    "Anchor the band behind you at chest height and hold one end in each hand",
+    "Anchor the band behind you at chest height and hold a handle in each hand",
     "Step forward until the band has light tension with your arms open",
     "Keep your elbows softly bent and bring your hands together",
     "Let your arms open slowly against the band"
@@ -54,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. needs work: The arc and stance match the approved 129. But the elbow wrap in bandRigPoses only switches on past 40 deg of elbow flexion, and the fly holds 20, so the side node never leaves the chest point. The strip then runs straight through the upper arm: 0 mm from the humerus axis at u 0.825 (66 mm inside the capsule) and 2-3 mm at u 0.275. Smaller issue: cue 1 says 'one end in each hand' while the loop uses handles. | ok: The band fly now routes outside the arm: the bandRig route 'outside' adds nodes outside the wrist and elbow and on the back of the shoulder. They blend in smoothly as the straight ring-to-hook run nears the arm or cuts the chest, and stay on the straight line in the open position. Every run clears the upper arm, forearm and trunk by at least 11 mm every frame (unit test). The only overlap is -5 mm into the palm right at the ring. No jumps: node steps match hand speed. The hero and side sheets show the strip along the outside of the arm and over the back of the shoulder. Cue 1 now says 'hold a handle in each hand' in EN and UK. The arc and stance are unchanged from 129. 10.5 KB, under the 12 KB gate."
   }
 }

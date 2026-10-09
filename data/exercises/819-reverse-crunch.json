@@ -32,9 +32,15 @@
     837
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "leg-raise",
+    "params": {
+      "posture": "lying_supine",
+      "kneeAngle": 90,
+      "bottomHipAngle": 90,
+      "topHipAngle": 118,
+      "pelvisCurl": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -51,6 +57,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Pelvis tilts 36 deg (-126 to -90) with lumbar 3-39, the pelvis rises 5.4 cm, and hip (82-90) and knee angles stay fixed as the cue says. Bottom has thighs vertical at 90/90. thigh/trunk(lumbar3) -68.4 mm sits inside 60+13."
   }
 }

@@ -31,7 +31,7 @@ const spread = (v: number[]) => Math.max(...v) - Math.min(...v)
 
 describe('front-raise template', () => {
   it('covers every front-raise record', () => {
-    expect([...baked.keys()]).toEqual(['207-prone-y-raise', '209-dumbbell-front-raise', '236-dumbbell-scaption-raise'])
+    expect([...baked.keys()]).toEqual(['207-prone-y-raise', '209-dumbbell-front-raise', '234-plate-front-raise', '236-dumbbell-scaption-raise'])
   })
 
   it('dumbbell front raise: straight forward from in front of the thighs to shoulder height, soft fixed elbow, no shrug, still trunk', () => {
@@ -119,6 +119,26 @@ describe('front-raise template', () => {
     }
     const first = frameQ(b, 0), last = frameQ(b, b.frames - 1)
     expect(Math.max(...first.map((v, k) => Math.abs(v - last[k])))).toBeLessThan(0.5)
+  })
+
+  it('plate (234): one plate by its rims, from in front of the thighs to eye level, nearly straight arms, still trunk', () => {
+    const b = get('234-plate-front-raise')
+    const top = arm(b, TOP), bottom = arm(b, BOTTOM)
+    expect(top.elev).toBeGreaterThan(100)
+    expect(top.elev).toBeLessThan(115)
+    expect(bottom.elev).toBeLessThan(35)
+    for (const u of [TOP, BOTTOM]) expect(dof(b, u, 'elbow_l.flex')).toBeLessThan(20)
+    // both hands on the plate's rims every frame
+    for (let i = 0; i < b.frames; i += 5) {
+      const f = fk(skel, frameQ(b, i))
+      const pose = frameImplements(b, i)[0]
+      for (const [s, site] of [['l', 'rim_l'], ['r', 'rim_r']] as const) expect(dist(sitePos(skel, f, `grip_${s}`), siteWorld(b.implements[0], pose, site).pos)).toBeLessThan(0.005)
+    }
+    // at the top the plate stands upright in front of the eyes
+    const f = fk(skel, frameQ(b, at(b, TOP)))
+    const plate = frameImplements(b, at(b, TOP))[0]
+    expect(Math.abs(plate.pos[1] - segPos(skel, f, 'head')[1])).toBeLessThan(0.12)
+    expect(spread(series(b, 'lumbar.flex')) + spread(series(b, 'thorax.flex'))).toBeLessThan(1)
   })
 
   it('unsupported variants throw', () => {

@@ -40,9 +40,15 @@
     401
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "squat",
+    "params": {
+      "implement": "kettlebell",
+      "hold": "goblet",
+      "stance": "shoulder",
+      "toeOut": 30,
+      "depth": "full"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -60,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: The goblet hold is right: the hands are on the horns at y 1.43, the bell hangs below them (centre y 1.30) and sits about 11 cm in front of the sternum site, so with its radius it touches the chest. Bottom is knee 118, thigh 78 deg from vertical (12 deg above parallel). That matches the approved 405 goblet (74.6) under the same arms-meet-thighs rule. Fresh QA passes and the shipped bake matches."
   }
 }

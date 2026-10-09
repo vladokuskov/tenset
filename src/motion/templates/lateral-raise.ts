@@ -3,10 +3,13 @@ import { bodyCapsules, restAgainst } from '../collide.ts'
 import { centerOfMass, centerOfPressure, fk, segPos, sitePos } from '../fk.ts'
 import { cableForce, cableHandle, comWorld, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { flatBench } from '../implements/shared.ts'
+import { band, bandPose } from '../implements/index.ts'
 import { add, cross, DEG, dist, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells, isWorking, sidePhase } from './arms.ts'
+import { fistContacts, fistGrips, fistId, fistPoses, floorNode, floorPose, underFeet } from './band-pose.ts'
+import { crossoverBody, crossoverContext, crossoverSway, handlePoses, type CrossoverCtx } from './crossover.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { ARM_BALANCE_TOL, hipsFor, limitSway, makeStance, plantedContacts, setPelvis, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
@@ -17,6 +20,11 @@ import { memo, type Setup, type Template } from './types.ts'
 // starts with the hand in front of the hips and sweeps out to the working plane. Lean-away: the free hand holds an
 // upright and the whole body tilts away from it; the dumbbell still hangs vertically at the bottom, so the arm starts
 // abducted by the lean relative to the trunk.
+// Band (225): standing on the middle of a light band, an end bunched in each fist; the dumbbell rep with no load in
+// the balance (the band's pull runs from the hands to the feet, inside the body's own support). Cable Y-raise (226):
+// two low pulleys either side and a little ahead, each hand on the opposite cable (crossed in front of the thighs);
+// the arms rise from in front of the thighs up and out into a Y (plane ~30) to just above head height, leaning
+// against the pulls as the crossover templates do.
 
 type P = ParamsOf<'lateral-raise'>
 
@@ -41,7 +49,7 @@ const SEAT_TILT = 2
 type Side = 'l' | 'r'
 
 type Ctx = {
-  kind: 'db' | 'cable' | 'lean' | 'seat'
+  kind: 'db' | 'cable' | 'lean' | 'seat' | 'band' | 'y'
   tempo: Tempo
   setup: Setup
   stance: StanceSetup
@@ -53,7 +61,11 @@ type Ctx = {
   sway?: Sway
   feet?: FootTarget[]
   benchPose?: ImplementPose
+  x?: CrossoverCtx
 }
+
+/** Y-raise: low pulleys either side, a little ahead of the body (m), cable load (kg) and where the hands start */
+const Y = { x: 1.12, y: 0.15, z: 0.35, kg: 4, start: { plane: 82, elev: 16 } }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
@@ -228,8 +240,48 @@ function seatContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   return { kind: 'seat', tempo, setup, stance: makeStance(skel, stanceWidth(skel, 'hip'), 8), measure: () => 0, feet, benchPose }
 }
 
+/** standing on the middle of the band, the ends bunched in the fists (the band runs from the little-finger side) */
+function bandContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
+  const strip = band({
+    path: [{ implement: fistId('l'), site: 'a' }, { implement: fistId('l'), site: 'b' }, ...underFeet(skel, stance.feet), { implement: fistId('r'), site: 'b' }, { implement: fistId('r'), site: 'a' }],
+    size: 'light',
+  })
+  const setup: Setup = {
+    implements: [...fistGrips(), floorNode(), strip],
+    contacts: [...plantedContacts(skel, stance), ...fistContacts()],
+    tempo,
+    symmetric: p.laterality === 'bilateral',
+    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+  }
+  return { kind: 'band', tempo, setup, stance, measure: comWithDumbbells(skel, 0) }
+}
+
+function yArms(skel: Skeleton, c: number, p: P) {
+  return (q: Float64Array) => {
+    arm(skel, q, 'l', c, p, Y.start)
+    arm(skel, q, 'r', c, p, Y.start)
+  }
+}
+
+function yContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const x = crossoverContext(skel, {
+    tempo,
+    pulleys: { l: [Y.x, Y.y, Y.z], r: [-Y.x, Y.y, Y.z] },
+    crossed: true,
+    kg: Y.kg,
+    stance: { kind: 'hip', knee: 8, tilt: 4 },
+    trunk: { 'lumbar.flex': 2, 'thorax.flex': 3, 'neck.flex': -6, 'head.flex': -2 },
+    facing: [0, 0, 1],
+  })
+  x.sway = crossoverSway(skel, x, () => zeroQ(skel), (u) => yArms(skel, phaseAt(u, tempo).c, p))
+  return { kind: 'y', tempo, setup: x.setup, stance: x.hip!, measure: () => 0, x }
+}
+
 function makeContext(p: P, skel: Skeleton): Ctx {
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.posture === 'standing' && p.implement === 'band' && p.support === 'none' && p.leanAngle === 0) return bandContext(p, skel, tempo)
+  if (p.posture === 'standing' && p.implement === 'cable' && p.crossed && p.laterality === 'bilateral' && p.support === 'none' && p.leanAngle === 0) return yContext(p, skel, tempo)
   if (p.posture === 'seated' && p.implement === 'dumbbell' && p.support === 'bench' && p.leanAngle === 0) return seatContext(p, skel, tempo)
   if (p.posture !== 'standing') throw new Error(`lateral-raise: variant not implemented yet (${p.posture})`)
   if (p.implement === 'cable' && p.support === 'none' && p.leanAngle === 0) return cableContext(p, skel, tempo)
@@ -240,7 +292,7 @@ function makeContext(p: P, skel: Skeleton): Ctx {
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const ctx = makeContext(p, skel)
-  if (ctx.kind === 'db' || ctx.kind === 'cable') ctx.sway = limitSway((u, sway) => standing(u, p, skel, ctx, zeroQ(skel), sway))
+  if (ctx.kind === 'db' || ctx.kind === 'cable' || ctx.kind === 'band') ctx.sway = limitSway((u, sway) => standing(u, p, skel, ctx, zeroQ(skel), sway))
   return ctx
 })
 
@@ -255,7 +307,7 @@ function trunkPose(skel: Skeleton, q: Float64Array) {
 /** dumbbell and cable variants: legs and arms for loop fraction u, ankles balancing the COM */
 function standing(u: number, p: P, skel: Skeleton, ctx: Ctx, q: Float64Array, sway?: Sway) {
   trunkPose(skel, q)
-  if (ctx.kind === 'db') {
+  if (ctx.kind === 'db' || ctx.kind === 'band') {
     const upper = (qq: Float64Array) => {
       arm(skel, qq, 'l', cOf(u, 'l', p, ctx.tempo), p)
       arm(skel, qq, 'r', cOf(u, 'r', p, ctx.tempo), p)
@@ -286,6 +338,17 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   if (ctx.kind === 'db') {
     standing(u, p, skel, ctx, q, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }
+  }
+
+  if (ctx.kind === 'band') {
+    standing(u, p, skel, ctx, q, ctx.sway)
+    return { q, implements: [...fistPoses(skel, q), floorPose(), bandPose()], contacts: ctx.setup.contacts }
+  }
+
+  if (ctx.kind === 'y') {
+    const x = ctx.x!
+    crossoverBody(skel, x, q, yArms(skel, phaseAt(u, ctx.tempo).c, p), x.sway)
+    return { q, implements: [...handlePoses(skel, x, q), { id: x.crossover.id, pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
   }
 
   const work = ctx.work!

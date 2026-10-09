@@ -46,9 +46,16 @@
     501
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hinge",
+    "params": {
+      "implement": "barbell",
+      "hold": "hands",
+      "gripWidth": 1.2,
+      "stance": "hip",
+      "kneeAngle": 22,
+      "start": "pins"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -65,6 +72,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: The bar runs on a vertical line 2.6 cm in front of midfoot, from 0.785 m down to 0.511 m, which is just below the knee at 0.535 m. At the bottom it clears the spotter arms by 2.8 mm. The trunk is 52 deg from vertical, hip flexion peaks at 73 and knee at 22. In the side sheet the J-hooks overlap the head, but that is projection only: the gate's machine colliders find no body/rack pair within reach. The new camera keeps the glutes and the rack in frame."
   }
 }

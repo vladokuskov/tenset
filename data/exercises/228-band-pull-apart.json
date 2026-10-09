@@ -42,9 +42,15 @@
     229
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "rear-raise",
+    "params": {
+      "implement": "band",
+      "posture": "standing",
+      "torsoAngle": 0,
+      "grip": "pronated",
+      "elbowAngle": 5
+    },
     "mapView": "B"
   },
   "cues": [
@@ -61,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. needs work: The record says grip 'pronated', but the band branch (apartArms, palm: back) never reads p.grip. FK shows thumbs-up fists: the right palm normal is (1.00,-0.02,0.04), facing medial, at the stretch, and (0.19,-0.07,0.98), facing forward, at the finish. Palms never face down, so the band leaves vertical fists from the top. The band also stretches 0.70 to 2.03 m (2.9x) for a 'light' band. | ok: Fixed in rear-raise.ts apartArms: the band branch now reads p.grip. For 'pronated' it targets palm = -thorax up, so FK gives palm.up of -0.99 through the whole arc and the band runs along the knuckle line. 'neutral' keeps the old thumbs-up path. APART_START plane changed from 84 to 74 (hands a little wider than the shoulders). The band path goes from 0.92 to 2.05 m, about 2.2x (was 2.9x). The finish stays at plane 6 because a narrower finish takes the band off the chest, and the cue says it touches the chest. The band is still about 6 mm off the chest at the finish. QA passes, rebaked, and the hero and side sheets show fists palms down. Tests updated: band start plane > 70, plus a new palms-down assertion. What's left: the start is 4 deg wider than the generic rear-raise range (75), so that one assertion is relaxed for band only."
   }
 }

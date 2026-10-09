@@ -39,9 +39,13 @@
     208
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "vertical-press",
+    "params": {
+      "implement": "band",
+      "posture": "standing",
+      "grip": "pronated"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. needs work: The front node is only pushed forward while the ring is above the shoulder (an 8 cm ramp). Below that the strip runs straight from ring to sole and goes through the arm: 0-3 mm from the humerus axis at u 0.33-0.46, and at u 0.375 the node itself sits 4 cm from the elbow joint centre. At the bottom (u 0.5) the strip passes 3.4 cm from the elbow centre, which is inside the elbow. The sole segment also comes down through the foot (rearfoot capsule axis 0 mm) instead of wrapping its edge. The front hero hides most of this; the side view shows it. | ok: The front node no longer depends on whether the ring is above the shoulder. It sits on the straight ring-to-sole line and blends smoothly (based on the line's clearance against the arm) to 7.5 cm in front of the elbow. clearNode then pushes it forward only as far as the arm, trunk and same-side legs need, checked every frame. The outer sole point moved from 4.0 to 5.2 cm, just outside the 4.5 cm half-sole, so the strip comes down beside the foot (1-7 mm off the rearfoot capsule) instead of through it. Ring-to-front and front-to-sole clear the arm and trunk every frame (unit test), and the front-to-sole run stays off the foot. The run under the sole is still inside it by design (-1 mm). Node steps are smooth (ratio about 0.9 to hand speed)."
   }
 }

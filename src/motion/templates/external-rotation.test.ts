@@ -30,7 +30,7 @@ function humerus(b: Baked, i: number) {
 
 describe('external-rotation template', () => {
   it('covers every external-rotation record', () => {
-    expect([...baked.keys()]).toEqual(['211-cable-external-rotation', '215-side-lying-external-rotation'])
+    expect([...baked.keys()]).toEqual(['211-cable-external-rotation', '215-side-lying-external-rotation', '232-band-external-rotation'])
   })
 
   it.each([...baked.keys()])('%s: the upper arm stays pinned at the side, the elbow at 90, only the humerus turns', (slug) => {
@@ -128,6 +128,20 @@ describe('external-rotation template', () => {
     expect(handAt(START)[1]).toBeLessThan(elbowAt(START)[1] - 0.1)
     expect(handAt(END)[1]).toBeGreaterThan(elbowAt(END)[1] + 0.15)
     for (const name of ['pelvis.ty', 'pelvis.list', 'hip_l.flex', 'knee_r.flex']) expect(spread(series(b, name))).toBeLessThan(1e-9)
+  })
+
+  it('band (232): the cable rep with a band from a post anchor at elbow height on the far side', () => {
+    const b = get('232-band-external-rotation')
+    const c = get('211-cable-external-rotation')
+    expect(spread(series(b, 'shoulder_r.rot'))).toBeCloseTo(spread(series(c, 'shoulder_r.rot')), 0)
+    const anchor = b.implements.find((s) => s.kind === 'band_anchor')!
+    const k = b.implements.indexOf(anchor)
+    const hook = siteWorld(anchor, frameImplements(b, 0)[k], 'hook').pos
+    expect(dist(hook, b.cables![0].pulley)).toBeLessThan(1e-4)
+    // far side (working right arm: the anchor on the left), at elbow height
+    expect(hook[0]).toBeGreaterThan(0.5)
+    const f = fk(skel, frameQ(b, at(b, START)))
+    expect(Math.abs(hook[1] - segPos(skel, f, 'forearm_r')[1])).toBeLessThan(0.15)
   })
 
   it('unsupported variants throw', () => {

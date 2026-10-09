@@ -39,8 +39,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "path": "cross_body",
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The top hand lands at x ±10 mm (the midline), 100 mm above the sternum and 22 cm in front, so the cross-body path reads. Elbow goes 8 to 120, humeral rotation 0 to 38, and the forearm turns 19 deg toward supination, so the thumb tilts slightly out from 'on top'. The two dumbbells pass 28.9 mm apart."
   }
 }

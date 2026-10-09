@@ -39,9 +39,14 @@
     303
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "vertical-pull",
+    "params": {
+      "implement": "bodyweight",
+      "grip": "pronated",
+      "gripWidth": 1.5,
+      "range": "scapular"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -58,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Elbows stay at 5.5 to 6.2 throughout. Clavicle elevation goes 20 to -4 and protraction 4 to -10, so the shoulders go down and back, and the pelvis rises 7.9 cm. The top holds about 0.5 s, matching 'hold the top'. Humeral rot swings 43 deg, but only as gimbal compensation near elevation 160: the hand frame stays fixed on the bar, with grip error 0.24 mm and hand-axis drift under 0.1."
   }
 }

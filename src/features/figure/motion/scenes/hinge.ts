@@ -11,6 +11,9 @@ export const hinge: SceneSpec = {
     if (params.stance === 'single_leg') return { az: -155, elev: 0.22 }
     // sumo (wide floor pull): front three-quarter, so the toe-out and the knees pushed out over the toes read
     if (params.stance === 'wide' && params.start === 'floor') return { az: -40, elev: 0.22 }
+    // rack pull: further behind, so the rack in front of the lifter stays behind the figure and its deep base does
+    // not push the lifter to the edge of the frame
+    if (params.start === 'pins') return { az: -150, elev: 0.2 }
     return { az: HINGE_AZ, elev: 0.2 }
   },
 }

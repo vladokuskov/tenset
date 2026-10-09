@@ -19,6 +19,9 @@ export const calfRaise: SceneSpec = {
   },
   grip: (ctx) => {
     if (ctx.spec.kind === 'wall') return 'wall-touch'
+    // palms flat: on the mat behind (seated band tibialis raise), on the padded box (donkey raise)
+    if (ctx.spec.kind === 'mat') return 'push-up-palm'
+    if (ctx.spec.kind === 'plyo_box') return 'bench-palm'
     if (ctx.spec.kind === 'calf_machine' || ctx.spec.kind === 'seated_calf') return 'neutral'
     return undefined
   },

@@ -3,6 +3,7 @@ import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { angleBetween, dist, qconj, qrot, RAD, sub } from '../math.ts'
+import { bandPath, isBand } from '../implements/index.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
@@ -26,7 +27,7 @@ function range(b: Baked, fn: (i: number) => number) {
 
 describe('shrug template', () => {
   it('covers every shrug record', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([308, 314, 336, 337])
+    expect(variants.map((v) => v.id).sort()).toEqual([308, 314, 335, 336, 337, 341])
   })
 
   it.each([...baked.keys()])('%s: clavicles rise ~0 -> 25 deg straight up, no rolling, arms still', (slug) => {
@@ -39,7 +40,8 @@ describe('shrug template', () => {
       expect(dof(b, at(b, TOP), `clavicle_${s}.elev`)).toBeLessThan(30)
       // straight up: protraction does not move (no rolling), and the arms hang the same way throughout
       expect(range(b, (i) => dof(b, i, `clavicle_${s}.prot`))).toBeLessThan(0.5)
-      expect(range(b, (i) => dof(b, i, `elbow_${s}.flex`))).toBeLessThan(1.5)
+      // the trap bar's side handles are solved by IK each frame, which lets the elbows drift a little more
+      expect(range(b, (i) => dof(b, i, `elbow_${s}.flex`))).toBeLessThan(slug.startsWith('335-') ? 3 : 1.5)
       // upper arm direction in the thorax frame (the plane angle is ill-defined for an arm this close to hanging)
       const hum = (i: number) => {
         const f = fk(skel, frameQ(b, i))
@@ -95,6 +97,27 @@ describe('shrug template', () => {
     // the bar hangs in front of the thighs
     const bar = frameImplements(b, at(b, BOTTOM))[0].pos
     expect(bar[2]).toBeGreaterThan(segPos(skel, fk(skel, frameQ(b, at(b, BOTTOM))), 'femur_l')[2])
+  })
+
+  it('trap bar (335): standing inside the hexagon, neutral hands on the side handles, the frame clear of the legs', () => {
+    const b = [...baked.entries()].find(([slug]) => slug.startsWith('335-'))![1]
+    const bar = b.implements[0]
+    expect(bar.kind).toBe('trap_bar')
+    const pose = frameImplements(b, at(b, BOTTOM))[0]
+    const f = fk(skel, frameQ(b, at(b, BOTTOM)))
+    // the hands hang beside the thighs, outside the shoulders
+    expect(siteWorld(bar, pose, 'l').pos[0]).toBeGreaterThan(segPos(skel, f, 'humerus_l')[0])
+    // the hexagon's sleeve plane sits below the hands, around the thighs
+    expect(pose.pos[1]).toBeLessThan(sitePos(skel, f, 'grip_l')[1])
+    expect(pose.pos[1]).toBeGreaterThan(segPos(skel, f, 'tibia_l')[1])
+  })
+
+  it('band (341): standing on the band, the band runs from each fist under both soles', () => {
+    const b = [...baked.entries()].find(([slug]) => slug.startsWith('341-'))![1]
+    const spec = b.implements.find(isBand)!
+    const poses = frameImplements(b, at(b, TOP))
+    const path = bandPath(spec, new Map(b.implements.map((s) => [s.id, s])), new Map(b.implements.map((s, k) => [s.id, poses[k]])))
+    expect(path.filter((v) => v.pos[1] < 0.005).length).toBe(4)
   })
 
   it('unsupported variants throw', () => {

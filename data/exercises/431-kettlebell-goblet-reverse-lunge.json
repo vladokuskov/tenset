@@ -40,9 +40,13 @@
     411
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "lunge",
+    "params": {
+      "implement": "kettlebell",
+      "hold": "goblet",
+      "direction": "reverse"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: A clean reverse lunge with the goblet kettlebell. The back knee drops to 13 cm off the floor and the front knee reaches 106. Lift-off at knee 92 only for this load, and the approved reverse lunges stay fresh. The bell is held by the horns under the chin per cue 1."
   }
 }

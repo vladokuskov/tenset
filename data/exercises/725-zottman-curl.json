@@ -36,9 +36,14 @@
     711
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "supinated",
+      "lowerGrip": "pronated",
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -55,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Verified frame by frame: forearm pro is -80 (supinated) through the concentric (frames 80 to 105) and +75 (pronated) through the eccentric (frames 15 to 60). The turns happen at the top pause and the bottom, and the seam stays continuous (-33.7 at frame 0, -43.1 at frame 110, seam gate 0.68). It is clearly distinct from the plain dumbbell curl."
   }
 }

@@ -5,7 +5,9 @@ import { twoHandHandle } from '../implements/core.ts'
 import { add, cross, DEG, lerp, norm, qaxis, qfromBasis, qid, qmul, qrot, reject, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Side, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
+import { band, bandAnchor, bandGrip, bandPose, poseHandle } from '../implements/bands.ts'
 import { stackSpec } from './core/cable.ts'
+import { sampleTwist, twistContext, type Twist } from './core/twist.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { naturalCubic } from './solve.ts'
 import { hipMidLocal, setPelvis, stanceWidth, type StanceName } from './standing.ts'
@@ -18,6 +20,9 @@ import { memo, type Setup, type Template } from './types.ts'
 // the far hip. Research (motion-authoring): trunk rotation +-30-45 deg, transverse-plane motion is author judgment.
 // Low to high (832): the same turn from a low pulley, starting sunk and bent towards the handle low by the near thigh
 // and finishing tall with long arms above the far shoulder (the chop's spine flexion and hip drop run the other way).
+// Band woodchop (833): the chop with a loop band anchored high on a post where the pulley stands, both fists stacked
+// on the band's end where they hold the cable handle (the band runs from the anchor into the upper fist, out of the
+// lower one and back), its pull in the balance as the cable's. Russian twist (821): seated, core/twist.ts.
 
 type P = ParamsOf<'rotation'>
 
@@ -58,6 +63,9 @@ const TOE_OUT = 15
 const PULLEY_OUT = 1.0
 /** pulley ahead of the feet line, m: the cable runs in front of the chest at the finish */
 const PULLEY_Z = 0.5
+/** band: the post's hook this far beside the lifter, m, further out along the pull line than the pulley so the loop
+ * stays stretched at the top of the chop (hook to fists >= 1 m, about a 2.3x stretch range) */
+const BAND_OUT = 1.55
 
 /** where the arms point, world, side right (mirrored for left): up towards the pulley at the start, outside the far
  * knee at the finish, bowing forward through the middle of the chop */
@@ -80,6 +88,7 @@ const PATHS: Record<'high_to_low' | 'low_to_high', Path> = {
 }
 
 type Ctx = {
+  kind: 'chop'
   tempo: Tempo
   setup: Setup
   work: Side
@@ -92,7 +101,12 @@ type Ctx = {
   pulley: V3
   hipY: number
   reach: (c: number) => number
+  /** band: the anchor's pose (its hook where the pulley would be) and the two fists' band grips (upper, lower) */
+  band?: { anchor: ImplementPose; hook: V3; grips: [ImplementSpec, ImplementSpec] }
 }
+
+/** band grips: the left fist on the upper one */
+const BAND_GRIPS = { l: 'band_l', r: 'band_r' } as const
 
 /** near foot pivoting on the ball: heel lifted and turned in by the share `k` of the finish, the toes flexed back
  * so they stay flat (the forefoot collision capsule is rigid with the foot and dips into the floor, FOOT_SINK) */
@@ -169,10 +183,11 @@ function solveFrame(skel: Skeleton, ctx: Ctx, c: number, d: number): { q: Float6
   return { q, pose: h.pose }
 }
 
-const context = memo((p: P, skel: Skeleton): Ctx => {
+const context = memo((p: P, skel: Skeleton): Ctx | Twist => {
+  if (p.implement === 'plate' && p.posture === 'seated' && p.direction === 'horizontal' && p.laterality !== 'bilateral') return twistContext(p, skel, p.tempo ?? DEFAULT_TEMPO)
   // the pulley sits where the handle starts: high for the chop, low for the lift
   const height = p.direction === 'low_to_high' ? 'low' : 'high'
-  if (p.implement !== 'cable' || p.direction === 'horizontal' || p.cableHeight !== height || p.posture !== 'standing' || p.stance === 'split' || (p.attachment ?? 'single_handle') !== 'single_handle') {
+  if ((p.implement !== 'cable' && !(p.implement === 'band' && p.direction === 'high_to_low')) || p.direction === 'horizontal' || p.cableHeight !== height || p.posture !== 'standing' || p.stance === 'split' || (p.attachment ?? 'single_handle') !== 'single_handle') {
     throw new Error(`rotation: variant not implemented yet (${p.implement}/${p.direction}/${p.cableHeight}/${p.posture}/${p.stance}/${p.attachment ?? '-'})`)
   }
   const tempo = p.tempo ?? DEFAULT_TEMPO
@@ -191,7 +206,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const handle = twoHandHandle({ gap: GAP })
   const path = PATHS[p.direction]
   const pulley: V3 = [-s * PULLEY_OUT, path.pulleyY, PULLEY_Z]
-  const ctx: Ctx = { tempo, setup: undefined as unknown as Setup, work, s, path, feet, nearBall, handle, pulley, hipY, reach: () => 0.6 }
+  const ctx: Ctx = { kind: 'chop', tempo, setup: undefined as unknown as Setup, work, s, path, feet, nearBall, handle, pulley, hipY, reach: () => 0.6 }
   // arm reach at knots: the straighter arm nearly straight
   const cs = Array.from({ length: 13 }, (_, k) => 0.5 - 0.5 * Math.cos((Math.PI * k) / 12))
   const ds = cs.map((c) => root1d((d) => {
@@ -202,12 +217,25 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   }, 0.35, 0.8, { tol: 1e-5 }).x)
   ctx.reach = naturalCubic(cs, ds)
   const cable: Cable = { pulley, implement: handle.id, point: [0, 0, 0], kg: CABLE_KG }
+  const isBand = p.implement === 'band'
   const contacts: Contact[] = [
     { site: `ball_${work}`, kind: 'planted', target: { world: nearBall } },
     ...(['heel', 'ball'] as const).map((site): Contact => ({ site: `${site}_${far}`, kind: 'planted', target: { world: add(feet.far.ankle, qrot(feet.far.rot, skel.data.sites[`${site}_${far}`].local)) } })),
-    { site: 'grip_l', kind: 'grip', target: { implement: handle.id, grip: 'l' } },
-    { site: 'grip_r', kind: 'grip', target: { implement: handle.id, grip: 'r' } },
+    { site: 'grip_l', kind: 'grip', target: isBand ? { implement: BAND_GRIPS.l, grip: 'c' } : { implement: handle.id, grip: 'l' } },
+    { site: 'grip_r', kind: 'grip', target: isBand ? { implement: BAND_GRIPS.r, grip: 'c' } : { implement: handle.id, grip: 'r' } },
   ]
+  if (isBand) {
+    // a post beside the lifter, its face turned towards them, the hook at the pulley's height further out
+    const hook: V3 = [-s * BAND_OUT, pulley[1], PULLEY_Z]
+    const anchorSpec = bandAnchor({ id: 'anchor', height: hook[1], mount: 'post' })
+    const rot = qaxis([0, 1, 0], s * 90 * DEG)
+    const anchor: ImplementPose = { id: anchorSpec.id, pos: sub(hook, qrot(rot, anchorSpec.sites.hook.pos)), rot }
+    const grips: [ImplementSpec, ImplementSpec] = [bandGrip({ id: BAND_GRIPS.l }), bandGrip({ id: BAND_GRIPS.r })]
+    const strip = band({ path: [{ implement: anchorSpec.id, site: 'hook' }, ...grips.flatMap((g) => [{ implement: g.id, site: 'a' }, { implement: g.id, site: 'b' }])], closed: true, size: 'medium' })
+    ctx.band = { anchor, hook, grips }
+    ctx.setup = { implements: [anchorSpec, ...grips, strip], contacts, tempo, symmetric: false, cables: [{ ...cable, pulley: hook, implement: BAND_GRIPS.l }], tolerances: { floor: FOOT_SINK } }
+    return ctx
+  }
   ctx.setup = { implements: [handle, stackSpec(pulley, [-s, 0, 0])], contacts, tempo, symmetric: false, cables: [cable], tolerances: { floor: FOOT_SINK } }
   return ctx
 })
@@ -215,8 +243,15 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
+  if (ctx.kind === 'twist') return sampleTwist(skel, ctx, c)
   const { q, pose } = solveFrame(skel, ctx, c, ctx.reach(c))
-  return { q, implements: [pose, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
+  if (!ctx.band) return { q, implements: [pose, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
+  // the band grips sit on the handle's grips, their +Y towards the anchor
+  const grips = (['l', 'r'] as const).map((side, i) => {
+    const g = siteWorld(ctx.handle, pose, side)
+    return poseHandle(ctx.band!.grips[i], 'c', g.pos, g.axis!, ctx.band!.hook)
+  })
+  return { q, implements: [ctx.band.anchor, ...grips, bandPose()], contacts: ctx.setup.contacts }
 }
 
 export const rotation: Template<P> = {

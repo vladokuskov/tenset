@@ -37,9 +37,14 @@
     502
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hip-thrust",
+    "params": {
+      "implement": "bodyweight",
+      "support": "floor",
+      "stance": "single_leg",
+      "kneeAngle": 70
+    },
     "mapView": "B"
   },
   "cues": [
@@ -56,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: The working hip goes from -4 to 48 deg flexion with knee 97-118. The free leg stays straight with its hip tied to the working hip, matching cues 2 and 4. The pelvis comes down to the mat at the bottom (trunk/mat -8 mm under the 15 mm tolerance) and the head stays on the mat. The camera matches 511."
   }
 }

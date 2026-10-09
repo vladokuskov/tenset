@@ -1,10 +1,12 @@
-import { plantFoot, solveLegs, type FootTarget } from '../constraints.ts'
+import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
-import { fk, segPos } from '../fk.ts'
-import { bench } from '../implements.ts'
-import { add, dot, lerp, norm, qid, scale, sub, type V3 } from '../math.ts'
-import { setDofs, zeroQ, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { centerOfMass, fk, segPos } from '../fk.ts'
+import { bench, type ImplementSpec } from '../implements.ts'
+import { weightPlate } from '../implements/index.ts'
+import { add, DEG, dot, lerp, norm, qaxis, qid, qrot, scale, sub, type V3 } from '../math.ts'
+import { setDofs, shoulderRhythm, zeroQ, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
+import { monotoneCubic } from './row/common.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells, isWorking, sidePhase } from './arms.ts'
 import { armDir, footContacts, forSide, mirrorArm, poseArm, SIDES, thoraxFrame, type Side } from './isolation.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
@@ -17,6 +19,10 @@ import { memo, type Setup, type Template } from './types.ts'
 // ankles balance body + load over the midfoot. Prone Y-raise: chest down on a 45 deg incline bench, legs straddling
 // it, feet on the floor; the arms hang straight down and rise in the Y plane (45) to 160 deg, thumbs up, with less
 // clavicle elevation and some retraction (shoulder blades down and back).
+// Plate (234): one plate held by its sides (rims at 3 and 9 o'clock, thumbs up), raised on an arc round the shoulders
+// from in front of the thighs to eye level with nearly straight arms (elbow ~10, solved by IK to the rims). The plate
+// turns with the forearms: vertical at the top, its top edge tipped forward at the bottom (wrists in radial deviation
+// take part of the turn), so it clears the thighs.
 
 type P = ParamsOf<'front-raise'>
 
@@ -37,7 +43,7 @@ const PRONE_FEET = [0.44, 0.42]
 const PRONE_TOE = 0
 
 type Ctx = {
-  kind: 'stand' | 'prone'
+  kind: 'stand' | 'prone' | 'plate'
   tempo: Tempo
   setup: Setup
   stance?: StanceSetup
@@ -48,6 +54,24 @@ type Ctx = {
   feet?: FootTarget[]
   benchPose?: ImplementPose
   measure?: (q: Float64Array) => number
+  /** plate: distance from the shoulder midpoint to the plate centre by elevation (m) */
+  plate?: { spec: ImplementSpec; r: (elev: number) => number }
+}
+
+const PLATE_KG = 20
+/** plate arc: share of the forearms' turn the plate keeps and an offset (deg), clearance from the thighs (m) */
+const PLATE_ARC = { share: 0.45, radial: 12, thighClear: 0.004, fingers: 22 }
+/** plate: the wrists' comfortable deviation, deg */
+const PLATE_DEV: [number, number] = [-22, 18]
+/**
+ * plate: the rim crosses the palm obliquely as the arms come down (index end towards the wrist), eased in from
+ * PLATE_OBL.from to PLATE_OBL.to deg of elevation, so the wrists never pin against their band (a jerk)
+ */
+const PLATE_OBL = { max: 40, from: 100, to: 15 }
+
+function plateOblique(elev: number) {
+  const t = Math.min(1, Math.max(0, (PLATE_OBL.from - elev) / (PLATE_OBL.from - PLATE_OBL.to)))
+  return PLATE_OBL.max * t * t * (3 - 2 * t)
 }
 
 /** a loop fraction in the bottom pause of the default tempo */
@@ -208,10 +232,88 @@ function proneContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   return { ...ctx0, setup, hip, feet, benchPose }
 }
 
+// ---------- plate ----------
+
+/**
+ * plate tipped forward (top edge away), deg: a share of the forearms' turn, eased into 0 (no jerk); the wrists and the
+ * rim crossing the palm obliquely take the rest, so the plate hangs nearly upright in front of the thighs
+ */
+function plateTilt(elev: number) {
+  const x = PLATE_ARC.share * (90 - elev) - PLATE_ARC.radial, w = 12
+  return x > w ? x : x < -w ? 0 : ((x + w) * (x + w)) / (4 * w)
+}
+
+function platePose(skel: Skeleton, q: Float64Array, ctx: Ctx, elev: number): ImplementPose {
+  const f = fk(skel, q)
+  const sm = scale(add(segPos(skel, f, 'humerus_l'), segPos(skel, f, 'humerus_r')), 0.5)
+  const e = elev * DEG
+  const r = ctx.plate!.r(elev)
+  return { id: ctx.plate!.spec.id, pos: add(sm, [0, -r * Math.cos(e), r * Math.sin(e)]), rot: qaxis([1, 0, 0], plateTilt(elev) * DEG) }
+}
+
+function plateArms(skel: Skeleton, q: Float64Array, ctx: Ctx, elev: number) {
+  const g = shoulderRhythm(elev, 90)
+  setDofs(skel, q, { 'clavicle_*.elev': g.elev, 'clavicle_*.prot': g.prot, 'grip_*.close': 1 })
+  const pose = platePose(skel, q, ctx, elev)
+  const site = ctx.plate!.spec.sites.rim_l
+  attachHand(skel, q, 'l', { pos: add(pose.pos, qrot(pose.rot, site.pos)), axis: qrot(pose.rot, site.axis!), palm: [-1, 0, 0], oblique: plateOblique(elev) }, { pole: [1, -0.5, -0.2], planeHint: 80, uprot: g.uprot, devBand: PLATE_DEV })
+  mirrorArm(skel, q)
+  return pose
+}
+
+function plateStand(u: number, p: P, skel: Skeleton, ctx: Ctx, q: Float64Array, sway?: Sway) {
+  trunkPose(skel, q)
+  const elev = lerp(ctx.bottom, p.topElevation, phaseAt(u, ctx.tempo).c)
+  let pose!: ImplementPose
+  const measure = (qq: Float64Array) => centerOfMass(skel, fk(skel, qq), [{ mass: PLATE_KG, pos: platePose(skel, qq, ctx, elev).pos }])[2]
+  const bal = standBalanced(skel, q, ctx.stance!, { knee: 8, tilt: 6 }, measure, (qq) => (pose = plateArms(skel, qq, ctx, elev)), undefined, sway)
+  return { bal, pose }
+}
+
+function plateContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
+  const spec = weightPlate({ kg: PLATE_KG })
+  const setup: Setup = {
+    implements: [spec],
+    contacts: [...plantedContacts(skel, stance), { site: 'grip_l', kind: 'grip', target: { implement: spec.id, grip: 'rim_l' } }, { site: 'grip_r', kind: 'grip', target: { implement: spec.id, grip: 'rim_r' } }],
+    tempo,
+    symmetric: p.laterality === 'bilateral',
+    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+    // the fingers wrap the rim over the plate's faces, where the gates' core disc meets the rim ring
+    rests: [{ implement: spec.id, regions: ['hand_l', 'hand_r'], tol: PLATE_ARC.fingers }],
+  }
+  const ctx: Ctx = { kind: 'plate', tempo, setup, stance, bottom: 20, plate: { spec, r: () => 0.6 } }
+  const at = (elev: number) => {
+    const q = zeroQ(skel)
+    trunkPose(skel, q)
+    const pose = plateArms(skel, q, ctx, elev)
+    return { q, pose }
+  }
+  // the plate's distance that keeps the elbows at elbowAngle, solved at a few elevations
+  const es = Array.from({ length: 9 }, (_, k) => lerp(0, p.topElevation + 5, k / 8))
+  const rs = es.map((e) => root1d((r) => {
+    ctx.plate!.r = () => r
+    return at(e).q[skel.dof['elbow_l.flex']] - p.elbowAngle
+  }, 0.3, 0.9, { tol: 1e-6 }).x)
+  ctx.plate!.r = monotoneCubic(es, rs)
+  // start: the lowest elevation that keeps the plate off the thighs
+  const gap = (elev: number) => {
+    const { q, pose } = at(elev)
+    const thighs = bodyCapsules(skel, fk(skel, q)).filter((c) => c.region.startsWith('thigh_'))
+    let g = Infinity
+    for (const sd of placeParts(spec, pose)) for (const c of thighs) g = Math.min(g, capsuleSolidClearance(c, sd))
+    return g - PLATE_ARC.thighClear
+  }
+  ctx.bottom = root1d(gap, 0, 60, { tol: 1e-4 }).x
+  ctx.sway = limitSway((uu, sway) => plateStand(uu, p, skel, ctx, zeroQ(skel), sway).bal)
+  return ctx
+}
+
 // ---------- template ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.implement === 'plate' && p.posture === 'standing' && p.laterality === 'bilateral') return plateContext(p, skel, tempo)
   if (p.implement !== 'dumbbell') throw new Error(`front-raise: variant not implemented yet (${p.implement})`)
   if (p.posture === 'standing') return standContext(p, skel, tempo)
   if (p.posture === 'lying_prone') return proneContext(p, skel, tempo)
@@ -221,6 +323,10 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const q = zeroQ(skel)
+  if (ctx.kind === 'plate') {
+    const { pose } = plateStand(u, p, skel, ctx, q, ctx.sway)
+    return { q, implements: [pose], contacts: ctx.setup.contacts }
+  }
   if (ctx.kind === 'stand') {
     standing(u, p, skel, ctx, q, ctx.sway)
     return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }

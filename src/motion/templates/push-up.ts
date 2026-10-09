@@ -1,7 +1,8 @@
 import { attachHand, root1d } from '../constraints.ts'
 import { bodyCapsules } from '../collide.ts'
-import { fk, segPos, sitePos } from '../fk.ts'
+import { fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import type { ImplementSpec } from '../implements.ts'
+import { around, band, bandNode, bandPose, segmentPose } from '../implements/index.ts'
 import { palmRest } from '../implements/press-vertical-bodyweight.ts'
 import { PLYO_BOX, plyoBox } from '../implements/shared.ts'
 import { dls } from '../ik.ts'
@@ -10,6 +11,7 @@ import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skele
 import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic } from './solve.ts'
+import { clearNode } from './press-cable.ts'
 import { memo, type Setup, type Template } from './types.ts'
 
 // Push-up, root driver: palms flat and the balls of the feet planted (on the floor, or on a box under the hands or
@@ -21,6 +23,11 @@ import { memo, type Setup, type Template } from './types.ts'
 // scapulae retract as the chest lowers and protract at the top; the push-up plus adds full protraction after lockout
 // (the thorax rises between the shoulder blades), still inside the default tempo.
 // Kneeling: the knees rest on the floor with the toes turned under behind them, the plank pivoting at the knees.
+// Pike: the hips folded high (an inverted V, legs straight, on the balls of the feet), the same rigid body pivoting
+// about the feet, so the head lowers to the floor just in front of the hands and the arms press overhead in line with
+// the trunk (shoulder flexion ~150 deg at the top; a vertical press against body weight).
+// Diamond (grip under 0.5): the hands together under the chest, fingers turned in. Band: a band across the upper back
+// (over the shoulder blades and the back of the shoulders), its ends pinned under the palms.
 
 type P = ParamsOf<'push-up'>
 
@@ -49,6 +56,14 @@ const POLE_TOP: V3 = [0.15, -0.85, -0.5]
 /** fingers turned out from straight ahead, deg */
 const TURN_OUT = 8
 const FINGERS: V3 = [Math.sin(TURN_OUT * DEG), 0, Math.cos(TURN_OUT * DEG)]
+/** diamond (grip under 0.5 x shoulder width): the hands touch under the chest, index fingers and thumbs together, the
+ * fingers turned in this far, deg (in line with the forearms seen from above); the elbows stay closer to the ribs at
+ * the bottom: `flare` deg out from the torso (seen from above, ~20-25 against ~35 for the standard push-up), the pole
+ * leaning `up` off the floor (the standard push-up's 0.6) and the hands `back` m towards the feet from where the wrist
+ * alone would put them, so the forearms stay ~25 deg off the floor at the bottom */
+const DIAMOND = { below: 0.5, turn: -45, flare: 22, up: 0.8, back: 0.04 }
+const DIAMOND_FINGERS: V3 = [Math.sin(DIAMOND.turn * DEG), 0, Math.cos(DIAMOND.turn * DEG)]
+const fingersFor = (p: P): V3 => (p.gripWidth < DIAMOND.below ? DIAMOND_FINGERS : FINGERS)
 /** palms flat under a loaded forearm: wrist extension to ~90 (the rig's -70 is for free hands) */
 const WRIST_FLEX: [number, number] = [-95, 75]
 /** wrist extension at the top, deg: the hands sit that far ahead of the shoulders (past ~85 the rig's pronation and
@@ -94,6 +109,32 @@ const FOOT_SINK = 65
  * floor (the toes reach over it) */
 const FOOT_SINK_BOX = 30
 
+/**
+ * Band push-up: the strip crosses the upper back (an arc round the trunk at the armpits, thorax2 frame: lateral and
+ * back half axes, m), wraps over the back of each shoulder (a node lifted off the straight run just far enough to clear
+ * the shoulder, checked every frame), passes the outside of each deltoid (humerus frame) and runs to the floor beside
+ * the little finger, then under the palm. The runs down the arms face the hero camera (az -45), so they read as a band
+ */
+const BAND_BACK = { at: [0, 0.03, 0.083] as V3, r: [0.19, 0.15] as [number, number], from: -40, to: -140 }
+const BAND_DELT: V3 = [0.08, -0.07, -0.015]
+/** the back-of-shoulder node: off the shoulder joint centre (thorax frame: lateral, towards the head, back), m, and the
+ * way it moves if the upper arm still needs room */
+const BAND_REAR: V3 = [0.07, -0.02, -0.065]
+const BAND_REAR_DIR: V3 = [0, 1, -0.6]
+const BAND_FACE: V3 = [-Math.SQRT1_2, 0, Math.SQRT1_2]
+/** under the palm (palm rest frame, from the grip site at the finger roots): the palm's middle and the little finger edge */
+const BAND_PALM = { mid: [0, 0.001, -0.045] as V3, edge: [0.05, 0.001, -0.045] as V3 }
+
+/** pike: hip flexion, ankle dorsiflexion (heels up, toes turned under) and neck flexion (head in line, eyes back
+ * between the hands), deg */
+const PIKE = { hip: 88, ankle: 6, neck: [4, 4] }
+/** root-find ranges of the trunk pitch (deg above horizontal) for the lockout, the rep and the bottom, and of the hands'
+ * distance from the balls of the feet (m): a plank lies near level, a pike tips head down */
+const RANGES = {
+  plank: { top: [45, -10], rep: [45, -40], bottom: [60, -40], hands: [1.0, 1.7] },
+  pike: { top: [-5, -80], rep: [-2, -85], bottom: [-2, -88], hands: [0.6, 1.4] },
+}
+
 type Ctx = {
   tempo: Tempo
   setup: Setup
@@ -114,6 +155,7 @@ const MIRRORED = ['clavicle_*.elev', 'clavicle_*.prot', 'scapula_*.uprot', 'shou
 
 function unsupported(p: P) {
   if (p.laterality !== 'bilateral') return `laterality ${p.laterality}`
+  if (p.pike && (p.kneeling || p.elevation !== 'floor' || p.plus || p.implement !== 'bodyweight')) return 'pike variant'
   if (p.kneeling && p.elevation !== 'floor') return `kneeling ${p.elevation}`
   return null
 }
@@ -124,11 +166,11 @@ function plank(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Ctx, 'balls'>, c
   setDofs(skel, q, {
     'lumbar.flex': 0,
     'thorax.flex': PLUS_THORAX * plus,
-    'neck.flex': NECK[p.elevation === 'feet' ? 1 : 0][0],
-    'head.flex': NECK[p.elevation === 'feet' ? 1 : 0][1],
-    'hip_*.flex': HIP,
+    'neck.flex': p.pike ? PIKE.neck[0] : NECK[p.elevation === 'feet' ? 1 : 0][0],
+    'head.flex': p.pike ? PIKE.neck[1] : NECK[p.elevation === 'feet' ? 1 : 0][1],
+    'hip_*.flex': p.pike ? PIKE.hip : HIP,
     'knee_*.flex': KNEE,
-    'ankle_*.df': p.kneeling ? KNEEL_DF : ANKLE_DF + (p.elevation === 'feet' ? DECLINE_DF * Math.min(1, Math.max(0, -pitch / DECLINE_PITCH)) : 0),
+    'ankle_*.df': p.pike ? PIKE.ankle : p.kneeling ? KNEEL_DF : ANKLE_DF + (p.elevation === 'feet' ? DECLINE_DF * Math.min(1, Math.max(0, -pitch / DECLINE_PITCH)) : 0),
     'clavicle_*.prot': lerp(PROT[0], PROT[1], c) + PLUS * plus,
     'grip_*.close': 1,
   })
@@ -158,7 +200,7 @@ function plank(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Ctx, 'balls'>, c
 }
 
 /** flat palm, fingers forward and turned out a little */
-const palmHand = (skel: Skeleton) => qalign([0, -1, 0], skel.data.sites.grip_l.normal!, FINGERS, [0, -1, 0])
+const palmHand = (skel: Skeleton, fingers: V3) => qalign([0, -1, 0], skel.data.sites.grip_l.normal!, fingers, [0, -1, 0])
 
 /** relaxed forearm and wrist limits for the arm solve: the wrist angles are set afterwards (wristAngles) */
 const FREE = { limits: { pro: [-179, 179] as [number, number], flex: [-179, 179] as [number, number], dev: [-179, 179] as [number, number] }, devBand: [-179, 179] as [number, number] }
@@ -169,7 +211,7 @@ const FREE = { limits: { pro: [-179, 179] as [number, number], flex: [-179, 179]
  * the hand cannot roll about the fingers), so the arm solver's own split is arbitrary: a damped, bounded solve from
  * a fixed seed keeps it smooth, letting the palm tip a few degrees where a flat palm is out of reach.
  */
-function wristAngles(skel: Skeleton, q: Float64Array) {
+function wristAngles(skel: Skeleton, q: Float64Array, fingers: V3, seed: number[] = WRIST_SEED) {
   const d = skel.dof
   const ix = [d['forearm_l.pro'], d['wrist_l.flex'], d['wrist_l.dev']]
   const normal = skel.data.sites.grip_l.normal!
@@ -180,39 +222,58 @@ function wristAngles(skel: Skeleton, q: Float64Array) {
   const res = (x: number[]) => {
     const r = handRot(x)
     const n = qrot(r, normal), f = qrot(r, [0, -1, 0])
-    return [n[0], n[2], 0.5 * (f[0] * FINGERS[2] - f[2] * FINGERS[0]), REG[0] * (x[0] - WRIST_SEED[0]) * DEG, REG[1] * x[2] * DEG]
+    return [n[0], n[2], 0.5 * (f[0] * fingers[2] - f[2] * fingers[0]), REG[0] * (x[0] - seed[0]) * DEG, REG[1] * x[2] * DEG]
   }
   const lo = [-90, WRIST_FLEX[0], -35], hi = [85, WRIST_FLEX[1], 20]
-  const r = dls(res, [WRIST_SEED[0], WRIST_SEED[1], 0], { tol: 1e-9, iters: 25, lo, hi })
+  const r = dls(res, [seed[0], seed[1], 0], { tol: 1e-9, iters: 25, lo, hi })
   return handRot(r.x)
 }
 
-function arms(skel: Skeleton, q: Float64Array, ctx: Pick<Ctx, 'palms' | 'palmPose'>, bottom: V3, c: number) {
+function arms(skel: Skeleton, q: Float64Array, ctx: Pick<Ctx, 'palms' | 'palmPose'>, bottom: V3, c: number, fingers: V3) {
   const pole = norm(add(scale(bottom, 1 - ramp(c, 0.1, 0.9)), scale(norm(POLE_TOP), ramp(c, 0.1, 0.9))))
   const s = ctx.palms.sites.l
   const pos = add(ctx.palmPose.pos, qrot(ctx.palmPose.rot, s.pos))
   const thorax = fk(skel, q).rot[skel.seg.thorax2]
   // the arm reaches the palm, the wrist lays it as flat as it can, and again (the hand's tip moves the wrist a little)
-  let hand = palmHand(skel)
+  let hand = palmHand(skel, fingers)
   for (let it = 0; it < 5; it++) {
     attachHand(skel, q, 'l', { pos, axis: [-1, 0, 0], palm: [0, -1, 0], hand }, { pole: qrot(thorax, pole), planeHint: 90, ...FREE })
-    hand = wristAngles(skel, q)
+    hand = wristAngles(skel, q, fingers)
   }
   for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
 }
 
+/**
+ * Both palms flat on a support (the left arm solved, the right mirrored): the left grip site at `pos`, fingers along the
+ * horizontal `fingers`, the elbow towards `pole` (world); `seed`: the forearm pronation and wrist flexion the wrist
+ * solve starts from and leans towards (deg). Shared with the bench dip.
+ */
+export function flatPalmArms(skel: Skeleton, q: Float64Array, pos: V3, fingers: V3, pole: V3, o: { seed?: number[]; planeHint?: number; iters?: number } = {}) {
+  let hand = palmHand(skel, fingers)
+  for (let it = 0; it < (o.iters ?? 5); it++) {
+    attachHand(skel, q, 'l', { pos, axis: [-1, 0, 0], palm: [0, -1, 0], hand }, { pole, planeHint: o.planeHint ?? 90, ...FREE })
+    hand = wristAngles(skel, q, fingers, o.seed)
+  }
+  for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
+}
+
+/** palms flat under a loaded forearm: the wrist limits the push-up and the bench dip pass to the joint-limit gate */
+export const PALM_WRIST_LIMITS = { 'wrist_l.flex': WRIST_FLEX, 'wrist_r.flex': WRIST_FLEX }
+/** flat palms on a padded box or bench top: how far the fist capsule sinks into it, mm (see HAND_SINK) */
+export const PALM_SINK = HAND_SINK
+
 function frame(skel: Skeleton, p: P, ctx: Pick<Ctx, 'balls' | 'palms' | 'palmPose'>, pole: V3, c: number, pitch: number): Float64Array {
   const q = zeroQ(skel)
   plank(skel, q, p, ctx, c, pitch)
-  arms(skel, q, ctx, pole, c)
+  arms(skel, q, ctx, pole, c, fingersFor(p))
   return q
 }
 
-/** upper-arm angle from the torso in its frontal plane, deg */
-function flare(skel: Skeleton, q: Float64Array): number {
+/** upper-arm angle from the torso in its frontal plane, deg; `signed`: negative with the elbow in towards the midline */
+function flare(skel: Skeleton, q: Float64Array, signed = false): number {
   const f = fk(skel, q)
   const h = qrot(qconj(f.rot[skel.seg.thorax2]), sub(segPos(skel, f, 'forearm_l'), segPos(skel, f, 'humerus_l')))
-  return Math.atan2(Math.abs(h[0]), -h[1]) * RAD
+  return Math.atan2(signed ? h[0] : Math.abs(h[0]), -h[1]) * RAD
 }
 
 const elbowOf = (skel: Skeleton, q: Float64Array) => q[skel.dof['elbow_l.flex']]
@@ -230,7 +291,8 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const palmPose: ImplementPose = { id: palms.id, pos: [0, handsH + (handsH ? PALM_LIFT_BOX : PALM_LIFT), 1.35], rot: qid() }
   const base = { balls, palms, palmPose }
   let pole: V3 = norm([0.6, -0.8, -0.6])
-  const poleAt = (t: number): V3 => norm([Math.sin(t * DEG), -0.8 * Math.cos(t * DEG), -0.6])
+  const up = p.gripWidth < DIAMOND.below ? DIAMOND.up : 0.6
+  const poleAt = (t: number): V3 => norm([Math.sin(t * DEG), -0.8 * Math.cos(t * DEG), -up])
   // bottom: plank pitch that puts the chest CHEST_GAP above the support, or the head HEAD_GAP above the floor where
   // that comes first (feet on a box tip the head down)
   const chest = (a: number) => {
@@ -238,32 +300,35 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     const low = (re: RegExp) => Math.min(...caps.filter((k) => re.test(k.segment)).map((k) => Math.min(k.a[1], k.b[1]) - k.r))
     return Math.min(low(/^thorax/) - handsH - CHEST_GAP, low(/^head$/) - HEAD_GAP)
   }
-  const bottomPitch = () => root1d(chest, 60, -40, { tol: 1e-6, scan: 20 }).x
+  const R = p.pike ? RANGES.pike : RANGES.plank
+  const bottomPitch = () => root1d(chest, R.bottom[0], R.bottom[1], { tol: 1e-6, scan: 20 }).x
   // hands just far enough ahead of the shoulders for WRIST_TOP at the top or WRIST_BOTTOM at the bottom, whichever
   // binds (on a box: the plank pivots through a steeper arc, so the shoulders travel further forward on the way
   // down); elbow pole (out and back towards the feet, the elbow pointing away from the floor) that gives the FLARE
   // at the bottom
-  const topPitch = () => root1d((a) => elbowOf(skel, frame(skel, p, base, pole, 1, a)) - ELBOW_TOP, 45, -10, { tol: 1e-6, scan: 11 }).x
+  const topPitch = () => root1d((a) => elbowOf(skel, frame(skel, p, base, pole, 1, a)) - ELBOW_TOP, R.top[0], R.top[1], { tol: 1e-6, scan: 11 }).x
   const wristTop = (z: number) => {
     palmPose.pos = [0, palmPose.pos[1], z]
     const w = (c: number, a: number) => frame(skel, p, base, pole, c, a)[skel.dof['wrist_l.flex']]
     return Math.min(w(1, topPitch()) + WRIST_TOP, w(0, bottomPitch()) + WRIST_BOTTOM)
   }
-  const flareTo = FLARE[0] + FLARE[1] * Math.max(0, p.gripWidth - 1)
+  const diamond = p.gripWidth < DIAMOND.below
+  const flareTo = diamond ? DIAMOND.flare : FLARE[0] + FLARE[1] * Math.max(0, p.gripWidth - 1)
   const elbowOut = (t: number) => {
     pole = poleAt(t)
-    return flare(skel, frame(skel, p, base, pole, 0, bottomPitch())) - flareTo
+    // the diamond's hands sit inside the shoulders, so its elbow could also swing in under the chest: only outwards counts
+    return flare(skel, frame(skel, p, base, pole, 0, bottomPitch()), diamond) - flareTo
   }
   // hand placement and elbow pole depend on each other once the bottom binds
   for (let pass = 0; pass < 6; pass++) {
     const z0 = palmPose.pos[2]
-    palmPose.pos = [0, palmPose.pos[1], root1d(wristTop, 1.0, 1.7, { tol: 1e-5, scan: 7 }).x]
+    palmPose.pos = [0, palmPose.pos[1], root1d(wristTop, R.hands[0], R.hands[1], { tol: 1e-5, scan: 7 }).x - (diamond ? DIAMOND.back : 0)]
     pole = poleAt(root1d(elbowOut, 0, 80, { tol: 1e-4, scan: 8 }).x)
     if (pass && Math.abs(palmPose.pos[2] - z0) < 1e-4) break
   }
   const elbowBottom = elbowOf(skel, frame(skel, p, base, pole, 0, bottomPitch()))
   const target = (c: number) => lerp(elbowBottom, ELBOW_TOP, c)
-  const pitchFor = (c: number) => root1d((a) => elbowOf(skel, frame(skel, p, base, pole, c, a)) - target(c), 45, -40, { tol: 1e-6, scan: 17 }).x
+  const pitchFor = (c: number) => root1d((a) => elbowOf(skel, frame(skel, p, base, pole, c, a)) - target(c), R.rep[0], R.rep[1], { tol: 1e-6, scan: 17 }).x
   const cs = Array.from({ length: KNOTS }, (_, i) => i / (KNOTS - 1))
   const pitch = monotoneCubic(cs, cs.map(pitchFor))
   const implements_: ImplementSpec[] = [palms]
@@ -279,6 +344,18 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     rests = p.elevation === 'hands'
       ? [{ implement: box.id, regions: ['hand_l', 'hand_r'], tol: HAND_SINK }]
       : [{ implement: box.id, regions: ['foot_l', 'foot_r'], tol: FOOT_SINK_BOX }]
+  }
+  if (p.implement === 'band') {
+    const under = (side: 'l' | 'r', at: V3) => ({ implement: palms.id, site: side, at: side === 'l' ? at : ([-at[0], at[1], at[2]] as V3), face: [0, 1, 0] as V3 })
+    const delt = (s: 'l' | 'r') => ({ implement: `delt_${s}`, face: BAND_FACE })
+    implements_.push(...['back', 'delt_l', 'delt_r', 'rear_l', 'rear_r'].map((id) => bandNode(id)), band({
+      size: 'heavy',
+      path: [
+        under('l', BAND_PALM.mid), under('l', BAND_PALM.edge), delt('l'), 'rear_l',
+        ...around('back', { r: BAND_BACK.r, from: BAND_BACK.from, to: BAND_BACK.to, n: 7, center: BAND_BACK.at }),
+        'rear_r', delt('r'), under('r', BAND_PALM.edge), under('r', BAND_PALM.mid),
+      ],
+    }))
   }
   const contacts: Contact[] = [
     { site: 'ball_l', kind: 'planted', target: { world: balls[0] } },
@@ -302,7 +379,29 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const c = phaseAt(u, ctx.tempo).c
   const q = frame(skel, p, ctx, ctx.pole, c, ctx.pitch(c))
-  return { q, implements: [ctx.palmPose, ...(ctx.boxPose ? [ctx.boxPose] : [])], contacts: ctx.setup.contacts }
+  const implements_ = [ctx.palmPose, ...(ctx.boxPose ? [ctx.boxPose] : [])]
+  if (p.implement === 'band') {
+    const f = fk(skel, q)
+    const mirror = (v: V3): V3 => [-v[0], v[1], v[2]]
+    const back = segmentPose(skel, f, 'back', 'thorax2')
+    const caps = bodyCapsules(skel, f)
+    const dir = norm(qrot(back.rot, BAND_REAR_DIR))
+    implements_.push(back)
+    for (const s of ['l', 'r'] as const) {
+      const m = (v: V3): V3 => (s === 'l' ? v : mirror(v))
+      const delt = localToWorld(skel, f, `humerus_${s}`, m(BAND_DELT))
+      const ang = BAND_BACK.from * DEG
+      const arc = localToWorld(skel, f, 'thorax2', add(BAND_BACK.at, m([BAND_BACK.r[0] * Math.cos(ang), 0, BAND_BACK.r[1] * Math.sin(ang)])))
+      // on the back of the shoulder (thorax frame off the joint centre), lifted only as far as the upper arm needs
+      const near = caps.filter((c) => c.region === `upperarm_${s}`)
+      const base = add(segPos(skel, f, `humerus_${s}`), qrot(back.rot, m(BAND_REAR)))
+      const rear = clearNode(near, delt, arc, base, dir, 0.004, 0.06)
+      // world-aligned nodes, so the strip's face (BAND_FACE) is a world direction
+      implements_.push({ id: `delt_${s}`, pos: delt, rot: qid() }, { id: `rear_${s}`, pos: rear, rot: qid() })
+    }
+    implements_.push(bandPose())
+  }
+  return { q, implements: implements_, contacts: ctx.setup.contacts }
 }
 
 export const pushUp: Template<P> = {

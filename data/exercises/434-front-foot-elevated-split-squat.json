@@ -41,9 +41,15 @@
     409
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "in_place",
+      "frontFootElevated": true,
+      "platformHeight": "low"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -60,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: The front foot is flat on a 10 cm step and the rear knee joint bottoms at 14 cm, so the knee surface sits at about 9 cm, below the step top as cue 2 says. The front knee travels forward over the toes and the dumbbells hang at the sides. No issues in either sheet."
   }
 }

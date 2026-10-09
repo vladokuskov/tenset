@@ -38,8 +38,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "band",
+      "grip": "supinated",
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The band anchors and stretches plausibly (fixed floor points, handle rings). Bands carry no collision geometry, though, and my own band-segment check finds the strand 8 to 9 mm inside the forearm capsule at the top frames (0 and 110), where it drops from the ring past the curled forearm. No gate sees this."
   }
 }

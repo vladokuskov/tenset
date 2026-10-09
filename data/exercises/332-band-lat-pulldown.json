@@ -41,8 +41,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "vertical-pull",
+    "params": {
+      "implement": "band",
+      "posture": "kneeling",
+      "grip": "pronated",
+      "gripWidth": 1.5
+    },
     "mapView": "B"
   },
   "cues": [
@@ -60,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Fists travel at a fixed x +-0.34, from (y 1.715, z 0.30) at elbow 12 down to (y 1.09, z 0.12) at elbow 145, beside the upper chest. That fits the cues. But the anchor is only about 0.35 m from the fists at full stretch, so the whole band path is just 1.11 m, and the figure kneels with the wall right at its knees. The start is about 68 deg above horizontal (22 deg forward of vertical), not quite 'straight overhead'."
   }
 }

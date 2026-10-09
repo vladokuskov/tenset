@@ -25,7 +25,7 @@ summarized below; the script and its dry-run output are retired). `src/motion/pa
 
 | key | values | meaning |
 |---|---|---|
-| implement | barbell, dumbbell, ez_bar, cable, machine, smith, bodyweight | what is moved; each template accepts a subset |
+| implement | barbell, dumbbell, ez_bar, cable, machine, smith, bodyweight, band, kettlebell, plate, trap_bar | what is moved; each template accepts a subset |
 | machine | leg_press, leg_extension, leg_curl_seated, leg_curl_lying, lat_pulldown, chest_press_machine, shoulder_press_machine, pec_deck, hip_abduction, hip_adduction, back_extension, assisted_pullup, calf_machine, seated_calf | equipment ids from `data/equipment.json`; when `implement: machine` omits it, the template's usual machine is filled in |
 | grip | pronated, supinated, neutral, mixed | at the start position with arms hanging: pronated = palms back, neutral = palms in, supinated = palms forward. EZ bar "semi-supinated" is `supinated` + `implement: ez_bar` |
 | gripWidth | 0.5..2.6 | see conventions |
@@ -61,13 +61,16 @@ Driver: implement.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, machine, smith | barbell |
+| implement | barbell, dumbbell, machine, smith, kettlebell, cable, band | barbell |
 | machine | chest_press_machine | (optional) |
-| posture | lying_supine, seated | lying_supine |
+| posture | lying_supine, seated, standing | lying_supine |
 | benchAngle | -30..15 | 0 |
 | grip | pronated, neutral | pronated |
 | gripWidth | 0.5..2.6 | 1.4 |
 | elbowFlare | 0..90 | 55 |
+| support | bench, floor | (optional) floor = lying on the floor (floor press) |
+| stance | hip, split | (optional) standing cable or band press |
+| squeeze | boolean | (optional) dumbbells pressed together (squeeze press) |
 
 ### incline-press
 
@@ -89,12 +92,14 @@ Driver: implement.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, machine, smith | barbell |
+| implement | barbell, dumbbell, machine, smith, kettlebell, band | barbell |
 | machine | shoulder_press_machine | (optional) |
 | posture | standing, seated | standing |
 | benchAngle | -30..90 | 90 |
-| grip | pronated, neutral | pronated |
+| grip | pronated, neutral, supinated | pronated |
 | gripWidth | 0.5..2.6 | 1.1 |
+| support | bench, floor | (optional) seated: floor = sitting on the floor, legs straight (Z press) |
+| rotate | boolean | (optional) the grip turns from `grip` to palms forward on the way up (Arnold press: `grip: supinated`) |
 
 ### dip
 
@@ -106,6 +111,7 @@ Driver: root.
 | torsoAngle | 0..60 | 20 |
 | grip | neutral, pronated | neutral |
 | kneeAngle | 0..120 | 70 |
+| support | bench | (optional) bench = hands on a bench edge behind the hips, feet on the floor (bench dip; kneeAngle at the top) |
 
 ### push-up
 
@@ -113,11 +119,12 @@ Driver: root.
 
 | key | values | default |
 |---|---|---|
-| implement | bodyweight | bodyweight |
+| implement | bodyweight, band | bodyweight |
 | elevation | floor, hands, feet | floor |
 | plus | boolean | false |
-| gripWidth | 0.5..2.6 | 1.2 |
+| gripWidth | 0.2..2.6 | 1.2 (below 0.5: diamond, the hands together, fingers turned in) |
 | kneeling | boolean | false |
+| pike | boolean | (optional) hips high, folded at the hips (pike push-up) |
 
 ### fly
 
@@ -125,7 +132,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, cable, machine | dumbbell |
+| implement | dumbbell, cable, machine, band | dumbbell |
 | machine | pec_deck | (optional) |
 | posture | lying_supine, standing, seated | lying_supine |
 | benchAngle | -30..90 | 0 |
@@ -140,15 +147,16 @@ Driver: joint. **sample() implemented.**
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, cable, machine | dumbbell |
+| implement | dumbbell, cable, machine, band | dumbbell |
 | posture | standing, seated | standing |
 | cableHeight | low, mid, high | low |
 | grip | neutral, pronated | neutral |
 | plane | -10..60 | 20 |
-| topElevation | 60..120 | 85 |
+| topElevation | 60..150 | 85 |
 | elbowAngle | 0..45 | 15 |
 | leanAngle | 0..40 | 0 |
 | support | none, upright, bench | none |
+| crossed | boolean (bilateral cable: each hand on the opposite low pulley) | (optional) |
 
 ### front-raise
 
@@ -156,7 +164,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, cable, barbell | dumbbell |
+| implement | dumbbell, cable, barbell, plate | dumbbell |
 | posture | standing, seated, lying_prone | standing |
 | benchAngle | -30..90 | 45 |
 | grip | pronated, neutral | pronated |
@@ -170,7 +178,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, cable, machine | dumbbell |
+| implement | dumbbell, cable, machine, band | dumbbell |
 | machine | pec_deck | (optional) |
 | posture | standing, seated, lying_prone | standing |
 | torsoAngle | 0..90 | 75 |
@@ -186,7 +194,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | cable, dumbbell | cable |
+| implement | cable, dumbbell, band | cable |
 | posture | standing, side_lying | standing |
 | armPosition | side, abducted | side |
 | cableHeight | low, mid, high | mid |
@@ -198,9 +206,9 @@ Driver: implement.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, cable, machine, bodyweight, smith | barbell |
+| implement | barbell, dumbbell, cable, machine, bodyweight, smith, band, kettlebell | barbell |
 | posture | standing, seated, lying_prone, lying_supine, kneeling | standing |
-| support | none, bench, chest_pad | none |
+| support | none, bench, chest_pad, floor | none |
 | torsoAngle | 0..90 | 45 |
 | benchAngle | -30..90 | (optional) |
 | grip | pronated, supinated, neutral, mixed | pronated |
@@ -218,13 +226,14 @@ Driver: root. **sample() implemented.**
 
 | key | values | default |
 |---|---|---|
-| implement | bodyweight, cable, machine | bodyweight |
+| implement | bodyweight, cable, machine, band | bodyweight |
 | machine | lat_pulldown, assisted_pullup | (optional) |
 | posture | hanging, seated, kneeling | hanging |
 | grip | pronated, supinated, neutral | pronated |
 | gripWidth | 0.5..2.6 | 1.5 |
 | attachment | long_bar, v_bar, straight_bar, single_handle | (optional) |
 | legs | straight, bent, crossed | bent |
+| range | full, scapular (shoulder blades only, elbows straight) | (optional) |
 
 ### shrug
 
@@ -232,7 +241,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, cable, smith, machine | dumbbell |
+| implement | barbell, dumbbell, cable, smith, machine, band, trap_bar | dumbbell |
 | posture | standing, seated | standing |
 | grip | pronated, neutral, mixed | neutral |
 | gripWidth | 0.5..2.6 | 1.1 |
@@ -243,9 +252,9 @@ Driver: implement. **sample() implemented.**
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, smith, machine, bodyweight | barbell |
+| implement | barbell, dumbbell, smith, machine, bodyweight, kettlebell | barbell |
 | machine | leg_press | (optional) |
-| hold | back_high, back_low, front_rack, goblet, sides, hands | back_high |
+| hold | back_high, back_low, front_rack, goblet, sides, hands, two_hand | back_high |
 | posture | standing, seated, lying_supine | standing |
 | stance | narrow, hip, shoulder, wide | shoulder |
 | toeOut | 0..45 | 15 |
@@ -254,6 +263,10 @@ Driver: implement. **sample() implemented.**
 | sledAngle | 0..90 | 45 |
 | footPosition | low, mid, high, forward | mid |
 | armPosition | forward, crossed, hips | forward |
+| heelsElevated | boolean | (optional) |
+| box | boolean | (optional) |
+
+Kettlebell: `goblet` is one bell by the horns at the chest, `front_rack` two bells in the rack. `two_hand` is one dumbbell hanging upright between the legs from both hands (sumo squat). `heelsElevated` puts the heels on a 10 kg plate (goblet holds); `box` sits back onto a box whose height the depth sets (high-bar barbell).
 
 ### lunge
 
@@ -261,14 +274,17 @@ Driver: root.
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, barbell, bodyweight, smith | dumbbell |
+| implement | dumbbell, barbell, bodyweight, smith, kettlebell | dumbbell |
 | hold | sides, goblet, back_high, front_rack, hands | sides |
-| direction | forward, reverse, in_place, step_up | reverse |
+| direction | forward, reverse, in_place, step_up, lateral, curtsy | reverse |
 | rearFootElevated | boolean | false |
+| frontFootElevated | boolean | (optional) |
 | travel | boolean | false |
 | platformHeight | low, mid, knee | knee |
 | stepLength | 0.5..1.6 | 1 |
 | torsoAngle | 0..45 | 10 |
+
+`lateral`: in place from a wide stance, the hips sit back over the right foot (goblet dumbbell). `curtsy`: the rear foot steps back and across behind the front one. `frontFootElevated` (in place): the front foot on a low step, its height by `platformHeight` (low 10, mid 15, knee 20 cm).
 
 ### leg-extension
 
@@ -287,16 +303,18 @@ Driver: implement.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, cable, bodyweight | barbell |
-| hold | hands, front_of_thighs, opposite_hand, sides | hands |
+| implement | barbell, dumbbell, cable, bodyweight, kettlebell | barbell |
+| hold | hands, front_of_thighs, opposite_hand, sides, back_high | hands |
 | grip | pronated, supinated, neutral, mixed | pronated |
 | gripWidth | 0.5..2.6 | 1.1 |
-| stance | narrow, hip, shoulder, wide, single_leg | hip |
+| stance | narrow, hip, shoulder, wide, single_leg, split | hip |
 | toeOut | 0..45 | 10 |
 | kneeAngle | 0..90 | 20 |
-| start | hang, floor | hang |
+| start | hang, floor, pins | hang |
 | attachment | rope, single_handle, straight_bar | (optional) |
 | cableHeight | low, mid, high | low |
+
+Kettlebell: `hold: hands` = both hands on the handle (RDL; `stance: wide` + `start: floor` = sumo, the bell between the heels), `opposite_hand` + `single_leg` = single-leg RDL. `hold: back_high` = good morning (bar on the upper back). `stance: split` = B-stance (kickstand): the back toes just behind the front heel, `side` is the front leg. `start: pins` = rack pull from the safety arms just below the knees.
 
 ### hip-thrust
 
@@ -304,10 +322,12 @@ Driver: root.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, bodyweight, dumbbell, machine | barbell |
+| implement | barbell, bodyweight, dumbbell, machine, smith | barbell |
 | support | bench, floor | bench |
-| stance | narrow, hip, shoulder, wide | hip |
+| stance | narrow, hip, shoulder, wide, single_leg | hip |
 | kneeAngle | 45..120 | 90 |
+
+`stance: single_leg` (bodyweight): one foot planted (`side`), the other leg held off the floor (bent on the bench, straight in line with the working thigh on the mat). `implement: smith`: the bar on the Smith rails over the hip crease at the bottom.
 
 ### leg-curl
 
@@ -337,7 +357,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | machine, cable, bodyweight | machine |
+| implement | machine, cable, bodyweight, band | machine |
 | machine | hip_abduction, hip_adduction | (optional) |
 | direction | abduction, adduction | abduction |
 | posture | seated, standing, side_lying | seated |
@@ -345,20 +365,25 @@ Driver: joint.
 | attachment | ankle_strap | (optional) |
 | cableHeight | low, mid, high | low |
 
+`implement: band` + `posture: seated`: on the end of a flat bench, feet together, a mini band round the thighs above the knees.
+
 ### calf-raise
 
 Driver: root.
 
 | key | values | default |
 |---|---|---|
-| implement | machine, dumbbell, bodyweight, smith, barbell | machine |
+| implement | machine, dumbbell, bodyweight, smith, barbell, band | machine |
 | machine | calf_machine, seated_calf, leg_press | (optional) |
 | direction | plantarflexion, dorsiflexion | plantarflexion |
 | posture | standing, seated | standing |
 | kneeAngle | 0..110 | 0 |
 | stance | hip, single_leg | hip |
-| support | none, wall | none |
+| support | none, wall, bench, floor | none |
 | platform | floor, step | step |
+| torsoAngle | 0..90 | (optional) |
+
+`support: bench` + `torsoAngle`: hinged over with the forearms on a padded box (donkey raise). `implement: band` + `support: floor`: dorsiflexion seated on the floor with the legs long, a band over the feet (band tibialis raise).
 
 ### curl
 
@@ -366,9 +391,14 @@ Driver: joint. **sample() implemented.**
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, barbell, ez_bar, cable | dumbbell |
+| implement | dumbbell, barbell, ez_bar, cable, band | dumbbell |
 | grip | supinated, neutral, pronated | supinated |
 | supinate | boolean | false |
+| lowerGrip | supinated, neutral, pronated | (optional) |
+| path | drag, cross_body | (optional) |
+| support | thigh | (optional) |
+| hold | two_hand | (optional) |
+| armPosition | abducted | (optional) |
 | gripWidth | 0.5..2.6 | 1 |
 | posture | standing, seated, lying_prone | standing |
 | benchAngle | -30..90 | (optional) |
@@ -382,7 +412,7 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | cable, dumbbell, ez_bar, barbell | cable |
+| implement | cable, dumbbell, ez_bar, barbell, band | cable |
 | attachment | rope, straight_bar, v_bar, single_handle, ez_bar | (optional) |
 | cableHeight | low, mid, high | high |
 | grip | neutral, pronated, supinated | neutral |
@@ -394,6 +424,7 @@ Driver: joint.
 | shoulderFlexion | -60..180 | 0 |
 | hold | hands, two_hand | hands |
 | support | none, bench | none |
+| elbowFlare | 0..90 | (optional) |
 
 ### wrist-curl
 
@@ -401,10 +432,10 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | dumbbell, barbell, cable | dumbbell |
+| implement | dumbbell, barbell, cable, band | dumbbell |
 | grip | supinated, pronated | supinated |
-| posture | kneeling, seated | kneeling |
-| support | bench, thigh | bench |
+| posture | kneeling, seated, standing | kneeling |
+| support | bench, thigh, none | bench |
 
 ### crunch
 
@@ -412,11 +443,14 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | bodyweight, cable, machine | bodyweight |
+| implement | bodyweight, cable, machine, plate | bodyweight |
 | attachment | rope | (optional) |
 | cableHeight | low, mid, high | high |
-| posture | kneeling, lying_supine | lying_supine |
+| posture | kneeling, lying_supine, standing | lying_supine |
 | kneeAngle | 0..130 | 90 |
+| range | crunch, sit_up | (optional; omitted = crunch) |
+| arms | temples, crossed | (optional; omitted = temples, a plate is held on the chest by its rim) |
+| benchAngle | -30..0 | (optional; decline board, omitted = the floor) |
 
 ### leg-raise
 
@@ -428,7 +462,11 @@ Driver: joint.
 | posture | hanging, lying_supine | hanging |
 | support | none, elbow_pads | none |
 | kneeAngle | 0..120 | 0 |
-| topHipAngle | 45..130 | 100 |
+| topHipAngle | 45..160 | 100 |
+| toBar | boolean | (optional; hanging, the trunk leans back until the toes touch the bar) |
+| bottomHipAngle | 0..100 | (optional; lying, thigh angle above the mat at the bottom) |
+| pelvisCurl | boolean | (optional; lying, the pelvis rolls up off the mat: reverse crunch) |
+| twist | 0..45 | (optional; hanging, pelvis turn towards the working side at the top: oblique raise) |
 
 ### hold
 
@@ -436,14 +474,17 @@ Driver: root.
 
 | key | values | default |
 |---|---|---|
-| kind | front_plank, side_plank, pallof_press | front_plank |
-| implement | bodyweight, cable | bodyweight |
+| kind | front_plank, side_plank, pallof_press, hollow_hold, bear_plank, suitcase_hold | front_plank |
+| implement | bodyweight, cable, band, dumbbell | bodyweight |
 | support | forearm, hand | forearm |
 | legs | stacked, staggered | stacked |
 | attachment | single_handle | (optional) |
 | cableHeight | low, mid, high | mid |
 | stance | hip, shoulder, split | hip |
 | pressOut | boolean | false |
+| elbowsAhead | 0..0.3 (m) | (optional; forearm plank, elbows ahead of the shoulders: long-lever plank) |
+| hipDip | 0..0.3 (m) | (optional; side plank, the hips lower this far and drive up each rep) |
+| tap | boolean | (optional; hand plank, the working hand taps the opposite shoulder) |
 
 ### rotation
 
@@ -451,9 +492,9 @@ Driver: joint.
 
 | key | values | default |
 |---|---|---|
-| implement | cable, bodyweight, dumbbell | cable |
+| implement | cable, bodyweight, dumbbell, band, plate | cable |
 | attachment | single_handle, rope | (optional) |
 | cableHeight | low, mid, high | high |
 | direction | high_to_low, low_to_high, horizontal | high_to_low |
 | stance | hip, shoulder, wide, split | wide |
-| posture | standing, kneeling | standing |
+| posture | standing, kneeling, seated | standing |

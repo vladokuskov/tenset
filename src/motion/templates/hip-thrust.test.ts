@@ -15,10 +15,12 @@ const baked = new Map(variants.map((v) => [v.id, bake(getTemplate('hip-thrust'),
 const get = (id: number) => baked.get(id)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
+/** the planted (working) leg: single-leg records drive through their right leg */
+const work = (b: Baked) => (b.params.stance === 'single_leg' ? (b.params.side === 'left' ? 'l' : 'r') : 'l')
 
 describe('hip-thrust template', () => {
   it('covers every hip-thrust record in the family', () => {
-    expect([...baked.keys()].sort()).toEqual([502, 511, 530])
+    expect([...baked.keys()].sort()).toEqual([502, 511, 529, 530, 531, 533])
   })
 
   it.each([...baked.keys()])('%i: feet planted, hands held, finite frames, seamless loop', (id) => {
@@ -43,21 +45,22 @@ describe('hip-thrust template', () => {
 
   it.each([...baked.keys()])('%i: lockout shins at the param angle (90 = vertical), hips just past neutral (ribs down), knee ROM ~21 +/- 7', (id) => {
     const b = get(id)
+    const w = work(b)
     const f = fk(skel, frameQ(b, 0))
-    const knee = segPos(skel, f, 'tibia_l'), ankle = segPos(skel, f, 'foot_l')
+    const knee = segPos(skel, f, `tibia_${w}`), ankle = segPos(skel, f, `foot_${w}`)
     const shin = Math.atan2(ankle[2] - knee[2], knee[1] - ankle[1]) * (180 / Math.PI)
     expect(shin).toBeCloseTo(90 - Number(b.params.kneeAngle), 0)
-    const hip = dof(b, 0, 'hip_l.flex')
+    const hip = dof(b, 0, `hip_${w}.flex`)
     expect(hip).toBeLessThanOrEqual(0)
     expect(hip).toBeGreaterThan(HIP_TOP - 2)
     // ribs down: the lumbar spine never extends
     for (let i = 0; i < b.frames; i += 5) expect(frameQ(b, i)[skel.dof['lumbar.flex']]).toBeGreaterThanOrEqual(0)
-    const rom = dof(b, 0.625, 'knee_l.flex') - dof(b, 0, 'knee_l.flex')
+    const rom = dof(b, 0.625, `knee_${w}.flex`) - dof(b, 0, `knee_${w}.flex`)
     expect(rom).toBeGreaterThan(10)
     expect(rom).toBeLessThan(30)
   })
 
-  it.each([502, 530])('%i on the bench: shins vertical at lockout, ~75 deg hip flexion at the bottom, back on the edge, load on the hips', (id) => {
+  it.each([502, 530, 531])('%i on the bench: shins vertical at lockout, ~75 deg hip flexion at the bottom, back on the edge, load on the hips', (id) => {
     const b = get(id)
     const f = fk(skel, frameQ(b, 0))
     expect(Math.abs(segPos(skel, f, 'tibia_l')[2] - segPos(skel, f, 'foot_l')[2])).toBeLessThan(0.02)
@@ -77,7 +80,8 @@ describe('hip-thrust template', () => {
       expect(back).toBeLessThan(0)
       expect(back).toBeGreaterThan(-0.015)
       const bar = frameImplements(b, i).find((p) => p.id === (id === 530 ? 'db' : 'bar'))!.pos
-      expect(Math.abs(bar[2] - sitePos(skel, g, 'hip_crease')[2])).toBeLessThan(0.001)
+      // the Smith bar keeps to its rail line, over the hip crease at the bottom and a few cm off it at lockout
+      expect(Math.abs(bar[2] - sitePos(skel, g, 'hip_crease')[2])).toBeLessThan(id === 531 ? 0.07 : 0.001)
       expect(bar[1]).toBeGreaterThan(segPos(skel, g, 'pelvis')[1])
     }
   })
@@ -112,9 +116,33 @@ describe('hip-thrust template', () => {
     expect(dof(b, 0.625, 'hip_l.flex')).toBeGreaterThan(30)
   })
 
+  it('Smith: the bar travels straight up and down on one rail line, over the hip crease at the bottom', () => {
+    const b = get(531)
+    const zs = Array.from({ length: b.frames }, (_, i) => frameImplements(b, i).find((p) => p.id === 'bar')!.pos[2])
+    expect(Math.max(...zs) - Math.min(...zs)).toBeLessThan(1e-6)
+    const f = fk(skel, frameQ(b, at(b, 0.625)))
+    expect(Math.abs(zs[0] - sitePos(skel, f, 'hip_crease')[2])).toBeLessThan(0.003)
+    expect(b.implements.some((s) => s.id === 'smith_reversed')).toBe(true)
+  })
+
+  it.each([529, 533])('%i single leg: one foot planted, the free leg held off the floor all rep', (id) => {
+    const b = get(id)
+    const w = work(b), fr = w === 'l' ? 'r' : 'l'
+    expect(b.contacts.filter((c) => c.kind === 'planted').every((c) => c.site.endsWith(`_${w}`))).toBe(true)
+    expect(b.symmetric).toBe(false)
+    for (let i = 0; i < b.frames; i += 4) {
+      const f = fk(skel, frameQ(b, i))
+      const low = Math.min(...bodyCapsules(skel, f).filter((c) => c.region === `foot_${fr}` || c.region === `shank_${fr}`).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+      expect(low).toBeGreaterThan(0.1)
+    }
+    // on the mat the free leg stays in line with the working thigh; on the bench the knee is held up, bent
+    if (id === 533) expect(dof(b, 0.3, `hip_${fr}.flex`)).toBeCloseTo(dof(b, 0.3, `hip_${w}.flex`), 3)
+    else expect(dof(b, 0.3, `knee_${fr}.flex`)).toBeGreaterThan(80)
+  })
+
   it('throws for variants it does not draw yet', () => {
     const t = getTemplate('hip-thrust')
-    for (const raw of [{ implement: 'dumbbell', support: 'floor' }, { implement: 'machine' }, { implement: 'barbell', support: 'floor' }]) {
+    for (const raw of [{ implement: 'dumbbell', support: 'floor' }, { implement: 'machine' }, { implement: 'barbell', support: 'floor' }, { implement: 'barbell', stance: 'single_leg' }, { implement: 'smith', support: 'floor' }]) {
       expect(() => t.sample(0, parseParams('hip-thrust', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

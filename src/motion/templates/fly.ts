@@ -11,6 +11,7 @@ import { dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
 import { crossoverBody, crossoverContext, handlePoses, stillSplit, type CrossoverCtx } from './crossover.ts'
 import { armDir, footContacts, mirrorArm, other, poseArm, relaxedArm, thoraxFrame, type Side } from './isolation.ts'
 import { pecDeckContext, samplePecDeck, type PecDeckCtx } from './pec-deck.ts'
+import { bandRig, bandRigPoses, type BandRig } from './press-cable.ts'
 import { plantFeet, restHead, seatOnPads, solidOf, trunkPose, type Posture } from './press-body.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -24,7 +25,8 @@ import { memo, type Setup, type Template } from './types.ts'
 // together in front of the hips, low-to-high starts just behind the hips and ends at chin height. Pec deck: seated,
 // back on the pad, handles on arcs round the shoulders (pec-deck.ts). Incline dumbbells: butt on the seat and upper
 // back on the inclined pad of the press bench (press-body.ts placement), the same thorax-relative arc as the flat
-// bench, so the dumbbells close over the upper chest.
+// bench, so the dumbbells close over the upper chest. Band: the mid cable fly's stance and arc, the band anchored on a
+// post behind at chest height and its ends on two handles (press-cable.ts band rig).
 
 type P = ParamsOf<'fly'>
 
@@ -76,7 +78,7 @@ type Ctx =
   | { kind: 'bench'; tempo: Tempo; setup: Setup; arc: Arc; hip: V3; tilt: number; neck: number; feet: FootTarget[]; benchPose: ImplementPose }
   | { kind: 'incline'; tempo: Tempo; setup: Setup; arc: Arc; base: Float64Array; benchPose: ImplementPose }
   | { kind: 'seated'; tempo: Tempo; setup: Setup; arc: Arc; base: Float64Array; benchPose: ImplementPose; x: CrossoverCtx }
-  | { kind: 'cable'; tempo: Tempo; setup: Setup; arc: Arc; x: CrossoverCtx; work?: Side }
+  | { kind: 'cable'; tempo: Tempo; setup: Setup; arc: Arc; x: CrossoverCtx; work?: Side; band?: BandRig }
   | { kind: 'machine'; tempo: Tempo; setup: Setup; x: PecDeckCtx }
 
 // ---------- arms ----------
@@ -211,6 +213,32 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   return { kind: 'cable', tempo, setup: x.setup, arc, x }
 }
 
+// ---------- band ----------
+
+/** the band's post behind the lifter: hook z, m (at the mid pulleys' height) */
+const BAND_POST_Z = -0.75
+
+function bandContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const hook: V3 = [0, PULLEY_Y.mid, BAND_POST_Z]
+  const split = SPLIT.mid
+  // the crossover rig gives the stance and its balance (no pulls: a band pulls far less than a stack at the stretch)
+  const x = crossoverContext(skel, {
+    tempo,
+    pulleys: { l: hook, r: hook },
+    crossed: false,
+    kg: 0,
+    stance: { kind: 'split', front: 'l', step: split.step, frontKnee: split.frontKnee, tilt: split.tilt },
+    trunk: SPLIT_TRUNK.mid,
+    facing: [0, 0, 1],
+  })
+  const arc = ARCS.mid
+  x.sway = stillSplit(skel, x, () => zeroQ(skel), (u) => (q) => flyArms(skel, q, arc, phaseAt(u, tempo).c, p.elbowAngle))
+  const { rig, specs } = bandRig(hook, 'outside')
+  // the band handles take the cable handles' ids, so the grip contacts stand; no tower, no cable pull
+  x.setup = { ...x.setup, implements: specs, cables: undefined }
+  return { kind: 'cable', tempo, setup: x.setup, arc, x, band: rig }
+}
+
 // ---------- single arm ----------
 
 /**
@@ -264,6 +292,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.implement === 'dumbbell' && p.posture === 'lying_supine' && p.benchAngle === 0) return benchContext(skel, tempo)
   if (p.implement === 'dumbbell' && p.posture === 'lying_supine' && p.benchAngle >= 15 && p.benchAngle <= 45) return inclineContext(skel, tempo, p.benchAngle)
   if (p.implement === 'cable' && p.posture === 'standing' && p.stance === 'split') return cableContext(p, skel, tempo)
+  if (p.implement === 'band' && p.posture === 'standing' && p.stance === 'split' && p.cableHeight === 'mid') return bandContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'seated' && p.cableHeight === 'mid' && p.benchAngle >= 60) return seatedCableContext(p, skel, tempo)
   if (p.implement === 'machine' && p.posture === 'seated') {
     const x = pecDeckContext(skel, 'fly', { elbow: p.elbowAngle, tempo, symmetric: true })
@@ -293,6 +322,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   }
   const work = ctx.work
   crossoverBody(skel, ctx.x, q, (qq) => (work ? singleArms(skel, qq, ctx.arc, c, p.elbowAngle, work) : flyArms(skel, qq, ctx.arc, c, p.elbowAngle)), ctx.x.sway)
+  if (ctx.band) return { q, implements: bandRigPoses(skel, q, ctx.band), contacts: ctx.setup.contacts }
   const handles = handlePoses(skel, ctx.x, q).filter((h) => !work || h.id === ctx.x.handles[work].id)
   return { q, implements: [...handles, { id: ctx.x.crossover.id, pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
 }

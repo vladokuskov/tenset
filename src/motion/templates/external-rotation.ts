@@ -3,6 +3,7 @@ import { bodyCapsules, type Capsule } from '../collide.ts'
 import { cableForce, cableHandle, comWorld, dumbbell, type ImplementSpec, type Part } from '../implements.ts'
 import { dls } from '../ik.ts'
 import { towelRoll } from '../implements/chest-shoulder-isolation.ts'
+import { band, bandAnchor, bandHandle, bandPose, poseHandle } from '../implements/index.ts'
 import { flatBench } from '../implements/shared.ts'
 import { add, cross, DEG, dot, eulerFrom, lerp, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, RAD, reject, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
@@ -18,7 +19,8 @@ import { memo, type Setup, type Template } from './types.ts'
 // table for this template: author judgment, ~90 deg arc inside the active range). Cable: standing side-on to a
 // stack on the far side at elbow height, the cable pulling the hand in. Side-lying: on the flat bench on the other
 // side, head on the folded bottom arm, legs stacked; the top arm lifts the dumbbell from in front of the stomach towards the
-// ceiling and stops before the torso would roll back.
+// ceiling and stops before the torso would roll back. Band (232): the cable setup with a band from a post anchor at
+// elbow height on the far side to a soft handle; its pull joins the balance as the cable's does.
 
 type P = ParamsOf<'external-rotation'>
 
@@ -124,10 +126,26 @@ function trunkPose(skel: Skeleton, q: Float64Array) {
   setDofs(skel, q, { 'lumbar.flex': 1, 'thorax.flex': 2, 'neck.flex': -4, 'head.flex': -2 })
 }
 
+/** cable handle in the hand, or the band handle with its ring towards the anchor */
+function handPose(skel: Skeleton, q: Float64Array, ctx: Ctx): ImplementPose {
+  if (ctx.handle!.kind !== 'band_handle') return handleInHand(skel, q, ctx.work, ctx.pulley!, ctx.handle!)
+  const h = handFrame(skel, fk(skel, q), ctx.work)
+  return poseHandle(ctx.handle!, 'c', h.pos, h.axis, ctx.pulley!)
+}
+
+/** the band anchor's post stands on the far side, its face turned to the lifter, the hook on the pulley point */
+function stackPose(ctx: Ctx): ImplementPose {
+  if (ctx.handle!.kind !== 'band_handle') return { id: 'stack', pos: [0, 0, 0], rot: qid() }
+  const away = ctx.pulley![0] > 0 ? 1 : -1
+  const rot = qaxis([0, 1, 0], (-away * 90) * DEG)
+  const hook = ctx.setup.implements.find((s) => s.id === 'stack')!.sites.hook.pos
+  return { id: 'stack', pos: sub(ctx.pulley!, qrot(rot, hook)), rot }
+}
+
 function cableMeasure(skel: Skeleton, ctx: Ctx) {
   const cable = ctx.setup.cables![0]
   return (q: Float64Array) => {
-    const hp = handleInHand(skel, q, ctx.work, ctx.pulley!, ctx.handle!)
+    const hp = handPose(skel, q, ctx)
     const { at, force } = cableForce(cable, hp)
     return centerOfPressure(skel, fk(skel, q), [{ mass: ctx.handle!.mass, pos: comWorld(ctx.handle!, hp) }], [{ at, force }])[1]
   }
@@ -153,10 +171,11 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const hand = handFrame(skel, fk(skel, q), work).pos
   const away = work === 'r' ? 1 : -1
   const pulley: V3 = [away * 0.8, p.cableHeight === 'mid' ? hand[1] + 0.02 : p.cableHeight === 'high' ? 1.8 : 0.1, hand[2]]
-  const handle = cableHandle({ id: 'handle', attachment: 'single_handle' })
+  const isBand = p.implement === 'band'
+  const handle = isBand ? bandHandle({ id: 'handle' }) : cableHandle({ id: 'handle', attachment: 'single_handle' })
   const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
   const col: V3 = [pulley[0] + away * 0.12, 0, pulley[2]]
-  const stack: ImplementSpec = {
+  const stack: ImplementSpec = isBand ? { ...bandAnchor({ id: 'stack', height: pulley[1], mount: 'post' }) } : {
     id: 'stack',
     kind: 'bench',
     mass: 0,
@@ -173,6 +192,7 @@ function cableContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
     cables: [{ pulley, implement: 'handle', point: [0, 0, 0], kg: CABLE_KG }],
   }
+  if (isBand) setup.implements.push(band({ path: [{ implement: 'stack', site: 'hook' }, { implement: 'handle', site: 'ring' }], size: 'light' }))
   const towel = towelFit(skel, q, work)
   setup.implements.push(towelRoll({ r: towel.r }))
   const ctx: Ctx = { kind: 'cable', tempo, setup, work, stance, pulley, handle, towel }
@@ -269,7 +289,7 @@ function sideContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if (p.armPosition !== 'side') throw new Error(`external-rotation: variant not implemented yet (${p.armPosition})`)
-  if (p.implement === 'cable' && p.posture === 'standing') return cableContext(p, skel, tempo)
+  if ((p.implement === 'cable' || p.implement === 'band') && p.posture === 'standing') return cableContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && p.posture === 'side_lying') return sideContext(p, skel, tempo)
   throw new Error(`external-rotation: variant not implemented yet (${p.implement}/${p.posture})`)
 })
@@ -279,8 +299,9 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const q = zeroQ(skel)
   if (ctx.kind === 'cable') {
     standing(u, skel, ctx, q, ctx.sway)
-    const hp = handleInHand(skel, q, ctx.work, ctx.pulley!, ctx.handle!)
-    return { q, implements: [hp, { id: 'stack', pos: [0, 0, 0], rot: qid() }, towelPose(skel, q, ctx.towel)], contacts: ctx.setup.contacts }
+    const hp = handPose(skel, q, ctx)
+    const extra = p.implement === 'band' ? [bandPose()] : []
+    return { q, implements: [hp, stackPose(ctx), towelPose(skel, q, ctx.towel), ...extra], contacts: ctx.setup.contacts }
   }
   sideBody(skel, q, ctx.work, ctx.hip!, ctx.prop ?? 0)
   workingArm(skel, q, ctx.work, phaseAt(u, ctx.tempo).c, ROT.side_lying)

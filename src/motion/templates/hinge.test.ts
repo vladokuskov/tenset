@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleClearance } from '../collide.ts'
+import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
+import { kettlebellDims } from '../implements/free-weights.ts'
 import { PLATE_20_RADIUS, siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
-import { BOTTOM_HIP, SPINE, TOP_HIP, TOP_KNEE } from './hinge.ts'
+import { BOTTOM_HIP, KB, PINS, SPINE, SPLIT, TOP_HIP, TOP_KNEE } from './hinge.ts'
 import { getTemplate, parseParams } from './index.ts'
 
 const skel = testSkeleton()
@@ -14,12 +15,18 @@ const baked = new Map(variants.map((v) => [v.id, bake(getTemplate('hinge'), pars
 const get = (id: number) => baked.get(id)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
-/** the working (stance) side: the single-leg record stands on its right leg */
-const stance = (b: Baked) => (b.params.stance === 'single_leg' ? (b.params.side === 'left' ? 'l' : 'r') : 'l')
+/** the working (stance) side: the single-leg and B-stance records stand on (lead with) their right leg */
+const stance = (b: Baked) => (b.params.stance === 'single_leg' || b.params.stance === 'split' ? (b.params.side === 'left' ? 'l' : 'r') : 'l')
+const legClear = (b: Baked, i: number, id: string) => {
+  const f = fk(skel, frameQ(b, i))
+  const spec = b.implements.find((s) => s.id === id)!
+  const solids = placeParts(spec, frameImplements(b, i).find((p) => p.id === id)!)
+  return Math.min(...bodyCapsules(skel, f).filter((c) => /^(thigh|shank)_/.test(c.region)).flatMap((c) => solids.map((sd) => capsuleSolidClearance(c, sd))))
+}
 
 describe('hinge template', () => {
   it('covers every hinge record in the family', () => {
-    expect([...baked.keys()].sort()).toEqual([501, 508, 509, 510, 513, 521, 525])
+    expect([...baked.keys()].sort()).toEqual([501, 508, 509, 510, 513, 519, 520, 521, 522, 523, 524, 525, 542])
   })
 
   it.each([...baked.keys()])('%i: feet planted, hands on the load, finite frames, seamless loop', (id) => {
@@ -47,7 +54,8 @@ describe('hinge template', () => {
     const b = get(id)
     const s = stance(b)
     expect(dof(b, 0, `hip_${s}.flex`)).toBeCloseTo(TOP_HIP, 0)
-    expect(dof(b, 0, `knee_${s}.flex`)).toBeCloseTo(TOP_KNEE, 0)
+    // the sumo kettlebell keeps the knees soft at the top
+    expect(dof(b, 0, `knee_${s}.flex`)).toBeCloseTo(id === 520 ? KB.sumoTopKnee : TOP_KNEE, 0)
     for (let i = 0; i < b.frames; i += 4) {
       const q = frameQ(b, i)
       expect(q[skel.dof[`hip_${s}.flex`]]).toBeGreaterThan(-5)
@@ -57,7 +65,7 @@ describe('hinge template', () => {
   })
 
   it('RDLs: knees held at ~15-25 deg while the hips flex to ~70-90 (research range)', () => {
-    for (const id of [501, 509, 510]) {
+    for (const id of [501, 509, 510, 519, 524, 542]) {
       const b = get(id)
       const s = stance(b)
       expect(dof(b, 0.625, `knee_${s}.flex`)).toBeGreaterThanOrEqual(15)
@@ -148,9 +156,81 @@ describe('hinge template', () => {
     expect(grip[0]).toBeLessThan(segPos(skel, f, 'tibia_l')[0] - 0.05)
   })
 
+  it('kettlebell RDL: both hands on the handle, the bell close in front of the legs (a hand off the thighs at lockout)', () => {
+    const b = get(519)
+    for (let i = 0; i < b.frames; i += 3) {
+      const gap = legClear(b, i, 'kb')
+      expect(gap).toBeGreaterThan(-0.003)
+      // the converging arms meet the chest before the bell reaches the thighs when standing tall
+      expect(gap).toBeLessThan(0.13)
+    }
+    // at the bottom the straight arms rest on the knees with the bell just below them
+    expect(legClear(b, at(b, 0.625), 'kb')).toBeLessThan(0.07)
+    const f = fk(skel, frameQ(b, 0))
+    expect(Math.abs(sitePos(skel, f, 'grip_l')[0] - sitePos(skel, f, 'grip_r')[0])).toBeLessThan(0.12)
+  })
+
+  it('kettlebell sumo: wide stance, the bell stands on the floor between the heels at the bottom, knees bent past 80', () => {
+    const b = get(520)
+    const pose = frameImplements(b, at(b, 0.625)).find((p) => p.id === 'kb')!
+    expect(pose.pos[1]).toBeCloseTo(kettlebellDims(b.implements.find((s) => s.id === 'kb')!.mass).base, 2)
+    expect(Math.abs(pose.pos[0])).toBeLessThan(0.01)
+    const f = fk(skel, frameQ(b, at(b, 0.625)))
+    expect(Math.abs(pose.pos[2] - (sitePos(skel, f, 'midfoot_l')[2] + sitePos(skel, f, 'midfoot_r')[2]) / 2)).toBeLessThan(0.03)
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeGreaterThan(80)
+    for (let i = 0; i < b.frames; i += 3) expect(legClear(b, i, 'kb')).toBeGreaterThan(-0.003)
+  })
+
+  it('good morning: the bar rides the upper back (high-bar site), knees soft, the trunk hinges to ~80 deg hip flexion', () => {
+    const b = get(522)
+    for (const u of [0, 0.3, 0.625]) {
+      const f = fk(skel, frameQ(b, at(b, u)))
+      const site = sitePos(skel, f, 'back_high')
+      expect(dist(frameImplements(b, at(b, u))[0].pos, [0, site[1], site[2]])).toBeLessThan(0.003)
+    }
+    expect(dof(b, 0.625, 'hip_l.flex')).toBeCloseTo(BOTTOM_HIP.back, 0)
+    expect(dof(b, 0.625, 'knee_l.flex')).toBeCloseTo(b.params.kneeAngle as number, 0)
+  })
+
+  it('rack pull: the bar starts on the spotter arms just below the knees, the rack in front of the lifter', () => {
+    const b = get(523)
+    const rack = b.implements.find((s) => s.kind === 'row_rack')!
+    const bar = frameImplements(b, at(b, 0.625))[0].pos
+    expect(bar[1]).toBeCloseTo(rack.sites.safety.pos[1], 2)
+    const f = fk(skel, frameQ(b, 0))
+    const knee = segPos(skel, f, 'tibia_l')[1]
+    expect(knee - bar[1]).toBeGreaterThan(PINS.below - 0.01)
+    expect(knee - bar[1]).toBeLessThan(PINS.below + 0.03)
+    for (let i = 0; i < b.frames; i += 3) expect(frameImplements(b, i)[0].pos[1]).toBeGreaterThanOrEqual(rack.sites.safety.pos[1] - 0.0005)
+    const rackPose = frameImplements(b, 0).find((p) => p.id === rack.id)!
+    expect(rackPose.pos[2]).toBeGreaterThan(sitePos(skel, f, 'toe_l')[2])
+  })
+
+  it('B-stance: the back foot on its ball just behind the front heel, heel up, the dumbbells along the front leg', () => {
+    const b = get(524)
+    const f = fk(skel, frameQ(b, 0))
+    const front = stance(b), back = front === 'l' ? 'r' : 'l'
+    const ball = sitePos(skel, f, `ball_${back}`), heel = sitePos(skel, f, `heel_${front}`)
+    expect(heel[2] - ball[2]).toBeCloseTo(SPLIT.behind, 2)
+    expect(sitePos(skel, f, `heel_${back}`)[1]).toBeGreaterThan(0.05)
+    expect(b.contacts.some((c) => c.site === `ball_${back}` && c.kind === 'planted')).toBe(true)
+    expect(b.contacts.some((c) => c.site === `heel_${back}`)).toBe(false)
+    for (let i = 0; i < b.frames; i += 3) expect(legClear(b, i, `db_${front}`)).toBeLessThan(0.06)
+  })
+
+  it('kettlebell single leg: the bell in the hand opposite the stance leg, running down near the stance shin', () => {
+    const b = get(542)
+    const s = stance(b)
+    expect(b.contacts.find((c) => c.site === `grip_${s === 'l' ? 'r' : 'l'}`)?.target).toEqual({ implement: 'kb', grip: 'handle' })
+    const f = fk(skel, frameQ(b, at(b, 0.625)))
+    const bell = frameImplements(b, at(b, 0.625)).find((p) => p.id === 'kb')!.pos
+    expect(Math.abs(bell[0] - segPos(skel, f, `tibia_${s}`)[0])).toBeLessThan(0.25)
+    for (let i = 0; i < b.frames; i += 3) expect(legClear(b, i, 'kb')).toBeGreaterThan(-0.003)
+  })
+
   it('throws for variants it does not draw yet', () => {
     const t = getTemplate('hinge')
-    for (const raw of [{ implement: 'dumbbell', start: 'floor', hold: 'front_of_thighs' }, { implement: 'barbell', stance: 'single_leg' }, { implement: 'cable', attachment: 'single_handle' }]) {
+    for (const raw of [{ implement: 'dumbbell', start: 'floor', hold: 'front_of_thighs' }, { implement: 'barbell', stance: 'single_leg' }, { implement: 'cable', attachment: 'single_handle' }, { implement: 'kettlebell', stance: 'split' }, { implement: 'dumbbell', start: 'pins', hold: 'front_of_thighs' }]) {
       expect(() => t.sample(0, parseParams('hinge', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

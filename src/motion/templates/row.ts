@@ -3,6 +3,7 @@ import { DEFAULT_TEMPO } from '../timing.ts'
 import { benchContext, sampleBench, type BenchRow } from './row/bench.ts'
 import { bentContext, sampleBent, type Bent } from './row/bent.ts'
 import { cableContext, sampleCable, type StandingCable } from './row/cable.ts'
+import { floorBandContext, sampleFloorBand, type FloorBand } from './row/floor-band.ts'
 import type { P } from './row/common.ts'
 import { invertedContext, sampleInverted, type Inverted } from './row/inverted.ts'
 import { sampleSeated, seatedContext, type Seated } from './row/seated.ts'
@@ -15,9 +16,11 @@ import { memo, type Template } from './types.ts'
 // - seated: cable row on the row station, V-bar or wide bar (row/seated.ts)
 // - cable: standing face pull with a rope, single-arm row with a D-handle (row/cable.ts)
 // - inverted: body under a racked bar, heels down, pivoting about the ankles (row/inverted.ts)
-// - bench: one-arm dumbbell row off a flat bench, chest-supported dumbbell row on an incline pad (row/bench.ts)
+// - bench: one-arm dumbbell or kettlebell row off a flat bench, chest-supported dumbbell row on an incline pad (row/bench.ts)
+// - floor: band seated row, sitting on a mat with the band round the feet (row/floor-band.ts); the band face pull is in
+//   row/cable.ts
 
-type Ctx = Bent | Seated | BenchRow | Inverted | StandingCable
+type Ctx = Bent | Seated | BenchRow | Inverted | StandingCable | FloorBand
 
 function unsupported(p: P): string {
   return `${p.implement}/${p.posture}/${p.support}${p.attachment ? `/${p.attachment}` : ''}`
@@ -27,8 +30,11 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
   if ((p.implement === 'barbell' || p.implement === 'smith') && p.posture === 'standing' && p.support === 'none') return bentContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && ((p.support === 'bench' && p.posture === 'standing') || (p.support === 'chest_pad' && p.posture === 'lying_prone'))) return benchContext(p, skel, tempo)
+  if (p.implement === 'kettlebell' && p.support === 'bench' && p.posture === 'standing' && p.laterality === 'unilateral') return benchContext(p, skel, tempo)
   if (p.implement === 'barbell' && p.posture === 'lying_supine') return invertedContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'standing' && (p.attachment === 'rope' || p.attachment === 'single_handle')) return cableContext(p, skel, tempo)
+  if (p.implement === 'band' && p.posture === 'standing' && p.finish === 'external_rotation') return cableContext(p, skel, tempo)
+  if (p.implement === 'band' && p.posture === 'seated' && p.support === 'floor') return floorBandContext(p, skel, tempo)
   if (p.implement === 'cable' && p.posture === 'seated' && (p.attachment === 'v_bar' || p.attachment === 'long_bar')) return seatedContext(p, skel, tempo)
   throw new Error(`row: variant not implemented yet (${unsupported(p)})`)
 })
@@ -46,6 +52,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
       return sampleInverted(u, p, skel, ctx)
     case 'cable':
       return sampleCable(u, p, skel, ctx)
+    case 'floor':
+      return sampleFloorBand(u, p, skel, ctx)
   }
 }
 

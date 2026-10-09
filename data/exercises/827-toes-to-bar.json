@@ -41,8 +41,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "leg-raise",
+    "params": {
+      "posture": "hanging",
+      "kneeAngle": 0,
+      "topHipAngle": 145,
+      "toBar": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Toes reach the bar, and the sheet reads as toes-to-bar with no visible clipping. But the pike is mostly hip: hip flex 125 with straight knees, while lumbar only reaches 16 and thorax 4. That is why thigh/trunk penetration needs 65/94 mm against a default of 15/60. Owner should decide on the override. Trying more spinal rounding (lumbar 30-40) and shoulder extension with less hip flexion might cut the overlap, and that option was not tried."
   }
 }

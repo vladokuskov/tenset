@@ -12,6 +12,8 @@ import { dumbbellContacts, dumbbellPoses } from './arms.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
+import { kbGoblet, kbGobletArms, kbGobletPose } from './squat/holds.ts'
+import { gobletArms, gobletDumbbell, gobletPose } from './squat.ts'
 
 // Lunge family, root space: the hips are placed (height keyed by depth, fore-aft by balance: the centre of mass with
 // the dumbbells goes where the feet share the weight) and the legs are solved to their feet. The right leg works: it
@@ -26,15 +28,18 @@ import { memo, type Setup, type Template } from './types.ts'
 // straight down.
 
 type P = ParamsOf<'lunge'>
-type Kind = 'split' | 'split_floor' | 'reverse' | 'forward' | 'step_up'
-type Moving = Exclude<Kind, 'split' | 'split_floor'>
-/** what is carried: dumbbells at the sides, nothing, or a bar on the upper back (free or on the Smith rails) */
-type Load = 'db' | 'none' | 'barbell' | 'smith'
+type Kind = 'split' | 'split_floor' | 'reverse' | 'forward' | 'step_up' | 'lateral' | 'curtsy'
+type Moving = Exclude<Kind, 'split' | 'split_floor' | 'lateral'>
+/** what is carried: dumbbells at the sides, nothing, a bar on the upper back (free or on the Smith rails), a
+ * kettlebell held by the horns at the chest or a dumbbell held upright at the chest (goblet) */
+type Load = 'db' | 'none' | 'barbell' | 'smith' | 'kb' | 'goblet'
 /** the lunges whose moving foot swings in joint space */
 type Stepping = Exclude<Moving, 'step_up'>
-const KIND_LIST: Kind[] = ['split', 'split_floor', 'reverse', 'forward', 'step_up']
+const KIND_LIST: Kind[] = ['split', 'split_floor', 'reverse', 'forward', 'step_up', 'lateral', 'curtsy']
 
 const DB_KG = 16
+/** goblet dumbbell, kg */
+const GOBLET_KG = 20
 const TOE_OUT = 6
 /** feet this far from the midline (hip width apart), m */
 const HALF_WIDTH = 0.125
@@ -43,13 +48,13 @@ const STEP_HALF_WIDTH = 0.1
 /** knees at the top: standing tall, not locked */
 const TOP_KNEE = 3
 /** front knee flexion cap at the bottom, deg (research 90-100; the split squat sinks a little deeper) */
-const FRONT_KNEE_MAX: Record<Kind, number> = { split: 105, split_floor: 100, reverse: 100, forward: 100, step_up: 100 }
+const FRONT_KNEE_MAX: Record<Kind, number> = { split: 105, split_floor: 100, reverse: 100, forward: 100, step_up: 100, lateral: 95, curtsy: 100 }
 /** the rear kneecap stops this far above the floor, m */
 const REAR_KNEE_CLEAR = 0.035
 /** trailing leg at the bottom of the step-up, deg */
 const STEP_TRAIL_KNEE = 20
 /** share of the body weight on the back foot at the bottom (split squat: at the top and at the bottom) */
-const REAR_SHARE: Record<Exclude<Kind, 'step_up'>, number> = { split: 0.3, split_floor: 0.35, reverse: 0.35, forward: 0.4 }
+const REAR_SHARE: Record<Exclude<Kind, 'step_up'>, number> = { split: 0.3, split_floor: 0.35, reverse: 0.35, forward: 0.4, lateral: 0.15, curtsy: 0.35 }
 const SPLIT_TOP_SHARE = 0.12
 /** floor split squat: share on the back foot at the top (the hips start between the feet and move over the front foot
  * as they drop), the rear heel lift at the top (deg; the bottom's is REAR_PITCH.bottom) and the least rear knee bend
@@ -61,7 +66,7 @@ const BAR = { plateKg: 20, grip: 2.1, wristBias: 10 }
 const BAR_REST = ['trunk', 'girdle_l', 'girdle_r', 'neck', 'upperarm_l', 'upperarm_r']
 const ARM_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev', 'grip_*.close']
 /** front midfoot to rear ball (split squat: to the rear ankle) as a fraction of stepLength x leg length */
-const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0 }
+const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0, lateral: 0.55, curtsy: 0.7 }
 /** floor tolerance for a rear foot on its ball, mm: the rigid forefoot capsule sinks ~63 mm at REAR_PITCH.bottom */
 const REAR_FLOOR_TOL = 65
 /** the same for the step-up's trailing foot on its ball (heel up STEP.roll.off): ~33 mm (lead decision) */
@@ -69,19 +74,20 @@ const STEP_FLOOR_TOL = 35
 /** reverse lunge rear foot on its ball: heel lift at touch-down and at the bottom, deg */
 const REAR_PITCH = { land: 32, bottom: 58 }
 /** knee bend of the moving leg at touch-down and at lift-off, deg: the setup solves when those happen */
-const TOUCH_KNEE: Record<Moving, number> = { reverse: 65, forward: 60, step_up: 30 }
-const OFF_KNEE: Record<Moving, number> = { reverse: 82, forward: 90, step_up: 41 }
+const TOUCH_KNEE: Record<Moving, number> = { reverse: 65, forward: 60, step_up: 30, curtsy: 65 }
+const OFF_KNEE: Record<Moving, number> = { reverse: 82, forward: 90, step_up: 41, curtsy: 90 }
 /** the weight starts moving towards the back foot at this fraction of the touch-down depth (a controlled fall back) */
-const WEIGHT_FROM: Record<Stepping, number> = { reverse: 0.2, forward: 1 }
+const WEIGHT_FROM: Record<Stepping, number> = { reverse: 0.2, forward: 1, curtsy: 0.2 }
 /** way up: concentric progress by which the weight is off the back foot */
-const UP_WEIGHT: Record<Stepping, number> = { reverse: 0.7, forward: 0.6 }
+const UP_WEIGHT: Record<Stepping, number> = { reverse: 0.7, forward: 0.6, curtsy: 0.7 }
 /** hip and knee bend added mid-swing, deg: on the way down and on the way up */
 const SWING_BEND: Record<Stepping, { down: [number, number]; up: [number, number] }> = {
   reverse: { down: [15, 40], up: [20, 50] },
   forward: { down: [20, 55], up: [15, 50] },
+  curtsy: { down: [5, 50], up: [20, 50] },
 }
 /** pelvis hinge (tilt with the spine held) at touch-down, deg; the step-up leans over the box foot all the way down */
-const HINGE: Record<Kind, number> = { split: 0, split_floor: 0, reverse: 10, forward: 0, step_up: 26 }
+const HINGE: Record<Kind, number> = { split: 0, split_floor: 0, reverse: 10, forward: 0, step_up: 26, lateral: 0, curtsy: 10 }
 /** pelvis shift over the standing foot while the other foot is in the air, m */
 const SHIFT = 0.035
 /** dumbbells hang this far outside the shoulder joints, m, and the grip this far below them */
@@ -120,7 +126,25 @@ const STEP_PATH = { down: { clear: 0.08, ankle: 20 }, up: { clear: 0.1, ankle: 1
 
 /** the moving foot leaves home at this depth on the way down and is home by this concentric progress on the way up
  * (the hips start down and finish rising on both feet) */
-const HOME: Record<Stepping, [number, number]> = { reverse: [0.06, 0.85], forward: [0.06, 0.95] }
+const HOME: Record<Stepping, [number, number]> = { reverse: [0.06, 0.85], forward: [0.06, 0.95], curtsy: [0.06, 0.85] }
+/**
+ * Lateral lunge, in place from a wide stance (the step out is the setup): the hips sit back and over the right foot and
+ * come back to centre, moving sideways as depth to the power `lag` (they drop before they shift, so the near straight
+ * left leg keeps its foot); the left knee bends at most `straight` deg and both feet stay flat, the working foot turned
+ * out `toeOut.work` and the trailing foot `toeOut.trail` deg (its tilt goes into the ankle; turned out, less of it is
+ * eversion). Standing on one foot (curtsy swing) the centre of mass sits `inside` its midfoot, m. Curtsy: the left foot
+ * lands on its ball behind and CURTSY_ACROSS across the right foot's line, m.
+ */
+const LATERAL = { inside: 0.03, straight: 6, toeOut: { work: 10, trail: 30 }, lag: 2 }
+/** goblet kettlebell reverse lunge: the back foot lifts off a little earlier, while the knee is still bent this far
+ * (deg; with the upright goblet trunk the planted knee straightens faster through the rise) */
+const KB_OFF_KNEE = 92
+const CURTSY_ACROSS = 0.1
+/** front-foot-elevated split squat: step height by platformHeight, m, and the step's footprint */
+const FFE: Record<P['platformHeight'], number> = { low: 0.1, mid: 0.15, knee: 0.2 }
+const FFE_BOX = { width: 0.4, depth: 0.36 }
+/** front-foot-elevated split squat: the front knee bends deeper so the back knee drops past the step's height, deg */
+const FFE_FRONT_KNEE = 122
 /** quintic smoothstep on [0, 1], clamped */
 const smooth = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * x * (10 - 15 * x + 6 * x * x))
 /** how long the planted motion carries into a swing, in loop fraction (~0.15 s) */
@@ -154,6 +178,10 @@ type Ctx = {
   /** step-up: the left foot's spot on the floor behind the box */
   trail?: FootTarget
   box?: { spec: ImplementSpec; pose: ImplementPose; back: number; top: number }
+  /** front-foot-elevated split squat: the step under the front foot */
+  frontStep?: { spec: ImplementSpec; pose: ImplementPose }
+  /** the load held at the chest (goblet kettlebell or dumbbell) */
+  kb?: ImplementSpec
   bench?: { spec: ImplementSpec; pose: ImplementPose }
   hipTop: number
   /** step-up: hip height standing tall with the weight over the box foot (the pelvis shifted over it) */
@@ -176,7 +204,8 @@ type Ctx = {
 type State = { depth: number; swing: number; weight: number; up: boolean; u?: number; rear?: number; roll?: number }
 
 function loadOf(p: P): Load | null {
-  if (p.implement === 'dumbbell') return p.hold === 'sides' ? 'db' : null
+  if (p.implement === 'kettlebell') return p.hold === 'goblet' ? 'kb' : null
+  if (p.implement === 'dumbbell') return p.hold === 'sides' ? 'db' : p.hold === 'goblet' ? 'goblet' : null
   if (p.implement === 'bodyweight') return p.hold === 'sides' ? 'none' : null
   return p.hold === 'back_high' ? p.implement : null
 }
@@ -185,13 +214,17 @@ function kindOf(p: P): Kind | string {
   const load = loadOf(p)
   if (!load) return `${p.implement} hold ${p.hold}`
   if (p.side !== 'right') return 'left working side'
+  if (p.frontFootElevated && (p.direction !== 'in_place' || p.rearFootElevated || load !== 'db')) return `${p.implement} ${p.direction} with the front foot elevated`
   if (p.direction === 'in_place') {
     if (!p.rearFootElevated) return 'split_floor'
     return load === 'db' ? 'split' : `${p.implement} split squat with the rear foot elevated`
   }
   if (p.rearFootElevated) return `${p.direction} with the rear foot elevated`
-  // a free bar on the back steps back; everything else that steps carries dumbbells
-  if (p.direction === 'reverse' && load === 'barbell') return 'reverse'
+  // a free bar on the back or a goblet kettlebell steps back; everything else that steps carries dumbbells
+  if (p.direction === 'reverse' && (load === 'barbell' || load === 'kb')) return 'reverse'
+  // the lateral lunge holds a dumbbell at the chest (at the sides it would hang into the working thigh); only it does
+  if (p.direction === 'lateral') return load === 'goblet' ? 'lateral' : `lateral lunge ${p.implement} hold ${p.hold}`
+  if (load === 'goblet') return `goblet dumbbell ${p.direction}`
   if (load !== 'db') return `${p.implement} ${p.direction}`
   if (p.direction === 'step_up') return 'step_up'
   return p.direction
@@ -209,7 +242,7 @@ const ramp = (x: number, a: number, b: number) => minJerk(clamp((x - a) / (b - a
 function stateAt(ctx: Ctx, u: number): State {
   const ph = phaseAt(u, ctx.tempo)
   const depth = 1 - ph.c
-  if (ctx.kind === 'split' || ctx.kind === 'split_floor') return { depth, swing: 0, weight: 1, up: false }
+  if (ctx.kind === 'split' || ctx.kind === 'split_floor' || ctx.kind === 'lateral') return { depth, swing: 0, weight: 1, up: false }
   if (ctx.kind === 'step_up') return stepState(ctx, u)
   const [leave, land] = HOME[ctx.kind as Stepping]
   const s = ph.name === 'con' ? upState(ctx, ph.progress, 1 - ramp(ph.progress, ctx.off, land)) : downState(ctx, depth, ramp(depth, leave, ctx.touch))
@@ -371,13 +404,26 @@ function feetAt(skel: Skeleton, ctx: Ctx, s: State): Feet {
       const back = lerp(FLOOR_SPLIT.topShare, REAR_SHARE.split_floor, s.depth)
       return { r: ctx.front, l: footOnBall(skel, 'l', ball, pitch, TOE_OUT), toes: { l: -Math.min(58, pitch), r: 0 }, comZ: ctx.frontMid[2] - back * (ctx.frontMid[2] - ball[2]), shift: 0 }
     }
+    case 'curtsy':
     case 'reverse': {
       const land = ctx.rearBall!
       const pitch = REAR_PITCH.land + (REAR_PITCH.bottom - REAR_PITCH.land) * s.weight
       const l = landed ? footOnBall(skel, 'l', land, pitch, TOE_OUT) : ctx.rearHome
       // over one foot the centre of mass sits towards its heel
       const over = ctx.frontMid[2] - 0.06 * (s.up ? minJerk(s.swing) : ramp(s.depth, 0, ctx.touch))
-      return { r: ctx.front, l, toes: { l: landed ? -Math.min(58, pitch) : 0, r: 0 }, comZ: over - share * (over - land[2]), shift: -SHIFT * air, moving: 'l' }
+      const feet: Feet = { r: ctx.front, l, toes: { l: landed ? -Math.min(58, pitch) : 0, r: 0 }, comZ: over - share * (over - land[2]), shift: -SHIFT * air, moving: 'l' }
+      // curtsy: the rear foot lands across behind the front one, so the hips move over towards both feet sideways
+      if (ctx.kind === 'curtsy') {
+        const over = ctx.frontMid[0] + LATERAL.inside
+        const shifted = s.up ? 1 - minJerk(1 - Math.min(1, 2 * s.swing)) : minJerk(Math.min(1, 3 * s.swing))
+        feet.comX = landed ? over + share * (land[0] - over) : lerp(0, over, shifted)
+      }
+      return feet
+    }
+    case 'lateral': {
+      // both feet flat; the hips move over towards the right foot as they sit back and down
+      const split = ctx.frontMid[0] + REAR_SHARE.lateral * (midOf(skel, ctx.rearHome)[0] - ctx.frontMid[0])
+      return { r: ctx.front, l: ctx.rearHome, toes: { l: 0, r: 0 }, comZ: ctx.frontMid[2] - 0.01, comX: lerp(0, split, s.depth ** LATERAL.lag), shift: 0 }
     }
     case 'forward': {
       const ball = ctx.rearBall!
@@ -402,6 +448,8 @@ function feetAt(skel: Skeleton, ctx: Ctx, s: State): Feet {
 function loads(skel: Skeleton, ctx: Ctx, q: Float64Array) {
   const f = fk(skel, q)
   if (ctx.load === 'barbell') return [{ mass: ctx.bar!.mass, pos: barAt(skel, f) }]
+  if (ctx.load === 'kb') return [{ mass: ctx.kb!.mass, pos: kbGobletPose(skel, f, ctx.kb!).pos }]
+  if (ctx.load === 'goblet') return [{ mass: ctx.kb!.mass, pos: gobletPose(skel, f, ctx.kb!).pos }]
   if (ctx.load !== 'db') return []
   return (['l', 'r'] as const).map((s) => ({ mass: DB_KG, pos: sitePos(skel, f, `grip_${s}`) }))
 }
@@ -428,6 +476,8 @@ function solveBarArms(skel: Skeleton, bar: ImplementSpec): [number, number][] {
 /** the arms for the load: on the bar, or hanging (dumbbells; empty hands relaxed) */
 function setArms(skel: Skeleton, ctx: Ctx, q: Float64Array) {
   if (ctx.barArms) for (const [i, x] of ctx.barArms) q[i] = x
+  else if (ctx.load === 'kb') kbGobletArms(skel, q, ctx.kb!)
+  else if (ctx.load === 'goblet') gobletArms(skel, q, ctx.kb!)
   else {
     hangArms(skel, q)
     if (ctx.load === 'none') setDofs(skel, q, { 'grip_*.close': 0.3 })
@@ -576,7 +626,14 @@ function context(p: P, skel: Skeleton): Ctx {
     implements_.push(bar)
     contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: bar.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: bar.id, grip: 'r' } })
   }
-  const base = { kind, load, bar, barArms: bar && solveBarArms(skel, bar), tempo, torso: p.torsoAngle, setup: undefined as unknown as Setup, hipTop: 0, hipBottom: 0, touch: 0.6, off: 0.3 }
+  // a load held at the chest: a kettlebell by the horns, a dumbbell upright with the palms cupped under its top head
+  const kb = load === 'kb' ? kbGoblet() : load === 'goblet' ? gobletDumbbell(GOBLET_KG) : undefined
+  if (kb) {
+    const [l, r] = load === 'kb' ? ['horn_l', 'horn_r'] : ['cup_l', 'cup_r']
+    implements_.push(kb)
+    contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: kb.id, grip: l } }, { site: 'grip_r', kind: 'grip', target: { implement: kb.id, grip: r } })
+  }
+  const base = { kind, load, bar, barArms: bar && solveBarArms(skel, bar), kb, tempo, torso: p.torsoAngle, setup: undefined as unknown as Setup, hipTop: 0, hipBottom: 0, touch: 0.6, off: 0.3 }
   let ctx: Ctx
   if (kind === 'split') {
     // rear foot laces-down on the bench, toes back and lying on the pad; the pad's near end just past the forefoot
@@ -592,17 +649,32 @@ function context(p: P, skel: Skeleton): Ctx {
     contacts.push(...planted(skel, front))
     ctx = { ...base, front, frontMid: midOf(skel, front), rearHome: rear, rearFixed: rear, bench: { spec: bench, pose } }
   } else if (kind === 'split_floor') {
-    // long split stance on the floor: front foot flat, the rear foot on its ball behind
-    const front = plantFoot(skel, 'r', [-HALF_WIDTH, 0, 0.3], TOE_OUT)
+    // long split stance on the floor: front foot flat, the rear foot on its ball behind (deficit: the front foot on a step)
+    const h = p.frontFootElevated ? FFE[p.platformHeight] : 0
+    const front = plantFoot(skel, 'r', [-HALF_WIDTH, 0, 0.3], TOE_OUT, h)
     const frontMid = midOf(skel, front)
     const rearBall: V3 = [HALF_WIDTH, 0, frontMid[2] - D]
     contacts.push(...planted(skel, front), { site: 'ball_l', kind: 'planted', target: { world: rearBall } })
     ctx = { ...base, front, frontMid, rearHome: footOnBall(skel, 'l', rearBall, FLOOR_SPLIT.pitch, TOE_OUT), rearBall }
-  } else if (kind === 'reverse') {
+    if (h > 0) {
+      const spec = plyoBox({ id: 'step', height: h, width: FFE_BOX.width, depth: FFE_BOX.depth })
+      implements_.push(spec)
+      ctx.frontStep = { spec, pose: { id: 'step', pos: [frontMid[0], 0, frontMid[2]], rot: qid() } }
+    }
+  } else if (kind === 'reverse' || kind === 'curtsy') {
     const front = plantFoot(skel, 'r', [-HALF_WIDTH, 0, 0.3], TOE_OUT)
     const frontMid = midOf(skel, front)
     contacts.push(...planted(skel, front))
-    ctx = { ...base, front, frontMid, rearHome: plantFoot(skel, 'l', [HALF_WIDTH, 0, 0.3], TOE_OUT), rearBall: [HALF_WIDTH, 0, frontMid[2] - D] }
+    // curtsy: the left foot lands behind and across the right foot's line
+    const x = kind === 'curtsy' ? frontMid[0] - CURTSY_ACROSS : HALF_WIDTH
+    ctx = { ...base, front, frontMid, rearHome: plantFoot(skel, 'l', [HALF_WIDTH, 0, 0.3], TOE_OUT), rearBall: [x, 0, frontMid[2] - D] }
+  } else if (kind === 'lateral') {
+    // wide stance, both feet flat and planted
+    const half = HALF_WIDTH + D / 2
+    const rearHome = plantFoot(skel, 'l', [half, 0, 0], LATERAL.toeOut.trail)
+    const front = plantFoot(skel, 'r', [-half, 0, 0], LATERAL.toeOut.work)
+    contacts.push(...planted(skel, rearHome), ...planted(skel, front))
+    ctx = { ...base, front, frontMid: midOf(skel, front), rearHome }
   } else if (kind === 'forward') {
     const rearHome = plantFoot(skel, 'l', [HALF_WIDTH, 0, -0.35], TOE_OUT)
     const rearBall = ballOf(skel, rearHome)
@@ -629,7 +701,8 @@ function context(p: P, skel: Skeleton): Ctx {
   ctx.setup = { implements: implements_, contacts, tempo, symmetric: false }
   // the rear foot on its ball: the toes lie flat (toe joint) but the collision model's forefoot capsule belongs to the
   // rigid foot and dips under the floor as the heel rises (lead decision, see REAR_FLOOR_TOL)
-  if (kind === 'reverse' || kind === 'forward' || kind === 'split_floor') ctx.setup.tolerances = { floor: REAR_FLOOR_TOL }
+  if (kind === 'reverse' || kind === 'forward' || kind === 'split_floor' || kind === 'curtsy') ctx.setup.tolerances = { floor: REAR_FLOOR_TOL }
+  if (kb) ctx.setup.rests = [{ implement: kb.id, regions: ['trunk', 'hand_l', 'hand_r'], tol: 15 }]
   if (bar) ctx.setup.rests = [{ implement: bar.id, regions: BAR_REST, tol: 20 }]
   if (kind === 'step_up') ctx.setup.tolerances = { floor: STEP_FLOOR_TOL }
   if (kind === 'split') {
@@ -645,7 +718,7 @@ function context(p: P, skel: Skeleton): Ctx {
       set(y)
       return f(solve(skel, ctx, s, feetAt(skel, ctx, s)))
     }, lo, hi, { tol: 1e-5, scan: 16 }).x
-  const top: State = { depth: 0, swing: 0, weight: kind === 'split' || kind === 'split_floor' ? 1 : 0, up: false, rear: STEP.topShare }
+  const top: State = { depth: 0, swing: 0, weight: kind === 'split' || kind === 'split_floor' || kind === 'lateral' ? 1 : 0, up: false, rear: STEP.topShare }
   const bottom: State = { depth: 1, swing: 1, weight: 1, up: false, rear: STEP.bottomShare }
   const heights = () => {
     ctx.hipTop = hipWhere(top, (q) => kneeOf(skel, q, 'r') - TOP_KNEE, 0.6, 1.6, (y) => (ctx.hipTop = y))
@@ -659,7 +732,10 @@ function context(p: P, skel: Skeleton): Ctx {
     const atBottom = (f: (q: Float64Array) => number, lo: number) => hipWhere(bottom, f, lo, ctx.hipTop, (y) => (ctx.hipBottom = y))
     ctx.hipBottom = kind === 'step_up'
       ? atBottom((q) => kneeOf(skel, q, 'l') - STEP_TRAIL_KNEE, 0.6)
-      : Math.max(atBottom((q) => kneeOf(skel, q, 'r') - FRONT_KNEE_MAX[kind], 0.3), atBottom((q) => rearKneeHeight(skel, q) - REAR_KNEE_CLEAR, 0.3))
+      : kind === 'lateral'
+        // the trailing leg stays near straight with its foot flat
+        ? Math.max(atBottom((q) => kneeOf(skel, q, 'r') - FRONT_KNEE_MAX.lateral, 0.3), atBottom((q) => kneeOf(skel, q, 'l') - LATERAL.straight, 0.3))
+        : Math.max(atBottom((q) => kneeOf(skel, q, 'r') - (ctx.frontStep ? FFE_FRONT_KNEE : FRONT_KNEE_MAX[kind]), 0.3), atBottom((q) => rearKneeHeight(skel, q) - REAR_KNEE_CLEAR, 0.3))
   }
   heights()
   if (load === 'smith') {
@@ -677,7 +753,7 @@ function context(p: P, skel: Skeleton): Ctx {
     heights()
   }
   if (kind === 'step_up') stepSwings(skel, ctx)
-  else if (kind !== 'split' && kind !== 'split_floor') swings(skel, ctx, kind)
+  else if (kind !== 'split' && kind !== 'split_floor' && kind !== 'lateral') swings(skel, ctx, kind)
   return ctx
 }
 
@@ -701,7 +777,7 @@ function swings(skel: Skeleton, ctx: Ctx, kind: Stepping) {
     ctx.touch = t
     return knee(downState(ctx, t, 1)) - TOUCH_KNEE[kind]
   }, 0.15, 0.97, { tol: 1e-6, scan: 24 }).x
-  ctx.off = root1d((o) => knee(upState(ctx, o, 1)) - OFF_KNEE[kind], 0.02, 0.8, { tol: 1e-6, scan: 24 }).x
+  ctx.off = root1d((o) => knee(upState(ctx, o, 1)) - (ctx.load === 'kb' ? KB_OFF_KNEE : OFF_KNEE[kind]), 0.02, 0.8, { tol: 1e-6, scan: 24 }).x
 
   const [ecc, pb, con, pt] = ctx.tempo
   const T = loopDuration(ctx.tempo)
@@ -741,6 +817,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = contextOf(p, skel)
   const q = poseFor(skel, ctx, stateAt(ctx, u))
   const implements_: ImplementPose[] = ctx.load === 'db' ? [...dumbbellPoses(skel, q)] : []
+  if (ctx.kb) implements_.push((ctx.load === 'kb' ? kbGobletPose : gobletPose)(skel, fk(skel, q), ctx.kb))
+  if (ctx.frontStep) implements_.push(ctx.frontStep.pose)
   if (ctx.bar) implements_.push({ id: ctx.bar.id, pos: barAt(skel, fk(skel, q)), rot: qid() })
   if (ctx.railZ !== undefined) implements_.push({ id: 'smith', pos: [0, 0, 0], rot: qid() })
   if (ctx.bench) implements_.push(ctx.bench.pose)

@@ -39,9 +39,13 @@
     815
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hold",
+    "params": {
+      "kind": "front_plank",
+      "support": "forearm",
+      "elbowsAhead": 0.1
+    },
     "mapView": "F"
   },
   "cues": [
@@ -58,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: elbowsAhead 0.1 raises shoulder elevation to 97-99 (804: 79-81) and lowers elbow flex to 72 (804: 89), a visible long-lever difference in the side view. 804 stays byte-identical and the bake is fresh."
   }
 }

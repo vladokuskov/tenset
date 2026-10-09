@@ -1,12 +1,17 @@
-import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
+import { attachHand, handFrame, plantFoot, root1d, solveLegs, type FootTarget } from '../constraints.ts'
 import { bodyCapsules, restAgainst } from '../collide.ts'
 import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
-import { barbell, bench, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { barbell, bench, comWorld, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { band, bandHandle, bandNode, bandPose, poseHandle } from '../implements/index.ts'
 import { pressHandles, PRESS_MACHINE, pressMachineFrame, type PressGeometry } from '../implements/press-vertical-bodyweight.ts'
-import { add, lerp, norm, qid, qrot, scale, sub, type V3 } from '../math.ts'
+import { dls } from '../ik.ts'
+import { add, DEG, lerp, norm, qaxis, qid, qrot, scale, sub, type V3 } from '../math.ts'
+import { clearNode, closestOn, runClearance, smooth } from './press-cable.ts'
 import { setDofs, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
 import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells } from './arms.ts'
+import { mirrorArm as mirrorIsoArm, poseArm, relaxedArm, thoraxFrame } from './isolation.ts'
+import { kbContacts, kbInHand, kbRests, kettlebells, KB_KG } from './press-kettlebell.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic, secant } from './solve.ts'
 import { makeStance, plantedContacts, setPelvis, stand, stanceWidth, type StanceSetup } from './standing.ts'
@@ -22,6 +27,12 @@ import { memo, type Setup, type Template } from './types.ts'
 // ribs down, balanced over the midfoot. Seated barbell: the standing bar line and head motion on an upright bench.
 // Endpoints: humeral elevation ~40-60 deg at the bottom to ~165-175 at lockout, elbow flexion bottom ~95-140 to ~0-10
 // (motion-authoring research: Evangelista 2025 two-link OHP model; author judgment for the rest).
+// Turned grips (wave 3b): the Arnold press starts seated with the dumbbells in front of the chin, palms facing the
+// lifter and elbows forward, and turns the palms forward as the elbows sweep out to the sides on the way up; the
+// one-arm kettlebell press starts in the rack (palm in, elbow tucked, the bell on the back of the forearm) and turns
+// the palm forward to a lockout beside the ear, the free arm relaxed; the band press stands on the band (its middle
+// under the feet) and presses the handles from the shoulders. Z press: the seated dumbbell path sitting on the floor,
+// legs straight.
 
 type P = ParamsOf<'vertical-press'>
 
@@ -91,13 +102,17 @@ type Seated = {
   kind: 'db' | 'machine'
   feet: FootTarget[]
   benchPose?: ImplementPose
+  /** the still body when it is not the bench sit (sitting on the floor) */
+  base?: Float64Array
+  /** dumbbells that turn in the hands (Arnold press) */
+  turn?: Turn
   /** dumbbells: grip paths per side (left), world */
   from?: V3
   to?: V3
   press?: PressGeometry
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | StandDb | SeatedBar }
+type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | StandDb | SeatedBar | StandTurn }
 
 const ramp = (c: number, a: number, b: number) => minJerk((c - a) / (b - a))
 
@@ -108,7 +123,12 @@ function mirrorArm(skel: Skeleton, q: Float64Array) {
 }
 
 function unsupported(p: P) {
+  if (p.implement === 'kettlebell') return p.posture === 'standing' && p.laterality === 'unilateral' && p.grip === 'neutral' ? null : `kettlebell ${p.posture} ${p.laterality} ${p.grip}`
   if (p.laterality !== 'bilateral') return `laterality ${p.laterality}`
+  if (p.rotate && !(p.implement === 'dumbbell' && p.posture === 'seated' && p.grip === 'supinated' && p.support !== 'floor')) return `rotate ${p.implement} ${p.posture} ${p.grip}`
+  if (!p.rotate && p.grip === 'supinated') return 'supinated without rotate'
+  if (p.support === 'floor') return p.implement === 'dumbbell' && p.posture === 'seated' ? null : `floor ${p.implement} ${p.posture}`
+  if (p.implement === 'band') return p.posture === 'standing' && p.grip === 'pronated' ? null : `band ${p.posture} ${p.grip}`
   if (p.implement === 'barbell' && p.posture === 'standing') return null
   if (p.implement === 'smith' && p.posture === 'standing') return null
   if (p.implement === 'dumbbell' && p.posture === 'seated') return null
@@ -271,11 +291,12 @@ function dbArm(skel: Skeleton, q: Float64Array, pos: V3, c: number) {
 }
 
 function seatedFrame(skel: Skeleton, v: Seated, c: number): { q: Float64Array; implements: ImplementPose[] } {
-  const q = zeroQ(skel)
-  seatedBody(skel, q, v.feet)
+  const q = v.base ? Float64Array.from(v.base) : zeroQ(skel)
+  if (!v.base) seatedBody(skel, q, v.feet)
   if (v.kind === 'db') {
-    dbArm(skel, q, add(scale(v.from!, 1 - c), scale(v.to!, c)), c)
-    return { q, implements: [...dumbbellPoses(skel, q), v.benchPose!] }
+    if (v.turn) turnedArm(skel, q, v.turn, c)
+    else dbArm(skel, q, add(scale(v.from!, 1 - c), scale(v.to!, c)), c)
+    return { q, implements: [...dumbbellPoses(skel, q), ...(v.benchPose ? [v.benchPose] : [])] }
   }
   const g = v.press!
   const hp = pressHandles.pose(g, lerp(g.angle0, g.angle1, c))
@@ -312,6 +333,8 @@ function seatBench(p: P, skel: Skeleton) {
 }
 
 function dbContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  if (p.support === 'floor') return floorDbContext(skel, tempo)
+  if (p.rotate) return arnoldContext(p, skel, tempo)
   const { feet, f, benchSpec, benchPose } = seatBench(p, skel)
   // grip paths: from ear level beside the head (forearms vertical under the dumbbells) to overhead, hands closing in
   const gh = segPos(skel, f, 'humerus_l')
@@ -473,10 +496,216 @@ function sampleSeatedBar(u: number, skel: Skeleton, ctx: Ctx, v: SeatedBar): Pos
   return { q: seatedBarFrame(skel, v, c), implements: [barPose(v, c), v.benchPose], contacts: ctx.setup.contacts }
 }
 
+// ---------- turned grips: Arnold press, kettlebell, band; Z press ----------
+
+/**
+ * Arnold and kettlebell presses in joint space (the hand follows the arm, the load follows the hand): the humerus
+ * rises from `elev[0]` to `elev[1]` deg while its plane swings from `plane[0]` (in front) towards the side, both linear in
+ * contraction, the elbow
+ * opens so the forearm stays about vertical (flexion 180 - elevation, capped at `elbow0`), and the palm turns about
+ * the trunk's long axis by phi (thorax frame, left hand: 0 = palm to the face, 90 = palm in, 180 = palm forward),
+ * the turn done by `until` of the press; `lean`: the forearm starts that far past vertical towards the face
+ * (Arnold), easing out as the palms turn; `inward`: the forearm starts that far (deg) tilted in towards the midline
+ * (the kettlebell rack, the fist under the chin), easing out the same way. The rig's forearm supinates to 90, so "palms to the face" starts a little
+ * short of full supination. Research: humeral elevation ~165-175 and elbow ~0-10 at
+ * lockout (motion-authoring research, as the other overhead presses).
+ */
+type Turn = { phi: [number, number]; plane: [number, number]; elev: [number, number]; elbow0: number; until: number; wrist: number; lean?: number; inward?: number }
+
+/** Arnold press: elbows in front, the dumbbells before the chin, palms to the face; the elbows sweep out as the palms turn */
+const ARNOLD: Turn = { phi: [18, 180], plane: [88, 22], elev: [52, 172], elbow0: 140, until: 0.9, wrist: 6, lean: 12 }
+const ARNOLD_KG = 12
+/** kettlebell: from the rack (palm in, the fist under the chin near the midline, the forearm tilted in, the elbow down in
+ * front of the ribs, the bell on the back of the forearm against the upper arm and chest) to a lockout beside the ear,
+ * palm forward */
+const KB_TURN: Turn = { phi: [90, 180], plane: [90, 26], elev: [32, 172], elbow0: 145, until: 0.85, wrist: 0, inward: 36 }
+/** band: palms forward from the front of the shoulders, elbows down and a little out, to overhead */
+const BAND_TURN: Turn = { phi: [180, 180], plane: [50, 25], elev: [40, 172], elbow0: 140, until: 1, wrist: 8 }
+/** band under the feet: where the strip crosses under each sole from the midfoot, m: the inner point under the sole, the
+ * outer one just past the sole's edge, so the strip comes down beside the foot */
+const BAND_SOLE = { in: 0.04, out: 0.052 }
+/** where the strip passes the arm: how close (m) the straight run comes to it before the node moves in front of the
+ * elbow, and how far in front of the elbow joint it then sits, m */
+const BAND_FRONT = { near: 0.03, elbow: 0.075 }
+/** sitting on the floor (Z press): pelvis tilt, hip abduction and ankle angle, deg; sink into the floor, m */
+const FLOOR_SIT = { tilt: -4, abd: 5, ankle: -12, sink: 0.003 }
+
+type BandRig = { handles: [ImplementSpec, ImplementSpec]; soles: [ImplementPose, ImplementPose] }
+
+/** standing kettlebell or band press */
+type StandTurn = { kind: 'turn'; stance: StanceSetup; df: (c: number) => number; turn: Turn; work: 'l' | 'r' | null; kb?: ImplementSpec; band?: BandRig }
+
+/** grip ends from the shoulder joint: lateral and forward offsets given, the height that gives each end's elbow flexion */
+function gripEnds(elbowAt: (off: V3, c: number) => number, from: number[], elbow0: number, to: number[]): [V3, V3] {
+  const [bx, bz] = from, [tx, tz] = to
+  const a: V3 = [bx, root1d((y) => elbowAt([bx, y, bz], 0) - elbow0, -0.15, 0.4, { tol: 1e-5, scan: 11 }).x, bz]
+  const b: V3 = [tx, root1d((y) => elbowAt([tx, y, tz], 1) - DB_ELBOW1, 0.35, 0.8, { tol: 1e-5, scan: 8 }).x, tz]
+  return [a, b]
+}
+
+/** left arm in joint space for contraction c, right mirrored */
+function turnedArm(skel: Skeleton, q: Float64Array, t: Turn, c: number) {
+  const fr = thoraxFrame(skel, q)
+  const thorax = fk(skel, q).rot[skel.seg.thorax2]
+  const w = ramp(c, 0, t.until)
+  const elev = lerp(t.elev[0], t.elev[1], c)
+  const palm = qrot(thorax, qrot(qaxis([0, 1, 0], lerp(t.phi[0], t.phi[1], w) * DEG), [0, 0, -1]))
+  const elbow = Math.min(t.elbow0, 180 - elev + (t.lean ?? 0) * (1 - w))
+  const bend = t.inward ? norm(add(fr.up, scale(fr.right, Math.tan(t.inward * (1 - w) * DEG)))) : fr.up
+  poseArm(skel, q, 'l', { plane: lerp(t.plane[0], t.plane[1], c), elev, elbow, bend, palm, wrist: t.wrist })
+  mirrorIsoArm(skel, q)
+}
+
+function arnoldContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const { feet, benchSpec, benchPose } = seatBench(p, skel)
+  const v: Seated = { kind: 'db', feet, benchPose, turn: ARNOLD }
+  const setup: Setup = {
+    implements: [...handDumbbells(ARNOLD_KG), benchSpec],
+    contacts: [...feetContacts(skel, feet), ...dumbbellContacts()],
+    tempo,
+    symmetric: true,
+  }
+  return { tempo, setup, v }
+}
+
+/** sitting on the floor, legs straight and a little apart, trunk upright: the butt and the heels on the floor */
+function floorSit(skel: Skeleton): Float64Array {
+  const q = zeroQ(skel)
+  setDofs(skel, q, { 'lumbar.flex': -2, 'thorax.flex': 2, 'neck.flex': 0, 'head.flex': 0, 'grip_*.close': 1, 'hip_*.abd': FLOOR_SIT.abd, 'knee_*.flex': 2, 'ankle_*.df': FLOOR_SIT.ankle })
+  const low = (re: RegExp) => Math.min(...bodyCapsules(skel, fk(skel, q)).filter((c) => re.test(c.segment)).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+  const res = (x: number[]) => {
+    setDofs(skel, q, { 'hip_*.flex': 90 + FLOOR_SIT.tilt - x[1] })
+    setPelvis(skel, q, [0, x[0], 0], FLOOR_SIT.tilt)
+    return [(low(/^pelvis$/) + FLOOR_SIT.sink) * 100, (low(/^(tibia|talus|calcn|foot)_l/) + FLOOR_SIT.sink) * 100]
+  }
+  const r = dls(res, [0.12, 3], { tol: 1e-8, iters: 60 })
+  res(r.x)
+  return q
+}
+
+function floorDbContext(skel: Skeleton, tempo: Tempo): Ctx {
+  const base = floorSit(skel)
+  const gh = segPos(skel, fk(skel, base), 'humerus_l')
+  const v: Seated = { kind: 'db', feet: [], base }
+  const elbowAt = (off: V3, c: number) => {
+    v.from = v.to = add(gh, off)
+    return seatedFrame(skel, v, c).q[skel.dof['elbow_l.flex']]
+  }
+  const [from, to] = gripEnds(elbowAt, DB_FROM, DB_ELBOW0, DB_TO)
+  v.from = add(gh, from)
+  v.to = add(gh, to)
+  const setup: Setup = { implements: handDumbbells(DB_KG), contacts: dumbbellContacts(), tempo, symmetric: true }
+  return { tempo, setup, v }
+}
+
+/** standing kettlebell or band press at ankle dorsiflexion df; one-arm work relaxes the free arm */
+function turnStandFrame(skel: Skeleton, v: Pick<StandTurn, 'stance' | 'turn' | 'work'>, c: number, df: number): Float64Array {
+  const q = zeroQ(skel)
+  const lean = lerp(SDB_LEAN[0], SDB_LEAN[1], c)
+  setDofs(skel, q, { 'lumbar.flex': -2 + 0.35 * lean, 'thorax.flex': 0.15 * lean, 'grip_*.close': 1 })
+  stand(skel, q, v.stance, { knee: KNEE, df, tilt: tiltOf(lean) })
+  turnedArm(skel, q, v.turn, c)
+  if (v.work) {
+    const s = v.work === 'l' ? 'r' : 'l'
+    for (const k of ['clavicle_*.elev', 'clavicle_*.prot', 'shoulder_*.rot', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev']) q[skel.dof[k.replace('*', s)]] = 0
+    relaxedArm(skel, q, s)
+  }
+  return q
+}
+
+/** where the band leaves each sole (left first): the midfoot, the strip across it */
+function soles(skel: Skeleton, stance: StanceSetup): [ImplementPose, ImplementPose] {
+  return stance.feet.map((ft) => ({ id: `sole_${ft.side}`, pos: add(add(ft.ankle, qrot(ft.rot, skel.data.sites[`midfoot_${ft.side}`].local)), [0, 0.002, 0]) as V3, rot: ft.rot })) as [ImplementPose, ImplementPose]
+}
+
+/**
+ * Band handle poses, and the points where the strips pass the arm on their way down to the soles: on the straight line
+ * from the handle's ring to the outer edge of the sole while that keeps clear of the arm, moving to a point in front of
+ * the elbow as it nears the arm (a smooth blend on the line's clearance), then only as far forward as the arm, trunk
+ * and legs need, checked every frame
+ */
+function bandPoses(skel: Skeleton, f: ReturnType<typeof fk>, rig: BandRig): ImplementPose[] {
+  const out: ImplementPose[] = []
+  const caps = bodyCapsules(skel, f)
+  const fwd = qrot(f.rot[skel.seg.thorax2], [0, 0, 1])
+  for (const [k, s] of (['l', 'r'] as const).entries()) {
+    const h = handFrame(skel, f, s)
+    const sole = add(rig.soles[k].pos, qrot(rig.soles[k].rot, [s === 'l' ? BAND_SOLE.out : -BAND_SOLE.out, 0, 0]))
+    // the ring hangs below the fist on the palm side, so the straps straddle the hand
+    const handle = poseHandle(rig.handles[k], 'c', h.pos, h.axis, add(h.pos, add(norm(sub(sole, h.pos)), scale(h.palm, 0.6))))
+    const ring = handle.pos
+    const arm = caps.filter((c) => [`upperarm_${s}`, `forearm_${s}`, `girdle_${s}`].includes(c.region))
+    // the strip meets the floor beside the foot, so the foot is left out (the outer sole point clears it)
+    const body = caps.filter((c) => !/^(hand|foot)/.test(c.region) && !c.region.endsWith(s === 'l' ? '_r' : '_l'))
+    const elbow = segPos(skel, f, `forearm_${s}`)
+    const w = smooth((BAND_FRONT.near - runClearance(arm, ring, sole)) / BAND_FRONT.near)
+    const base = lerp3(closestOn(ring, sole, elbow), add(elbow, scale(fwd, BAND_FRONT.elbow)), w)
+    out.push(handle, { id: `front_${s}`, pos: clearNode(body, ring, sole, base, fwd), rot: qid() })
+  }
+  return out
+}
+
+const lerp3 = (a: V3, b: V3, t: number): V3 => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)]
+
+function turnStandContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
+  const kb = p.implement === 'kettlebell'
+  const work = kb ? (p.side === 'left' ? 'l' : 'r') : null
+  const v: StandTurn = { kind: 'turn', stance, df: () => 5, turn: kb ? KB_TURN : BAND_TURN, work }
+  const contacts: Contact[] = [...plantedContacts(skel, stance)]
+  const implements_: ImplementSpec[] = []
+  let rests: Setup['rests']
+  if (work) {
+    v.kb = kettlebells([work])[0]
+    implements_.push(v.kb)
+    contacts.push(...kbContacts([work]))
+    rests = kbRests([work], true)
+  } else {
+    const handles: [ImplementSpec, ImplementSpec] = [bandHandle({ id: 'handle_l' }), bandHandle({ id: 'handle_r' })]
+    v.band = { handles, soles: soles(skel, stance) }
+    const sole = (s: 'l' | 'r', x: number) => ({ implement: `sole_${s}`, at: [x, 0, 0] as V3, face: [0, -1, 0] as V3 })
+    // the strip faces forward down the front of the body
+    const front = (s: 'l' | 'r') => ({ implement: `front_${s}`, face: [0, 0, 1] as V3 })
+    implements_.push(...handles, bandNode('sole_l'), bandNode('sole_r'), bandNode('front_l'), bandNode('front_r'))
+    implements_.push(band({
+      path: [{ implement: 'handle_l', site: 'ring' }, front('l'), sole('l', BAND_SOLE.out), sole('l', -BAND_SOLE.in), sole('r', BAND_SOLE.in), sole('r', -BAND_SOLE.out), front('r'), { implement: 'handle_r', site: 'ring' }],
+    }))
+    contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: 'handle_l', grip: 'c' } }, { site: 'grip_r', kind: 'grip', target: { implement: 'handle_r', grip: 'c' } })
+  }
+  // the ankles put the body and the bell's centre of mass over the midfoot
+  const com = (q: Float64Array) => {
+    const f = fk(skel, q)
+    const loads = v.kb && work ? [{ mass: KB_KG, pos: comWorld(v.kb, kbInHand(skel, f, work, v.kb, true)) }] : []
+    return centerOfMass(skel, f, loads)[2]
+  }
+  const cs = Array.from({ length: KNOTS }, (_, i) => i / (KNOTS - 1))
+  v.df = monotoneCubic(cs, cs.map((c) => secant((df) => com(turnStandFrame(skel, v, c, df)) - stance.midfoot[2], 4, 7, 1e-6, 12)))
+  const setup: Setup = {
+    implements: implements_,
+    contacts,
+    tempo,
+    symmetric: !work,
+    balance: { point: 'com', over: 'midfoot', tol: 0.025 },
+    ...(rests ? { rests } : {}),
+  }
+  return { tempo, setup, v }
+}
+
+function sampleTurnStand(u: number, skel: Skeleton, ctx: Ctx, v: StandTurn): Pose {
+  const c = phaseAt(u, ctx.tempo).c
+  const q = turnStandFrame(skel, v, c, v.df(c))
+  const f = fk(skel, q)
+  const implements_: ImplementPose[] = []
+  if (v.kb && v.work) implements_.push(kbInHand(skel, f, v.work, v.kb, true))
+  if (v.band) implements_.push(...bandPoses(skel, f, v.band), ...v.band.soles, bandPose())
+  return { q, implements: implements_, contacts: ctx.setup.contacts }
+}
+
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`vertical-press: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.posture === 'standing' && (p.implement === 'kettlebell' || p.implement === 'band')) return turnStandContext(p, skel, tempo)
   if (p.posture === 'standing') return p.implement === 'dumbbell' ? standDbContext(skel, tempo) : standContext(p, skel, tempo)
   if (p.implement === 'barbell') return seatedBarContext(p, skel, tempo)
   return p.implement === 'dumbbell' ? dbContext(p, skel, tempo) : machineContext(p, skel, tempo)
@@ -486,6 +715,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
   const v = ctx.v
   if ('seatedBar' in v) return sampleSeatedBar(u, skel, ctx, v)
+  if (v.kind === 'turn') return sampleTurnStand(u, skel, ctx, v)
   if (v.kind === 'sdb') return sampleStandDb(u, skel, ctx, v)
   return 'stance' in v ? sampleStand(u, skel, ctx, v) : sampleSeated(u, skel, ctx, v)
 }
@@ -498,3 +728,6 @@ export const verticalPress: Template<P> = {
   setup: (p, skel) => context(p, skel).setup,
   sample,
 }
+
+/** internals for the unit tests */
+export const _verticalPress = { context, ARNOLD, KB_TURN, BAND_TURN }

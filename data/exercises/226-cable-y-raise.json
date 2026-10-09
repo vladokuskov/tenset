@@ -45,8 +45,16 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lateral-raise",
+    "params": {
+      "implement": "cable",
+      "posture": "standing",
+      "cableHeight": "low",
+      "grip": "neutral",
+      "plane": 30,
+      "topElevation": 130,
+      "crossed": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -64,6 +72,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The Y path is right: plane 82 to 30, elevation 16 to 130, and the fists finish 13 cm above head_top (1.957 vs 1.823 m). The cables cross as the cue says and clear the body (closest is 27.6 mm to the handle). The hands start uncrossed beside the thighs, and with both towers in the -14 camera the figure reads small. Owner call on the camera."
   }
 }

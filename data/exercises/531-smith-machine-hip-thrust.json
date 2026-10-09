@@ -40,8 +40,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hip-thrust",
+    "params": {
+      "implement": "smith",
+      "support": "bench",
+      "stance": "hip",
+      "kneeAngle": 90
+    },
     "mapView": "B"
   },
   "cues": [
@@ -58,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Fixed as the reviewer suggested: the Smith frame is turned 180 deg about Y on the rail line. The template now registers its rails as implement 'smith_reversed', so compose.ts and collision.ts were not touched. A new layout in src/features/figure/props/families/hinge.ts draws the frame rotated (bar pieces stripped, holds ['bar']), and the bar is drawn as the template's barbell. I measured the clearance by hand with machineColliders + solidClearance over the rep. Bench to Smith minimum is 65 mm (bench leg tube vs Smith floor tube at x 0.6, z 0.65). The rear posts face at z ~1.17, past the toes at z 1.027. The pad is now about 63 cm from the front posts. The safety stops now sit 13 mm under the carriages at the bar's lowest point (bar low y 0.515). With the default 0.62 they would have overlapped the carriages. QA passes (repair report in qa/out/3b/L4/repair), the bake is rewritten, and hip-thrust tests pass after a one-token update to the Smith id assertion. The hero (qa/out/3b/L4/repair-figure/figure-531.png) shows the figure centred and larger, because the frame is no longer framed whole. What remains: the camera stays az -18/0.22, so the rear posts and plate-storage pegs are now between the camera and the figure. They flank the figure and do not cover the hips or glutes, but the near post slightly overlaps the left plate. The top of the frame is cropped. The QA stick sheet still draws only the logic rails, not the drawn frame. There is still no general fixed-vs-fixed gate."
   }
 }

@@ -38,9 +38,14 @@
     821
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "rotation",
+    "params": {
+      "implement": "band",
+      "cableHeight": "high",
+      "direction": "high_to_low",
+      "stance": "wide"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -57,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. needs work: The band copies 809's pulley spot, so the hook-to-grip span is only 0.58 m at the top versus 2.0 m at the bottom, a 3.5x stretch range. At the top the hands nearly reach the post, and a closed medium loop (about 1 m doubled) would hang slack there. It is still drawn taut, and setup.cables applies a constant 12 kg. | ok: The band hook moved to x = -1.55 m (BAND_OUT), same height and depth as the 809 pulley. The body solve still uses the pulley spot, so the body is identical to 809 (the existing turn-equality test still passes). The band grips' orientation and setup.cables now point at the hook. Hook-to-grip span is 1.03-2.43 m, a 2.37x stretch range (it was 0.58-2.0, 3.5x). New test: minimum span over 1.0 m and ratio under 2.5. The figure sheet shows the loop taut and near-horizontal at about 1 m at the top. QA passes, bake is fresh."
   }
 }

@@ -40,8 +40,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "dip",
+    "params": {
+      "support": "bench",
+      "torsoAngle": 5,
+      "kneeAngle": 25
+    },
     "mapView": "B"
   },
   "cues": [
@@ -58,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: The bottom is shallow: elbow 61 (bench-dip research and this file's own bar dips use more than 85). The rep moves the shoulders only 18 cm, and the upper arm finishes 16 deg below level, not 'about level'. Per the author, the depth was capped at shoulder elevation 58 to stay under the horizontal-abduction gate's 60-120 deg band. That gate's own comment says it misreads pure extension, and the new test loosened the elbow check to >55. So the depth was set to dodge a gate artifact, not by anatomy. | minor: Deepened. BENCH_DIP.extension goes 58 to 80, so at the bottom the elbow is 89 and the upper arm is about level in the world (shoulder y 80.9, elbow 79.1). Hip drop is 32 cm. The test bound is back to elbow > 80 (and < 100, extension > 70). The deeper bottom needed more changes: elbow pole [0.5,0.1,-1] to [0.3,0.1,-1] (the wrist-dev flip came from pronation saturating), toe-out 10 to 6 (ankle inversion went past its limit), and record params torsoAngle 15 to 5 and kneeAngle 60 to 25 (thigh/trunk penetration with the hips this low). QA passes all gates and the side sheet reads as a bench dip. Remaining: this relies on a scoped setup.tolerances.horizontalAbduction = 85 on the bench dip only. The gate reads this pure extension as 77-82 deg behind once elevation passes 60. That is an unapproved lead decision, so 733 is not signed off until the lead accepts it or fixes the gate. Changing the record's torsoAngle and kneeAngle also changes the setup (more upright trunk, straighter legs at the top)."
   }
 }

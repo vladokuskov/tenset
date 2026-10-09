@@ -48,7 +48,7 @@ function range(b: Baked, fn: (i: number) => number) {
 
 describe('row template', () => {
   it('covers every row record', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([206, 304, 305, 306, 307, 312, 313, 315, 320, 324])
+    expect(variants.map((v) => v.id).sort()).toEqual([206, 229, 304, 305, 306, 307, 312, 313, 315, 320, 321, 323, 324])
   })
 
   it.each([...baked.keys()])('%s: finite frames, hands on the load, planted feet still, loop closes', (slug) => {
@@ -202,6 +202,44 @@ describe('row template', () => {
     expect(Math.max(...y) - Math.min(...y)).toBeGreaterThan(0.3)
     const knee = segPos(skel, fk(skel, frameQ(b, at(b, BOTTOM))), 'tibia_l')
     expect(Math.min(...y)).toBeLessThan(knee[1] + 0.12)
+  })
+
+  it('band face pull (229): the face pull with a band through a wall anchor at face height, each fist pulled towards it', () => {
+    const b = get(229)
+    const f = fk(skel, frameQ(b, at(b, TOP)))
+    // elbows high and hands beside the head at the finish, as the rope face pull
+    expect(sitePos(skel, f, 'grip_l')[1]).toBeGreaterThan(segPos(skel, f, 'humerus_l')[1])
+    expect(b.cables!.map((c) => c.implement).sort()).toEqual(['bg_l', 'bg_r'])
+    const anchor = b.implements.find((s) => s.kind === 'band_anchor')!
+    const hook = siteWorld(anchor, frameImplements(b, 0)[b.implements.indexOf(anchor)], 'hook').pos
+    for (const c of b.cables!) expect(dist(c.pulley, hook)).toBeLessThan(1e-4)
+    expect(Math.abs(hook[1] - sitePos(skel, f, 'chin')[1])).toBeLessThan(0.2)
+  })
+
+  it('kettlebell row (321): the one-arm bench row with the bell hanging under the fist to the hip', () => {
+    const b = get(321)
+    const kb = b.implements.findIndex((s) => s.kind === 'kettlebell')
+    for (const u of [TOP, BOTTOM]) {
+      const q = frameQ(b, at(b, u))
+      const pose = frameImplements(b, at(b, u))[kb]
+      // the bell hangs below the handle in the fist
+      expect(pose.pos[1]).toBeLessThan(handFrame(skel, fk(skel, q), 'r').pos[1] - 0.1)
+    }
+    expect(dof(b, BOTTOM, 'elbow_*.flex')).toBeLessThan(12)
+    expect(dof(b, TOP, 'elbow_*.flex')).toBeGreaterThan(70)
+  })
+
+  it('band seated row (323): sitting on the mat, legs straight, the band round the soles, fists pulled to the stomach', () => {
+    const b = get(323)
+    const q = frameQ(b, at(b, TOP))
+    const f = fk(skel, q)
+    for (const s of ['l', 'r']) expect(q[skel.dof[`knee_${s}.flex`]]).toBeLessThan(15)
+    // the pelvis on the floor, fists at the stomach at the finish and reaching towards the feet at the stretch
+    expect(segPos(skel, f, 'pelvis')[1]).toBeLessThan(0.3)
+    expect(dist(sitePos(skel, f, 'grip_l'), localToWorld(skel, f, 'lumbar3', [0.05, 0.04, 0.12]))).toBeLessThan(0.15)
+    const f0 = fk(skel, frameQ(b, at(b, BOTTOM)))
+    expect(sitePos(skel, f0, 'grip_l')[2]).toBeGreaterThan(segPos(skel, f0, 'humerus_l')[2] + 0.35)
+    expect(dof(b, BOTTOM, 'elbow_*.flex')).toBeLessThan(15)
   })
 
   it('unsupported variants throw', () => {

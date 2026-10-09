@@ -29,7 +29,7 @@ describe('template param schemas', () => {
     for (const id of TEMPLATE_IDS) {
       expect(SCHEMAS[id].safeParse({ grip: 'overhand' }).success).toBe(false)
       expect(SCHEMAS[id].safeParse({ gripWidth: 'wide' }).success).toBe(false)
-      expect(SCHEMAS[id].safeParse({ implement: 'kettlebell' }).success).toBe(false)
+      expect(SCHEMAS[id].safeParse({ implement: 'sandbag' }).success).toBe(false)
       if (SCHEMAS[id].safeParse({ grip: 'neutral' }).success) withGrip++
     }
     expect(withGrip).toBeGreaterThan(12)

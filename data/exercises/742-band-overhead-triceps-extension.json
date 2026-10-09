@@ -32,9 +32,17 @@
     737
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "band",
+      "cableHeight": "low",
+      "grip": "neutral",
+      "posture": "standing",
+      "torsoAngle": 5,
+      "stance": "split",
+      "shoulderFlexion": 175
+    },
     "mapView": "B"
   },
   "cues": [
@@ -51,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. needs work: My band-segment check (gates never check bands) finds the far strand (left fist to the floor under the rear foot) 21 mm inside the trunk capsule (trunk13) at lockout, frames 0 to about 20 and about 100 to 110. Both strands also pass 17 to 22 mm through the rear shank (shank_r1p/1q) on every frame of the loop, because they rise straight from the arch point (x -0.157/-0.097, z -0.35). The side sheet shows the strand over the calf and buttock. | ok: Fixed the band routing in src/motion/templates/triceps/overhead-band.ts. Each strand now runs from under the arch along the sole to a floor point 3 cm behind the rear heel, then straight up. That clears the calf and buttock with no nodes on the leg. A new adaptive node on each strand (back_r, back_l) stays on the straight run while the run clears the trunk, neck and head. When the run would cut in (the far strand at lockout), the node pushes out from the deepest capsule just far enough that both halves clear by 8 mm, and it moves smoothly between frames (max 24 mm per frame, while the fists move 56). I re-ran the reviewer's band-segment check on all 111 frames: no strand comes within 5 mm of trunk, shank, thigh, neck or head. Before the fix the worst cases were trunk13 -23 mm and shank_r1q -24 mm. The only remaining overlaps are the runs along the sole against the round rearfoot capsule (-5 mm), the same as the original under-foot run that was already accepted. I added a regression assertion for this to triceps-extension.test.ts and widened the floor-point bound to allow the heel exits. QA passes, the bake is fresh, and the side sheet shows the strands behind the calf and buttock, with the far strand passing behind the head at lockout."
   }
 }

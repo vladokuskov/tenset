@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { fk, segPos, segRot, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
+import { bandPath, isBand } from '../implements/index.ts'
+import { bodyCapsules, segmentDistance } from '../collide.ts'
 import { angleBetween, dist, qconj, qrot, RAD, sub, type V3 } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -48,11 +50,19 @@ const STRETCH: Record<number, [number, number]> = {
   736: [98, 112],
   // dumbbells come down beside the ears, past the EZ bar's stop at the forehead
   738: [110, 135],
+  // band pushdown: the rope pushdown's range, hands to chest height (cue 4)
+  741: [100, 115],
+  // band overhead: the overhead cable range, hands behind the head
+  742: [125, 140],
+  // Tate press: the dumbbells meet over the chest
+  744: [105, 130],
 }
+/** the Tate press flares the elbows as they bend (its upper arm is checked on its own below) */
+const FLARES = new Set([744])
 
 describe('triceps-extension template', () => {
   it('covers every triceps-extension record', () => {
-    expect([...baked.keys()].sort()).toEqual([704, 705, 706, 715, 716, 717, 734, 736, 738])
+    expect([...baked.keys()].sort()).toEqual([704, 705, 706, 715, 716, 717, 734, 736, 738, 741, 742, 744])
   })
 
   it.each([...baked.keys()])('%s: elbow from lockout to its stretch band, upper arm still', (id) => {
@@ -66,7 +76,7 @@ describe('triceps-extension template', () => {
     const h0 = humerus(b, 0)
     let drift = 0
     for (let i = 0; i < b.frames; i++) drift = Math.max(drift, angleBetween(h0, humerus(b, i)) * RAD)
-    expect(drift).toBeLessThan(6)
+    expect(drift).toBeLessThan(FLARES.has(id) ? 55 : 6)
   })
 
   it('holds the variant shoulder angle', () => {
@@ -239,6 +249,59 @@ describe('triceps-extension template', () => {
     // the free arm does not move
     const [lo, hi] = range(b, 'elbow_l.flex')
     expect(hi - lo).toBeLessThan(0.01)
+  })
+
+  it('band pushdown: handles on a band looped through a high anchor in front, the pull balanced as two cables', () => {
+    const b = get(741)
+    const anchor = b.implements.findIndex((s) => s.kind === 'band_anchor')
+    const hook = siteWorld(b.implements[anchor], frameImplements(b, 0)[anchor], 'hook').pos
+    expect(hook[1]).toBeGreaterThan(1.9)
+    expect(hook[2]).toBeGreaterThan(0.4)
+    expect(b.cables?.map((c) => c.implement)).toEqual(['handle_l', 'handle_r'])
+    const z = Array.from({ length: b.frames }, (_, i) => segPos(skel, fk(skel, frameQ(b, i)), 'head')[2])
+    expect(Math.max(...z) - Math.min(...z)).toBeLessThan(0.03)
+    expect(range(b, 'shoulder_*.elev')[1]).toBeLessThan(30)
+  })
+
+  it('band overhead: the band runs from under the rear foot to both fists, upper arms overhead', () => {
+    const b = get(742)
+    const strip = b.implements.find((s) => s.kind === 'band') as unknown as { band: { closed: boolean; path: { implement: string; at?: number[] }[] } }
+    expect(strip.band.closed).toBe(true)
+    const floor = strip.band.path.filter((p) => p.implement === 'floor')
+    const rear = b.contacts.filter((c) => c.kind === 'planted' && c.site.endsWith('_r')).map((c) => ('world' in c.target ? c.target.world[2] : 0))
+    // under the arch and behind the heel, where the strands leave the foot
+    for (const p of floor) {
+      expect(p.at![1]).toBeLessThan(0.01)
+      expect(p.at![2]).toBeGreaterThan(Math.min(...rear) - 0.12)
+      expect(p.at![2]).toBeLessThan(Math.max(...rear) + 0.01)
+    }
+    expect(range(b, 'shoulder_*.elev')[0]).toBeGreaterThan(155)
+    // the strands clear the calf, the buttock and the back (they wrap the upper back at lockout); the runs along the
+    // sole and between the fists are left out
+    const specs = new Map(b.implements.map((s) => [s.id, s]))
+    const spec = b.implements.find(isBand)!
+    for (let i = 0; i < b.frames; i += 3) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => !/^(hand|foot)_/.test(c.region))
+      const pts = bandPath(spec, specs, new Map(frameImplements(b, i).map((p) => [p.id, p])))
+      for (let k = 0; k < pts.length - 1; k++) {
+        const ids = [spec.band.path[k].implement, spec.band.path[k + 1].implement]
+        if (ids.every((x) => x === 'floor') || ids.every((x) => x.startsWith('fist'))) continue
+        for (const c of caps) expect(segmentDistance(pts[k].pos, pts[k + 1].pos, c.a, c.b).d - c.r).toBeGreaterThan(0.005)
+      }
+    }
+  })
+
+  it('Tate press: palms to the feet at lockout, the elbows bend out to the sides and the fists meet over the chest', () => {
+    const b = get(744)
+    const u = (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] / 2) / (b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3])
+    // lockout: the dumbbells lie across the body (handle along X)
+    const top = frameImplements(b, 0)[b.implements.findIndex((s) => s.id === 'db_l')]
+    expect(Math.abs(qrot(top.rot, [1, 0, 0])[0])).toBeGreaterThan(0.85)
+    // bottom: the elbows out wide, the hands close together over the midline
+    const f = fk(skel, frameQ(b, at(b, u)))
+    expect(segPos(skel, f, 'forearm_l')[0]).toBeGreaterThan(segPos(skel, f, 'humerus_l')[0] + 0.1)
+    expect(dist(sitePos(skel, f, 'grip_l'), sitePos(skel, f, 'grip_r'))).toBeLessThan(0.35)
+    expect(dof(b, u, 'shoulder_*.rot')).toBeGreaterThan(60)
   })
 
   it('unsupported variants throw', () => {

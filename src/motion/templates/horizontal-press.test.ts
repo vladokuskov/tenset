@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
+import { bodyCapsules, capsuleSolidClearance, placeParts, segmentDistance, solidClearance } from '../collide.ts'
 import { fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, qconj, qrot, sub, type V3 } from '../math.ts'
@@ -34,10 +34,10 @@ const folded = (b: Baked) => Array.from({ length: b.frames }, (_, i) => frameQ(b
 
 describe('horizontal-press template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([101, 107, 108, 120, 121, 707])
+    expect([...baked.keys()].sort()).toEqual([101, 107, 108, 118, 119, 120, 121, 124, 128, 135, 707])
   })
 
-  it.each(variants.map((v) => v.id))('%s: finite, feet planted, hands on the implement, body still, seamless loop', (id) => {
+  it.each(variants.filter((v) => v.params.posture !== 'standing').map((v) => v.id))('%s: finite, feet planted, hands on the implement, body still, seamless loop', (id) => {
     const b = get(id)
     expect(b.q.every(Number.isFinite)).toBe(true)
     const base = frameQ(b, 0)
@@ -278,7 +278,137 @@ describe('horizontal-press template', () => {
     expect(flareOf(skel, pose(b, BOTTOM).f)).toBeLessThan(flareOf(skel, pose(get(107), BOTTOM).f))
   })
 
+  it.each([[118, 45], [119, 40]])('floor press (%s): lying on the floor, the upper arms stop on it at ~%s deg out with the forearms vertical', (id, flare) => {
+    const b = get(id)
+    const { f } = pose(b, BOTTOM)
+    const caps = bodyCapsules(skel, f)
+    const low = (re: RegExp) => Math.min(...caps.filter((c) => re.test(c.region)).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+    // the back and the upper arm on the floor (a few mm of soft tissue), no bench
+    expect(b.implements.some((s) => s.kind === 'bench')).toBe(false)
+    expect(low(/^trunk$/)).toBeGreaterThan(-0.005)
+    expect(low(/^trunk$/)).toBeLessThan(0.002)
+    expect(low(/^upperarm_l$/)).toBeGreaterThan(-0.005)
+    expect(low(/^upperarm_l$/)).toBeLessThan(0.002)
+    expect(Math.abs(flareOf(skel, f) - flare)).toBeLessThan(2)
+    expect(Math.abs(forearmTilt(skel, f))).toBeLessThan(3)
+    expect(Math.abs(forearmSag(skel, f))).toBeLessThan(3)
+    // the elbow about square at the bottom (forearm vertical over a level upper arm), soft at lockout
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(75)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeLessThan(105)
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    // knees up, feet flat
+    expect(dof(b, BOTTOM, 'knee_l.flex')).toBeGreaterThan(85)
+  })
+
+  it('kettlebell floor press (119): the bell rests on the back of the forearm the whole rep, the hand through the window', () => {
+    const b = get(119)
+    const k = b.implements.findIndex((s) => s.id === 'kb_l')
+    for (let i = 0; i < b.frames; i += 5) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region === 'forearm_l' || c.region === 'hand_l')
+      const bell = placeParts({ ...b.implements[k], parts: b.implements[k].parts.filter((p) => p.shape === 'cylinder' && p.r > 0.03) }, frameImplements(b, i)[k])
+      const touch = Math.min(...bell.flatMap((s) => caps.map((c) => capsuleSolidClearance(c, s))))
+      expect(touch, `@${i}`).toBeGreaterThan(-0.006)
+      expect(touch, `@${i}`).toBeLessThan(0.001)
+    }
+  })
+
+  it('squeeze press (135): the dumbbells pressed together side by side all rep, lowered onto the chest', () => {
+    const b = get(135)
+    const [l, r] = ['db_l', 'db_r'].map((id) => b.implements.findIndex((s) => s.id === id))
+    for (let i = 0; i < b.frames; i += 4) {
+      const impl = frameImplements(b, i)
+      const [a, c] = [placeParts(b.implements[l], impl[l]), placeParts(b.implements[r], impl[r])]
+      const gap = Math.min(...a.flatMap((x) => c.map((y) => solidClearance(x, y))))
+      expect(gap, `@${i}`).toBeGreaterThan(-0.003)
+      expect(gap, `@${i}`).toBeLessThan(0.004)
+    }
+    // the heads on the chest at the bottom
+    const { f, impl } = pose(b, BOTTOM)
+    const trunk = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
+    const onChest = Math.min(...placeParts(b.implements[l], impl[l]).flatMap((s) => trunk.map((c) => capsuleSolidClearance(c, s))))
+    expect(onChest).toBeLessThan(0.002)
+    expect(onChest).toBeGreaterThan(-0.008)
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+  })
+
+  it.each([124, 128])('standing press (%s): split stance held still, the hands from beside the chest to together in front at chest height', (id) => {
+    const b = get(id)
+    const base = frameQ(b, 0)
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      for (const n of ['pelvis.tx', 'pelvis.ty', 'pelvis.tz', 'pelvis.tilt']) expect(Math.abs(q[skel.dof[n]] - base[skel.dof[n]]), n).toBeLessThan(1e-6)
+    }
+    const hands = (u: number) => {
+      const { f } = pose(b, u)
+      return { l: sitePos(skel, f, 'grip_l'), r: sitePos(skel, f, 'grip_r'), chest: localToWorld(skel, f, 'thorax2', [0, 0, 0.1]) }
+    }
+    const top = hands(TOP), bottom = hands(BOTTOM)
+    // lockout: hands together (~17 cm apart) in front at about chest height; the stretch: beside the chest, elbows back
+    expect(dist(top.l, top.r)).toBeGreaterThan(0.13)
+    expect(dist(top.l, top.r)).toBeLessThan(0.21)
+    expect(top.l[2] - top.chest[2]).toBeGreaterThan(0.35)
+    expect(Math.abs(top.l[1] - top.chest[1])).toBeLessThan(0.12)
+    // (the reference point sits 10 cm out from the spine, ~12 cm inside the chest's front)
+    expect(bottom.l[2] - bottom.chest[2]).toBeLessThan(0.3)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(100)
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    expect(segPos(skel, pose(b, BOTTOM).f, 'forearm_l')[2]).toBeLessThan(sitePos(skel, pose(b, BOTTOM).f, 'grip_l')[2])
+    // a press, not a fly: the hands travel on a straight level line (never above the shoulders), at the bottom no more
+    // than ~10 cm outside the shoulder joints, the upper arms ~45-60 deg out from the trunk
+    const sh = segPos(skel, pose(b, BOTTOM).f, 'humerus_l')
+    expect(bottom.l[0] - sh[0]).toBeLessThan(0.1)
+    for (let i = 0; i < b.frames; i++) {
+      const g = fk(skel, frameQ(b, i))
+      const h = sitePos(skel, g, 'grip_l')
+      expect(Math.abs(h[1] - top.l[1]), `level @${i}`).toBeLessThan(0.02)
+      expect(h[1], `below the shoulder @${i}`).toBeLessThan(segPos(skel, g, 'humerus_l')[1] - 0.05)
+    }
+    expect(armElevation(skel, pose(b, BOTTOM).f)).toBeGreaterThan(40)
+    expect(armElevation(skel, pose(b, BOTTOM).f)).toBeLessThan(62)
+  })
+
+  it('cable press (124) pulls from two towers behind; the band press (128) runs from a post behind, past the chest', () => {
+    const cb = get(124)
+    expect(cb.cables?.length).toBe(2)
+    // the pulleys ~0.4-0.6 m behind the shoulders, so at the bottom the cables pull mostly back, not out to the side
+    const g = fk(skel, frameQ(cb, at(cb, BOTTOM)))
+    for (const c of cb.cables!) {
+      expect(c.pulley[2] - segPos(skel, g, 'humerus_l')[2]).toBeLessThan(-0.4)
+      expect(c.pulley[2] - segPos(skel, g, 'humerus_l')[2]).toBeGreaterThan(-0.65)
+      const h = sitePos(skel, g, c.pulley[0] > 0 ? 'grip_l' : 'grip_r')
+      expect(Math.abs(c.pulley[0] - h[0])).toBeLessThan(Math.abs(c.pulley[2] - h[2]))
+    }
+    const b = get(128)
+    expect(b.cables).toBeUndefined()
+    const anchor = b.implements.find((s) => s.kind === 'band_anchor')!
+    expect(frameImplements(b, 0)[b.implements.indexOf(anchor)].pos[2]).toBeLessThan(-0.5)
+    // the strip passes the side of the chest outside the trunk
+    const { f, impl } = pose(b, TOP)
+    const side = impl[b.implements.findIndex((s) => s.id === 'side_l')].pos as V3
+    const trunk = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
+    expect(Math.min(...trunk.map((c) => segmentDistance(c.a, c.b, side, side).d - c.r))).toBeGreaterThan(0)
+    // every run of the strip from the ring past the arm to the hook keeps off the arm's capsules, every frame
+    for (let i = 0; i < b.frames; i++) {
+      const g = fk(skel, frameQ(b, i))
+      const im = frameImplements(b, i)
+      const at_ = (id: string) => im[b.implements.findIndex((x) => x.id === id)].pos as V3
+      for (const s of ['l', 'r']) {
+        const ring = siteWorld(b.implements.find((x) => x.id === `handle_${s}`)!, im[b.implements.findIndex((x) => x.id === `handle_${s}`)], 'ring').pos
+        const hook = siteWorld(anchor, im[b.implements.indexOf(anchor)], 'hook').pos
+        const pts = [ring, at_(`arm_${s}`), at_(`side_${s}`), hook]
+        const arm = bodyCapsules(skel, g).filter((c) => c.region === `upperarm_${s}` || c.region === `forearm_${s}`)
+        for (let k = 0; k + 1 < pts.length; k++) {
+          expect(Math.min(...arm.map((c) => segmentDistance(c.a, c.b, pts[k], pts[k + 1]).d - c.r)), `${s} run ${k} @${i}`).toBeGreaterThan(0)
+        }
+      }
+    }
+  })
+
   it('unsupported variants throw with a reason', () => {
+    expect(() => run({ implement: 'kettlebell' })).toThrow(/variant not implemented yet/)
+    expect(() => run({ implement: 'barbell', support: 'floor' })).toThrow(/variant not implemented yet/)
+    expect(() => run({ implement: 'dumbbell', grip: 'pronated', squeeze: true })).toThrow(/variant not implemented yet/)
+    expect(() => run({ implement: 'cable', posture: 'standing' })).toThrow(/variant not implemented yet/)
     expect(() => run({ benchAngle: -15 })).toThrow(/variant not implemented yet/)
     expect(() => run({ benchAngle: 5 })).toThrow(/variant not implemented yet/)
     expect(() => run({ implement: 'barbell', grip: 'neutral' })).toThrow(/variant not implemented yet/)

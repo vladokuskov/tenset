@@ -3,7 +3,7 @@ import { z } from 'zod'
 // One vocabulary for every template's media.params. Documented in data/motion-templates/PARAMS.md.
 // Angles in degrees. gripWidth is a multiple of skeleton shoulderWidth (distance between the shoulder joint centres).
 
-export const ImplementId = z.enum(['barbell', 'dumbbell', 'ez_bar', 'cable', 'machine', 'smith', 'bodyweight'])
+export const ImplementId = z.enum(['barbell', 'dumbbell', 'ez_bar', 'cable', 'machine', 'smith', 'bodyweight', 'band', 'kettlebell', 'plate', 'trap_bar'])
 export const MachineId = z.enum([
   'leg_press', 'leg_extension', 'leg_curl_seated', 'leg_curl_lying', 'lat_pulldown', 'chest_press_machine',
   'shoulder_press_machine', 'pec_deck', 'hip_abduction', 'hip_adduction', 'back_extension', 'assisted_pullup',

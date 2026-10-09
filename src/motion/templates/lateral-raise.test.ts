@@ -5,6 +5,7 @@ import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import { shoulderRhythm } from '../skeleton.ts'
+import { bandPath, isBand } from '../implements/index.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
 
@@ -14,6 +15,13 @@ const baked = new Map(variants.map((v) => [v.slug, bake(getTemplate('lateral-rai
 const get = (slug: string) => baked.get(slug)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
+
+/** the band strip's world path in frame i */
+function strip(b: Baked, i: number) {
+  const spec = b.implements.find(isBand)!
+  const poses = frameImplements(b, i)
+  return bandPath(spec, new Map(b.implements.map((s) => [s.id, s])), new Map(b.implements.map((s, k) => [s.id, poses[k]])))
+}
 
 describe('lateral-raise template', () => {
   it('dumbbell: scapular plane, ~10 -> 85 deg elevation, fixed soft elbow, girdle follows the rhythm', () => {
@@ -90,5 +98,33 @@ describe('lateral-raise template', () => {
     // the dumbbells hang outside the bench (pad half width 0.14 m)
     const hand = handFrame(skel, fk(skel, frameQ(b, at(b, 0.625))), 'l').pos
     expect(hand[0]).toBeGreaterThan(0.25)
+  })
+
+  it('band (225): the dumbbell arc, the band from each fist down under both soles', () => {
+    const b = get('225-band-lateral-raise')
+    expect(dof(b, 0.625, 'shoulder_l.elev')).toBeCloseTo(10, 5)
+    expect(dof(b, 0, 'shoulder_l.elev')).toBeCloseTo(85, 5)
+    expect(dof(b, 0.3, 'shoulder_l.plane')).toBeCloseTo(20, 5)
+    const path = strip(b, at(b, 0))
+    // fist, fist, four points under the soles, fist, fist
+    expect(path.length).toBe(8)
+    for (const v of path.slice(2, 6)) expect(v.pos[1]).toBeLessThan(0.005)
+    for (const v of [path[1], path[6]]) expect(v.pos[1]).toBeGreaterThan(1.2)
+  })
+
+  it('cable Y-raise (226): crossed low cables, hands from in front of the thighs up and out into a Y above the head', () => {
+    const b = get('226-cable-y-raise')
+    // crossed: the left hand's cable runs to the right (-X) tower
+    const lc = b.cables!.find((c) => c.implement === 'handle_l')!
+    expect(lc.pulley[0]).toBeLessThan(0)
+    expect(lc.pulley[1]).toBeLessThan(0.2)
+    expect(dof(b, 0.625, 'shoulder_l.elev')).toBeCloseTo(16, 3)
+    expect(dof(b, 0.625, 'shoulder_l.plane')).toBeCloseTo(82, 3)
+    expect(dof(b, 0, 'shoulder_l.elev')).toBeCloseTo(130, 3)
+    expect(dof(b, 0, 'shoulder_l.plane')).toBeCloseTo(30, 3)
+    const f = fk(skel, frameQ(b, at(b, 0)))
+    // just above head height: the fists above the top of the head (head joint + ~0.2 m)
+    expect(sitePos(skel, f, 'grip_l')[1]).toBeGreaterThan(segPos(skel, f, 'head')[1] + 0.2)
+    expect(frameQ(b, 5)[skel.dof['shoulder_l.elev']]).toBeCloseTo(frameQ(b, 5)[skel.dof['shoulder_r.elev']], 6)
   })
 })

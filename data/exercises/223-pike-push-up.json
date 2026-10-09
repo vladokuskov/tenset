@@ -38,8 +38,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "push-up",
+    "params": {
+      "pike": true,
+      "gripWidth": 1.3
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Hips high (hip flex 88, pelvis tilt 121-137), elbow 6 to 92, and the head comes down 4 cm off the floor just in front of the hands, matching the cue. But shoulder elevation at the top is only ~115, so arms and trunk are not in line and the trunk sits about 45 deg from the floor. That reads closer to a declined push-up than a strict pike. Hero frame t=0.625 rendered blank (renderer, not the motion)."
   }
 }

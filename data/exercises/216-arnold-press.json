@@ -38,9 +38,15 @@
     235
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "vertical-press",
+    "params": {
+      "implement": "dumbbell",
+      "posture": "seated",
+      "benchAngle": 90,
+      "grip": "supinated",
+      "rotate": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -58,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Bottom: elbow 140, plane 88 (arms in front), forearm pronation -88, so palms face the lifter at chin height. Top: elev 172, plane 22, pronation +32, so palms face forward. The turn reverses on the way down, and the dumbbells stay more than 7 cm from the face. The 18 deg start offset is not visible on the sheet."
   }
 }
