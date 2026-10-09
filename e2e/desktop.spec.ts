@@ -118,7 +118,8 @@ test.describe('1280 and up: catalog drawer, board and map panel', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Added Chest Dip to Wednesday' })).toBeVisible()
     await expect(wednesday).not.toHaveAttribute('data-drop-target')
 
-    await drawer.getByRole('combobox', { name: 'Add to day' }).selectOption({ label: 'Saturday' })
+    await drawer.getByRole('button', { name: /^Add to day/ }).click()
+    await page.getByRole('listbox', { name: 'Add to day' }).getByRole('option', { name: 'Saturday' }).click()
     await drawer.getByRole('button', { name: 'Add Chest Dip to Saturday' }).click()
     await expect(card(page, 'Saturday', 'Chest Dip')).toBeVisible()
 
@@ -135,7 +136,7 @@ test.describe('1280 and up: catalog drawer, board and map panel', () => {
     const adds = list.getByRole('button', { name: /^Add / })
     await expect(adds.first()).toBeVisible()
 
-    await drawer.getByRole('combobox', { name: 'Muscle' }).focus()
+    await drawer.getByRole('button', { name: 'Muscle', exact: true }).focus()
     await page.keyboard.press('Tab')
     const skip = drawer.getByRole('link', { name: 'Skip to week board' })
     await expect(skip).toBeFocused()
@@ -161,6 +162,33 @@ test.describe('1280 and up: catalog drawer, board and map panel', () => {
     await expect(page).not.toHaveURL(/#/)
     await page.keyboard.press('Tab')
     await expect(page.getByRole('region', { name: 'Monday' }).getByRole('link').first()).toBeFocused()
+  })
+
+  test('drawer filter menu: arrows open it, Enter picks, Escape returns focus', async ({ page }) => {
+    desktopOnly()
+    await startFromTemplate(page, 'Upper/Lower 4x')
+    await page.getByRole('button', { name: 'Show exercises' }).click()
+    const drawer = page.getByRole('complementary', { name: 'Exercises' })
+    const trigger = drawer.getByRole('button', { name: 'Muscle', exact: true })
+    await trigger.focus()
+    await page.keyboard.press('ArrowDown')
+    const list = page.getByRole('listbox', { name: 'Muscle' })
+    await expect(list).toBeVisible()
+    await expect(list.getByRole('option', { name: 'Any muscle' })).toBeFocused()
+    await page.keyboard.type('Lats')
+    await expect(page.getByRole('searchbox', { name: 'Search', exact: true })).toHaveValue('Lats')
+    await page.keyboard.press('ArrowDown')
+    await expect(list.getByRole('option', { name: 'Lats' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(list).toBeHidden()
+    const active = drawer.getByRole('button', { name: 'Muscle: Lats' })
+    await expect(active).toBeFocused()
+
+    await page.keyboard.press('Enter')
+    await expect(list.getByRole('option', { name: 'Lats' })).toHaveAttribute('aria-selected', 'true')
+    await page.keyboard.press('Escape')
+    await expect(list).toBeHidden()
+    await expect(active).toBeFocused()
   })
 
   test('hovering an entry outlines its muscles; hovering or focusing a muscle lights its entries', async ({ page }) => {

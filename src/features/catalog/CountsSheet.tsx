@@ -8,6 +8,7 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { Button } from '../../ui/Button'
 import { Pill } from '../../ui/Pill'
 import { SegmentedControl } from '../../ui/SegmentedControl'
+import { Select } from '../../ui/Select'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
 import { catalogMessages } from './messages'
@@ -98,32 +99,25 @@ export function CountsSheet({ exercise, open, onClose }: { exercise: Exercise; o
       </ul>
 
       {remaining.length > 0 && (
-        <label className="mt-4 block">
-          <span className="mb-1.5 block text-sm font-medium text-ink-2">{m.addMuscle}</span>
-          <select
-            value=""
-            onChange={(e) => {
-              const g = e.target.value
-              if (!g) return
+        <div className="mt-4">
+          <span aria-hidden className="mb-1.5 block text-sm font-medium text-ink-2">
+            {m.addMuscle}
+          </span>
+          <Select
+            label={m.addMuscle}
+            variant="field"
+            placeholder={m.chooseGroup}
+            value={undefined}
+            groups={AREAS.map((area) => ({
+              label: m.area[area],
+              options: remaining.filter((g) => g.area === area).map((g) => ({ value: g.id, label: groupName(g.id, locale) })),
+            }))}
+            onChange={(g) => {
               setAdded((a) => [...a, g])
               setOverride(exercise.id, g, 'secondary')
             }}
-            className="h-11 w-full rounded-md border border-line-strong bg-raised px-3 text-ink"
-          >
-            <option value="">{m.chooseGroup}</option>
-            {AREAS.map((area) => (
-              <optgroup key={area} label={m.area[area]}>
-                {remaining
-                  .filter((g) => g.area === area)
-                  .map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {groupName(g.id, locale)}
-                    </option>
-                  ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
       )}
 
       <p className="mt-5 text-sm text-ink-2">{m.countsNote}</p>
