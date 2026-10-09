@@ -34,7 +34,7 @@
     714
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "wrist-curl",
     "params": {
       "implement": "band",
@@ -58,7 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: The hand is not closed. scenes/wrist-curl.ts has no grip hook for band_grip (rotation.ts and hold.ts map it to 'pronated', triceps to 'rope'), and my close-up shows loose, spread fingers over the bunched band at the top (t=0). The baked wrist range is -51.8 to 33.2, not the reported 40 to -45. Unilateral is correct (only wrist_r.flex moves) and the band pulls the right way. | minor: Added the requested hook to src/features/figure/motion/scenes/wrist-curl.ts: band_grip maps to 'rope', matching the triceps precedent. The hook works, but it is close to cosmetic. Without a hook, the composer already picked 'pronated' from params.grip, so the reviewer's diagnosis (no hook, so loose fingers) doesn't hold. Solving at the 22 mm band grip gives nearly the same finger curls for rope, pronated, neutral and d-handle (knuckle about -27 deg, middle joint about 55, fingertip joint about 46). Those are the same shapes as the approved 709 hand. My close-ups (repair-figure/close and close2, yaw 60) still show the index finger lifted off the bunched band at the top of the rep. Seen from the same angle, the approved 709 hand looks about the same. Getting a tighter fist would mean changing the shared hand solver or adding a new grip, which this wave isn't allowed to do. Motion is unchanged (the bake is byte-identical), and the free hand and the reported range were not touched. The baked wrist range really is about -52 to 33."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. needs work: The hand is not closed. scenes/wrist-curl.ts has no grip hook for band_grip (rotation.ts and hold.ts map it to 'pronated', triceps to 'rope'), and my close-up shows loose, spread fingers over the bunched band at the top (t=0). The baked wrist range is -51.8 to 33.2, not the reported 40 to -45. Unilateral is correct (only wrist_r.flex moves) and the band pulls the right way. | minor: Added the requested hook to src/features/figure/motion/scenes/wrist-curl.ts: band_grip maps to 'rope', matching the triceps precedent. The hook works, but it is close to cosmetic. Without a hook, the composer already picked 'pronated' from params.grip, so the reviewer's diagnosis (no hook, so loose fingers) doesn't hold. Solving at the 22 mm band grip gives nearly the same finger curls for rope, pronated, neutral and d-handle (knuckle about -27 deg, middle joint about 55, fingertip joint about 46). Those are the same shapes as the approved 709 hand. My close-ups (repair-figure/close and close2, yaw 60) still show the index finger lifted off the bunched band at the top of the rep. Seen from the same angle, the approved 709 hand looks about the same. Getting a tighter fist would mean changing the shared hand solver or adding a new grip, which this wave isn't allowed to do. Motion is unchanged (the bake is byte-identical), and the free hand and the reported range were not touched. The baked wrist range really is about -52 to 33."
   }
 }

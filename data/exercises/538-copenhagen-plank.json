@@ -37,7 +37,7 @@
     515
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hold",
     "params": {
       "kind": "copenhagen_plank"
@@ -58,7 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Forearm plank (elbow 88, elbow under the shoulder), top shin on the bench at -4 mm, bottom leg hanging clear (ankle 134 mm up). The body bends about 5 deg at the hips. The primary (top-leg adductors) faces the floor and only the obliques read from the -12/0.04 camera. The support hand sinks 13.5 mm into the 10 mm mat (3.5 mm below the floor, within the 5 mm floor tolerance)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3c 2026-10-09: rated minor, owner review. minor: Forearm plank (elbow 88, elbow under the shoulder), top shin on the bench at -4 mm, bottom leg hanging clear (ankle 134 mm up). The body bends about 5 deg at the hips. The primary (top-leg adductors) faces the floor and only the obliques read from the -12/0.04 camera. The support hand sinks 13.5 mm into the 10 mm mat (3.5 mm below the floor, within the 5 mm floor tolerance)."
   }
 }

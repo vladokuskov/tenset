@@ -34,7 +34,7 @@
     536
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hip-abduction",
     "params": {
       "implement": "band",
@@ -56,7 +56,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3c 2026-10-09: rated minor, owner review. needs work: The pelvis moves 432 mm sideways (x -305..127). Each weight shift takes about 9-12 frames (f27-36, f81-93) and peaks at 1.7 m/s, so the figure lurches, against cue 4 ('torso still'). It stands still 0.3-0.5 s in between (f0-9, f51-66). The record declares no planted contacts, so the report says 'balance (lateral): not judged: no planted feet' and foot slip never ran. That contradicts the author's 'balance.lateral true'. My FK shows the planted feet do hold to 0 mm. | minor: I rebuilt the walk as a timeline: swing 0.4 s, a 1.25 s minimum-jerk weight shift only where the stance foot changes, and a 0.2 s settle between two steps on the same foot. The step is 0.14 m (was 0.18). WALK_TEMPO is [1.9,0.2,1.6,0.8], 4.5 s a loop, with the concentric pulse on the left lead step and its shift. Peak pelvis sideways speed is 0.58 m/s (was about 1.7 m/s). The pelvis still pauses about 1 s over each stance foot, across the follow swing, settle and next lead swing, because single support pins the pressure to that foot. Gates: qa.ts's lateralSkip returns 'no planted feet' before it looks at balance.lateral, and a per-bake contact list can't carry planted contacts per stance phase. So the QA lateral and foot-slip gates still don't judge 537, and I'm not allowed to change gates.ts. To cover it, I added two walk.test.ts cases. One checks pressure inside the feet that are down on every frame plus heel drift under 2 mm while a foot is flat. The other checks peak pelvis speed under 0.6 m/s and a shift of at least 0.8 s. Both pass; the probe shows the worst frame 9.9 mm inside the support and heel slip measuring 0."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3c 2026-10-09: rated minor, owner review. needs work: The pelvis moves 432 mm sideways (x -305..127). Each weight shift takes about 9-12 frames (f27-36, f81-93) and peaks at 1.7 m/s, so the figure lurches, against cue 4 ('torso still'). It stands still 0.3-0.5 s in between (f0-9, f51-66). The record declares no planted contacts, so the report says 'balance (lateral): not judged: no planted feet' and foot slip never ran. That contradicts the author's 'balance.lateral true'. My FK shows the planted feet do hold to 0 mm. | minor: I rebuilt the walk as a timeline: swing 0.4 s, a 1.25 s minimum-jerk weight shift only where the stance foot changes, and a 0.2 s settle between two steps on the same foot. The step is 0.14 m (was 0.18). WALK_TEMPO is [1.9,0.2,1.6,0.8], 4.5 s a loop, with the concentric pulse on the left lead step and its shift. Peak pelvis sideways speed is 0.58 m/s (was about 1.7 m/s). The pelvis still pauses about 1 s over each stance foot, across the follow swing, settle and next lead swing, because single support pins the pressure to that foot. Gates: qa.ts's lateralSkip returns 'no planted feet' before it looks at balance.lateral, and a per-bake contact list can't carry planted contacts per stance phase. So the QA lateral and foot-slip gates still don't judge 537, and I'm not allowed to change gates.ts. To cover it, I added two walk.test.ts cases. One checks pressure inside the feet that are down on every frame plus heel drift under 2 mm while a foot is flat. The other checks peak pelvis speed under 0.6 m/s and a shift of at least 0.8 s. Both pass; the probe shows the worst frame 9.9 mm inside the support and heel slip measuring 0."
   }
 }

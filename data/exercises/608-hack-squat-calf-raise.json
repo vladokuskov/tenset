@@ -31,7 +31,7 @@
     612
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "calf-raise",
     "params": {
       "implement": "machine",
@@ -54,7 +54,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Mechanics are right: knee held at 4, ankle 22 to -32 (54 deg ROM), toes extend to 38 over the plate edge, and the sled rides 72 mm. The hero (az -95/0.12) is a side view where the long reclined frame makes the figure about a third of the tile, so the calves (the only primary) are small. Forefoot rests 42 mm into the plate (precedent)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3c 2026-10-09: rated minor, owner review. minor: Mechanics are right: knee held at 4, ankle 22 to -32 (54 deg ROM), toes extend to 38 over the plate edge, and the sled rides 72 mm. The hero (az -95/0.12) is a side view where the long reclined frame makes the figure about a third of the tile, so the calves (the only primary) are small. Forefoot rests 42 mm into the plate (precedent)."
   }
 }

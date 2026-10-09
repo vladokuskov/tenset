@@ -42,7 +42,7 @@
     502
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "swing",
     "params": {
       "stance": "wide",
@@ -66,7 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3c 2026-10-09: rated minor, owner review. needs work: At the hike the hands are at y=0.53 m, which is knee height (knee 0.53 m), and the hip crease is at 0.81 m. The bell centre is 0.27 m behind the knees. Cue 1 says 'wrists high near your groin', so the motion contradicts it (THIGH_GAP.at 0.8 puts the forearm crossing near the knees). Smaller points: the float holds still for about 0.27 s with the hands 57 mm above the shoulders, which is more than the 'chest height' cue, and the -105 hero is almost the side view. | minor: I couldn't get the forearms to clear the thighs at the groin. Moving the arm line up the thigh raises the wrists from 0.61 m to only 0.72-0.76 m, but forearm/thigh penetration grows from -22 mm to -70..-83 mm. Toe-out 45 and a 42 deg knee bend don't fix it either (-53 mm at 0.70 m), so I left the geometry alone. I took the fallback instead. Cue 1 now reads 'Hike the bell back between your thighs, behind your knees' (EN), and UK reads 'Закиньте гирю назад між стегнами, за коліна' (unreviewed). Both now match the drawn hike. The float hold is down from 0.24 s to 0.12 s (SWING_TEMPO [0.7,0.06,0.6,0.12], 1.48 s a rep). ARM.top went from 88 to 78, so the hands end about 30 mm below the shoulders (1.43 m vs 1.46 m), between sternum and shoulder height. swing.test now checks that the hands stay at or below the shoulders. QA passes, the bake is updated and the sheet looks right. Still open: the hike sits low (bell behind the knees, not a high groin pass), which is the cue-side fix rather than the preferred motion fix, and I left the -105 hero camera as it was."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3c 2026-10-09: rated minor, owner review. needs work: At the hike the hands are at y=0.53 m, which is knee height (knee 0.53 m), and the hip crease is at 0.81 m. The bell centre is 0.27 m behind the knees. Cue 1 says 'wrists high near your groin', so the motion contradicts it (THIGH_GAP.at 0.8 puts the forearm crossing near the knees). Smaller points: the float holds still for about 0.27 s with the hands 57 mm above the shoulders, which is more than the 'chest height' cue, and the -105 hero is almost the side view. | minor: I couldn't get the forearms to clear the thighs at the groin. Moving the arm line up the thigh raises the wrists from 0.61 m to only 0.72-0.76 m, but forearm/thigh penetration grows from -22 mm to -70..-83 mm. Toe-out 45 and a 42 deg knee bend don't fix it either (-53 mm at 0.70 m), so I left the geometry alone. I took the fallback instead. Cue 1 now reads 'Hike the bell back between your thighs, behind your knees' (EN), and UK reads 'Закиньте гирю назад між стегнами, за коліна' (unreviewed). Both now match the drawn hike. The float hold is down from 0.24 s to 0.12 s (SWING_TEMPO [0.7,0.06,0.6,0.12], 1.48 s a rep). ARM.top went from 88 to 78, so the hands end about 30 mm below the shoulders (1.43 m vs 1.46 m), between sternum and shoulder height. swing.test now checks that the hands stay at or below the shoulders. QA passes, the bake is updated and the sheet looks right. Still open: the hike sits low (bell behind the knees, not a high groin pass), which is the cue-side fix rather than the preferred motion fix, and I left the -105 hero camera as it was."
   }
 }

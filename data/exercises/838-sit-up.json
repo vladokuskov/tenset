@@ -34,7 +34,7 @@
     834
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "crunch",
     "params": {
       "posture": "lying_supine",
@@ -58,7 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Trunk turns pelvis 23.5 + lumbar 16 + thorax 24 = about 64 deg from the floor at the top, so it stops about 26 deg short of upright (cue reworded EN+UK to match). It reads as a sit-up with curl-then-hinge sequencing and planted feet (slip 0.18 mm). The folded forearms ride high near the chin rather than across the chest."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. minor: Trunk turns pelvis 23.5 + lumbar 16 + thorax 24 = about 64 deg from the floor at the top, so it stops about 26 deg short of upright (cue reworded EN+UK to match). It reads as a sit-up with curl-then-hinge sequencing and planted feet (slip 0.18 mm). The folded forearms ride high near the chin rather than across the chest."
   }
 }

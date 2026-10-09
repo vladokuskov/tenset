@@ -43,7 +43,7 @@
     513
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hinge",
     "params": {
       "implement": "kettlebell",
@@ -68,7 +68,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: FK on the shipped bake: at lockout the bell centre sits at z 0.236 against a hip crease at 0.056, so it is about 18 cm forward. Shoulder elevation holds at 21 deg, so the arms read as slightly raised in the side sheet. Upper arm/chest penetration measures -25.3 mm under the new 26 mm tolerance. Hinge depth matches the 501/509 precedent (hip 2-82, knee 3-20, trunk 70.7 deg from vertical at the bottom), both fists close on handle_l/r, and the cue edit is accurate. Owner should accept the forward-hanging bell together with the tolerance."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. minor: FK on the shipped bake: at lockout the bell centre sits at z 0.236 against a hip crease at 0.056, so it is about 18 cm forward. Shoulder elevation holds at 21 deg, so the arms read as slightly raised in the side sheet. Upper arm/chest penetration measures -25.3 mm under the new 26 mm tolerance. Hinge depth matches the 501/509 precedent (hip 2-82, knee 3-20, trunk 70.7 deg from vertical at the bottom), both fists close on handle_l/r, and the cue edit is accurate. Owner should accept the forward-hanging bell together with the tolerance."
   }
 }

@@ -37,7 +37,7 @@
     813
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hold",
     "params": {
       "kind": "bear_plank",
@@ -59,7 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: In a static hold the elbows go 5.2 → 22.2 → 5.2 deg and the chest (front_rack) drops 20 mm (0.557 → 0.537) every loop while the hips stay fixed. That reads as a small push-up bob, where 804 varies the elbows only 0.5 deg. Hands are also 7 cm ahead of the shoulders, against the cue 'hands under your shoulders'. The 4.5 cm knee hover is accurate but hard to see. | minor: The breath is out of the arm chain. holdShoulder counter-flexes the thorax each frame so the shoulder-to-palm distance stays at its braced value (measured on a fresh pose, which fixed a first attempt that pinned the elbows at 1 deg). Elbows are a constant 5.2 deg on both sides (they were 5.2 to 22.2), and the lumbar/clavicle breath still shows in the angle plot. New test: elbow range under 2 deg and max under 10. Hands not moved: with flat palms, any palm closer than 7 cm ahead of the shoulder pushes the wrist past the -95 deg limit (an approved push-up lead decision) and the arm solve breaks. The 7 cm is the palm centre, though. The wrist joint is 5 cm behind the shoulder, so the shoulder is directly over the hand and the cue 'hands under your shoulders' holds. The test asserts wrist behind and palm ahead of the shoulder, so no cue change. Remaining: the 4.5 cm knee hover is still hard to see in the hero frames. I left the camera alone (bear_plank -72/0.14): a low view is what shows a floor gap, and raising it is optional per the reviewer. QA passes, bake is fresh."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. needs work: In a static hold the elbows go 5.2 → 22.2 → 5.2 deg and the chest (front_rack) drops 20 mm (0.557 → 0.537) every loop while the hips stay fixed. That reads as a small push-up bob, where 804 varies the elbows only 0.5 deg. Hands are also 7 cm ahead of the shoulders, against the cue 'hands under your shoulders'. The 4.5 cm knee hover is accurate but hard to see. | minor: The breath is out of the arm chain. holdShoulder counter-flexes the thorax each frame so the shoulder-to-palm distance stays at its braced value (measured on a fresh pose, which fixed a first attempt that pinned the elbows at 1 deg). Elbows are a constant 5.2 deg on both sides (they were 5.2 to 22.2), and the lumbar/clavicle breath still shows in the angle plot. New test: elbow range under 2 deg and max under 10. Hands not moved: with flat palms, any palm closer than 7 cm ahead of the shoulder pushes the wrist past the -95 deg limit (an approved push-up lead decision) and the arm solve breaks. The 7 cm is the palm centre, though. The wrist joint is 5 cm behind the shoulder, so the shoulder is directly over the hand and the cue 'hands under your shoulders' holds. The test asserts wrist behind and palm ahead of the shoulder, so no cue change. Remaining: the 4.5 cm knee hover is still hard to see in the hero frames. I left the camera alone (bear_plank -72/0.14): a low view is what shows a floor gap, and raising it is optional per the reviewer. QA passes, bake is fresh."
   }
 }

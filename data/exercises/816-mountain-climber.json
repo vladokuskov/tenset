@@ -37,7 +37,7 @@
     826
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "floor-core",
     "params": {
       "kind": "mountain_climber"
@@ -58,7 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3c 2026-10-09: rated minor, owner review. needs work: Both primaries (abs, hip flexors) face the mat and the camera is at elev 0.3, so the pulse barely shows. hold.ts already handles this for front_plank ('the abs face the floor, so a low view... shows them', elev 0.1). The default 3.7 s loop for a single knee drive is also very slow for a mountain climber (2 s eccentric). The motion itself is fine: knee drive to hip 100 / knee 126 deg, hips +7 cm. | minor: Changed: the mountain climber now has its own camera branch in scenes/floor-core.ts, { az: -60, elev: 0.1 } (the front_plank precedent), instead of sharing bird dog's -65/0.3. Added a template-own CLIMBER_TEMPO [0.8, 0, 0.8, 0.1] (1.7 s) in floor-core/climber.ts, used when params.tempo is unset (the swing precedent). It still needs a lead decision. The reviewer's ~[0.6, 0, 0.5, 0.1] failed the flip gates: knee_r acceleration 4563 > 4000 and ankle_r.df jerk 95850 > 60000. 1.5 s still failed ankle jerk at 60480, and C2 easing on the foot turn made it worse (110k), so I reverted that easing. Re-baked; QA passes; fresh. Remaining: the loop runs at 1.7 s vs 3.7 s before, which is quicker but still slower than a real climber (~0.5 s a drive). The motion gates cap it there unless someone smooths the ankle path. The low view helps only a little. I also tried elev 0.04: the abs and hip flexors face the mat, so the pulse is still only a thin red strip under the trunk, the same as the front_plank precedent."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3c 2026-10-09: rated minor, owner review. needs work: Both primaries (abs, hip flexors) face the mat and the camera is at elev 0.3, so the pulse barely shows. hold.ts already handles this for front_plank ('the abs face the floor, so a low view... shows them', elev 0.1). The default 3.7 s loop for a single knee drive is also very slow for a mountain climber (2 s eccentric). The motion itself is fine: knee drive to hip 100 / knee 126 deg, hips +7 cm. | minor: Changed: the mountain climber now has its own camera branch in scenes/floor-core.ts, { az: -60, elev: 0.1 } (the front_plank precedent), instead of sharing bird dog's -65/0.3. Added a template-own CLIMBER_TEMPO [0.8, 0, 0.8, 0.1] (1.7 s) in floor-core/climber.ts, used when params.tempo is unset (the swing precedent). It still needs a lead decision. The reviewer's ~[0.6, 0, 0.5, 0.1] failed the flip gates: knee_r acceleration 4563 > 4000 and ankle_r.df jerk 95850 > 60000. 1.5 s still failed ankle jerk at 60480, and C2 easing on the foot turn made it worse (110k), so I reverted that easing. Re-baked; QA passes; fresh. Remaining: the loop runs at 1.7 s vs 3.7 s before, which is quicker but still slower than a real climber (~0.5 s a drive). The motion gates cap it there unless someone smooths the ankle path. The low view helps only a little. I also tried elev 0.04: the abs and hip flexors face the mat, so the pulse is still only a thin red strip under the trunk, the same as the front_plank precedent."
   }
 }

@@ -30,7 +30,7 @@
     236
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "front-raise",
     "params": {
       "implement": "plate",
@@ -56,7 +56,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: Bottom of the rep: the plate is tipped 59 deg (quat x 0.493), close to a tray. The arms stop at elevation 25 with the rims at y 0.81 m and z 0.22, about 20 cm in front of the thighs, so 'lower slowly back to your thighs' never happens. The wrists use only -9 to +12 deg of deviation. The fingers also need a 22 mm rest-tolerance override, and the forward balance runs at 30.2 of 35 mm. The top is fine: plate centre at 1.66 m (eye level), elbow 5-15. | minor: Fixed in front-raise.ts, plate branch only. plateTilt now keeps 0.45 x (90 - elev) - 12 (was 90 - elev - 8). A new eased rim obliquity (GripTarget.oblique, 0 -> 40 deg between elevation 100 and 15) takes the rest of the turn, so the wrists don't hit their band corner. A first try without the easing gave a 78k deg/s3 wrist jerk. devBand is widened to [-22, 18] (limit 20) and thighClear goes from 12 to 4 mm. Bottom: elevation 14, plate tilt about 23 deg (was 59), plate centre y 0.78 / z 0.14 (was 0.81 / 0.22), plate-to-thigh gap 20 mm. Wrist dev now runs -9 to +18. Top unchanged (plate centre 1.66 m). QA passes (jerk 20k on the elbow, balance 30.0 of 35 mm, finger rest still 12.5 mm inside the 22 mm tolerance). The side sheet shows the plate hanging near upright in front of the thighs. What's left: the rim crosses the palm at about 46 deg at the bottom, so the hand reads as a diagonal rim grip rather than a pure fist-round-rim. Forward balance stays at 30 of 35 mm. The 22 mm rest tolerance is unchanged (lead's call)."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. needs work: Bottom of the rep: the plate is tipped 59 deg (quat x 0.493), close to a tray. The arms stop at elevation 25 with the rims at y 0.81 m and z 0.22, about 20 cm in front of the thighs, so 'lower slowly back to your thighs' never happens. The wrists use only -9 to +12 deg of deviation. The fingers also need a 22 mm rest-tolerance override, and the forward balance runs at 30.2 of 35 mm. The top is fine: plate centre at 1.66 m (eye level), elbow 5-15. | minor: Fixed in front-raise.ts, plate branch only. plateTilt now keeps 0.45 x (90 - elev) - 12 (was 90 - elev - 8). A new eased rim obliquity (GripTarget.oblique, 0 -> 40 deg between elevation 100 and 15) takes the rest of the turn, so the wrists don't hit their band corner. A first try without the easing gave a 78k deg/s3 wrist jerk. devBand is widened to [-22, 18] (limit 20) and thighClear goes from 12 to 4 mm. Bottom: elevation 14, plate tilt about 23 deg (was 59), plate centre y 0.78 / z 0.14 (was 0.81 / 0.22), plate-to-thigh gap 20 mm. Wrist dev now runs -9 to +18. Top unchanged (plate centre 1.66 m). QA passes (jerk 20k on the elbow, balance 30.0 of 35 mm, finger rest still 12.5 mm inside the 22 mm tolerance). The side sheet shows the plate hanging near upright in front of the thighs. What's left: the rim crosses the palm at about 46 deg at the bottom, so the hand reads as a diagonal rim grip rather than a pure fist-round-rim. Forward balance stays at 30 of 35 mm. The 22 mm rest tolerance is unchanged (lead's call)."
   }
 }

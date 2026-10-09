@@ -37,7 +37,7 @@
     712
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "curl",
     "params": {
       "implement": "cable",
@@ -63,7 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Pulleys at y 1.48 m, x ±1.2. Shoulder elevation holds 88 and rotation -88 with elbow 10 to 125. The hands go from x -0.915/y 1.60 to beside the ears (x -0.32, y 1.78), and the stacks lift correctly at the top. The figure is small between the towers and the ankles are locked (sway follow 0), which are owner calls."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. minor: Pulleys at y 1.48 m, x ±1.2. Shoulder elevation holds 88 and rotation -88 with elbow 10 to 125. The hands go from x -0.915/y 1.60 to beside the ears (x -0.32, y 1.78), and the stacks lift correctly at the top. The figure is small between the towers and the ankles are locked (sway follow 0), which are owner calls."
   }
 }

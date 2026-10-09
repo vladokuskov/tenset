@@ -36,7 +36,7 @@
     713
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "curl",
     "params": {
       "implement": "barbell",
@@ -61,7 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Reads as a drag curl. Elbow goes 12 to 115, shoulder extension reaches 42, the bar holds z 108 to 120 mm the whole way and tops out at y 1144 (200 mm below the sternum), with a 5 mm minimum trunk clearance. Cue 1 says 'about shoulder width', but gripWidth 1.25 puts the hands at x ±284 mm (57 cm apart). wrist dev reaches -25 to keep the hands on the bar."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. minor: Reads as a drag curl. Elbow goes 12 to 115, shoulder extension reaches 42, the bar holds z 108 to 120 mm the whole way and tops out at y 1144 (200 mm below the sternum), with a 5 mm minimum trunk clearance. Cue 1 says 'about shoulder width', but gripWidth 1.25 puts the hands at x ±284 mm (57 cm apart). wrist dev reaches -25 to keep the hands on the bar."
   }
 }

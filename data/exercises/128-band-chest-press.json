@@ -39,7 +39,7 @@
     107
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "horizontal-press",
     "params": {
       "implement": "band",
@@ -63,7 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: It uses the same pressArms as 124 (identical ROM), so it has the same defects: hands rise to 11 cm above the shoulders mid-descent, and at the bottom they are 18 cm outside the shoulders, not at the chest. The band strip also goes through the arms. The ring-to-side-node segment passes 15 mm from the humerus axis at lockout (51 mm inside the 66 mm upper-arm capsule) and 0 mm at u 0.14. It passes 0 mm from the forearm axis at u 0.74. The side sheet shows the strip vanishing into the upper arm at lockout. | minor: Uses the new 124 arm path: straight level line, hands at the chest at the bottom, 17 cm apart at lockout. The band now has two nodes per side (arm_, side_), checked against the arm capsules every frame. The arm node sits on the straight run and blends smoothly (based on the run's clearance) to a point 6.5 cm under the elbow. The side node starts at the chest side and drops only as far as the capsules need. All strip runs clear the upper arm and forearm by at least 6 mm every frame (unit test). The worst is 0 mm to the palm right at the ring. No node jumps: per-frame steps track hand speed. Remaining: mid-rep the elbows drop to about 1.12 m, so the strip makes a visible V under each elbow, 8-11 cm below the joint centre. It does not penetrate, but a taut band would probably press against the arm instead. 9.6 KB."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. needs work: It uses the same pressArms as 124 (identical ROM), so it has the same defects: hands rise to 11 cm above the shoulders mid-descent, and at the bottom they are 18 cm outside the shoulders, not at the chest. The band strip also goes through the arms. The ring-to-side-node segment passes 15 mm from the humerus axis at lockout (51 mm inside the 66 mm upper-arm capsule) and 0 mm at u 0.14. It passes 0 mm from the forearm axis at u 0.74. The side sheet shows the strip vanishing into the upper arm at lockout. | minor: Uses the new 124 arm path: straight level line, hands at the chest at the bottom, 17 cm apart at lockout. The band now has two nodes per side (arm_, side_), checked against the arm capsules every frame. The arm node sits on the straight run and blends smoothly (based on the run's clearance) to a point 6.5 cm under the elbow. The side node starts at the chest side and drops only as far as the capsules need. All strip runs clear the upper arm and forearm by at least 6 mm every frame (unit test). The worst is 0 mm to the palm right at the ring. No node jumps: per-frame steps track hand speed. Remaining: mid-rep the elbows drop to about 1.12 m, so the strip makes a visible V under each elbow, 8-11 cm below the joint centre. It does not penetrate, but a taut band would probably press against the arm instead. 9.6 KB."
   }
 }

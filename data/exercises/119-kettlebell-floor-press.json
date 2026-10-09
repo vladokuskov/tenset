@@ -38,7 +38,7 @@
     128
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "horizontal-press",
     "params": {
       "implement": "kettlebell",
@@ -62,7 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The bell sits on the back of the forearm with the handle closed in the palm (forearm/kb sink 3.1 mm, tol 8) and pronation runs -59 to -45 (neutral). The close-ups look right. The only issue is cost: the bake takes ~156 s in QA, so still.ts --live times out at 90 s and the sheet had to come from the shipped bake. The owner should know before any re-bake."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. minor: The bell sits on the back of the forearm with the handle closed in the palm (forearm/kb sink 3.1 mm, tol 8) and pronation runs -59 to -45 (neutral). The close-ups look right. The only issue is cost: the bake takes ~156 s in QA, so still.ts --live times out at 90 s and the sheet had to come from the shipped bake. The owner should know before any re-bake."
   }
 }

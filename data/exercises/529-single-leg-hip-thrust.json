@@ -39,7 +39,7 @@
     531
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hip-thrust",
     "params": {
       "implement": "bodyweight",
@@ -63,7 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The working leg matches 502 exactly (hip -4 to 75, knee 91-112), and the free leg is held at hip 95 / knee 90 relative to the pelvis. Only the working foot is planted. The crossed arms bring the fingers to the chin and mouth in every frame of both sheets, which reads oddly; the owner should judge it. Glutes face the floor, so the side camera shows only a sliver of the primary, the same limitation as the bench parent."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3b 2026-10-09: rated minor, owner review. minor: The working leg matches 502 exactly (hip -4 to 75, knee 91-112), and the free leg is held at hip 95 / knee 90 relative to the pelvis. Only the working foot is planted. The crossed arms bring the fingers to the chin and mouth in every frame of both sheets, which reads oddly; the owner should judge it. Glutes face the floor, so the side camera shows only a sliver of the primary, the same limitation as the bench parent."
   }
 }

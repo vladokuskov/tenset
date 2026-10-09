@@ -37,7 +37,7 @@
     401
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "machine",
@@ -59,7 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending",
-    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Fixed: in stations.ts buildPendulumArm the counter-lever is gone. The load now hangs from a cross member halfway along the side beams on the pad side of the pivot, with a loaded horn out from each beam, so the plates go down with the pads (about 3-4 cm in the side sheet). In variants.ts the bottom is now set by depth, not knee angle: PEND_BELOW is { quarter: -0.25, parallel: 0, full: 0.04 } m of hip joint below the knee, found by root search on the swing. The 'shallower' knee target is removed. Bottom now: knee 109, hip 100, ankle df 29, hip joint 40 mm below the knee (658 vs 698). It was 108 / 95 / 32 with the hip 10 mm below. qa.ts --only 414 passes, rebaked, and the variants.test pendulum case now asserts the hip is more than 35 mm below the knee. Remaining: (1) The pivot is still 1.0 m behind and 15 deg below the shoulder line, so it can still read as a lever squat. I swept a pivot level with or above the shoulders: it stops the knee at about 96-102 (pitch 0) or about 73 (pitch +10) with the shins near vertical, so I kept -15 and wrote that reason in the PEND comment. If the owner wants the classic overhead pivot, depth or knee travel will suffer. (2) In the hero view the plates sit fairly close to the rear tower and travel only a few cm, because they are on the inner half of the arm. (3) The hands still hang to the hip-height side handles (earlier lead decision). verify-posters was not run. The prop change only affects the pendulum_arm layout, which no approved loop uses."
+    "motion": "approved",
+    "note": "Approved by the owner 2026-10-09 (bulk approval of waves 3b and 3c). Earlier findings, kept for follow-up: Wave 3c 2026-10-09: rated minor, owner review. minor: Fixed: in stations.ts buildPendulumArm the counter-lever is gone. The load now hangs from a cross member halfway along the side beams on the pad side of the pivot, with a loaded horn out from each beam, so the plates go down with the pads (about 3-4 cm in the side sheet). In variants.ts the bottom is now set by depth, not knee angle: PEND_BELOW is { quarter: -0.25, parallel: 0, full: 0.04 } m of hip joint below the knee, found by root search on the swing. The 'shallower' knee target is removed. Bottom now: knee 109, hip 100, ankle df 29, hip joint 40 mm below the knee (658 vs 698). It was 108 / 95 / 32 with the hip 10 mm below. qa.ts --only 414 passes, rebaked, and the variants.test pendulum case now asserts the hip is more than 35 mm below the knee. Remaining: (1) The pivot is still 1.0 m behind and 15 deg below the shoulder line, so it can still read as a lever squat. I swept a pivot level with or above the shoulders: it stops the knee at about 96-102 (pitch 0) or about 73 (pitch +10) with the shins near vertical, so I kept -15 and wrote that reason in the PEND comment. If the owner wants the classic overhead pivot, depth or knee travel will suffer. (2) In the hero view the plates sit fairly close to the rear tower and travel only a few cm, because they are on the inner half of the arm. (3) The hands still hang to the hip-height side handles (earlier lead decision). verify-posters was not run. The prop change only affects the pendulum_arm layout, which no approved loop uses."
   }
 }

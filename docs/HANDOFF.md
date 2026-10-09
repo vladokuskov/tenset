@@ -14,6 +14,7 @@ Tenset (repo `gym-builder`): no-backend, phone-first PWA for planning a weekly g
 - The owner delegated decisions: accept the recommended option and record it in docs/PLAN.md.
 
 ## State
+- 2026-10-09: the owner approved every pending loop from waves 3b and 3c, so 295 of 300 exercises are animated and live. The 5 cards are 316, 427, 532, 535 and 730.
 - Wave 3c (2026-10-09, branch feat/motion-3c): 66 more animated (295 of 300). 30 approved, 36 pending owner review on /dev/review. Cards left: 316, 427, 532, 535, 730.
 - Wave 3b (2026-10-09, branch feat/motion-3b): 75 more animated (229 of 300). 34 are approved and live, and 41 are pending owner review on /dev/review. The remaining 71 cards are 13 3a leftovers needing props, 4 3b deferrals and the 54 tier-C exercises.
 - Wave 3a (2026-10-08, branch feat/motion-3a): 48 of the 65 tier-A v2 exercises animated, so 154 of 300 have motion. All 48 are approved and live: 19 rated ok by the review, plus 29 rated minor that the owner approved in bulk. The findings stay in each qa.note. The other 146 are still cards: 17 deferred from tier A plus all of B and C (see PLAN.md "Wave 3a").
