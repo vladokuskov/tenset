@@ -17,7 +17,7 @@ import { SORT_LABEL } from '../dnd'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './board'
 import { desktopMessages } from './messages'
 
-const STRIP = 'sticky top-[calc(var(--safe-top)+4rem)] h-[calc(100dvh-var(--safe-top)-5rem)] rounded-xl bg-surface'
+const STRIP = 'min-h-0 rounded-xl bg-surface'
 
 // Pointer only, with the library's click-safe defaults: the "+" buttons are the keyboard path.
 const sensors = [PointerSensor]

@@ -4,15 +4,21 @@ import { cx } from './cx'
 export type PageProps = {
   /** narrow: phone column, max 640px. wide: desktop layouts such as the week board. */
   width?: 'narrow' | 'wide'
+  /** Exactly one screen tall: children share the height and scroll inside themselves (desktop week board). */
+  fit?: boolean
   children: ReactNode
   className?: string
 }
 
 /** Screen wrapper: sets the content width and leaves room for the tab bar and sticky actions. */
-export function Page({ width = 'narrow', children, className }: PageProps) {
+export function Page({ width = 'narrow', fit, children, className }: PageProps) {
   const style = width === 'wide' ? ({ '--page-max': '90rem' } as CSSProperties) : undefined
   return (
-    <div className={cx('min-h-dvh pb-chrome', className)} style={style} data-width={width}>
+    <div
+      className={cx(fit ? 'flex h-dvh min-h-[36rem] flex-col pb-[calc(var(--chrome-bottom)+1rem)]' : 'min-h-dvh pb-chrome', className)}
+      style={style}
+      data-width={width}
+    >
       {children}
     </div>
   )

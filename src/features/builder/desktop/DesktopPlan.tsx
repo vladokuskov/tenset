@@ -23,7 +23,8 @@ export const BOARD_QUERY = '(min-width: 64rem)'
 // Width at which drawer, board and map panel all fit with readable columns; the drawer starts open here.
 const ROOMY_QUERY = '(min-width: 106rem)'
 const DRAWER_KEY = 'gb:desk-drawer'
-const STICKY = 'sticky top-[calc(var(--safe-top)+4rem)] self-start'
+// The page is one screen tall; the board row takes what the header leaves and its parts scroll inside.
+const FILL = 'flex min-h-0 flex-1 flex-col'
 
 function readDrawer(): boolean | null {
   try {
@@ -126,9 +127,9 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
 
   if (!wide) {
     return (
-      <Page width="wide">
+      <Page width="wide" fit>
         {header}
-        <PageBody>
+        <PageBody className={FILL}>
           <InstallNudge className="mb-4" />
           <WeekBoard view={view} onAdd={onAdd} onHover={onEntryHover} highlight={highlight} />
         </PageBody>
@@ -155,12 +156,12 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
   )
 
   return (
-    <Page width="wide">
-      <div style={{ '--page-max': '120rem' } as CSSProperties}>
+    <Page width="wide" fit>
+      <div className={FILL} style={{ '--page-max': '120rem' } as CSSProperties}>
         {header}
-        <PageBody>
+        <PageBody className={FILL}>
           <InstallNudge className="mb-4" />
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_19rem] items-start gap-4 min-[120rem]:grid-cols-[auto_minmax(0,1fr)_25rem]">
+          <div className="grid min-h-0 flex-1 grid-cols-[auto_minmax(0,1fr)_19rem] gap-4 min-[120rem]:grid-cols-[auto_minmax(0,1fr)_25rem]">
             <WeekBoard
               view={view}
               onAdd={onAdd}
@@ -170,10 +171,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
               onDropExercise={drawerOpen ? add : undefined}
               onDragExercise={onDragExercise}
             />
-            <aside
-              aria-label={m.weekMap}
-              className={`${STICKY} max-h-[calc(100dvh-var(--safe-top)-5rem)] overflow-y-auto overscroll-contain`}
-            >
+            <aside aria-label={m.weekMap} className="scrollbar-thin min-h-0 overflow-y-auto overscroll-contain rounded-xl">
               {panel}
             </aside>
           </div>
