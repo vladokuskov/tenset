@@ -23,13 +23,16 @@
   "groups": {
     "hip_flexors": "primary",
     "abs": "primary",
-    "obliques": "secondary"
+    "obliques": "secondary",
+    "quads": "secondary"
   },
   "heads": {
-    "transversus_abdominis": 0.5
+    "transversus_abdominis": 0.5,
+    "vastus_lateralis": 0.5,
+    "vastus_medialis": 0.5,
+    "vastus_intermedius": 0.5
   },
   "stabilizers": [
-    "quads",
     "triceps",
     "lats",
     "upper_back"

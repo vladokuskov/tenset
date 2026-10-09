@@ -13,7 +13,8 @@ import type { Setup } from '../types.ts'
 // Waiter curl (730): one dumbbell held upright by its top head, both palms cupped under the plate side by side (the
 // goblet hold), elbows at the sides. A symmetric reference arm (palms up, upper arm hanging, drifting forward near the
 // top) sets the height and reach of the hands; the dumbbell stays vertical on the midline with its cups there and both
-// arms are solved onto it. The rep runs from where the lower head clears the thighs to where it would reach the chest.
+// arms are solved onto it. The rep runs from where the lower head clears the thighs (the bell held a little forward,
+// tipping with the forearms below LEAN.from) to where it would reach the chest.
 
 type P = ParamsOf<'curl'>
 
@@ -24,13 +25,19 @@ const WAITER = {
   /** the dumbbell's lower head keeps this far off the thighs at the bottom and off the chest and chin at the top, m */
   thighs: 0.012,
   chest: 0.015,
-  elbow: { min: 64, max: 135 },
+  elbow: { min: 30, max: 135 },
   drift: 10,
-  /** upper arms forward at the bottom, deg: the forearms converge on the dumbbell in front of the belly, not on it */
-  lean: 4,
+  /**
+   * upper arms forward at the bottom, deg: the bell is held a little forward, so its lower head clears the thighs with
+   * the elbows at ~39 (at 4 the rep stopped at ~73) and the arms converge on it in front of the belly, not through it.
+   * 25 keeps the upper arms ~7 mm inside ARMS_TOL against the chest at the bottom (at 20 they were within 3 mm)
+   */
+  lean: 25,
   /** elbows' pole: out and back from straight down (thorax frame) */
   pole: [1.5, -1, -0.5] as V3,
 }
+/** trunk / upper arm allowance at the bottom, mm (the default is 20) */
+const ARMS_TOL = 30
 /** goblet cup in the dumbbell frame (X up the handle, Y forward, Z left): squat.ts GOBLET, so the hands match */
 const CUP = { at: [0.033, 0.03, 0.06] as V3, fingers: [0, 1, -0.4] as V3, palm: [1, 0, -0.3] as V3 }
 /** forearm angle below level past which the dumbbell tips forward with it, and the blend width, deg */
@@ -135,6 +142,10 @@ export function waiterContext(_p: P, skel: Skeleton, tempo: Tempo): Waiter {
     balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
     // the palms press up under the top head
     rests: [{ implement: 'db', regions: ['hand_l', 'hand_r'], tol: 15 }],
+    // both hands meet on the midline with the arms long at the bottom, so the upper arms press on the sides of the chest
+    // (22-29 mm into the capsules; the right upper arm's capsule already overlaps the chest's 8 mm standing relaxed, the
+    // left's does not, the capsule fit is not mirror-exact); the 421 two-hand hang allowance (squat.ts HANG.chest)
+    tolerances: { body: Object.fromEntries(['trunk / upperarm_l', 'trunk / upperarm_r', 'trunk / upperarm_l (thorax2)', 'trunk / upperarm_r (thorax2)'].map((k) => [k, ARMS_TOL])) },
   }
   const v: Waiter = { tempo, setup, stance, db, elbow: [WAITER.elbow.min, WAITER.elbow.max] }
   // bottom: the lower head clear of the thighs; top: the heads short of the chest, neck and chin

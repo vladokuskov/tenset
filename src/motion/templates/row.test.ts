@@ -48,7 +48,7 @@ function range(b: Baked, fn: (i: number) => number) {
 
 describe('row template', () => {
   it('covers every row record', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([206, 229, 304, 305, 306, 307, 312, 313, 315, 317, 318, 319, 320, 321, 322, 323, 324, 338, 339, 340])
+    expect(variants.map((v) => v.id).sort()).toEqual([206, 229, 304, 305, 306, 307, 312, 313, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 338, 339, 340])
   })
 
   it.each([...baked.keys()])('%s: finite frames, hands on the load, planted feet still, loop closes', (slug) => {
@@ -243,6 +243,25 @@ describe('row template', () => {
     const f0 = fk(skel, frameQ(b, at(b, BOTTOM)))
     expect(sitePos(skel, f0, 'grip_l')[2]).toBeGreaterThan(segPos(skel, f0, 'humerus_l')[2] + 0.35)
     expect(dof(b, BOTTOM, 'elbow_*.flex')).toBeLessThan(15)
+  })
+
+  it('T-bar row (316): straddling the landmine bar, the V-handle rowed to the lower chest with the elbows past ~110 and level with the trunk', () => {
+    const b = get(316)
+    const k = b.implements.findIndex((s) => s.kind === 'landmine_bar')
+    const handle = (u: number) => siteWorld(b.implements[k], frameImplements(b, at(b, u))[k], 'v_l').pos
+    // the handle rises well up from the hang and drifts back on the bar's arc
+    expect(handle(TOP)[1] - handle(BOTTOM)[1]).toBeGreaterThan(0.2)
+    expect(handle(BOTTOM)[2] - handle(TOP)[2]).toBeGreaterThan(0.05)
+    // the finish: elbow past 105, the upper arm along the trunk line (not in front of it), the hands under the chest
+    const ft = fk(skel, frameQ(b, at(b, TOP)))
+    const hum = qrot(qconj(ft.rot[skel.seg.thorax2]), norm(sub(segPos(skel, ft, 'forearm_l'), segPos(skel, ft, 'humerus_l'))))
+    expect(dof(b, TOP, 'elbow_*.flex')).toBeGreaterThan(105)
+    expect(hum[2]).toBeLessThan(0.2)
+    const sh = segPos(skel, ft, 'humerus_l'), g = sitePos(skel, ft, 'grip_l')
+    expect(sh[1] - g[1]).toBeLessThan(0.42)
+    // the trunk stays hinged at torsoAngle (45)
+    expect(Math.abs(trunkAngle(b, at(b, BOTTOM)) - 45)).toBeLessThan(6)
+    expect(Math.abs(trunkAngle(b, at(b, TOP)) - 45)).toBeLessThan(6)
   })
 
   it('Meadows row (317): staggered stance, the free hand on the front thigh, the sleeve rowed up beside the hip', () => {

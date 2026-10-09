@@ -49,6 +49,7 @@
     "Keep your hips stacked instead of rolling back"
   ],
   "basis": [
+    "distefano-2009",
     "anatomy-general"
   ],
   "confidence": "medium",

@@ -184,7 +184,8 @@ export type LandmineHandle = 'none' | 'v'
  * - `end` / `end_in`: one hand round the free sleeve 7 cm from its tip, axis +X / -X (index towards the tip / the pivot)
  * - `cup_l` / `cup_r`: both hands cupped round the tip (the composer gives a goblet hand), sides named for the press
  *   pose (local +X towards the lifter: yaw 180, so local +Z is the lifter's left)
- * - with `handle: 'v'`: `v_l` / `v_r`, a close-grip V-handle hooked under the shaft by the plates, handles along the bar
+ * - with `handle: 'v'`: `v_l` / `v_r`, a close-grip V-handle hooked under the shaft about 20 cm inside the free end's
+ *   inner collar (LANDMINE_V.inset), handles along the bar
  *   (neutral grip, axis +X), sides named for the row pose (bar running forward from the pivot behind: yaw 0, so local -Z
  *   is the lifter's left)
  * - `tip` (centre of the sleeve end face, normal +X)
@@ -220,8 +221,10 @@ export function landmineBar(o: { id?: string; plateKg?: number; handle?: Landmin
 }
 
 /** close-grip V-handle under the landmine bar: inset from the free end's inner collar, strut length, drop to the grips,
- * half spacing, grip half length and radius, frame radius */
-export const LANDMINE_V = { inset: 0.08, neck: 0.05, drop: 0.12, half: 0.06, grip: 0.06, gripR: 0.015, r: 0.012 }
+ * half spacing, grip half length and radius, frame radius. Hooked 20 cm inside the collar with a 9 cm drop (T-bar row,
+ * 316): nearer the plates or lower, the plates and shaft meet the chest with the elbows still ~90 deg and in front of
+ * the trunk */
+export const LANDMINE_V = { inset: 0.2, neck: 0.05, drop: 0.09, half: 0.06, grip: 0.06, gripR: 0.015, r: 0.012 }
 
 /**
  * Pose of a landmine bar pivoting at `pivot` (world): `yaw` deg about +Y with 0 = the bar running towards +Z (forward)

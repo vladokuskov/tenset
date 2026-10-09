@@ -1,7 +1,7 @@
 {
   "groups": {
     "free_weights": "Вільні ваги",
-    "benches_racks": "Лавки і стійки",
+    "benches_racks": "Лави і стійки",
     "bars_stations": "Турніки та станції",
     "upper_machines": "Блоки й тренажери для верху",
     "leg_machines": "Тренажери для ніг"
@@ -11,11 +11,11 @@
     "dumbbell": "Гантелі",
     "ez_bar": "EZ-гриф",
     "plate": "Млинець",
-    "flat_bench": "Горизонтальна лавка",
-    "adjustable_bench": "Регульована лавка",
+    "flat_bench": "Горизонтальна лава",
+    "adjustable_bench": "Регульована лава",
     "rack": "Стійки для присідань",
     "smith": "Тренажер Сміта",
-    "back_extension": "Лавка для гіперекстензії 45°",
+    "back_extension": "Лава для гіперекстензії 45°",
     "step": "Ящик або степ",
     "pullup_bar": "Турнік",
     "dip_station": "Бруси",
@@ -37,7 +37,7 @@
     "band": "Гумова стрічка",
     "trap_bar": "Трап-гриф",
     "landmine": "Лендмайн",
-    "preacher_bench": "Лавка Скотта",
+    "preacher_bench": "Лава Скотта",
     "rings": "Гімнастичні кільця",
     "ab_wheel": "Ролик для преса",
     "ghd": "Тренажер GHD",
@@ -50,7 +50,7 @@
     "full_gym": "Повний зал",
     "basic_gym": "Базовий зал",
     "home_gym": "Домашній зал",
-    "dumbbells_bench": "Гантелі + лавка",
+    "dumbbells_bench": "Гантелі + лава",
     "bodyweight": "Власна вага + дрібний інвентар"
   }
 }

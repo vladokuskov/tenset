@@ -82,8 +82,9 @@ describe('curl template', () => {
         waist = Math.min(waist, ...arms.flatMap((a) => trunk.map((t) => capsuleClearance(a, t) + Math.max(0, -restGap.get(`${a.name}/${t.name}`)!))))
       }
       expect(zHi - zLo, `${slug} hip travel`).toBeLessThan(0.05)
-      // soft contact only (the penetration gate allows 12 mm)
-      expect(waist, `${slug} upper arm into the waist`).toBeGreaterThan(-0.012)
+      // soft contact only (the penetration gate allows 12 mm; the waiter curl's two hands on one bell take the 421
+      // two-hand hang allowance, 30 mm)
+      expect(waist, `${slug} upper arm into the waist`).toBeGreaterThan(b.params.hold === 'two_hand' ? -0.03 : -0.012)
     }
   })
 
@@ -255,9 +256,8 @@ describe('curl template', () => {
     handsOn(b)
   })
 
-  it('waiter curl: one dumbbell upright in both palms on the midline, elbows at the sides', () => {
-    // 730 stays a card (its ROM stops short of straight arms), so the variant is baked from its params here
-    const b = bake(getTemplate('curl'), parseParams('curl', { implement: 'dumbbell', grip: 'supinated', hold: 'two_hand', posture: 'standing' }, 'bilateral'), skel)
+  it('waiter curl (730): one dumbbell upright in both palms on the midline, elbows near the sides, ~40 -> ~130', () => {
+    const b = get('730-waiter-curl')
     for (let i = 0; i < b.frames; i += 6) {
       const pose = frameImplements(b, i)[0]
       expect(Math.abs(pose.pos[0])).toBeLessThan(1e-6)
@@ -268,6 +268,16 @@ describe('curl template', () => {
     const up = 2 * (top.rot[0] * top.rot[1] + top.rot[2] * top.rot[3])
     expect(up).toBeGreaterThan(0.95)
     expect(dof(b, 0, 'elbow_l.flex')).toBeGreaterThan(120)
+    // the bottom: the bell held a little forward clears the thighs with the elbows at ~39 (not a half rep)
+    expect(dof(b, 0.625, 'elbow_l.flex')).toBeLessThan(45)
+    expect(dof(b, 0, 'elbow_l.flex') - dof(b, 0.625, 'elbow_l.flex')).toBeGreaterThan(85)
+    // the lower head stays off the thighs (the upper arms against the waist are checked with the standing curls)
+    for (let i = 0; i < b.frames; i += 3) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i)))
+      const heads = placeParts(b.implements[0], frameImplements(b, i)[0]).slice(1)
+      const thighs = caps.filter((c) => /^thigh_/.test(c.region))
+      expect(Math.min(...heads.flatMap((h) => thighs.map((t) => capsuleSolidClearance(t, h))))).toBeGreaterThan(0)
+    }
     handsOn(b)
   })
 

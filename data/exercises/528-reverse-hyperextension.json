@@ -22,7 +22,7 @@
   },
   "groups": {
     "glute_max": "primary",
-    "hamstrings": "secondary",
+    "hamstrings": "primary",
     "lower_back": "secondary"
   },
   "heads": {

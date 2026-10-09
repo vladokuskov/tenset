@@ -52,9 +52,10 @@
     "Return slowly without letting your torso turn"
   ],
   "basis": [
+    "reinold-2004",
     "anatomy-general"
   ],
-  "confidence": "medium",
+  "confidence": "high",
   "status": "active",
   "replacedBy": null,
   "qa": {

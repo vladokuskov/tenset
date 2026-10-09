@@ -254,7 +254,8 @@ function oneArmContext(p: P, skel: Skeleton, tempo: Tempo): BenchRow {
     { site: `grip_${free}`, kind: 'support', target: { implement: 'bench', grip: 'hand' } },
     { site: `grip_${work}`, kind: 'grip', target: { implement: db.id, grip: db.kind === 'kettlebell' ? 'handle' : 'c' } },
   ]
-  v.setup = { implements: [db, benchSpec], contacts, tempo, symmetric: false }
+  // the supporting palm rests on the pad
+  v.setup = { implements: [db, benchSpec], contacts, tempo, symmetric: false, rests: [{ implement: benchSpec.id, regions: [`hand_${free}`], tol: 15 }] }
   return v
 }
 

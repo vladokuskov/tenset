@@ -37,15 +37,20 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lunge",
+    "params": {
+      "implement": "bodyweight",
+      "hold": "hands",
+      "direction": "cossack",
+      "torsoAngle": 35
+    },
     "mapView": "F"
   },
   "cues": [
-    "Take a very wide stance with your toes slightly out",
+    "Take a very wide stance with your toes turned out",
     "Sink onto one leg as deep as your heel stays down",
     "Let the straight leg's toes point up",
-    "Shift across to the other side without standing up fully"
+    "Push back up to the middle and repeat on the other side"
   ],
   "basis": [
     "anatomy-general"
@@ -55,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Polish pass 2026-10-09: animated on retry, rated minor, owner review. See docs/PLAN.md \"Polish pass\" for the compromise."
   }
 }

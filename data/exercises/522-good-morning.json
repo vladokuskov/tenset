@@ -62,10 +62,9 @@
     "Squeeze your glutes and bring your hips through until you stand tall"
   ],
   "basis": [
-    "bourne-2017",
     "anatomy-general"
   ],
-  "confidence": "medium",
+  "confidence": "low",
   "status": "active",
   "replacedBy": null,
   "qa": {

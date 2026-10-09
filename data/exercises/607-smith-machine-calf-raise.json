@@ -24,10 +24,7 @@
   "groups": {
     "calves": "primary"
   },
-  "stabilizers": [
-    "abs",
-    "lower_back"
-  ],
+  "stabilizers": [],
   "alternatives": [
     612,
     601,

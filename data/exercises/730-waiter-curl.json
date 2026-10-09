@@ -37,15 +37,19 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "curl",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "two_hand",
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
     "Hold one dumbbell upright with both palms under the top plate",
-    "Keep your elbows close to your sides",
+    "Keep your upper arms close to your ribs",
     "Curl the dumbbell toward your chin, keeping it upright",
-    "Lower slowly to straight arms"
+    "Lower slowly until your forearms point down and forward"
   ],
   "basis": [
     "anatomy-general"
@@ -55,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Polish pass 2026-10-09: animated on retry, rated minor, owner review. See docs/PLAN.md \"Polish pass\" for the compromise."
   }
 }

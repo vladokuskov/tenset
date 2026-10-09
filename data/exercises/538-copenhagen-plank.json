@@ -51,6 +51,7 @@
     "Hold steady without letting your hips drop or rotate"
   ],
   "basis": [
+    "serner-2014",
     "anatomy-general"
   ],
   "confidence": "medium",

@@ -24,7 +24,7 @@
   },
   "groups": {
     "glute_max": "primary",
-    "hamstrings": "secondary",
+    "hamstrings": "primary",
     "adductors": "secondary",
     "lower_back": "secondary"
   },

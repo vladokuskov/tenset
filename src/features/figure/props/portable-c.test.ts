@@ -157,8 +157,8 @@ describe('tier C portable implements', () => {
     for (const s of ['end', 'end_in', 'v_l', 'v_r']) expectHandleSite(bar, s)
     expect(nearestAxis(bar, bar.sites.cup_l.pos).d).toBeLessThan(0.04)
     // the V-handle sits under the shaft, inside the free end's collar
-    expect(bar.sites.v_l.pos[1]).toBeLessThan(-0.1)
-    expect(bar.sites.v_l.pos[0]).toBeLessThan(plates[0].a[0] - 0.05)
+    expect(bar.sites.v_l.pos[1]).toBeLessThan(-0.08)
+    expect(bar.sites.v_l.pos[0]).toBeLessThan(plates[0].a[0] - 0.15)
     expect(landmineBar().sites.v_l).toBeUndefined()
     // rigid about the pivot: every site keeps its distance from the pivot in any pose
     const pivot: V3 = [0.3, LANDMINE.pivot, -1]

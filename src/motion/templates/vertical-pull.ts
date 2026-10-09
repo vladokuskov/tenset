@@ -460,6 +460,8 @@ function seatedContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     contacts.push({ site: name, kind: 'planted', target: { world: add(f.ankle, qrot(f.rot, skel.data.sites[name].local)) } })
   }
   const setup: Setup = { implements: [spec, frame], contacts, tempo, symmetric: p.laterality === 'bilateral' }
+  // the free palm rests on the thigh pad roller
+  if (single) setup.rests = [{ implement: 'station', regions: [`hand_${single === 'l' ? 'r' : 'l'}`], tol: 15 }]
   return { tempo, setup, v: { kind: 'seated', handle: spec, ...base, top, bottom, pulley, single, rest } }
 }
 
