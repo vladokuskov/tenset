@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules, capsuleSolidClearance, placeParts } from '../collide.ts'
+import { bodyCapsules, capsuleSolidClearance, placeParts, segmentDistance } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, qrot, RAD } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
+import { armElevation } from './press-body.ts'
 import { _pushUp, pushUp } from './push-up.ts'
 import { SCHEMAS } from './schemas.ts'
 import type { AnyTemplate } from './types.ts'
@@ -26,10 +27,10 @@ const KNEES = /^(shank_[lr]1|thigh_[lr][23])/
 
 describe('push-up template', () => {
   it('covers every record of the template', () => {
-    expect([...baked.keys()].sort()).toEqual([106, 113, 114, 115, 134])
+    expect([...baked.keys()].sort()).toEqual([106, 113, 114, 115, 125, 134, 223, 732])
   })
 
-  it.each([...baked.keys()])('%s: elbow ~6 at the top to the chest a fist above the support, plank rigid', (id) => {
+  it.each([...baked.keys()].filter((id) => !baked.get(id)!.params.pike))('%s: elbow ~6 at the top to the chest a fist above the support, plank rigid', (id) => {
     const b = baked.get(id)!
     expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
     expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(75)
@@ -69,7 +70,9 @@ describe('push-up template', () => {
         expect(dist(sitePos(skel, f, c.site), target), `${c.site} @${i}`).toBeLessThan(0.005)
       }
       const n = qrot(f.rot[skel.seg.hand_l], skel.data.sites.grip_l.normal!)
-      expect(Math.acos(-n[1]) * RAD, `palm tilt @${i}`).toBeLessThan(15)
+      // diamond: the turned-in hands tip up to ~25 deg at the bottom (the forearms lean out to the tucked elbows and the
+      // rig's pronation runs out at 85)
+      expect(Math.acos(-n[1]) * RAD, `palm tilt @${i}`).toBeLessThan((b.params.gripWidth as number) < 0.5 ? 26 : 15)
       const w = q[skel.dof['wrist_l.flex']]
       expect(w).toBeGreaterThanOrEqual(lo - 0.5)
       expect(w).toBeLessThanOrEqual(hi + 0.5)
@@ -88,7 +91,8 @@ describe('push-up template', () => {
       for (const c of caps) floor = Math.min(floor, Math.min(c.a[1], c.b[1]) - c.r)
       if (box >= 0) for (const s of placeParts(b.implements[box], frameImplements(b, i)[box])) for (const c of caps) prop = Math.min(prop, capsuleSolidClearance(c, s))
     }
-    expect(floor).toBeGreaterThan(0.003)
+    // diamond: the wrist end of the forearm passes ~1 mm over the floor on the way down (the hand flat, turned in)
+    expect(floor).toBeGreaterThan((b.params.gripWidth as number) < 0.5 ? 0.001 : 0.003)
     if (box >= 0) expect(prop).toBeGreaterThan(0.003)
     expect(b.tolerances?.floor).toBeLessThanOrEqual(65)
   })
@@ -168,7 +172,77 @@ describe('push-up template', () => {
     expect(pitch(b, TOP)).toBeGreaterThan(pitch(baked.get(113)!, TOP) + 10)
   })
 
+  it('diamond (732): the hands together under the chest, fingers turned in, the chest lowered to just over them', () => {
+    const b = baked.get(732)!
+    const f = fk(skel, frameQ(b, at(b, BOTTOM)))
+    const [l, r] = [sitePos(skel, f, 'grip_l'), sitePos(skel, f, 'grip_r')]
+    expect(dist(l, r)).toBeLessThan(0.2)
+    // the left hand's fingers point forward and in (towards -X)
+    const fingers = qrot(f.rot[skel.seg.hand_l], [0, -1, 0])
+    expect(fingers[0]).toBeLessThan(-0.3)
+    // under the chest: the hands sit between the shoulders, about on the shoulder line
+    expect(Math.abs(l[0])).toBeLessThan(skel.data.shoulderWidth / 2 - 0.08)
+    expect(Math.abs(l[2] - segPos(skel, f, 'humerus_l')[2])).toBeLessThan(0.08)
+    // the elbows stay nearer the ribs than on the regular push-up: ~20-25 deg out seen from above (the band push-up's
+    // standard grip ~35) and narrower, the elbows pointing back towards the feet
+    const elbow = (id: number) => {
+      const g = fk(skel, frameQ(baked.get(id)!, at(baked.get(id)!, BOTTOM)))
+      const sh = segPos(skel, g, 'humerus_l'), el = segPos(skel, g, 'forearm_l'), wr = segPos(skel, g, 'hand_l')
+      const fore = Math.asin((el[1] - wr[1]) / dist(el, wr)) * RAD
+      return { x: el[0], top: Math.atan2(el[0] - sh[0], sh[2] - el[2]) * RAD, fore }
+    }
+    expect(elbow(732).top).toBeGreaterThan(15)
+    expect(elbow(732).top).toBeLessThan(28)
+    expect(elbow(732).top).toBeLessThan(elbow(125).top - 8)
+    expect(elbow(732).x).toBeLessThan(elbow(125).x - 0.04)
+    // the forearms stay well off the floor (the chest sinks to the hands, not onto the forearms)
+    expect(elbow(732).fore).toBeGreaterThan(22)
+  })
+
+  it('band (125): the strip crosses the upper back over the deltoids to the floor beside the hands, clear of the trunk and arms', () => {
+    const b = baked.get(125)!
+    expect(b.implements.some((s) => s.kind === 'band')).toBe(true)
+    const ids = ['delt_l', 'delt_r']
+    for (let i = 0; i < b.frames; i += 5) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      const caps = bodyCapsules(skel, f).filter((c) => /^(upperarm|trunk)/.test(c.region))
+      for (const id of ids) {
+        const p = impl[b.implements.findIndex((s) => s.id === id)].pos
+        expect(Math.min(...caps.map((c) => segmentDistance(c.a, c.b, p, p).d - c.r)), `${id} @${i}`).toBeGreaterThan(-0.005)
+      }
+      // the back node rides on the upper back, above the floor-facing chest
+      const back = impl[b.implements.findIndex((s) => s.id === 'back')].pos
+      expect(back[1]).toBeGreaterThan(0.2)
+      // from each deltoid node over the back of the shoulder to the back arc, the strip stays on the arm's surface
+      for (const s of ['l', 'r']) {
+        const arm = bodyCapsules(skel, f).filter((c) => c.region === `upperarm_${s}`)
+        const [d, r] = [`delt_${s}`, `rear_${s}`].map((id) => impl[b.implements.findIndex((x) => x.id === id)].pos)
+        expect(Math.min(...arm.map((c) => segmentDistance(c.a, c.b, d, r).d - c.r)), `delt-rear ${s} @${i}`).toBeGreaterThan(-0.005)
+      }
+    }
+  })
+
+  it('pike (223): hips high, folded ~90 deg, the head lowering to the floor just in front of the hands, arms pressing overhead', () => {
+    const b = baked.get(223)!
+    for (let i = 0; i < b.frames; i += 5) {
+      const q = frameQ(b, i)
+      expect(q[skel.dof['hip_l.flex']]).toBeCloseTo(88, 5)
+      const f = fk(skel, q)
+      expect(segPos(skel, f, 'pelvis')[1]).toBeGreaterThan(segPos(skel, f, 'humerus_l')[1] + 0.2)
+    }
+    expect(dof(b, TOP, 'elbow_l.flex')).toBeLessThan(10)
+    expect(dof(b, BOTTOM, 'elbow_l.flex')).toBeGreaterThan(75)
+    // arms overhead relative to the trunk at the top (~115 deg; the hands sit ahead of the head)
+    expect(armElevation(skel, fk(skel, frameQ(b, at(b, TOP))))).toBeGreaterThan(105)
+    const f = fk(skel, frameQ(b, at(b, BOTTOM)))
+    const head = bodyCapsules(skel, f).filter((c) => c.region === 'head')
+    expect(Math.min(...head.map((c) => Math.min(c.a[1], c.b[1]) - c.r))).toBeCloseTo(0.04, 3)
+    expect(segPos(skel, f, 'head')[2]).toBeGreaterThan(sitePos(skel, f, 'grip_l')[2])
+  })
+
   it('unsupported variants throw', () => {
+    expect(() => bake(t, parse({ pike: true, kneeling: true }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({ kneeling: true, elevation: 'hands' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => bake(t, parse({}, 'unilateral'), skel)).toThrow(/variant not implemented yet/)
   })

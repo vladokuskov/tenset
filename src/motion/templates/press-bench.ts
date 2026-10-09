@@ -8,9 +8,11 @@ import { add, lerp, norm, qid, qrot, scale, type V3 } from '../math.ts'
 import { zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { phaseAt, type Tempo } from '../timing.ts'
 import {
-  armElevation, BACK_CAPS, flareLean, forearmSag, forearmTilt, holdArm, holdFade, minClear, naturalCubic, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, solidOf,
+  armElevation, BACK_CAPS, flareLean, flareOf, forearmSag, forearmTilt, holdArm, holdFade, minClear, naturalCubic, plantFeet, poleAt, restHead, SEAT_CAPS, seatedCaps, seatOnPads, solidOf,
   solveLeftArm, trunkPose, wristSchedule, type ArmRig, type Posture,
 } from './press-body.ts'
+import { plantFeet as plantSupineFeet } from './core/floor.ts'
+import { kbContacts, kbInHand, kbRests, kettlebells } from './press-kettlebell.ts'
 import type { ParamsOf } from './schemas.ts'
 import type { Setup } from './types.ts'
 
@@ -23,6 +25,10 @@ import type { Setup } from './types.ts'
 // `elbowFlare` from the torso (frontal-plane abduction) at the bottom. Grip 1.0-1.7 x biacromial keeps abduction
 // under ~45-75 deg (Larsen 2021; Green & Comfort 2007). With the bar on the chest the elbows fold to ~135-150 deg:
 // this rig's grip site sits mid-palm.
+// Floor press (support floor): lying on the floor, knees up and feet flat, the upper arms stop on the floor at the
+// record's flare with the forearms vertical over the elbows (elbow ~90 deg); dumbbells or kettlebells (the bell on the
+// back of the forearm, press-kettlebell.ts). Squeeze press: neutral dumbbells side by side, pressed together the whole
+// rep, lowered as one onto the chest.
 
 export type PressParams = ParamsOf<'horizontal-press'> | ParamsOf<'incline-press'>
 
@@ -75,8 +81,15 @@ const RACK_BACK = 0.1
 const KNEE = { flat: 90, incline: 80 }
 /** feet planted a little wider than the shoulders, m from the midline (in front of the bench's front stabiliser) */
 const FEET_HALF = 0.3
+/** floor press: knees up with the feet flat about hip width apart, a flat back; the butt, upper back, head and
+ * the upper arms at the bottom sink this far into the floor (the floor gate allows 5 mm), m */
+const FLOOR = { knee: 95, feetHalf: 0.12, lumbar: -2, pelvis: 2, sink: 0.003 }
+/** squeeze press: the dumbbells' heads this far apart (pressed together), and their sink into the chest at the bottom, m */
+const SQUEEZE = { gap: 0.0005, sink: 0.003 }
+/** a floor plane to rest on (placement only, not an implement) */
+const FLOOR_SOLID = placeParts({ id: 'floor', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [{ shape: 'box', center: [0, -0.5, 0], size: [6, 1, 6] }], sites: {} }, { id: 'floor', pos: [0, 0, 0], rot: qid() })[0]
 
-export type Hold = 'barbell' | 'dumbbell' | 'smith'
+export type Hold = 'barbell' | 'dumbbell' | 'smith' | 'kettlebell'
 
 export type BenchCtx = {
   kind: 'bench'
@@ -98,13 +111,22 @@ export type BenchCtx = {
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 
+/** the horizontal-press options (the incline press has none of them) */
+const options = (p: PressParams) => p as Partial<ParamsOf<'horizontal-press'>>
+
 export function unsupportedBench(p: PressParams): string | null {
+  const o = options(p)
   if (p.posture !== 'lying_supine') return `${p.implement}/${p.posture}`
   if (p.implement === 'machine') return 'machine lying'
+  if (p.implement !== 'barbell' && p.implement !== 'dumbbell' && p.implement !== 'smith' && p.implement !== 'kettlebell') return `${p.implement} lying`
+  if (o.support === 'floor' && (p.benchAngle !== 0 || (p.implement !== 'dumbbell' && p.implement !== 'kettlebell'))) return `floor ${p.implement} ${p.benchAngle}`
+  if (o.support !== 'floor' && p.implement === 'kettlebell') return 'kettlebell on a bench'
+  if (o.squeeze && (p.implement !== 'dumbbell' || p.grip !== 'neutral' || p.benchAngle !== 0 || o.support === 'floor')) return `squeeze ${p.implement} ${p.grip}`
   if (p.benchAngle < 0) return `decline ${p.benchAngle}`
   if (p.benchAngle > 0 && p.benchAngle < 10) return `bench angle ${p.benchAngle}`
-  if (p.implement === 'dumbbell' && p.grip !== 'pronated' && p.grip !== 'neutral') return `dumbbell grip ${p.grip}`
-  if (p.implement !== 'dumbbell' && p.grip !== 'pronated') return `${p.implement} grip ${p.grip}`
+  const free = p.implement === 'dumbbell' || p.implement === 'kettlebell'
+  if (free && p.grip !== 'pronated' && p.grip !== 'neutral') return `${p.implement} grip ${p.grip}`
+  if (!free && p.grip !== 'pronated') return `${p.implement} grip ${p.grip}`
   if (p.laterality !== 'bilateral') return p.laterality
   return null
 }
@@ -135,6 +157,31 @@ function placeBody(skel: Skeleton, a: number, bench: ImplementSpec, pose: Implem
   }
   const r = dls(res, [pose.pos[1] + 0.09, s0.tilt], { tol: 1e-7, iters: 60 })
   return { hip: [0, r.x[0], z], s: { ...s0, tilt: r.x[1] } }
+}
+
+/** lying on the floor: the pelvis tilt and height that rest the butt and the upper back on it */
+function placeFloor(skel: Skeleton): { hip: V3; s: Posture } {
+  const s0: Posture = { tilt: -90 + FLOOR.pelvis, lumbar: FLOOR.lumbar, thorax: 0, clavicle: CLAVICLE }
+  const res = (x: number[]) => {
+    const c = seatedCaps(skel, [0, x[0], 0], { ...s0, tilt: x[1] })
+    return [(minClear(c.filter((k) => k.segment === 'pelvis'), FLOOR_SOLID) + FLOOR.sink) * 100, (minClear(c.filter(BACK_CAPS), FLOOR_SOLID) + FLOOR.sink) * 100]
+  }
+  const r = dls(res, [0.1, s0.tilt], { tol: 1e-7, iters: 60 })
+  return { hip: [0, r.x[0], 0], s: { ...s0, tilt: r.x[1] } }
+}
+
+/**
+ * Floor press bottom: the grip point and pole lean that rest the upper arm on the floor at `flare` from the trunk
+ * with the forearm vertical over the elbow (front and side views)
+ */
+function floorBottom(skel: Skeleton, flare: number, arm: (center: V3, pole: V3) => Float64Array, guess: V3, lean: number): { bottom: V3; lean: number } {
+  const res = (x: number[]) => {
+    const f = fk(skel, arm([x[0], x[1], x[2]], poleAt(x[3])))
+    const upper = bodyCapsules(skel, f).filter((c) => c.region === 'upperarm_l')
+    return [(flareOf(skel, f) - flare) / 10, (minClear(upper, FLOOR_SOLID) + FLOOR.sink) * 100, forearmTilt(skel, f) / 10, forearmSag(skel, f) / 10]
+  }
+  const r = dls(res, [...guess, lean], { tol: 1e-9, iters: 80 })
+  return { bottom: [r.x[0], r.x[1], r.x[2]], lean: r.x[3] }
 }
 
 // ---------- path ----------
@@ -179,8 +226,10 @@ function holdDumbbells(skel: Skeleton, solve: (c: number, off: V3, th: number) =
   return { offset: (c: number): V3 => [dx(clamp(c)) / 100, 0, dz(clamp(c)) / 100], pole: (c: number) => poleAt(th(clamp(c))) }
 }
 
+const isFree = (hold: Hold) => hold === 'dumbbell' || hold === 'kettlebell'
+
 function gripOf(ctx: Pick<BenchCtx, 'hold' | 'bar' | 'along'>, center: V3) {
-  return { pos: ctx.hold === 'dumbbell' ? center : add(center, ctx.bar!.sites.l.pos), axis: ctx.along ?? ([1, 0, 0] as V3) }
+  return { pos: isFree(ctx.hold) ? center : add(center, ctx.bar!.sites.l.pos), axis: ctx.along ?? ([1, 0, 0] as V3) }
 }
 
 // ---------- context ----------
@@ -188,15 +237,20 @@ function gripOf(ctx: Pick<BenchCtx, 'hold' | 'bar' | 'along'>, center: V3) {
 export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): BenchCtx {
   const a = p.benchAngle
   const hold = p.implement as Hold
+  const free = isFree(hold)
+  const o = options(p)
+  const floor = o.support === 'floor'
+  const squeeze = !!o.squeeze
   const incline = a >= 10
   const close = hold === 'barbell' && !incline && p.gripWidth <= CLOSE_GRIP
   const bench = pressBench({ backAngle: a, seatHeight: SEAT_H })
   const benchPose: ImplementPose = { id: 'bench', pos: [0, SEAT_H, 0], rot: qid() }
-  const { hip, s } = placeBody(skel, a, bench, benchPose)
+  const { hip, s } = floor ? placeFloor(skel) : placeBody(skel, a, bench, benchPose)
   const base = zeroQ(skel)
   trunkPose(skel, base, hip, s)
-  restHead(skel, base, solidOf(bench, benchPose, 1))
-  const legs = plantFeet(skel, base, hip, incline ? KNEE.incline : KNEE.flat, FEET_HALF)
+  if (floor) restHead(skel, base, FLOOR_SOLID, FLOOR.sink)
+  else restHead(skel, base, solidOf(bench, benchPose, 1))
+  const legs = floor ? plantSupineFeet(skel, base, hip[2], FLOOR.knee, FLOOR.feetHalf, 0, 0) : plantFeet(skel, base, hip, incline ? KNEE.incline : KNEE.flat, FEET_HALF)
   const f0 = fk(skel, base)
   const gh = scale(add(segPos(skel, f0, 'humerus_l'), segPos(skel, f0, 'humerus_r')), 0.5)
   // a low incline touches between the flat and the 30 deg points
@@ -205,9 +259,12 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
 
   const implements_: ImplementSpec[] = []
   const contacts: Contact[] = [...legs.contacts]
-  const fixed: ImplementPose[] = [benchPose]
+  const fixed: ImplementPose[] = floor ? [] : [benchPose]
   let bar: ImplementSpec | undefined
-  if (hold === 'dumbbell') {
+  if (hold === 'kettlebell') {
+    implements_.push(...kettlebells(['l', 'r']))
+    contacts.push(...kbContacts(['l', 'r']))
+  } else if (hold === 'dumbbell') {
     implements_.push(dumbbell({ id: 'db_l', mass: DB_KG }), dumbbell({ id: 'db_r', mass: DB_KG }))
     contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: 'db_l', grip: 'c' } }, { site: 'grip_r', kind: 'grip', target: { implement: 'db_r', grip: 'c' } })
   } else {
@@ -215,11 +272,12 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     implements_.push(bar)
     contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: bar.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: bar.id, grip: 'r' } })
   }
-  implements_.push(bench)
-  // palms face the feet, knuckles up; the bar sits low in the palm over a slightly extended wrist
-  const rig: ArmRig = { pole: poleAt(60), palm: norm(incline ? [0, 0.2, 1] : [0, 0.35, 1]), wristBias: WRIST_EXT }
+  if (!floor) implements_.push(bench)
+  // palms face the feet, knuckles up; the bar sits low in the palm over a slightly extended wrist (kettlebells: the
+  // wrist straight under the bell)
+  const rig: ArmRig = { pole: poleAt(60), palm: norm(incline ? [0, 0.2, 1] : [0, 0.35, 1]), wristBias: hold === 'kettlebell' ? 0 : WRIST_EXT }
   // neutral dumbbells: palms face each other, the handles along the torso
-  const neutral = hold === 'dumbbell' && p.grip === 'neutral'
+  const neutral = free && p.grip === 'neutral'
   const along = neutral ? qrot(f0.rot[skel.seg.thorax2], [0, -1, 0]) : undefined
   if (neutral) rig.palm = qrot(f0.rot[skel.seg.thorax2], [-1, 0, 0])
   const arm = (center: V3, pole = rig.pole) => {
@@ -234,7 +292,26 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   const surface = root1d((y) => minClear(trunkCaps, placeParts(probe, { id: 'bar', pos: [0, y, touch[2]], rot: qid() })[0]) + BAR_SINK, touch[1] - 0.1, touch[1] + 0.25, { tol: 1e-6 }).x
   let bottom: V3 = bar ? [0, surface, touch[2]] : [0.3, surface - DB_BELOW, touch[2]]
   let lean = 60
-  if (hold === 'dumbbell') {
+  if (floor) {
+    // the upper arms on the floor, the forearms vertical over the elbows
+    ;({ bottom, lean } = floorBottom(skel, p.elbowFlare, arm, [0.4, gh[1] + 0.25, gh[2] + 0.2], 60))
+    rig.pole = poleAt(lean)
+  } else if (squeeze) {
+    // the dumbbells side by side, heads touching, lowered as one onto the chest
+    const db = implements_[0]
+    const x = (db.parts[1] as Extract<Part, { shape: 'cylinder' }>).r + SQUEEZE.gap / 2
+    const onChest = (y: number) => {
+      const f = fk(skel, arm([x, y, bottom[2]]))
+      const h = handFrame(skel, f, 'l')
+      const solids = placeParts(db, { id: 'db_l', pos: h.pos, rot: implementFromHand(h.axis, h.palm) })
+      const trunk = bodyCapsules(skel, f).filter((k) => k.region === 'trunk')
+      return Math.min(...solids.flatMap((sd) => trunk.map((k) => capsuleSolidClearance(k, sd)))) + SQUEEZE.sink
+    }
+    for (let pass = 0; pass < 3; pass++) {
+      bottom = [x, root1d(onChest, surface, surface + 0.3, { tol: 1e-5 }).x, bottom[2]]
+      rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
+    }
+  } else if (hold === 'dumbbell') {
     // dumbbells beside the chest, just clear of it, of the upper arms and of the head
     const db = implements_[0]
     const gap = (c: V3) => {
@@ -269,7 +346,7 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
   } else rig.pole = poleAt((lean = flareLean(skel, p.elbowFlare, (pole) => arm(bottom, pole))))
   // lockout over the shoulder joints (the Smith bar stays on its rail over the touch point), elbows soft
   const topZ = hold === 'smith' ? bottom[2] : gh[2]
-  const topX = hold === 'dumbbell' ? DB_TOP_X : 0
+  const topX = squeeze ? bottom[0] : free ? DB_TOP_X : 0
   const topY = root1d((y) => arm([topX, y, topZ])[skel.dof['elbow_l.flex']] - LOCK_ELBOW, bottom[1], bottom[1] + 0.8, { tol: 1e-6 }).x
   const top: V3 = [topX, topY, topZ]
   const strokeOf = (stroke: Stroke) => {
@@ -280,7 +357,9 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
       return q
     }
     let path = (c: number) => jCurve(top, bottom, c, stroke)
-    if (hold === 'dumbbell') {
+    if (squeeze) {
+      // pressed together: no sideways freedom, the pole stays put
+    } else if (free) {
       const j = path
       const h = holdDumbbells(skel, (c, off, th) => pose(add(j(c), off), poleAt(th)), lean)
       path = (c) => add(j(c), h.offset(c))
@@ -312,6 +391,8 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
 
   const setup: Setup = { implements: implements_, contacts, tempo, symmetric: true }
   if (bar) setup.rests = [{ implement: bar.id, regions: ['trunk'], tol: 10 }]
+  if (squeeze) setup.rests = ['db_l', 'db_r'].map((implement) => ({ implement, regions: ['trunk'], tol: 10 }))
+  if (hold === 'kettlebell') setup.rests = kbRests(['l', 'r'])
   if (hold === 'smith') {
     // the rails as the drawn Smith machine has them (props/smith.ts: 7.5 cm behind the bar line)
     implements_.splice(1, 0, {
@@ -346,6 +427,9 @@ export function sampleBench(u: number, skel: Skeleton, ctx: BenchCtx): Pose {
       const h = handFrame(skel, f, s)
       implements_.push({ id: `db_${s}`, pos: h.pos, rot: implementFromHand(h.axis, h.palm) })
     }
+  } else if (ctx.hold === 'kettlebell') {
+    const f = fk(skel, q)
+    implements_.push(...ctx.setup.implements.slice(0, 2).map((spec, k) => kbInHand(skel, f, k ? 'r' : 'l', spec)))
   } else implements_.push({ id: ctx.bar!.id, pos: center, rot: qid() })
   implements_.push(...ctx.fixed)
   return { q, implements: implements_, contacts: ctx.setup.contacts }

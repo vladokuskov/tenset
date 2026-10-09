@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules } from '../collide.ts'
-import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
+import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist } from '../math.ts'
 import { loopDuration } from '../timing.ts'
@@ -22,8 +22,8 @@ const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[
 const trunkLean = (b: Baked, u: number) => dof(b, u, 'pelvis.tilt') + dof(b, u, 'lumbar.flex') + dof(b, u, 'thorax.flex')
 
 describe('lunge template', () => {
-  it('covers every lunge record: split squats, reverse and forward lunges, step-up and walking lunge', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 430])
+  it('covers every lunge record: split squats, reverse, forward, lateral and curtsy lunges, step-up and walking lunge', () => {
+    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 426, 430, 431, 433, 434])
   })
 
   it.each(variants.map((v) => [v.slug, v.id] as const))('%s: finite, planted feet still, dumbbells in the hands, loop closes', (_, id) => {
@@ -250,6 +250,63 @@ describe('lunge template', () => {
     ['goblet hold', { hold: 'goblet' }],
     ['left working side', { side: 'left' }],
   ])('%s: throws variant not implemented yet', (_, params) => {
+    expect(() => getTemplate('lunge').setup(parseParams('lunge', params), skel)).toThrow(/variant not implemented yet/)
+  })
+
+  // ---------- wave 3b ----------
+
+  it('lateral lunge (426): wide stance, both feet flat throughout; the hips sit back over the right foot, the left leg near straight', () => {
+    const b = get(426)
+    const u = bottomU(b)
+    expect(b.contacts.filter((c) => c.kind === 'planted')).toHaveLength(4)
+    const f = fk(skel, frameQ(b, at(b, u)))
+    const f0 = fk(skel, frameQ(b, 0))
+    const rightX = sitePos(skel, f, 'midfoot_r')[0], leftX = sitePos(skel, f, 'midfoot_l')[0]
+    expect(leftX - rightX).toBeGreaterThan(0.65)
+    expect(segPos(skel, f0, 'pelvis')[0]).toBeCloseTo(0, 2)
+    // hips well over towards the right foot, lower and further back than standing
+    expect(segPos(skel, f, 'pelvis')[0]).toBeLessThan((leftX + rightX) / 2 - 0.25 * (leftX - rightX))
+    expect(dof(b, u, 'knee_r.flex')).toBeGreaterThan(65)
+    expect(dof(b, u, 'knee_l.flex')).toBeLessThan(7)
+    expect(trunkLean(b, u)).toBeGreaterThan(20)
+  })
+
+  it('curtsy lunge (433): the left foot lands on its ball behind and across the right foot', () => {
+    const b = get(433)
+    const f = fk(skel, frameQ(b, at(b, bottomU(b))))
+    expect(sitePos(skel, f, 'ball_l')[0]).toBeLessThan(sitePos(skel, f, 'midfoot_r')[0] - 0.05)
+    expect(sitePos(skel, f, 'ball_l')[2]).toBeLessThan(sitePos(skel, f, 'heel_r')[2] - 0.3)
+    expect(sitePos(skel, f, 'heel_l')[1]).toBeGreaterThan(0.05)
+    expect(dof(b, bottomU(b), 'knee_r.flex')).toBeGreaterThan(85)
+  })
+
+  it('goblet kettlebell reverse lunge (431): the bell upright at the chest, the hands on the horns', () => {
+    const b = get(431)
+    const k = b.implements.findIndex((s) => s.kind === 'kettlebell')
+    expect(b.contacts.filter((c) => c.kind === 'grip').map((c) => (c.target as { grip: string }).grip).sort()).toEqual(['horn_l', 'horn_r'])
+    for (let i = 0; i < b.frames; i += 9) {
+      const f = fk(skel, frameQ(b, i))
+      const pose = frameImplements(b, i)[k]
+      expect(Math.abs(pose.pos[1] - localToWorld(skel, f, 'thorax2', skel.data.sites.sternum.local)[1])).toBeLessThan(0.08)
+    }
+  })
+
+  it('front-foot-elevated split squat (434): the front foot flat on a low step, the back knee drops below the step', () => {
+    const b = get(434)
+    const k = b.implements.findIndex((s) => s.id === 'step')
+    const top = siteWorld(b.implements[k], frameImplements(b, 0)[k], 'top').pos[1]
+    expect(top).toBeCloseTo(0.1, 3)
+    const f = fk(skel, frameQ(b, at(b, bottomU(b))))
+    expect(sitePos(skel, f, 'heel_r')[1]).toBeCloseTo(top, 3)
+    const knee = Math.min(...bodyCapsules(skel, f).filter((c) => /^(thigh|shank)_l$/.test(c.region)).map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+    expect(knee).toBeLessThan(top)
+  })
+
+  it.each([
+    ['lateral lunge with the dumbbells at the sides', { hold: 'sides', direction: 'lateral' }],
+    ['curtsy with a bar', { implement: 'barbell', hold: 'back_high', direction: 'curtsy' }],
+    ['front foot elevated on a step-up', { direction: 'step_up', frontFootElevated: true }],
+  ])('%s: throws variant not implemented yet (3b)', (_, params) => {
     expect(() => getTemplate('lunge').setup(parseParams('lunge', params), skel)).toThrow(/variant not implemented yet/)
   })
 })

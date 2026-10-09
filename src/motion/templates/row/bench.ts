@@ -3,7 +3,8 @@ import { bodyCapsules, capsuleSolidClearance, placeParts } from '../../collide.t
 import { fk, segPos } from '../../fk.ts'
 import { bench, dumbbell, type ImplementSpec } from '../../implements.ts'
 import { flatBench } from '../../implements/shared.ts'
-import { add, DEG, norm, qaxis, qfromBasis, qmul, qrot, scale, sub, type Quat, type V3 } from '../../math.ts'
+import { kettlebell } from '../../implements/index.ts'
+import { add, cross, DEG, norm, qaxis, qfromBasis, qmul, qrot, scale, sub, type Quat, type V3 } from '../../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
 import type { Tempo } from '../../timing.ts'
 import { setPelvis } from '../standing.ts'
@@ -21,8 +22,11 @@ import { elbowPole, lerp, mirrorArm, other, phases, PROT, reach, shoulderMid, wo
 // feet, toes turned under. On a 30 deg pad the feet only reach the floor with the hips flexed ~20 deg, which drives
 // the fronts of the thighs 25-40 mm into the lower pad whatever the stance width. The dumbbells hang under the shoulders (pronated, palms to the feet); the elbows flare to elbowFlare (~65,
 // lead decision: the upper-back variant) and drive up until the upper arms are level with the back, forearms vertical.
+// Kettlebell (321): the one-arm row with a kettlebell held by its handle (neutral, the handle along the body), the
+// bell hanging under the fist; the finish flare opens until the bell clears the standing thigh.
 
 const DB_KG = { one: 18, chest: 12 }
+const KB_KG = 20
 /** the drawn adjustable bench's seat pad: from the hinge forward, m (props/sockets.ts BENCH.seat.len) */
 const DRAWN_SEAT = 0.32
 const BENCH_TOP = 0.44
@@ -210,7 +214,7 @@ function oneArmContext(p: P, skel: Skeleton, tempo: Tempo): BenchRow {
   const benchPose: ImplementPose = { id: 'bench', pos: [benchX, BENCH_TOP, supportPos[2] - (DRAWN_SEAT - ONE.handFromFront)], rot: [0, 0, 0, 1] }
   const benchSpec: ImplementSpec = { ...flatBench({ seatHeight: BENCH_TOP }), sites: { hand: { pos: sub(supportPos, benchPose.pos), normal: [0, 1, 0] } } }
 
-  const db = dumbbell({ id: `db_${work}`, mass: DB_KG.one })
+  const db = p.implement === 'kettlebell' ? kettlebell({ id: `kb_${work}`, kg: KB_KG }) : dumbbell({ id: `db_${work}`, mass: DB_KG.one })
   const v: BenchRow = {
     kind: 'bench', tempo, setup: undefined as never, variant: 'one', work, base, db: [db], benchPose,
     bottom: [0, 0, 0], top: [0, 0, 0], sm0: [0, 0, 0], topPole: [0, 0, 0], support: { pos: supportPos, hand },
@@ -248,7 +252,7 @@ function oneArmContext(p: P, skel: Skeleton, tempo: Tempo): BenchRow {
   const contacts: Contact[] = [
     ...footContacts(skel, [body.foot]),
     { site: `grip_${free}`, kind: 'support', target: { implement: 'bench', grip: 'hand' } },
-    { site: `grip_${work}`, kind: 'grip', target: { implement: db.id, grip: 'c' } },
+    { site: `grip_${work}`, kind: 'grip', target: { implement: db.id, grip: db.kind === 'kettlebell' ? 'handle' : 'c' } },
   ]
   v.setup = { implements: [db, benchSpec], contacts, tempo, symmetric: false }
   return v
@@ -267,6 +271,12 @@ function armsOne(skel: Skeleton, q: Float64Array, v: BenchRow, target: V3) {
 
 function dbPose(skel: Skeleton, q: Float64Array, spec: ImplementSpec): ImplementPose {
   const h = handFrame(skel, fk(skel, q), spec.id.endsWith('_l') ? 'l' : 'r')
+  if (spec.kind === 'kettlebell') {
+    // the handle along the grip axis, the bell hanging straight down from it
+    const x = norm(h.axis)
+    const rot = qfromBasis(x, norm(cross(cross(x, [0, 1, 0]), x)))
+    return { id: spec.id, pos: sub(h.pos, qrot(rot, spec.sites.handle.pos)), rot }
+  }
   return { id: spec.id, pos: h.pos, rot: implementFromHand(h.axis, h.palm) }
 }
 

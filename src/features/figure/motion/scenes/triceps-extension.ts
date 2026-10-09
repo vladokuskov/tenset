@@ -2,6 +2,8 @@ import type { SceneSpec } from './types.ts'
 
 export const tricepsExtension: SceneSpec = {
   camera: (params) => {
+    // Tate press: the elbows bend out to the sides, so from past the feet and high, where both arms' sideways fold reads
+    if (params.posture === 'lying_supine' && params.elbowFlare !== undefined) return { az: -30, elev: 0.55 }
     // lying: from the lifter's right and higher, so the arms' arc over the face reads; near the side, since from
     // further towards the head the raised upper arm hides the triceps at lockout
     if (params.posture === 'lying_supine') return { az: -95, elev: 0.35 }
@@ -19,6 +21,8 @@ export const tricepsExtension: SceneSpec = {
   grip: (ctx) => {
     // the spreading rope's fist pieces close the hand like the rope attachment
     if (ctx.spec.kind === 'rope_end') return 'rope'
+    // a bare band bunched in the fist closes the hand the same way
+    if (ctx.spec.kind === 'band_grip') return 'rope'
     // the supporting hand rests flat on the bench
     if (ctx.spec.kind === 'bench' && ctx.site === 'hand') return 'open'
     return undefined

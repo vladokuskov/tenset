@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules } from '../collide.ts'
-import { centerOfMass, fk, segPos } from '../fk.ts'
+import { centerOfMass, fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { FLOOR_MAT } from '../implements/shared.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
@@ -20,7 +20,7 @@ const total = (b: Baked, i: number) => dof(b, i, 'hip_l.flex') + dof(b, i, 'lumb
 
 describe('leg-raise template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([802, 806, 807])
+    expect([...baked.keys()].sort()).toEqual([802, 806, 807, 819, 825, 827])
   })
 
   it.each([802, 806, 807])('%s: contacts held, loop closes, hips flex to the param with the pelvis curling up', (id) => {
@@ -89,5 +89,61 @@ describe('leg-raise template', () => {
   it('unsupported variants say so', () => {
     const t = getTemplate('leg-raise')
     expect(() => t.setup(parseParams('leg-raise', { posture: 'hanging', support: 'elbow_pads' }), skel)).toThrow(/variant not implemented yet/)
+  })
+
+  it.each([819, 825, 827])('%s: contacts held, the loop closes', (id) => {
+    const b = get(id)
+    for (let i = 0; i < b.frames; i++) expect(contactError(skel, b, i)).toBeLessThan(0.005)
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
+  })
+
+  it('827 toes-to-bar: the trunk lies back and the toes reach the bar between the hands, the centre of mass under the grips', () => {
+    const b = get(827)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    const bar = frameImplements(b, top)[0].pos
+    const f = fk(skel, frameQ(b, top))
+    for (const s of ['l', 'r']) {
+      const toe = sitePos(skel, f, `toe_${s}`)
+      expect(bar[1] - toe[1]).toBeGreaterThan(0.02)
+      expect(bar[1] - toe[1]).toBeLessThan(0.07)
+      expect(Math.abs(toe[2] - bar[2])).toBeLessThan(0.1)
+      expect(Math.abs(toe[0])).toBeLessThan(skel.data.shoulderWidth * 0.675)
+    }
+    expect(dof(b, top, 'pelvis.tilt')).toBeLessThan(-40)
+    expect(total(b, top) - total(b, bottom)).toBeGreaterThan(130)
+    for (let i = 0; i < b.frames; i++) expect(Math.abs(centerOfMass(skel, fk(skel, frameQ(b, i)))[2] - bar[2])).toBeLessThan(0.02)
+  })
+
+  it('819 reverse crunch: the knees hold 90, the hips roll up off the mat while the upper back stays down', () => {
+    const b = get(819)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    const ft = fk(skel, frameQ(b, top)), fb = fk(skel, frameQ(b, bottom))
+    expect(segPos(skel, ft, 'femur_l')[1] - segPos(skel, fb, 'femur_l')[1]).toBeGreaterThan(0.03)
+    expect(Math.abs(segPos(skel, ft, 'thorax2')[1] - segPos(skel, fb, 'thorax2')[1])).toBeLessThan(0.015)
+    expect(dof(b, bottom, 'pelvis.tilt') - dof(b, top, 'pelvis.tilt')).toBeGreaterThan(30)
+    for (let i = 0; i < b.frames; i++) expect(dof(b, i, 'knee_l.flex')).toBeCloseTo(90, 0)
+  })
+
+  it('825 oblique knee raise: the knees rise towards the right shoulder, the centre of mass stays between the hands', () => {
+    const b = get(825)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    const ft = fk(skel, frameQ(b, top)), fb = fk(skel, frameQ(b, bottom))
+    const knees = (f: ReturnType<typeof fk>) => (segPos(skel, f, 'tibia_l')[0] + segPos(skel, f, 'tibia_r')[0]) / 2 - segPos(skel, f, 'pelvis')[0]
+    expect(knees(ft) - knees(fb)).toBeLessThan(-0.1)
+    expect(dof(b, top, 'pelvis.rot')).toBeLessThan(-20)
+    // the shoulders stay nearly square under the bar while the hips turn: the spine turns back what the pelvis turns
+    // (measured on the joint lines, which the whole body's roll about the forward axis leaves alone)
+    const yaw = (seg: string) => {
+      const l = segPos(skel, ft, `${seg}_l`), r = segPos(skel, ft, `${seg}_r`)
+      return Math.abs((Math.atan2(l[2] - r[2], l[0] - r[0]) * 180) / Math.PI)
+    }
+    expect(yaw('femur')).toBeGreaterThan(40)
+    expect(yaw('humerus')).toBeLessThan(8)
+    for (let i = 0; i < b.frames; i++) expect(Math.abs(centerOfMass(skel, fk(skel, frameQ(b, i)))[0])).toBeLessThan(0.02)
+  })
+
+  it('825 oblique knee raise: both arms stay straight (the body swings and rolls under the bar instead)', () => {
+    const b = get(825)
+    for (let i = 0; i < b.frames; i++) for (const s of ['l', 'r']) expect(dof(b, i, `elbow_${s}.flex`)).toBeLessThan(10)
   })
 })

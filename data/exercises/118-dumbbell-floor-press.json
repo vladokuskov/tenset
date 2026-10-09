@@ -40,9 +40,14 @@
     113
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "dumbbell",
+      "support": "floor",
+      "grip": "pronated",
+      "elbowFlare": 45
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: FK: bottom elbow 93, upper arm 45 deg out and 4 deg behind the frontal plane resting on the floor (2.5 mm sink), forearm vertical. Dumbbells 45 mm apart at lockout, palms toward the feet. The side sheet shows the pause on the floor. Matches the cues."
   }
 }

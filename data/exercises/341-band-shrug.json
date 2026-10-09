@@ -32,8 +32,11 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "shrug",
+    "params": {
+      "implement": "band",
+      "grip": "neutral"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -50,6 +53,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The dumbbell-shrug arms are unchanged (clavicle elevation -3 to 26), with a heavy band from each fist under both soles. The band only changes 2.27 to 2.09 m (8%), so it reads static. From the rear hero it leaves the little-finger end of the fist and bends down with a visible kink. Owner look."
   }
 }

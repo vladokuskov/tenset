@@ -7,7 +7,8 @@ import { jointRotation, type Contact, type Skeleton } from '../skeleton.ts'
 // and ankle dorsiflexion, pelvis tilt for the trunk.
 
 export type StanceName = 'narrow' | 'hip' | 'shoulder' | 'wide'
-export type StanceSetup = { feet: FootTarget[]; midfoot: V3 }
+/** pitch: the feet's heel-up pitch, deg (heels on a plate), so the hip guess tilts the shank by df + pitch */
+export type StanceSetup = { feet: FootTarget[]; midfoot: V3; pitch?: number }
 
 export function stanceWidth(skel: Skeleton, stance: StanceName): number {
   const { hipWidth, shoulderWidth } = skel.data
@@ -62,7 +63,7 @@ export function hipsFor(skel: Skeleton, stance: StanceSetup, knee: number, df: n
   const foot = stance.feet[0]
   const pelvisRot = qaxis([1, 0, 0], tilt * DEG)
   const off = qrot(pelvisRot, sub(skel.segments[skel.seg.femur_l].offset, hipMidLocal(skel)))
-  const a = df * DEG
+  const a = (stance.pitch === undefined ? df : df + stance.pitch) * DEG
   const k = knee * DEG
   const kneeGuess = add(foot.ankle, [0, ls * Math.cos(a), ls * Math.sin(a)])
   const planar = add(kneeGuess, [0, lt * Math.cos(k - a), -lt * Math.sin(k - a)])

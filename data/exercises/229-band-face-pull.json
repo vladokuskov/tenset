@@ -41,9 +41,16 @@
     205
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "row",
+    "params": {
+      "implement": "band",
+      "posture": "standing",
+      "torsoAngle": 0,
+      "grip": "neutral",
+      "elbowFlare": 90,
+      "finish": "external_rotation"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -60,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Finish: elbow 136 at shoulder height (elevation 82), rot -60 external, fists 8 cm above the chin and 9 cm behind it at x +-0.29, so 'hands beside your ears' holds. Stretch: elbow 10 with the fists 0.47 m ahead at 1.51 m, toward the 1.6 m anchor. The band is a taut V (1.80 to 3.16 m) and stays at least 99 mm off the forearms and 144 mm off the head and girdle."
   }
 }

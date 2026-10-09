@@ -33,14 +33,21 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "triceps-extension",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "pronated",
+      "posture": "lying_supine",
+      "benchAngle": 0,
+      "shoulderFlexion": 68,
+      "elbowFlare": 5
+    },
     "mapView": "B"
   },
   "cues": [
     "Lie on the bench holding the dumbbells above your chest, palms facing your feet",
     "Point your elbows out to the sides",
-    "Bend your elbows until the dumbbells meet your chest",
+    "Bend your elbows until the dumbbells meet over your chest",
     "Press back up by straightening only your elbows"
   ],
   "basis": [
@@ -51,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Mechanics check out: humeral rotation 80, plane 38 to 85, elbow 5 to 116. At the bottom the heads come within 19.5 mm of each other, about 106 mm above the sternum site and 145 mm toward the feet (over the lower chest). At lockout the hands are x ±265 mm (53 cm apart, wider than the shoulders), so the arms form a V rather than stacking. From the feet-end hero the bottom dumbbells sit in front of the face. Cue 3 was reworded."
   }
 }

@@ -2,9 +2,10 @@ import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../co
 import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, type Capsule, type Solid } from '../collide.ts'
 import { fk, type FK } from '../fk.ts'
 import { barbell, dumbbell, type ImplementSpec } from '../implements.ts'
+import { smithRails } from '../implements/back.ts'
 import { barPad, BAR_PAD, palmRests, thrustBench } from '../implements/hinge.ts'
 import { floorMat, FLOOR_MAT } from '../implements/shared.ts'
-import { add, DEG, dist, lerp, neg, norm, qconj, qfromBasis, qid, qrot, sub, type V3 } from '../math.ts'
+import { add, DEG, dist, lerp, neg, norm, qconj, qfromBasis, qid, qmul, qrot, sub, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type ImplementPose, type Pose, type Side, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
@@ -50,6 +51,17 @@ const DB_KG = 24
 const DB_SINK = 0.006
 /** left palm on the end face (facing -X), fingers forward along the forearm and a little up over the rim */
 const DB_HAND = qfromBasis([1, 0, 0], neg(norm([0, 0.3, 1])))
+/**
+ * Single leg: the free leg held off the floor. On the bench the knee is lifted and bent (hip and knee flexion, deg,
+ * held relative to the pelvis); on the mat the leg is straight and in line with the working thigh
+ */
+const FREE_BENCH = { hip: 95, knee: 90, df: 0 }
+const FREE_FLOOR = { knee: 2, df: -15 }
+/**
+ * bodyweight on the bench: arms crossed on the chest (as the back extension), thorax2 frame (X left, Y up the spine,
+ * Z forward): palm centres on the opposite shoulders, the right forearm over the left
+ */
+const CROSSED: Record<Side, V3> = { l: [-0.13, 0.1, 0.23], r: [0.13, 0.065, 0.28] }
 
 type Ctx = {
   support: Support
@@ -71,14 +83,26 @@ type Ctx = {
   mat?: ImplementPose
   /** bridge: neck flexion that rests the head on the mat, by eccentric progress (smoothed) */
   neckAt?: (s: number) => number
+  /** single leg: the working (planted) and the free side */
+  work?: Side
+  free?: Side
+  /** bodyweight on the bench: arms crossed on the chest */
+  crossed?: boolean
+  /** Smith: the bar's rail line (z) */
+  railZ?: number
 }
+
+/** the Smith frame's implement id here: a frame turned round, not the composer's 'smith' (drawn behind the bar) */
+export const SMITH_REVERSED = 'smith_reversed'
 
 const UPPER_BACK = (c: Capsule) => c.segment === 'thorax1' || c.segment === 'thorax2'
 const LOW_TRUNK = (c: Capsule) => c.region === 'trunk' && !UPPER_BACK(c)
 const MAT_TOP = FLOOR_MAT.thick
 
 function variant(p: P): Support | string {
-  if ((p.implement === 'barbell' || p.implement === 'dumbbell') && p.support === 'bench') return 'bench'
+  if (p.stance === 'single_leg' && p.implement !== 'bodyweight') return `single-leg ${p.implement}`
+  if ((p.implement === 'barbell' || p.implement === 'dumbbell' || p.implement === 'smith') && p.support === 'bench') return 'bench'
+  if (p.implement === 'bodyweight' && p.support === 'bench' && p.stance === 'single_leg') return 'bench'
   if (p.implement === 'bodyweight' && p.support === 'floor') return 'floor'
   return `${p.implement} on the ${p.support}`
 }
@@ -136,7 +160,7 @@ function topLegs(skel: Skeleton, q: Float64Array, kneeAngle: number) {
 /** bar centre resting (through the pad) on the hips, level with the hip crease; the dumbbell rests on its heads */
 function barPose(skel: Skeleton, q: Float64Array, ctx: Ctx): ImplementPose {
   const f = fk(skel, q)
-  const z = toWorld(skel, f, 'pelvis', skel.data.sites.hip_crease.local)[2]
+  const z = ctx.railZ ?? toWorld(skel, f, 'pelvis', skel.data.sites.hip_crease.local)[2]
   const hips = bodyCapsules(skel, f).filter((c) => c.segment === 'pelvis' || c.segment.startsWith('lumbar') || c.region.startsWith('thigh_'))
   const y0 = pos(skel, f, 'pelvis')[1]
   if (ctx.db) {
@@ -157,6 +181,18 @@ function mirrorArm(skel: Skeleton, q: Float64Array) {
 
 function arms(skel: Skeleton, q: Float64Array, ctx: Ctx, bar?: ImplementPose) {
   setDofs(skel, q, { 'clavicle_*.prot': 4, 'clavicle_*.elev': 0 })
+  if (ctx.crossed) {
+    // palms towards the body, fingers towards the opposite shoulder
+    const f = fk(skel, q)
+    const t = f.rot[skel.seg.thorax2], o = f.pos[skel.seg.thorax2]
+    setDofs(skel, q, { 'clavicle_*.prot': 8, 'grip_*.close': 0 })
+    for (const side of ['l', 'r'] as Side[]) {
+      const sx = side === 'l' ? 1 : -1
+      const hand = qmul(t, qfromBasis([0, 0, sx], norm([sx, -0.35, 0])))
+      attachHand(skel, q, side, { pos: add(o, qrot(t, CROSSED[side])), axis: qrot(t, [-sx, 0, 0]), palm: qrot(t, [0, 0, -1]), hand }, { pole: qrot(t, [sx * 0.6, -1, 0.3]), wristBias: 0, planeHint: 90 })
+    }
+    return
+  }
   if (ctx.db) {
     // palms on the dumbbell's end faces, fingers over the rims
     const g = add(bar!.pos, ctx.db.sites.l.pos)
@@ -183,6 +219,20 @@ function arms(skel: Skeleton, q: Float64Array, ctx: Ctx, bar?: ImplementPose) {
   mirrorArm(skel, q)
 }
 
+/** single leg: the free leg off the floor */
+function freeLeg(skel: Skeleton, q: Float64Array, ctx: Ctx) {
+  const w = ctx.work!, fr = ctx.free!
+  if (ctx.support === 'bench') {
+    setDofs(skel, q, { [`hip_${fr}.flex`]: FREE_BENCH.hip, [`hip_${fr}.abd`]: 0, [`hip_${fr}.rot`]: 0, [`knee_${fr}.flex`]: FREE_BENCH.knee, [`ankle_${fr}.df`]: FREE_BENCH.df, [`ankle_${fr}.inv`]: 0 })
+    return
+  }
+  // in line with the working thigh
+  setDofs(skel, q, {
+    [`hip_${fr}.flex`]: q[skel.dof[`hip_${w}.flex`]], [`hip_${fr}.abd`]: 0, [`hip_${fr}.rot`]: 0,
+    [`knee_${fr}.flex`]: FREE_FLOOR.knee, [`ankle_${fr}.df`]: FREE_FLOOR.df, [`ankle_${fr}.inv`]: 0,
+  })
+}
+
 // ---------- frame ----------
 
 function solveFrame(skel: Skeleton, ctx: Ctx, s: number): { q: Float64Array; bar?: ImplementPose } {
@@ -191,12 +241,15 @@ function solveFrame(skel: Skeleton, ctx: Ctx, s: number): { q: Float64Array; bar
   if (ctx.support === 'bench') setDofs(skel, q, { 'neck.flex': lerp(NECK.top.neck, NECK.bottom.neck, s), 'head.flex': lerp(NECK.top.head, NECK.bottom.head, s) })
   else setDofs(skel, q, { 'neck.flex': ctx.neckAt!(s), 'head.flex': ctx.neckAt!(s) * HEAD_SHARE })
   solveLegs(skel, q, ctx.feet)
+  if (ctx.free) freeLeg(skel, q, ctx)
   const bar = ctx.bar || ctx.db ? barPose(skel, q, ctx) : undefined
   arms(skel, q, ctx, bar)
   return { q, bar }
 }
 
 function poses(ctx: Ctx, bar?: ImplementPose): ImplementPose[] {
+  if (ctx.crossed) return [{ id: ctx.bench!.id, pos: [0, 0, 0], rot: qid() }]
+  if (ctx.railZ !== undefined) return [{ id: ctx.bench!.id, pos: [0, 0, 0], rot: qid() }, bar!, { ...bar!, id: ctx.pad!.id }, { id: SMITH_REVERSED, pos: [0, 0, 0], rot: qid() }]
   if (ctx.db) return [{ id: ctx.bench!.id, pos: [0, 0, 0], rot: qid() }, bar!]
   if (ctx.support === 'bench') return [{ id: ctx.bench!.id, pos: [0, 0, 0], rot: qid() }, bar!, { ...bar!, id: ctx.pad!.id }]
   return [ctx.mat!, { id: ctx.palms!.id, pos: [0, 0, 0], rot: qid() }]
@@ -236,7 +289,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 
   // feet planted where the lockout put them at the stance width, pointing along the line from under the hips, so the
   // knees stay over the feet as the hips sink level with them (knee over the toes degenerates there)
-  const half = stanceWidth(skel, p.stance as StanceName) / 2
+  const half = stanceWidth(skel, (p.stance === 'single_leg' ? 'hip' : p.stance) as StanceName) / 2
   torso(skel, q, ctx, ctx.top, (g) => toWorld(skel, g, 'thorax2', ctx.pivot)[2])
   topLegs(skel, q, p.kneeAngle)
   const ft = fk(skel, q)
@@ -248,6 +301,13 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
     const at = plantFoot(skel, side, [x, 0, 0], toeOut)
     return plantFoot(skel, side, [x, 0, ankleZ - at.ankle[2]], toeOut)
   })
+  if (p.stance === 'single_leg') {
+    // one foot planted where the hip-width stance puts it, the other leg held off the floor
+    ctx.work = p.side === 'left' ? 'l' : 'r'
+    ctx.free = ctx.work === 'l' ? 'r' : 'l'
+    ctx.feet = ctx.feet.filter((x) => x.side === ctx.work)
+    ctx.setup.symmetric = false
+  }
   ctx.setup.contacts = plantedContacts(skel, { feet: ctx.feet, midfoot: [0, 0, ankleZ] })
 
   if (support === 'bench') {
@@ -256,7 +316,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
       const g = zeroQ(skel)
       torso(skel, g, ctx, tilt, (h) => toWorld(skel, h, 'thorax2', ctx.pivot)[2])
       solveLegs(skel, g, ctx.feet)
-      return g[skel.dof['hip_l.flex']] - HIP_BOTTOM
+      return g[skel.dof[`hip_${ctx.work ?? 'l'}.flex`]] - HIP_BOTTOM
     }
     ctx.bottom = root1d(hipAt, ctx.top, ctx.top + 80, { tol: 1e-7, scan: 16 }).x
     if (p.implement === 'dumbbell') {
@@ -272,9 +332,23 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
       ctx.setup.contacts.push({ site: 'grip_l', kind: 'grip', target: { implement: db.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: db.id, grip: 'r' } })
       return ctx
     }
+    if (p.implement === 'bodyweight') {
+      ctx.crossed = true
+      implements_.push(ctx.bench!)
+      return ctx
+    }
     ctx.bar = barbell({ gripWidth: 2 * GRIP_HALF, plateKg: BAR_PLATES })
     ctx.pad = barPad()
     implements_.push(ctx.bench!, ctx.bar, ctx.pad)
+    if (p.implement === 'smith') {
+      // the bar rides its rails over the hip crease at the bottom of the rep
+      const g = zeroQ(skel)
+      torso(skel, g, ctx, ctx.bottom, (h) => toWorld(skel, h, 'thorax2', ctx.pivot)[2])
+      ctx.railZ = toWorld(skel, fk(skel, g), 'pelvis', skel.data.sites.hip_crease.local)[2]
+      // the frame turned round on the rail line (families/hinge.ts draws it): its rear posts and base stand beyond the
+      // feet, clear of the bench, and the open front faces the bench
+      implements_.push({ ...smithRails({ z: ctx.railZ }), id: SMITH_REVERSED })
+    }
     ctx.setup.contacts.push(
       { site: 'grip_l', kind: 'grip', target: { implement: ctx.bar.id, grip: 'l' } },
       { site: 'grip_r', kind: 'grip', target: { implement: ctx.bar.id, grip: 'r' } },

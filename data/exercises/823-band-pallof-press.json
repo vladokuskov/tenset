@@ -34,14 +34,19 @@
     812
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hold",
+    "params": {
+      "kind": "pallof_press",
+      "implement": "band",
+      "stance": "hip",
+      "pressOut": true
+    },
     "mapView": "F"
   },
   "cues": [
     "Anchor the band at chest height and stand side-on to it",
-    "Hold the handle at your sternum with both hands",
+    "Hold the band at your sternum with both hands",
     "Press straight out and keep your torso facing forward",
     "Hold briefly, then bring your hands back in"
   ],
@@ -53,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Band span from hook to grips is 1.009 m in and 1.014 m pressed out. That near-constant length is correct for a Pallof press, where torque grows with the lever, not the stretch. Body is identical to 808: lateral CoP -165 mm against a feet edge of -188 (808: -160), and the cue reword fits the bare band."
   }
 }

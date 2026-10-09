@@ -34,12 +34,17 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "crunch",
+    "params": {
+      "implement": "cable",
+      "attachment": "rope",
+      "cableHeight": "high",
+      "posture": "standing"
+    },
     "mapView": "F"
   },
   "cues": [
-    "Stand facing a high pulley with the rope beside your head",
+    "Stand with your back to a high pulley, the rope beside your head",
     "Soften your knees and keep your hips still",
     "Curl your ribs down toward your pelvis",
     "Return slowly until your torso is upright"
@@ -52,6 +57,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Load direction is right: stack is highest at the crunch with back to the pulley. Spinal flexion is 54 deg (lumbar 26 + thorax 28) with zero hip flexion (-4..0), and the whole body leans forward from the ankles (dorsiflexion 18-22, knees 14-24) to counter the cable. The lean is physically justified but looks like a ski lean. The cue rewrite changes the described setup, so the owner should confirm."
   }
 }

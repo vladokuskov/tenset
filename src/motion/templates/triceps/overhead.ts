@@ -19,7 +19,7 @@ import { ROPE_IDS, ropeContacts, ropeHandle, ropeImplements, ropePoses, stackSpe
  * ~135) and the elbows straighten until the arms point up and forward along the lean. The hips hold still: one
  * pelvis position keeps the centre of pressure of body, rope and cable pull over the stagger's midpoint.
  */
-const OVER = {
+export const OVER = {
   /** front (left) foot ahead of the rear one, m; front and rear knee flexion, deg */
   step: 0.7,
   frontKnee: 32,
@@ -54,7 +54,7 @@ export type Overhead = Base & {
   elbow: readonly [number, number]
 }
 
-function trunkBase(skel: Skeleton, tilt: number) {
+export function trunkBase(skel: Skeleton, tilt: number) {
   const q = zeroQ(skel)
   setDofs(skel, q, { 'lumbar.flex': OVER.lumbar, 'thorax.flex': OVER.thorax, 'neck.flex': OVER.neck, 'head.flex': -4, 'clavicle_*.elev': 4, 'grip_*.close': 1 })
   setPelvis(skel, q, [0, 1, 0], tilt)
@@ -62,7 +62,7 @@ function trunkBase(skel: Skeleton, tilt: number) {
 }
 
 /** trunk lean from vertical (hip midpoint to shoulder midpoint), deg */
-function trunkAngle(skel: Skeleton, q: Float64Array) {
+export function trunkAngle(skel: Skeleton, q: Float64Array) {
   const f = fk(skel, q)
   const hips = scale(add(segPos(skel, f, 'femur_l'), segPos(skel, f, 'femur_r')), 0.5)
   const sh = scale(add(segPos(skel, f, 'humerus_l'), segPos(skel, f, 'humerus_r')), 0.5)
@@ -71,7 +71,7 @@ function trunkAngle(skel: Skeleton, q: Float64Array) {
 }
 
 /** the body for a pelvis position: legs to the planted feet, trunk, both arms */
-function body(skel: Skeleton, v: Pick<Overhead, 'feet' | 'tilt' | 'u'>, hip: V3, e: number, c: number) {
+export function body(skel: Skeleton, v: Pick<Overhead, 'feet' | 'tilt' | 'u'>, hip: V3, e: number, c: number) {
   const q = trunkBase(skel, v.tilt)
   setPelvis(skel, q, hip, v.tilt)
   solveLegs(skel, q, v.feet)

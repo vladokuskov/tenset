@@ -41,8 +41,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "two_hand",
+      "stance": "wide",
+      "toeOut": 40,
+      "depth": "parallel"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: The dumbbell is held out in front instead of hanging. The elbows stay bent with the forearms 33 deg off vertical all rep, which puts the bell centre 37 cm in front of the shoulder joint at the top (z 0.346 vs -0.024). At the bottom it is 33 cm in front of the knees (z 0.399 vs 0.072). That contradicts cue 2 ('hangs between your legs'). The front camera hides it, but the side sheet shows a front-raise-like reach with 20 kg. | minor: Re-gripped and re-hung in src/motion/templates/squat.ts. The hands now grip the top plate rim from either side, palms in, wrists neutral; the old hooks sat 11 cm behind the bell axis. The hooks are at a fixed reach (0.69 m) from the shoulders, elbows about 17-19 deg, elbow pole back, protraction 12. hangPose now solves the smallest forward offset that keeps each hook-to-shoulder line 6.5 cm clear of the thighs. Bell z minus shoulder z: 7 cm at the bottom, where the bell sits level with the knees (was 33 cm in front of them); about 10 cm mid-rep; 16 cm at the top (was 37 cm). Forearms are 12-24 deg off vertical, from 33. Scoped trunk/upperarm tolerance raised from 20 to 30 mm, as the reviewer allowed. All gates pass. New test: forward offset under 18 cm all rep, under 8 cm at the bottom, bell z no more than 3 cm past the knee, elbows under 25 deg. Remaining: the top position cannot be within 5 cm of the shoulder line. With the bell plumb, the hands and top plate end up inside the thick upper thighs (75-115 mm penetration), so the arms angle a little forward at the top. In the figure the hands read as cupping the plate sides rather than a firm visible grip."
   }
 }

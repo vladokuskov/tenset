@@ -9,6 +9,8 @@ import { comWithDumbbells, dumbbellContacts, dumbbellPoses, handDumbbells, isWor
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, setPelvis, stanceWidth, standBalanced, type StanceSetup, type Sway } from './standing.ts'
 import { footContacts, splitStance, standSplit, type SplitStance } from './isolation.ts'
+import { stoodBand, stoodBandPoses, type StoodBand } from './curl/band.ts'
+import { isCurlVariant, variantSample, variantSetup } from './curl/variants.ts'
 import { memo, type Setup, type Template } from './types.ts'
 
 // Elbow flexion ~8 -> 140 deg with the upper arm quiet (a few degrees of forward drift near the top, no shoulder
@@ -21,6 +23,8 @@ import { memo, type Setup, type Template } from './types.ts'
 type P = ParamsOf<'curl'>
 
 const DB_KG = 12
+/** band handle mass for the balance, kg (the band's pull runs from the hands to the feet, inside the body) */
+const BAND_HANDLE_KG = 0.15
 const ELBOW: [number, number] = [8, 140]
 /** spider curl: the forearm would hit the pad beyond this */
 const SPIDER_TOP = 125
@@ -91,6 +95,8 @@ type Ctx = {
   sway?: Sway
   /** Bayesian curl: one hand on a single handle, the low pulley behind the lifter */
   behind?: { work: 'l' | 'r'; pulley: V3; handle: ImplementSpec; split: SplitStance }
+  /** band curls: stood on at its middle, a handle in each hand (the dumbbell arms) */
+  band?: StoodBand
 }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
@@ -198,20 +204,52 @@ function forearm(p: P, cl: number) {
   return FOREARM[p.grip]
 }
 
+/**
+ * Zottman: the forearm turns from the grip to lowerGrip over the top pause and the first ZOTTMAN.top s of the
+ * eccentric, and back over the last ZOTTMAN.bottom[0] s of the eccentric, the bottom pause and the first
+ * ZOTTMAN.bottom[1] s of the concentric (cues: palms down at the top, back up at the bottom), deg
+ */
+const ZOTTMAN = { lead: 0.1, top: 0.3, bottom: [0.3, 0.2] }
+function lowerTurn(p: P, us: number, tempo: Tempo): number | undefined {
+  if (!p.lowerGrip || p.lowerGrip === p.grip) return undefined
+  const [ecc, pb, , pt] = tempo
+  const T = ecc + pb + tempo[2] + pt
+  // seconds since the end of the concentric (the loop starts mid top pause)
+  let t = ((us - Math.floor(us)) * T + pt / 2) % T
+  if (t > T - ZOTTMAN.lead) t -= T
+  const down = minJerk((t + ZOTTMAN.lead) / (pt + ZOTTMAN.lead + ZOTTMAN.top))
+  const from = pt + ecc - ZOTTMAN.bottom[0]
+  const k = t < from ? down : 1 - minJerk((t - from) / (ZOTTMAN.bottom[0] + pb + ZOTTMAN.bottom[1]))
+  return lerp(FOREARM[p.grip], FOREARM[p.lowerGrip], k)
+}
+
+/**
+ * cross-body hammer curl, at the top: humeral internal rotation, so the forearm carries the dumbbell across the chest,
+ * and extra upper-arm flexion, so it passes in front of the trunk instead of into it, deg
+ */
+/** cross-body top elbow flexion, deg: the dumbbell ends in front of the opposite chest, not at the chin */
+const CROSS_TOP = 120
+const CROSS_ROT = 38
+const CROSS_FLEX = 15
+/** Zottman: the pronated dumbbell's heads lie across the thigh, so the upper arm sits a little further out, deg */
+const ZOTTMAN_ABD = 8
+
 function topElbow(body: Body) {
   return body === 'spider' ? SPIDER_TOP : body === 'incline' ? INCLINE_TOP : ELBOW[1]
 }
 
 /** c drives the elbow; cl (slightly lagged) the upper-arm drift and forearm rotation */
-function dbArm(skel: Skeleton, q: Float64Array, side: 'l' | 'r', c: number, cl: number, p: P, body: Body, bottom = ELBOW[0], lean = 0) {
+function dbArm(skel: Skeleton, q: Float64Array, side: 'l' | 'r', c: number, cl: number, p: P, body: Body, bottom = ELBOW[0], lean = 0, pro?: number) {
   const d = skel.dof
-  const abd = body === 'incline' ? INCLINE_ABD : body === 'stand' && p.implement === 'dumbbell' ? DB_ABD : wideBar(p) ? WIDE_ABD : 0
-  const ua = upperArm(skel, q, p, side, cl, abd, lean * (1 - c) + (body === 'stand' && closeEz(p) ? CLOSE_FLEX * (1 - CLOSE_FADE * c) : 0))
+  const abd = body === 'incline' ? INCLINE_ABD : body === 'stand' && p.implement === 'dumbbell' ? (p.lowerGrip ? ZOTTMAN_ABD : DB_ABD) : wideBar(p) ? WIDE_ABD : 0
+  const cross = p.path === 'cross_body' ? CROSS_FLEX * minJerk(cl) : 0
+  const ua = upperArm(skel, q, p, side, cl, abd, lean * (1 - c) + (body === 'stand' && closeEz(p) ? CLOSE_FLEX * (1 - CLOSE_FADE * c) : 0) + cross)
   q[d[`shoulder_${side}.plane`]] = ua.plane
   q[d[`shoulder_${side}.elev`]] = ua.elev
-  q[d[`shoulder_${side}.rot`]] = 0
-  q[d[`elbow_${side}.flex`]] = lerp(bottom, isBehind(p) ? BEHIND_TOP : topElbow(body), c)
-  q[d[`forearm_${side}.pro`]] = forearm(p, cl)
+  q[d[`shoulder_${side}.rot`]] = p.path === 'cross_body' ? CROSS_ROT * minJerk(cl) : 0
+  q[d[`elbow_${side}.flex`]] = lerp(bottom, isBehind(p) ? BEHIND_TOP : p.path === 'cross_body' ? CROSS_TOP : topElbow(body), c)
+  // cross-body: the forearm turns back half the humeral rotation, so the dumbbell's heads stay off the chest
+  q[d[`forearm_${side}.pro`]] = pro ?? forearm(p, cl) - (p.path === 'cross_body' ? 0.5 * CROSS_ROT * minJerk(cl) : 0)
   q[d[`wrist_${side}.flex`]] = 6 * c
   q[d[`clavicle_${side}.prot`]] = -3
   q[d[`clavicle_${side}.elev`]] = 0
@@ -413,15 +451,16 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
   const contacts = plantedContacts(skel, stance)
   if (isBehind(p)) return behindContext(p, skel, tempo)
-  if (p.implement === 'dumbbell') {
+  if (p.implement === 'dumbbell' || p.implement === 'band') {
+    const band = p.implement === 'band' ? stoodBand(skel, stance.feet) : undefined
     const setup: Setup = {
-      implements: handDumbbells(DB_KG),
-      contacts: [...contacts, ...dumbbellContacts()],
+      implements: band ? band.implements : handDumbbells(DB_KG),
+      contacts: [...contacts, ...(band ? band.contacts : dumbbellContacts())],
       tempo,
       symmetric,
       balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
     }
-    const ctx: Ctx = { tempo, setup, body, stance, measure: comWithDumbbells(skel, DB_KG) }
+    const ctx: Ctx = { tempo, setup, body, stance, measure: comWithDumbbells(skel, band ? BAND_HANDLE_KG : DB_KG), band }
     ctx.sway = limitSway((u, sway) => standDumbbells(skel, standingBase(skel), u, p, ctx, sway))
     return ctx
   }
@@ -495,7 +534,7 @@ function standDumbbells(skel: Skeleton, q: Float64Array, u: number, p: P, ctx: C
   const upper = (qq: Float64Array) => {
     for (const s of ['l', 'r'] as const) {
       const { c, cl } = phases(u, p, ctx.tempo, s)
-      dbArm(skel, qq, s, c, cl, p, 'stand')
+      dbArm(skel, qq, s, c, cl, p, 'stand', undefined, undefined, lowerTurn(p, sidePhase(u, s, p.laterality), ctx.tempo))
     }
   }
   return standBalanced(skel, q, ctx.stance!, { knee: 6, tilt: 2 }, ctx.measure!, upper, undefined, sway)
@@ -519,7 +558,7 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   }
   if (!ctx.bar) {
     standDumbbells(skel, q, u, p, ctx, ctx.sway)
-    return { q, implements: dumbbellPoses(skel, q), contacts: ctx.setup.contacts }
+    return { q, implements: ctx.band ? stoodBandPoses(skel, q, ctx.band) : dumbbellPoses(skel, q), contacts: ctx.setup.contacts }
   }
   const bar = ctx.bar
   const { c, cl } = phases(u, p, ctx.tempo, 'l')
@@ -534,7 +573,7 @@ export const curl: Template<P> = {
   driver: 'joint',
   params: SCHEMAS.curl,
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
-  sample,
+  setup: (p, skel) => (isCurlVariant(p) ? variantSetup(p, skel) : context(p, skel).setup),
+  sample: (u, p, skel) => (isCurlVariant(p) ? variantSample(u, p, skel) : sample(u, p, skel)),
 }
 

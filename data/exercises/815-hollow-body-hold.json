@@ -36,9 +36,11 @@
     804
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hold",
+    "params": {
+      "kind": "hollow_hold"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -55,6 +57,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Hollow hold reads clearly in the side sheet: shoulders and head off the mat, arms past the ears, legs about 16 deg up, pelvis down. Thorax flex only moves 26-30 and hip flex 5-7 (breathing), with no contacts and no clearance excess."
   }
 }

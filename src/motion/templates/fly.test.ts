@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
-import { bodyCapsules } from '../collide.ts'
+import { bodyCapsules, segmentDistance } from '../collide.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
 import { dist, dot, scale, sub } from '../math.ts'
@@ -37,7 +37,7 @@ describe('fly template', () => {
   it('covers every fly record', () => {
     expect([...baked.keys()]).toEqual([
       '105-cable-fly-high-to-low', '110-pec-deck-fly', '111-cable-fly-low-to-high', '112-dumbbell-fly', '129-mid-cable-fly', '130-incline-dumbbell-fly',
-      '131-seated-cable-fly', '132-single-arm-cable-fly',
+      '131-seated-cable-fly', '132-single-arm-cable-fly', '133-band-fly',
     ])
   })
 
@@ -196,6 +196,41 @@ describe('fly template', () => {
       const v = Array.from({ length: b.frames }, (_, i) => frameQ(b, i)[skel.dof[name]])
       expect(Math.max(...v) - Math.min(...v), name).toBeLessThan(1e-9)
     }
+  })
+
+  it('band fly (133): the mid cable fly from a band on a post behind at chest height, the strip passing outside the chest and arms', () => {
+    const b = get('133-band-fly')
+    expect(b.cables).toBeUndefined()
+    const anchor = b.implements.findIndex((s) => s.kind === 'band_anchor')
+    expect(anchor).toBeGreaterThanOrEqual(0)
+    const hook = siteWorld(b.implements[anchor], frameImplements(b, 0)[anchor], 'hook').pos
+    expect(hook[2]).toBeLessThan(-0.5)
+    expect(Math.abs(hook[1] - segAt(b, OPEN, 'humerus_l')[1])).toBeLessThan(0.15)
+    for (const u of [OPEN, CLOSED]) {
+      const f = fk(skel, frameQ(b, at(b, u)))
+      const side = frameImplements(b, at(b, u))[b.implements.findIndex((s) => s.id === 'side_l')].pos
+      const trunk = bodyCapsules(skel, f).filter((c) => c.region === 'trunk')
+      expect(Math.min(...trunk.map((c) => segmentDistance(c.a, c.b, side, side).d - c.r))).toBeGreaterThan(0)
+    }
+    // every frame, every run from the ring round the outside of the elbow and the back of the shoulder to the hook keeps
+    // off the arm (and the trunk)
+    const k = (id: string) => b.implements.findIndex((x) => x.id === id)
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      for (const s of ['l', 'r']) {
+        const ring = siteWorld(b.implements[k(`handle_${s}`)], impl[k(`handle_${s}`)], 'ring').pos
+        const pts = [ring, ...[`wrist_${s}`, `arm_${s}`, `side_${s}`].map((id) => impl[k(id)].pos), hook]
+        const caps = bodyCapsules(skel, f).filter((c) => c.region === `upperarm_${s}` || c.region === `forearm_${s}` || c.region === 'trunk')
+        for (let j = 0; j + 1 < pts.length; j++) {
+          expect(Math.min(...caps.map((c) => segmentDistance(c.a, c.b, pts[j], pts[j + 1]).d - c.r)), `${s} run ${j} @${i}`).toBeGreaterThan(0)
+        }
+      }
+    }
+    // the same arc as the mid cable fly
+    const mid = get('129-mid-cable-fly')
+    expect(arm(b, OPEN).plane).toBeCloseTo(arm(mid, OPEN).plane, 0)
+    expect(arm(b, CLOSED).plane).toBeCloseTo(arm(mid, CLOSED).plane, 0)
   })
 
   it('unsupported variants throw', () => {

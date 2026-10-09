@@ -174,9 +174,34 @@ describe('hip-abduction template', () => {
     expect(sitePos(skel, fk(skel, frameQ(b, at(b, TOP))), 'heel_r')[1]).toBeGreaterThan(0.45)
   })
 
+  // no record uses it yet (535 waits for tibial rotation: the feet swivel on their heels), so the variant is baked here
+  it('seated band: on the end of a flat bench, heels planted, the knees press ~9 cm further apart against the band', () => {
+    const b = bake(getTemplate('hip-abduction'), parseParams('hip-abduction', { implement: 'band', direction: 'abduction', posture: 'seated', hipAngle: 90 }, 'bilateral'), skel)
+    const knees = (u: number) => {
+      const f = fk(skel, frameQ(b, at(b, u)))
+      return f.pos[skel.seg.tibia_l][0] - f.pos[skel.seg.tibia_r][0]
+    }
+    expect(knees(TOP) - knees(STRETCH)).toBeGreaterThan(0.16)
+    expect(dof(b, at(b, TOP), 'hip_l.abd')).toBeGreaterThan(dof(b, at(b, STRETCH), 'hip_l.abd') + 8)
+    for (let i = 0; i < b.frames; i += 4) {
+      expect(dof(b, i, 'hip_r.abd')).toBeCloseTo(dof(b, i, 'hip_l.abd'), 6)
+      // soles flat, the feet together
+      const f = fk(skel, frameQ(b, i))
+      expect(Math.abs(sitePos(skel, f, 'heel_l')[1] - sitePos(skel, f, 'ball_l')[1])).toBeLessThan(0.002)
+      expect(sitePos(skel, f, 'heel_l')[0] - sitePos(skel, f, 'heel_r')[0]).toBeLessThan(0.16)
+      expect(dof(b, i, 'hip_l.flex')).toBeGreaterThan(80)
+      expect(dof(b, i, 'hip_l.flex')).toBeLessThan(95)
+    }
+    // the band rides both thighs: a node on each femur just above the knee, the strip closed round them
+    const band = b.implements.find((s) => s.kind === 'band') as { band?: { closed: boolean } }
+    expect(band.band?.closed).toBe(true)
+    expect(b.implements.filter((s) => s.kind === 'band_node').map((s) => s.id).sort()).toEqual(['knee_l', 'knee_r'])
+    expect(b.implements.some((s) => s.id === 'bench')).toBe(true)
+  })
+
   it('throws for variants it does not draw', () => {
     const t = getTemplate('hip-abduction')
-    for (const raw of [{ implement: 'bodyweight', posture: 'side_lying', direction: 'adduction' }, { implement: 'bodyweight', posture: 'standing' }, { implement: 'machine', posture: 'standing' }]) {
+    for (const raw of [{ implement: 'bodyweight', posture: 'side_lying', direction: 'adduction' }, { implement: 'bodyweight', posture: 'standing' }, { implement: 'machine', posture: 'standing' }, { implement: 'band', posture: 'standing' }, { implement: 'band', direction: 'adduction' }]) {
       expect(() => t.setup(parseParams('hip-abduction', raw), skel)).toThrow(/variant not implemented yet/)
     }
   })

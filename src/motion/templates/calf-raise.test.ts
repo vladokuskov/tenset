@@ -54,7 +54,7 @@ function toeAwareFoot(f: FK, s: 'l' | 'r'): Capsule[] {
 
 describe('calf-raise template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([601, 602, 603, 604, 605, 606, 607, 610, 612])
+    expect([...baked.keys()].sort()).toEqual([601, 602, 603, 604, 605, 606, 607, 609, 610, 611, 612])
   })
 
   it.each([...baked.keys()])('%s: finite, contacts held, the loop closes', (id) => {
@@ -184,6 +184,36 @@ describe('calf-raise template', () => {
     const t = getTemplate('calf-raise')
     for (const raw of [{ implement: 'smith', stance: 'single_leg' }, { implement: 'barbell', platform: 'floor' }, { implement: 'dumbbell', posture: 'seated', platform: 'step' }, { implement: 'bodyweight', direction: 'dorsiflexion', platform: 'step', support: 'none' }]) {
       expect(() => t.setup(parseParams('calf-raise', raw), skel)).toThrow(/variant not implemented yet/)
+    }
+  })
+
+  it('donkey raise (609): hinged near horizontal with the forearms on the pad, knees straight, the full ankle range on the step', () => {
+    const b = get(609)
+    const i = at(b, 0.5)
+    const lean = dof(b, i, 'pelvis.tilt') + dof(b, i, 'lumbar.flex') + dof(b, i, 'thorax.flex')
+    expect(lean).toBeGreaterThan(65)
+    expect(dof(b, at(b, STRETCH), 'ankle_l.df')).toBeGreaterThan(15)
+    expect(dof(b, at(b, TOP), 'ankle_l.df')).toBeLessThan(-30)
+    const k = b.implements.findIndex((s) => s.id === 'pad')
+    for (let j = 0; j < b.frames; j += 9) {
+      expect(dof(b, j, 'knee_l.flex')).toBeLessThan(6)
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, j))).filter((c) => c.region === 'forearm_l')
+      const pad = placeParts(b.implements[k], frameImplements(b, j)[k])
+      expect(Math.min(...pad.flatMap((p) => caps.map((c) => capsuleSolidClearance(c, p))))).toBeLessThan(0.03)
+    }
+  })
+
+  it('band tibialis raise (611): long sitting, knees still, the feet from pointed to pulled back about the heels', () => {
+    const b = get(611)
+    expect(dof(b, at(b, STRETCH), 'ankle_l.df')).toBeLessThan(-25)
+    expect(dof(b, at(b, TOP), 'ankle_l.df')).toBeGreaterThan(5)
+    const band = b.implements.find((s) => s.kind === 'band')
+    expect(band).toBeDefined()
+    for (let j = 0; j < b.frames; j += 9) {
+      expect(dof(b, j, 'knee_l.flex')).toBeCloseTo(4, 3)
+      const f = fk(skel, frameQ(b, j))
+      // the back of the heel stays on the mat
+      expect(localToWorld(skel, f, 'foot_l', [0.006, -0.045, -0.075])[1]).toBeCloseTo(0.014, 2)
     }
   })
 })

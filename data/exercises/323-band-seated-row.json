@@ -42,9 +42,17 @@
     313
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "row",
+    "params": {
+      "implement": "band",
+      "posture": "seated",
+      "support": "floor",
+      "torsoAngle": 0,
+      "grip": "neutral",
+      "gripWidth": 0.8,
+      "elbowFlare": 20
+    },
     "mapView": "B"
   },
   "cues": [
@@ -62,6 +70,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Long sitting: knees 6, hip flexion 87 to 99 (trunk leans about 12 at the stretch), elbow 9 to 127. The fists finish at y 0.335 m beside the waist, about 0.19 m above lumbar1, with retraction prot -18. The band loops the balls of the feet (sole contact -10 mm, intended), stretches 1.10 to 2.45 m, and stays at least 37 mm off the thighs and trunk. thigh/trunk at -48 mm is inside the pair tolerance."
   }
 }

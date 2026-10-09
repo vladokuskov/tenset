@@ -38,8 +38,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "rotation",
+    "params": {
+      "implement": "plate",
+      "posture": "seated",
+      "direction": "horizontal"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The rotation reads well: thorax ±30, lumbar ±12 and pelvis ±6, about ±48 total, with feet planted (slip 0.38 mm). But elbows stay at 120-123 deg, so the plate never leaves the chest, and cue 3 'bring the plate beside one hip' is not shown. Hands sit 20.5 mm into the plate core (rest tol 22), which relies on the lead decision."
   }
 }

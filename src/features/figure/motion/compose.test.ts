@@ -60,12 +60,17 @@ describe('scene composer', () => {
       const az = s.hero.az
       // cable curls turn further round so the stack upright in front of the lifter stays off the hands
       const cable = s.template === 'curl' && s.baked.params.implement === 'cable'
-      if (s.template === 'curl') expect(az, `${id}`).toBeGreaterThanOrEqual(cable ? -65 : -45)
-      if (s.template === 'curl') expect(az, `${id}`).toBeLessThanOrEqual(cable ? -55 : -25)
+      // the double-biceps high cable curl faces the camera between the two towers
+      const abducted = s.template === 'curl' && s.baked.params.armPosition === 'abducted'
+      if (s.template === 'curl' && abducted) expect(Math.abs(az + 20), `${id}`).toBeLessThan(5)
+      if (s.template === 'curl' && !abducted) expect(az, `${id}`).toBeGreaterThanOrEqual(cable ? -65 : -45)
+      if (s.template === 'curl' && !abducted) expect(az, `${id}`).toBeLessThanOrEqual(cable ? -55 : -25)
       if (s.template === 'lateral-raise') expect(Math.abs(az), `${id}`).toBeLessThan(20)
       if (s.template === 'vertical-pull') expect(Math.abs(az), `${id}`).toBeGreaterThan(110)
       // squats from behind (glutes and quads), except the front squat: front three-quarter so the rack reads
-      if (s.template === 'squat' && s.baked.params.hold !== 'front_rack') expect(az, `${id}`).toBeLessThanOrEqual(-50)
+      if (s.template === 'squat' && s.baked.params.hold !== 'front_rack' && s.baked.params.hold !== 'two_hand') expect(az, `${id}`).toBeLessThanOrEqual(-50)
+      // sumo with one dumbbell hanging between the legs: nearly from the front, so the dumbbell reads between the knees
+      if (s.template === 'squat' && s.baked.params.hold === 'two_hand') expect(Math.abs(az), `${id}`).toBeLessThan(25)
       if (s.template === 'squat' && s.baked.params.hold === 'front_rack') expect(az, `${id}`).toBeGreaterThanOrEqual(-50)
       if (s.template === 'squat' && s.baked.params.hold === 'front_rack') expect(az, `${id}`).toBeLessThanOrEqual(-25)
     }

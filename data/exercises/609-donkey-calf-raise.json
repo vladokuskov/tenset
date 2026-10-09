@@ -32,8 +32,16 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "calf-raise",
+    "params": {
+      "implement": "bodyweight",
+      "posture": "standing",
+      "kneeAngle": 0,
+      "stance": "hip",
+      "support": "bench",
+      "platform": "step",
+      "torsoAngle": 80
+    },
     "mapView": "B"
   },
   "cues": [
@@ -50,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The geometry is right: the trunk is horizontal at the top (88 deg) and 75 deg at the stretch, the hips stay over the balls (z -0.05 vs 0.0), knees near straight and ankles from -36 to 25. But the support is a 1.1 m padded plyo box while cue 1 says 'bench or rack', and the box is not in the equipment list (only 'step'). The owner should approve the support look or the cue wording."
   }
 }

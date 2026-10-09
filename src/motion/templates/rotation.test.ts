@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { fk, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist, dot, qrot } from '../math.ts'
+import { dist, dot, qrot, sub } from '../math.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { contactError, frameAt, seamRatio } from './core/checks.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -25,7 +25,7 @@ function handleCenter(b: Baked, i: number) {
 
 describe('rotation template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([809, 832])
+    expect([...baked.keys()].sort()).toEqual([809, 821, 832, 833])
   })
 
   it('809 woodchop: contacts held, loop closes, arms long', () => {
@@ -136,5 +136,52 @@ describe('rotation template', () => {
     // the lift needs its low pulley, the chop its high one
     expect(() => t.setup(parseParams('rotation', { direction: 'low_to_high' }), skel)).toThrow(/variant not implemented yet/)
     expect(() => t.setup(parseParams('rotation', { direction: 'horizontal', cableHeight: 'mid' }), skel)).toThrow(/variant not implemented yet/)
+  })
+
+  it.each([821, 833])('%s: contacts held, the loop closes', (id) => {
+    const b = get(id)
+    for (let i = 0; i < b.frames; i++) expect(contactError(skel, b, i)).toBeLessThan(0.005)
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
+  })
+
+  it('833 band woodchop: the chop as the cable one, the fists on the band where they hold the handle', () => {
+    const b = get(833), cable = get(809)
+    for (const u of [START, FINISH, 0.3]) {
+      const i = frameAt(b, u)
+      expect(turn(b, i)).toBeCloseTo(turn(cable, i), 6)
+      const f = fk(skel, frameQ(b, i))
+      for (const [s, id] of [['l', 'band_l'], ['r', 'band_r']] as const) {
+        const k = b.implements.findIndex((x) => x.id === id)
+        expect(dist(sitePos(skel, f, `grip_${s}`), siteWorld(b.implements[k], frameImplements(b, i)[k], 'c').pos)).toBeLessThan(0.005)
+      }
+    }
+    expect(b.implements.some((s) => s.kind === 'band_anchor')).toBe(true)
+  })
+
+  it('833 band woodchop: the loop stays stretched, hook to fists >= 1 m and under a 2.5x stretch range', () => {
+    const b = get(833)
+    const a = b.implements.findIndex((s) => s.kind === 'band_anchor'), g = b.implements.findIndex((s) => s.id === 'band_l')
+    const spans = Array.from({ length: b.frames }, (_, i) => {
+      const imp = frameImplements(b, i)
+      return dist(siteWorld(b.implements[a], imp[a], 'hook').pos, siteWorld(b.implements[g], imp[g], 'c').pos)
+    })
+    const [lo, hi] = [Math.min(...spans), Math.max(...spans)]
+    expect(lo).toBeGreaterThan(1.0)
+    expect(hi / lo).toBeLessThan(2.5)
+  })
+
+  it('821 Russian twist: leaning back ~45 deg, the shoulders turn the plate from one hip to the other, feet still', () => {
+    const b = get(821)
+    const top = frameAt(b, FINISH), bottom = frameAt(b, START)
+    expect(turn(b, bottom) - turn(b, top)).toBeGreaterThan(80)
+    const k = b.implements.findIndex((s) => s.id === 'plate')
+    // the plate beside the right hip at the top (working side), the left hip at the bottom
+    expect(frameImplements(b, top)[k].pos[0]).toBeLessThan(-0.15)
+    expect(frameImplements(b, bottom)[k].pos[0]).toBeGreaterThan(0.15)
+    for (const i of [top, bottom]) {
+      const f = fk(skel, frameQ(b, i))
+      const lean = sub(segPos(skel, f, 'thorax2'), segPos(skel, f, 'lumbar1'))
+      expect((Math.atan2(-lean[2], lean[1]) * 180) / Math.PI).toBeGreaterThan(30)
+    }
   })
 })

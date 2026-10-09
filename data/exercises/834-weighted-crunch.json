@@ -35,9 +35,13 @@
     838
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "crunch",
+    "params": {
+      "implement": "plate",
+      "posture": "lying_supine",
+      "kneeAngle": 90
+    },
     "mapView": "F"
   },
   "cues": [
@@ -54,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Same body as the approved 805 (lumbar 2-9, thorax 0-22, hips 41-45) with the 10 kg plate on the lower chest held by the rims, and it reads as a weighted crunch. Hand and trunk contact with the plate (-19.8/-9.4 mm) is within the declared 22 mm rest, per the lead decision."
   }
 }

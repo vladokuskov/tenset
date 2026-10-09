@@ -14,14 +14,17 @@ const get = (id: number) => baked.get(id)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const midBottom = (b: Baked) => (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] / 2) / (b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3])
 const flex = (b: Baked, u: number, s = 'l') => frameQ(b, at(b, u))[skel.dof[`wrist_${s}.flex`]]
+/** kneeling at the cross bench (the standing and half-kneeling variants have their own tests below) */
+const BENCH = [...baked.keys()].filter((id) => get(id).params.support === 'bench')
 
 describe('wrist-curl template', () => {
   it('covers every wrist-curl record', () => {
-    expect([...baked.keys()].sort()).toEqual([708, 709, 746, 747])
+    expect([...baked.keys()].sort()).toEqual([708, 709, 746, 747, 749, 750])
   })
 
   it('only the wrists move (the barbell adds a little deviation to keep the hands on its spacing)', () => {
-    for (const [id, b] of baked) {
+    for (const id of BENCH) {
+      const b = get(id)
       const moving = skel.dofs.filter((d) => {
         let lo = Infinity, hi = -Infinity
         for (let i = 0; i < b.frames; i++) {
@@ -55,7 +58,7 @@ describe('wrist-curl template', () => {
     expect(frameQ(down, 0)[skel.dof['forearm_l.pro']]).toBeGreaterThan(70)
   })
 
-  it.each([...baked.keys()])('%s: forearms rest on the pad, wrists past its far edge, hands on the dumbbells', (id) => {
+  it.each(BENCH)('%s: forearms rest on the pad, wrists past its far edge, hands on the dumbbells', (id) => {
     const b = get(id)
     const k = b.implements.findIndex((s) => s.kind === 'cross_bench')
     const impl = frameImplements(b, 0)
@@ -86,7 +89,7 @@ describe('wrist-curl template', () => {
     }
   })
 
-  it.each([...baked.keys()])('%s: the knees rest well inside the mat, the tucked toes on it', (id) => {
+  it.each(BENCH)('%s: the knees rest well inside the mat, the tucked toes on it', (id) => {
     const b = get(id)
     const k = b.implements.findIndex((s) => s.kind === 'mat')
     const mat = frameImplements(b, 0)[k]
@@ -100,7 +103,7 @@ describe('wrist-curl template', () => {
     expect(Math.min(...low.map((z) => z[0])) - back).toBeGreaterThan(0.02)
   })
 
-  it.each([...baked.keys()])('%s: the hanging load clears the bench by 15 mm', (id) => {
+  it.each(BENCH)('%s: the hanging load clears the bench by 15 mm', (id) => {
     const b = get(id)
     const k = b.implements.findIndex((s) => s.kind === 'cross_bench')
     const held = b.implements.filter((s) => s.kind === 'dumbbell' || s.kind === 'barbell').map((s) => s.id)
@@ -138,6 +141,66 @@ describe('wrist-curl template', () => {
       // the deviation that keeps the hands on the bar stays small
       for (let i = 0; i < b.frames; i++) expect(Math.abs(frameQ(b, i)[skel.dof['wrist_l.dev']])).toBeLessThan(15)
     }
+  })
+
+  /** the hands stay on their implement sites */
+  const handsOn = (b: Baked) => {
+    for (let i = 0; i < b.frames; i += 3) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      for (const c of b.contacts) {
+        if (c.kind !== 'grip' || !('implement' in c.target)) continue
+        const { implement, grip } = c.target
+        const j = b.implements.findIndex((s) => s.id === implement)
+        expect(dist(sitePos(skel, f, c.site), siteWorld(b.implements[j], impl[j], grip).pos)).toBeLessThan(0.005)
+      }
+    }
+  }
+
+  it('behind the back: arms hang still behind the thighs, the wrists curl the bar up and back, clear of the body', () => {
+    const b = get(749)
+    // flexion at the top, extension at the stretch
+    expect(flex(b, 0) - flex(b, midBottom(b))).toBeGreaterThan(80)
+    const k = b.implements.findIndex((s) => s.id === 'bar')
+    let gap = Infinity
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      expect(q[skel.dof['elbow_l.flex']]).toBeLessThan(6)
+      expect(q[skel.dof['forearm_l.pro']]).toBeGreaterThan(70)
+      const caps = bodyCapsules(skel, fk(skel, q)).filter((c) => c.region === 'trunk' || c.region.startsWith('thigh_'))
+      for (const d of placeParts(b.implements[k], frameImplements(b, i)[k])) for (const c of caps) gap = Math.min(gap, capsuleSolidClearance(c, d))
+      // the bar behind the body
+      expect(frameImplements(b, i)[k].pos[2]).toBeLessThan(segPos(skel, fk(skel, q), 'pelvis')[2])
+    }
+    expect(gap).toBeGreaterThan(0.005)
+    handsOn(b)
+  })
+
+  it('half kneeling band extension: the forearm along the front thigh, palm down, only the wrist moves', () => {
+    const b = get(750)
+    expect(b.symmetric).toBe(false)
+    const moving = skel.dofs.filter((d) => {
+      let lo = Infinity, hi = -Infinity
+      for (let i = 0; i < b.frames; i++) {
+        const v = b.q[i * b.nDof + d.index]
+        lo = Math.min(lo, v)
+        hi = Math.max(hi, v)
+      }
+      return hi - lo > 1e-3
+    })
+    expect(moving.map((d) => d.name)).toEqual(['wrist_r.flex'])
+    // hand hanging at the stretch, extended at the top
+    expect(flex(b, midBottom(b), 'r') - flex(b, 0, 'r')).toBeGreaterThan(70)
+    const f = fk(skel, frameQ(b, 0))
+    const caps = bodyCapsules(skel, f)
+    const fore = caps.filter((c) => c.region === 'forearm_r'), thigh = caps.filter((c) => c.region === 'thigh_r')
+    const knee = segPos(skel, f, 'tibia_r'), wrist = segPos(skel, f, 'hand_r')
+    expect(wrist[2]).toBeGreaterThan(knee[2])
+    expect(Math.min(...fore.flatMap((a) => thigh.map((t) => Math.hypot(...sub(a.b, t.b)))))).toBeLessThan(0.25)
+    // the rear knee on the mat, the band under the front foot
+    const mat = b.implements.findIndex((s) => s.kind === 'mat')
+    expect(dist(segPos(skel, f, 'tibia_l'), [frameImplements(b, 0)[mat].pos[0], segPos(skel, f, 'tibia_l')[1], frameImplements(b, 0)[mat].pos[2]])).toBeLessThan(0.2)
+    handsOn(b)
   })
 
   it('unsupported variants throw', () => {

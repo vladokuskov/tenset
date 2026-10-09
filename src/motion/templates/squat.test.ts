@@ -27,7 +27,7 @@ describe('squat template', () => {
       const f = fk(skel, frameQ(b, i))
       for (const c of planted) expect(dist(sitePos(skel, f, c.site), sitePos(skel, first, c.site))).toBeLessThan(0.002)
     }
-  })
+  }, 30_000)
 
   it('trunk lean falls out of where the bar sits: low bar > high bar > front rack', () => {
     const depth = { depth: 'parallel' }
@@ -172,5 +172,134 @@ describe('squat template', () => {
     expect(knee(0.625, 'r') - knee(0, 'r')).toBeGreaterThan(50)
     expect(Math.abs(knee(0.625, 'l') - knee(0, 'l'))).toBeLessThan(1e-6)
     for (let i = 0; i < b.frames; i += 3) expect(frameQ(b, i)[skel.dof['hip_r.flex']]).toBeLessThanOrEqual(112.5)
+  })
+
+  // ---------- wave 3b: kettlebells, the sumo hang, heels on a plate, the box ----------
+
+  const rec = (id: number) => {
+    const v = variants.find((x) => x.id === id)!
+    return bake(getTemplate('squat'), parseParams('squat', v.params, v.laterality), skel)
+  }
+  const grips = (b: Baked, i: number) => {
+    const f = fk(skel, frameQ(b, i))
+    const impl = frameImplements(b, i)
+    return Math.max(...b.contacts.filter((c) => c.kind === 'grip' && 'implement' in c.target).map((c) => {
+      const t = c.target as { implement: string; grip: string }
+      const k = b.implements.findIndex((s) => s.id === t.implement)
+      return dist(sitePos(skel, f, c.site), siteWorld(b.implements[k], impl[k], t.grip).pos)
+    }))
+  }
+
+  it('kettlebell goblet (417): upright against the chest, the hands on the horns', () => {
+    const b = rec(417)
+    const k = b.implements.findIndex((s) => s.kind === 'kettlebell')
+    for (let i = 0; i < b.frames; i += 7) {
+      const pose = frameImplements(b, i)[k]
+      expect(qrot(pose.rot, [0, 1, 0])[1]).toBeCloseTo(1, 6)
+      expect(grips(b, i)).toBeLessThan(0.005)
+      const chest = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region === 'trunk')
+      const bell = placeParts({ ...b.implements[k], parts: b.implements[k].parts.slice(0, 6) }, pose)
+      expect(Math.min(...bell.flatMap((p) => chest.map((c) => capsuleSolidClearance(c, p))))).toBeLessThan(0.002)
+    }
+  }, 30_000)
+
+  it('double kettlebell front rack (418): hands at the collarbones, the forearms through the handles, bells clear of the thighs', () => {
+    const b = rec(418)
+    const bell = (k: number) => ({ ...b.implements[k], parts: b.implements[k].parts.slice(0, 6) })
+    for (let i = 0; i < b.frames; i += 5) {
+      expect(grips(b, i)).toBeLessThan(0.005)
+      const f = fk(skel, frameQ(b, i))
+      const caps = bodyCapsules(skel, f)
+      for (const [k, s] of [[0, 'l'], [1, 'r']] as const) {
+        const pose = frameImplements(b, i)[k]
+        // the handle's window rides by the forearm (within 7.5 cm of its axis)
+        const win = siteWorld(b.implements[k], pose, 'window').pos
+        const elbow = segPos(skel, f, `forearm_${s}`), wrist = segPos(skel, f, `hand_${s}`)
+        const d = [wrist[0] - elbow[0], wrist[1] - elbow[1], wrist[2] - elbow[2]] as const
+        const t = Math.max(0, Math.min(1, ((win[0] - elbow[0]) * d[0] + (win[1] - elbow[1]) * d[1] + (win[2] - elbow[2]) * d[2]) / (d[0] ** 2 + d[1] ** 2 + d[2] ** 2)))
+        expect(dist(win, [elbow[0] + t * d[0], elbow[1] + t * d[1], elbow[2] + t * d[2]])).toBeLessThan(0.075)
+        // the bell lies on the outside of the forearm, lateral of the wrist and not in front of it
+        const out = s === 'l' ? 1 : -1
+        expect((pose.pos[0] - wrist[0]) * out).toBeGreaterThan(0.05)
+        expect(pose.pos[2]).toBeLessThan(wrist[2])
+        expect(pose.pos[1]).toBeLessThan(sitePos(skel, f, `grip_${s}`)[1] + 0.03)
+        const thighs = caps.filter((c) => c.region.startsWith('thigh_'))
+        expect(Math.min(...placeParts(bell(k), pose).flatMap((p) => thighs.map((c) => capsuleSolidClearance(c, p))))).toBeGreaterThan(0)
+      }
+    }
+    // the bells or the tucked elbows stop the squat above the depth table's full depth
+    expect(frameQ(b, at(b, 0.625))[skel.dof['knee_l.flex']]).toBeLessThan(118)
+  }, 30_000)
+
+  it('heels on a plate (420): heels up on the plate, balls on the floor, the knees travel further forward than flat', () => {
+    const b = rec(420)
+    const k = b.implements.findIndex((s) => s.id === 'plate')
+    const top = frameImplements(b, 0)[k].pos[1] * 2
+    const flat = run({ ...variants.find((x) => x.id === 420)!.params, heelsElevated: false })
+    const shin = (bb: Baked) => {
+      const f = fk(skel, frameQ(bb, at(bb, 0.625)))
+      return segPos(skel, f, 'tibia_l')[2] - segPos(skel, f, 'foot_l')[2]
+    }
+    for (let i = 0; i < b.frames; i += 7) {
+      const f = fk(skel, frameQ(b, i))
+      expect(sitePos(skel, f, 'heel_l')[1]).toBeCloseTo(top, 3)
+      expect(sitePos(skel, f, 'ball_l')[1]).toBeCloseTo(0, 3)
+    }
+    expect(shin(b)).toBeGreaterThan(shin(flat) + 0.02)
+  }, 30_000)
+
+  it('sumo (421): wide turned-out stance, one dumbbell hanging upright from both hands, clear of the floor', () => {
+    const b = rec(421)
+    const k = b.implements.findIndex((s) => s.id === 'db')
+    expect(frameQ(b, 0)[skel.dof['knee_l.flex']]).toBeGreaterThan(8)
+    for (let i = 0; i < b.frames; i += 5) {
+      const pose = frameImplements(b, i)[k]
+      expect(qrot(pose.rot, [1, 0, 0])[1]).toBeCloseTo(1, 6)
+      expect(grips(b, i)).toBeLessThan(0.005)
+      const low = Math.min(...placeParts(b.implements[k], pose).map((p) => (p.geo.shape === 'cylinder' ? Math.min(p.geo.a[1], p.geo.b[1]) : p.center[1])))
+      expect(low).toBeGreaterThan(0.02)
+    }
+    const f = fk(skel, frameQ(b, 0))
+    expect(sitePos(skel, f, 'midfoot_l')[0] - sitePos(skel, f, 'midfoot_r')[0]).toBeGreaterThan(0.6)
+  }, 30_000)
+
+  it('sumo (421): the dumbbell hangs near plumb under the shoulders on near-straight arms, between the knees at the bottom', () => {
+    const b = rec(421)
+    const k = b.implements.findIndex((s) => s.id === 'db')
+    const ahead = (i: number) => {
+      const f = fk(skel, frameQ(b, i))
+      return frameImplements(b, i)[k].pos[2] - (segPos(skel, f, 'humerus_l')[2] + segPos(skel, f, 'humerus_r')[2]) / 2
+    }
+    for (let i = 0; i < b.frames; i += 5) {
+      // only as far forward as the thighs make it at the top
+      expect(ahead(i)).toBeLessThan(0.18)
+      expect(frameQ(b, i)[skel.dof['elbow_l.flex']]).toBeLessThan(25)
+    }
+    const bottom = at(b, 0.625)
+    expect(ahead(bottom)).toBeLessThan(0.08)
+    expect(frameImplements(b, bottom)[k].pos[2]).toBeLessThan(segPos(skel, fk(skel, frameQ(b, bottom)), 'tibia_l')[2] + 0.03)
+  }, 30_000)
+
+  it('box squat (422): sits back onto the box at the bottom, clear of it standing, a longer pause on the box', () => {
+    const b = rec(422)
+    expect(b.tempo[1]).toBeGreaterThan(0.5)
+    const k = b.implements.findIndex((s) => s.id === 'box')
+    const box = (i: number) => {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region === 'trunk')
+      return Math.min(...placeParts(b.implements[k], frameImplements(b, i)[k]).flatMap((p) => caps.map((c) => capsuleSolidClearance(c, p))))
+    }
+    expect(box(at(b, 0.62))).toBeLessThan(0)
+    expect(box(at(b, 0.62))).toBeGreaterThan(-0.015)
+    expect(box(0)).toBeGreaterThan(0.1)
+    // more upright shins than the plain back squat at the same depth: the hips sit back
+    const plain = run({ hold: 'back_high', stance: 'shoulder', toeOut: 30, depth: 'parallel' })
+    expect(frameQ(b, at(b, 0.62))[skel.dof['ankle_l.df']]).toBeLessThan(frameQ(plain, at(plain, 0.625))[skel.dof['ankle_l.df']])
+  }, 30_000)
+
+  it('throws for the new holds where they do not fit', () => {
+    const t = getTemplate('squat')
+    for (const raw of [{ implement: 'kettlebell', hold: 'sides' }, { implement: 'dumbbell', hold: 'goblet', box: true }, { implement: 'barbell', hold: 'back_high', heelsElevated: true }]) {
+      expect(() => t.setup(parseParams('squat', raw), skel)).toThrow(/variant not implemented yet/)
+    }
   })
 })

@@ -1,8 +1,9 @@
 import { attachHand, root1d } from '../../constraints.ts'
 import { centerOfPressure, fk, sitePos } from '../../fk.ts'
 import { cableForce, comWorld, siteWorld, type Cable, type ImplementSpec } from '../../implements.ts'
+import { band, bandAnchor, bandGrip, bandPose, poseHandle } from '../../implements/bands.ts'
 import { twoHandHandle } from '../../implements/core.ts'
-import { add, lerp, norm, qfromBasis, qid, qrot, reject, sub, type V3 } from '../../math.ts'
+import { add, DEG, lerp, norm, qaxis, qfromBasis, qid, qrot, reject, sub, type V3 } from '../../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Side, type Skeleton } from '../../skeleton.ts'
 import { phaseAt, type Tempo } from '../../timing.ts'
 import type { ParamsOf } from '../schemas.ts'
@@ -14,6 +15,9 @@ import { stackSpec } from './cable.ts'
 // handle in front of the sternum; the handle presses straight out to arm's length and comes back while hips and
 // shoulders stay square to the front (anti-rotation: the trunk does not turn). The concentric is the press out, the
 // top pause is the pause at arm's length. Author judgment (research: static trunk with an arm press).
+// Band (823): the same press with a loop band anchored to a post at chest height where the pulley stands; both fists
+// stacked on the band's end exactly where they hold the cable handle (the band runs from the anchor into the top of
+// the upper fist, out of the bottom of the lower one and back), its pull in the balance as the cable's.
 
 type P = ParamsOf<'hold'>
 
@@ -40,7 +44,12 @@ export type Pallof = {
   reach: V3
   pulley: V3
   sway?: Sway
+  /** band: the anchor's pose (the pulley is its hook) and the two fists' band grips (upper, lower) */
+  band?: { anchor: ImplementPose; grips: [ImplementSpec, ImplementSpec] }
 }
+
+/** band grips: the left fist on the upper one */
+const BAND_GRIPS = { l: 'band_l', r: 'band_r' } as const
 
 function trunk(skel: Skeleton, q: Float64Array) {
   setDofs(skel, q, { 'lumbar.flex': 2, 'thorax.flex': 1, 'neck.flex': -3, 'head.flex': 0, 'clavicle_*.prot': 4, 'clavicle_*.elev': 2, 'grip_*.close': 1 })
@@ -103,16 +112,34 @@ export function pallofContext(p: P, skel: Skeleton, tempo: Tempo): Pallof {
   }
   const contacts: Contact[] = [
     ...plantedContacts(skel, stance),
-    { site: 'grip_l', kind: 'grip', target: { implement: handle.id, grip: 'l' } },
-    { site: 'grip_r', kind: 'grip', target: { implement: handle.id, grip: 'r' } },
+    { site: 'grip_l', kind: 'grip', target: p.implement === 'band' ? { implement: BAND_GRIPS.l, grip: 'c' } : { implement: handle.id, grip: 'l' } },
+    { site: 'grip_r', kind: 'grip', target: p.implement === 'band' ? { implement: BAND_GRIPS.r, grip: 'c' } : { implement: handle.id, grip: 'r' } },
   ]
-  v.setup = {
-    implements: [handle, stackSpec(pulley, [away, 0, 0])],
-    contacts,
-    tempo,
-    symmetric: false,
-    cables: [cable],
-    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+  if (p.implement === 'band') {
+    // the post's face towards the lifter, its hook where the pulley would be
+    const anchorSpec = bandAnchor({ id: 'anchor', height: pulley[1], mount: 'post' })
+    const rot = qaxis([0, 1, 0], -away * 90 * DEG)
+    const anchor: ImplementPose = { id: anchorSpec.id, pos: sub(pulley, qrot(rot, anchorSpec.sites.hook.pos)), rot }
+    const grips: [ImplementSpec, ImplementSpec] = [bandGrip({ id: BAND_GRIPS.l }), bandGrip({ id: BAND_GRIPS.r })]
+    const strip = band({ path: [{ implement: anchorSpec.id, site: 'hook' }, ...grips.flatMap((g) => [{ implement: g.id, site: 'a' }, { implement: g.id, site: 'b' }])], closed: true, size: 'medium' })
+    v.band = { anchor, grips }
+    v.setup = {
+      implements: [anchorSpec, ...grips, strip],
+      contacts,
+      tempo,
+      symmetric: false,
+      cables: [{ ...cable, implement: BAND_GRIPS.l }],
+      balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+    }
+  } else {
+    v.setup = {
+      implements: [handle, stackSpec(pulley, [away, 0, 0])],
+      contacts,
+      tempo,
+      symmetric: false,
+      cables: [cable],
+      balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+    }
   }
   reachFor()
   for (let k = 0; k < 2; k++) {
@@ -124,5 +151,11 @@ export function pallofContext(p: P, skel: Skeleton, tempo: Tempo): Pallof {
 
 export function samplePallof(skel: Skeleton, v: Pallof, c: number): Pose {
   const { q, pose } = frame(skel, v, c, v.sway)
-  return { q, implements: [pose, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: v.setup.contacts }
+  if (!v.band) return { q, implements: [pose, { id: 'stack', pos: [0, 0, 0], rot: qid() }], contacts: v.setup.contacts }
+  // the band grips sit on the handle's grips (index side up), their +Y towards the anchor
+  const grips = (['l', 'r'] as const).map((s, i) => {
+    const g = siteWorld(v.handle, pose, s)
+    return poseHandle(v.band!.grips[i], 'c', g.pos, g.axis!, v.pulley)
+  })
+  return { q, implements: [v.band.anchor, ...grips, bandPose()], contacts: v.setup.contacts }
 }

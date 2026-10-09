@@ -37,9 +37,14 @@
     748
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "wrist-curl",
+    "params": {
+      "implement": "barbell",
+      "grip": "pronated",
+      "posture": "standing",
+      "support": "none"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -56,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Wrist goes -40 to 55, and flexion lifts the bar about 12 to 15 cm up and back behind the buttocks. Palms face back with the arms hanging, the bar clears the thigh by 8 mm, and balance is 21 of 35 mm. The rear camera at az -145 shows both forearms."
   }
 }

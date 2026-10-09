@@ -24,14 +24,14 @@ export const KNEEL = { tilt: 16, lumbar: [-2, 28], thorax: [0, 32], neck: [4, 12
 const THIGH = 6
 const TOES = -55
 /** left fist (grip site) beside the temple, head frame, m: the strands pass either side of the head */
-const FIST: V3 = [0.15, 0.03, 0.035]
+export const FIST: V3 = [0.15, 0.03, 0.035]
 /** rope grips below the carabiner, m */
-const ROPE_DROP = 0.4
+export const ROPE_DROP = 0.4
 /** free strand length: a full-length cable rope, its strands running up past the sides of the head */
-const ROPE_FREE = 0.45
+export const ROPE_FREE = 0.45
 /** the free strands leave the fists this far past the grip centre, m: bent up towards the pulley at the bottom of the
  * curl they clear the thumbs (the default 5 cm ran them back across the fists) */
-const ROPE_EXIT = 0.08
+export const ROPE_EXIT = 0.08
 /** cable from the rope to the pulley at the top of the rep, deg from vertical towards the stack */
 const CABLE_LEAN = 35
 /** high pulley wheel centre, m (props/cable.ts PULLEY_HEIGHTS.high) */
@@ -77,10 +77,10 @@ function kneelBody(skel: Skeleton, q: Float64Array, c: number, v: Pick<Kneel, 't
 
 /** fists by the temples: the left hand fixed in the head frame (palm in, the strand leaving the top of the fist
  * forwards and up), the arm solved to it, the right mirrored */
-function fists(skel: Skeleton, q: Float64Array, strand: V3) {
+export function fists(skel: Skeleton, q: Float64Array, strand: V3, at: V3 = FIST) {
   const f = fk(skel, q)
   const head = f.rot[skel.seg.head]
-  const target = toWorld(skel, f, 'head', FIST)
+  const target = toWorld(skel, f, 'head', at)
   // hand axes in the head frame: back of the hand (+X local) out, index side (+Z local) along the strand
   const hand = qmul(head, qfromBasis([1, 0, 0], cross(strand, [1, 0, 0])))
   const thorax = f.rot[skel.seg.thorax2]
@@ -89,7 +89,7 @@ function fists(skel: Skeleton, q: Float64Array, strand: V3) {
 }
 
 /** the rope leaves the fist this far in towards the midline (per unit towards the pulley) */
-const STRAND_IN = 0.26
+export const STRAND_IN = 0.26
 
 export function kneelContext(skel: Skeleton, tempo: Tempo): Kneel {
   // knees and tucked toes on the mat: root height and knee flexion

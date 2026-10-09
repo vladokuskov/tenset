@@ -42,9 +42,14 @@
     519
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "hinge",
+    "params": {
+      "implement": "kettlebell",
+      "hold": "opposite_hand",
+      "stance": "single_leg",
+      "kneeAngle": 20
+    },
     "mapView": "B"
   },
   "cues": [
@@ -61,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: This matches 510 with the load swapped (hip 2-86, knee 3-20, free knee 6-45, trunk 75.5 deg from vertical at the bottom). The 16 kg bell hangs plumb in the hand opposite the stance leg (bell x +0.083 vs stance heel x -0.051) and the fist closes on the handle. At the bottom the bell is about 30 cm in front of the stance midfoot, below the shoulder. That makes cue 3 ('along the inside of your standing shin') a loose fit, but it follows the approved 510 path."
   }
 }

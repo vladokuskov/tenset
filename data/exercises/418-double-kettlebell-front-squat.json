@@ -42,8 +42,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "squat",
+    "params": {
+      "implement": "kettlebell",
+      "hold": "front_rack",
+      "stance": "shoulder",
+      "toeOut": 20,
+      "depth": "full"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +67,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: This is not a front rack. Each bell's centre is 11 cm in front of the wrist (kb_l z 0.256 vs wrist z 0.147) and 5 cm below it, and laterally it sits right at the wrist (x 0.159 vs 0.154). The side sheet shows both bells hanging in front of the fists, so it reads as holding two bells by the handles at the chest, which contradicts cue 1 ('Rest both bells on your forearms'). | minor: Fixed the bell placement solve in src/motion/templates/squat/holds.ts. The old energy term pushed the bell 6 cm ahead of the hand. The new one requires the bell to rest on the forearm and biceps (sink no more than 8 mm into them or the hand), stay clear of the chest, sit at least 6 cm lateral of the wrist and never in front of it. The hand target moved from [0.065,0.2,0.12] to [0.05,0.24,0.14]. Result: bell centre 6.8 cm lateral of the wrist and 9.8 cm behind it (was 11 cm in front), so the side sheet shows the bells behind the fists, on the outside of the forearms. Gates pass: biceps -7.6 mm and forearm +5 mm (12 mm rest tolerance), chest 24 mm clear. Depth now falls out at knee 114 (was 109). Remaining: (1) the reviewer's literal '5-8 cm lateral at wrist z' is impossible with a 9.5 cm-radius bell, which overlaps the forearm by about 2 cm at wrist depth. (2) The forearm does not pass through the handle window (window about 6.8 cm off the forearm axis), so the window test is 7.5 cm, not 4 cm. A true window rack needs an arm-solver rework (it caps wrist deviation at -19 and ignores the palm target). (3) In the live figure the bells sit fairly high, at shoulder and chin level. Tests added: bell lateral of the wrist by at least 5 cm and not in front of it."
   }
 }

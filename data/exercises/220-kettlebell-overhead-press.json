@@ -43,8 +43,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "vertical-press",
+    "params": {
+      "implement": "kettlebell",
+      "posture": "standing",
+      "grip": "neutral"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -62,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. needs work: Unilateral, free arm relaxed, and the lockout is good. The rack is wrong, though. At u 0.625 the fist is at x -30.9, 8 cm outside the shoulder joint (x -22.7). The bell centre is at x -43.6, 21 cm lateral to the shoulder, so it hangs out beside the deltoid instead of sitting between the forearm and upper arm in front of the chest. The rack is held for roughly a quarter of the loop and is what the hero shows. | minor: Rack re-targeted. KB_TURN plane goes 78 to 90, and a new Turn.inward (36 deg, easing out as the palm turns) tilts the forearm in. At u 0.625 the fist is at x -7.7, 15 cm in front of the shoulder joint, just under the chin. The forearm tilts in 18 deg and the elbow is 18 cm in front of the shoulder joint. The bell centre is at x -26, 3.7 cm outside the shoulder joint (was 21 cm) and 14 cm in front of it. kbInHand now also stops the bell on the upper arm (kbRests upperArm, tol 8, standing rack only; the floor press 119 is unchanged). Lockout is unchanged. New unit test covers fist, forearm tilt, elbow and bell position. Remaining: the forearm tilt of 18 is just under the 20-30 asked for, and the fist is 0.3 cm more medial than the -8 to -12 window. On the way up the fist still swings out to x -45 at head height before the lockout beside the ear, the same arc the reviewer accepted."
   }
 }

@@ -36,9 +36,13 @@
     229
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "external-rotation",
+    "params": {
+      "implement": "band",
+      "armPosition": "side",
+      "cableHeight": "mid"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +59,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Right arm only: elbow fixed at 90 at elevation 12 on the towel, humeral rot -52 (external) to +38 (fist in front of the stomach at x -0.06). That is a 90 deg arc and matches 211. The band runs from the post at elbow height (fist at 1.09-1.19 m) and stays at least 209 mm off the trunk. Nothing turns but the forearm."
   }
 }

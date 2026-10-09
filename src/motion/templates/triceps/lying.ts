@@ -41,7 +41,7 @@ export type Lying = Base & {
 
 type Posture = Pick<Lying, 'hip' | 'neck' | 'feet'>
 
-function lyingBase(skel: Skeleton, v: Posture) {
+export function lyingBase(skel: Skeleton, v: Posture) {
   const q = zeroQ(skel)
   setDofs(skel, q, { 'lumbar.flex': -3, 'thorax.flex': 3, 'neck.flex': v.neck, 'head.flex': 0, 'clavicle_*.prot': -6, 'clavicle_*.elev': -2 })
   setPelvis(skel, q, v.hip, -90)

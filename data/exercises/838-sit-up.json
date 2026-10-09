@@ -35,14 +35,19 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "crunch",
+    "params": {
+      "posture": "lying_supine",
+      "kneeAngle": 90,
+      "range": "sit_up",
+      "arms": "crossed"
+    },
     "mapView": "F"
   },
   "cues": [
     "Lie face up with knees bent and feet flat or anchored",
     "Cross your arms over your chest",
-    "Curl up until your chest nears your thighs",
+    "Curl up until your torso is nearly upright",
     "Roll back down slowly one section at a time"
   ],
   "basis": [
@@ -53,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Trunk turns pelvis 23.5 + lumbar 16 + thorax 24 = about 64 deg from the floor at the top, so it stops about 26 deg short of upright (cue reworded EN+UK to match). It reads as a sit-up with curl-then-hinge sequencing and planted feet (slip 0.18 mm). The folded forearms ride high near the chin rather than across the chest."
   }
 }

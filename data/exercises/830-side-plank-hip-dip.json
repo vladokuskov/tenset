@@ -37,8 +37,13 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hold",
+    "params": {
+      "kind": "side_plank",
+      "support": "forearm",
+      "legs": "stacked",
+      "hipDip": 0.12
+    },
     "mapView": "F"
   },
   "cues": [
@@ -55,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: Pelvis drops 13 cm (ty 0.428 to 0.297) through lumbar 16 and thorax 10 deg side bend, with slow lowering and a quick drive. Foot slip is 1.0 mm. The dip reads but is modest at hero size, and the primary (lower) obliques face the mat as in 803."
   }
 }

@@ -4,6 +4,7 @@ import { buildBarbell, buildEzBar } from './barbell'
 import { buildAttachment, buildCableStack, type AttachmentKind } from './cable'
 import { Kit, type Piece, type PropBuild } from './kit'
 import { buildLegPress } from './legpress'
+import { portableScenes } from './portable-scenes'
 import { buildLatPulldown } from './pulldown'
 import { buildAssistedPullup, buildPullupStation, ASSIST_PAD } from './pullup'
 import { buildSquatRack } from './rack'
@@ -217,6 +218,7 @@ const SCENES: Record<string, () => GalleryScene> = {
     kinds.forEach((k, i) => L.place(buildAttachment(k), [4.3 + (i % 3) * 0.5, 0.45, 0.6 + Math.floor(i / 3) * 0.7]))
     return L.scene({ figure: { at: [1.0, 0, 0.5] } })
   },
+  ...portableScenes,
 }
 
 export const galleryNames = Object.keys(SCENES).map((k) => (k === 'props' ? 'props' : `props-${k}`))

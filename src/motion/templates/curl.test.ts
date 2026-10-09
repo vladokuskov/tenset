@@ -15,6 +15,10 @@ const get = (slug: string) => baked.get(slug)!
 const at = (b: Baked, u: number) => Math.round(u * b.frames) % b.frames
 const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[name]]
 
+/** wave 3b variants with their own arm path or body (drag, cross-body, concentration, waiter, high cable), tested below */
+const own = (b: Baked) => Boolean(b.params.path || b.params.support || b.params.hold || b.params.armPosition)
+const arc = [...baked.keys()].filter((slug) => !own(get(slug)))
+
 /** the working side: the left arm of bilateral records (mirrored), the record's side of unilateral ones */
 const work = (b: Baked) => (b.params.laterality === 'unilateral' && b.params.side !== 'left' ? 'r' : 'l')
 
@@ -32,7 +36,7 @@ function humerusSwing(b: Baked, i: number, s: 'l' | 'r' = 'l') {
 }
 
 describe('curl template', () => {
-  it.each([...baked.keys()])('%s: elbow ~8-17 -> 125-140, upper arm quiet, no shrug, hands on the load', (slug) => {
+  it.each(arc)('%s: elbow ~8-17 -> 125-140, upper arm quiet, no shrug, hands on the load', (slug) => {
     const b = get(slug)
     const s = work(b)
     // bars end a little short of lockout: the carrying angle and full supination stop the elbows ~12-17 deg
@@ -65,7 +69,7 @@ describe('curl template', () => {
     const rest = bodyCapsules(skel, fk(skel, zeroQ(skel)))
     const restGap = new Map(rest.flatMap((a) => rest.map((t) => [`${a.name}/${t.name}`, capsuleClearance(a, t)] as const)))
     for (const [slug, b] of baked) {
-      if (b.params.posture !== 'standing') continue
+      if (b.params.posture !== 'standing' || b.params.armPosition) continue
       let zLo = Infinity, zHi = -Infinity, waist = Infinity
       for (let i = 0; i < b.frames; i++) {
         const q = frameQ(b, i)
@@ -163,5 +167,127 @@ describe('curl template', () => {
     expect(gap('753-close-grip-ez-bar-curl')).toBeLessThan(gap('701-ez-bar-curl') - 0.05)
     expect(gap('754-wide-grip-barbell-curl')).toBeGreaterThan(gap('710-barbell-curl') + 0.12)
     expect(dof(get('751-reverse-cable-curl'), 0.3, 'forearm_l.pro')).toBeGreaterThan(40)
+  })
+
+  /** the hands stay on their implement sites over the loop */
+  const handsOn = (b: Baked) => {
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const impl = frameImplements(b, i)
+      for (const c of b.contacts) {
+        if (c.kind !== 'grip' || !('implement' in c.target)) continue
+        const { implement, grip } = c.target
+        const k = b.implements.findIndex((s) => s.id === implement)
+        expect(dist(sitePos(skel, f, c.site), siteWorld(b.implements[k], impl[k], grip).pos)).toBeLessThan(0.005)
+      }
+    }
+  }
+
+  it('Zottman: palms up on the way up, palms down on the way down, turning at the top and bottom', () => {
+    const b = get('725-zottman-curl')
+    const T = b.tempo[0] + b.tempo[1] + b.tempo[2] + b.tempo[3]
+    // mid eccentric palms down, mid concentric palms up
+    expect(dof(b, (b.tempo[3] / 2 + b.tempo[0] / 2) / T, 'forearm_l.pro')).toBeGreaterThan(70)
+    expect(dof(b, (b.tempo[3] / 2 + b.tempo[0] + b.tempo[1] + b.tempo[2] / 2) / T, 'forearm_l.pro')).toBeLessThan(-75)
+    // the turn is smooth: no frame-to-frame jump
+    for (let i = 1; i < b.frames; i++) expect(Math.abs(frameQ(b, i)[skel.dof['forearm_l.pro']] - frameQ(b, i - 1)[skel.dof['forearm_l.pro']])).toBeLessThan(15)
+    handsOn(b)
+  })
+
+  it('cross-body: the dumbbell travels towards the opposite shoulder, thumb up, one arm at a time', () => {
+    const b = get('726-cross-body-hammer-curl')
+    // top of the right rep (u = 0): the hand crosses well inside its shoulder; the left hangs
+    const f = fk(skel, frameQ(b, 0))
+    expect(sitePos(skel, f, 'grip_r')[0]).toBeGreaterThan(segPos(skel, f, 'humerus_r')[0] + 0.12)
+    expect(dof(b, 0, 'shoulder_r.rot')).toBeGreaterThan(30)
+    expect(dof(b, 0, 'elbow_l.flex')).toBeLessThan(20)
+    expect(Math.abs(dof(b, 0.625, 'forearm_r.pro'))).toBeLessThan(5)
+    handsOn(b)
+  })
+
+  it('band curls: a handle in each hand, the band from the rings down under both feet', () => {
+    for (const slug of ['727-band-curl', '752-band-hammer-curl']) {
+      const b = get(slug)
+      const strip = b.implements.find((s) => s.kind === 'band') as unknown as { band: { path: { implement: string; at?: number[] }[] } }
+      expect(strip.band.path[0].implement).toBe('handle_l')
+      expect(strip.band.path.at(-1)!.implement).toBe('handle_r')
+      for (const p of strip.band.path.filter((x) => x.implement === 'floor')) expect(p.at![1]).toBeLessThan(0.01)
+      expect(dof(b, 0, 'elbow_l.flex')).toBeGreaterThan(130)
+      expect(dof(b, 0.625, 'elbow_l.flex')).toBeLessThan(12)
+      handsOn(b)
+    }
+    expect(dof(get('727-band-curl'), 0.3, 'forearm_l.pro')).toBeLessThan(-70)
+    expect(Math.abs(dof(get('752-band-hammer-curl'), 0.3, 'forearm_l.pro'))).toBeLessThan(5)
+  })
+
+  it('drag curl: the bar stays against the body and the elbows travel back', () => {
+    const b = get('723-barbell-drag-curl')
+    const k = b.implements.findIndex((s) => s.kind === 'barbell')
+    for (let i = 0; i < b.frames; i += 4) {
+      const caps = bodyCapsules(skel, fk(skel, frameQ(b, i))).filter((c) => c.region === 'trunk' || c.region.startsWith('thigh_'))
+      const gap = Math.min(...placeParts(b.implements[k], frameImplements(b, i)[k]).flatMap((s) => caps.map((c) => capsuleSolidClearance(c, s))))
+      expect(gap).toBeGreaterThan(-0.003)
+      expect(gap).toBeLessThan(0.03)
+    }
+    // top: the upper arm well behind the trunk, elbow past 110; bottom: arms all but straight
+    expect(humerusSwing(b, at(b, 0))).toBeLessThan(-30)
+    expect(dof(b, 0, 'elbow_l.flex')).toBeGreaterThan(110)
+    expect(dof(b, 0.625, 'elbow_l.flex')).toBeLessThan(15)
+    handsOn(b)
+  })
+
+  it('concentration curl: seated, the working upper arm still against the inner thigh, the free arm still', () => {
+    const b = get('724-concentration-curl')
+    let lo = Infinity, hi = -Infinity
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      lo = Math.min(lo, q[skel.dof['shoulder_r.elev']])
+      hi = Math.max(hi, q[skel.dof['shoulder_r.elev']])
+      expect(q[skel.dof['elbow_l.flex']]).toBeCloseTo(frameQ(b, 0)[skel.dof['elbow_l.flex']], 6)
+    }
+    expect(hi - lo).toBeLessThan(0.5)
+    const f = fk(skel, frameQ(b, 0))
+    const caps = bodyCapsules(skel, f)
+    const brace = Math.min(...caps.filter((c) => c.region === 'upperarm_r').flatMap((a) => caps.filter((c) => c.region === 'thigh_r').map((t) => capsuleClearance(a, t))))
+    expect(brace).toBeLessThan(0.01)
+    expect(dof(b, 0, 'elbow_r.flex')).toBeGreaterThan(130)
+    expect(dof(b, 0.625, 'elbow_r.flex')).toBeLessThan(15)
+    handsOn(b)
+  })
+
+  it('waiter curl: one dumbbell upright in both palms on the midline, elbows at the sides', () => {
+    // 730 stays a card (its ROM stops short of straight arms), so the variant is baked from its params here
+    const b = bake(getTemplate('curl'), parseParams('curl', { implement: 'dumbbell', grip: 'supinated', hold: 'two_hand', posture: 'standing' }, 'bilateral'), skel)
+    for (let i = 0; i < b.frames; i += 6) {
+      const pose = frameImplements(b, i)[0]
+      expect(Math.abs(pose.pos[0])).toBeLessThan(1e-6)
+      expect(humerusFromVertical(b, i)).toBeLessThan(25)
+    }
+    // upright at the top (handle along world up)
+    const top = frameImplements(b, 0)[0]
+    const up = 2 * (top.rot[0] * top.rot[1] + top.rot[2] * top.rot[3])
+    expect(up).toBeGreaterThan(0.95)
+    expect(dof(b, 0, 'elbow_l.flex')).toBeGreaterThan(120)
+    handsOn(b)
+  })
+
+  it('high cable curl: upper arms level out to the sides, hands curling towards the ears, body still', () => {
+    const b = get('729-high-cable-curl')
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      expect(Math.abs(q[skel.dof['shoulder_l.elev']] - 88)).toBeLessThan(1)
+    }
+    expect(dof(b, 0, 'elbow_l.flex')).toBeGreaterThan(120)
+    const f = fk(skel, frameQ(b, 0))
+    expect(sitePos(skel, f, 'grip_l')[1]).toBeGreaterThan(sitePos(skel, f, 'chin')[1])
+    expect(b.cables?.length).toBe(2)
+    let zLo = Infinity, zHi = -Infinity
+    for (let i = 0; i < b.frames; i++) {
+      const z = frameQ(b, i)[skel.dof['pelvis.tz']]
+      zLo = Math.min(zLo, z)
+      zHi = Math.max(zHi, z)
+    }
+    expect(zHi - zLo).toBeLessThan(0.01)
+    handsOn(b)
   })
 })

@@ -32,9 +32,12 @@
     336
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "shrug",
+    "params": {
+      "implement": "trap_bar",
+      "grip": "neutral"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -51,6 +54,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Trap-bar arms: elbow 6 to 8 (IK), handles at x +-0.315 (0.63 m apart), clavicle elevation -3 to 26, so the fists rise 9 cm (0.763 to 0.852 m). The frame and plates stay clear of the legs (closest is 82 mm to the forearm), and the 105 kg load is within balance (0.35 mm forward)."
   }
 }

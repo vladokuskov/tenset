@@ -29,8 +29,15 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "calf-raise",
+    "params": {
+      "implement": "band",
+      "direction": "dorsiflexion",
+      "posture": "seated",
+      "kneeAngle": 0,
+      "support": "floor",
+      "platform": "floor"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -47,6 +54,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The band behaves correctly: the ball-to-anchor distance grows by about 7 cm on dorsiflexion from -32 to +10, the anchor sits low in front and the knees stay within 8 mm. But the anchor is a 32 kg dumbbell while equipment lists only the band, which suggests a dumbbell is needed. The arms prop at 55 deg of shoulder extension, and the seated figure fills a small part of the tile. There is no foot contact gate, so floor and mat clearance are the only checks."
   }
 }

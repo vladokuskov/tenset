@@ -42,9 +42,16 @@
     405
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "squat",
+    "params": {
+      "implement": "barbell",
+      "hold": "back_high",
+      "stance": "shoulder",
+      "toeOut": 30,
+      "depth": "parallel",
+      "box": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -62,6 +69,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: It sits onto the box at the bottom (8 mm sink) and clears it at the top. Shins are 22 deg from vertical against 31 in the approved 401, and the trunk leans 57 deg against 45, which fits a sit-back box squat. The thigh ends 10 deg above parallel, hip joint 8 cm over the knee. The 0.6 s pause matches cue 3, so the tempo is a lead call."
   }
 }

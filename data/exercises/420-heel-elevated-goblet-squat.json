@@ -42,9 +42,16 @@
     406
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "squat",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "goblet",
+      "stance": "narrow",
+      "toeOut": 10,
+      "depth": "full",
+      "heelsElevated": true
+    },
     "mapView": "F"
   },
   "cues": [
@@ -61,6 +68,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Heels sit 3.5 cm up on the plate, 14 cm apart and 5 cm inside its edge. The shank reaches 43.6 deg from vertical against 33.2 in the flat 405, and the trunk stays at 22 deg against 38, so it is clearly a different variant from its parent and matches cues 3-4. The 13 mm forefoot dip under the scoped 16 mm floor tolerance is not visible in the side sheet, and it follows the calf FOREFOOT_REST precedent."
   }
 }

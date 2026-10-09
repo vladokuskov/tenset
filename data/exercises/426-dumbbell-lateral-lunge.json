@@ -41,13 +41,18 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "goblet",
+      "direction": "lateral",
+      "torsoAngle": 35
+    },
     "mapView": "F"
   },
   "cues": [
-    "Step wide to the side with your toes pointing forward",
-    "Sit your hips back over the stepping leg",
+    "Take a wide stance with your toes turned slightly out",
+    "Sit your hips back over the working leg",
     "Keep the other leg straight and both feet flat",
     "Drive through the working leg to bring your hips back to center"
   ],
@@ -59,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: This is played in place, not stepped, and cues 1-2 were rewritten to fit the animation (UK unreviewed). The hips shift 31 cm over the right foot, from a 73 cm heel span. The working knee bottoms at about 77, shallower than a typical lateral lunge (~90+), and the trailing ankle eversion sits at 29.96 of 30. It reads clearly from the front, but the owner should accept the redefinition and the shallow depth."
   }
 }

@@ -42,8 +42,12 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "lunge",
+    "params": {
+      "implement": "dumbbell",
+      "hold": "sides",
+      "direction": "curtsy"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -60,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The left ball lands 76 cm behind and 10 cm across the right foot's line (x -0.225 vs -0.125), and the pelvis shifts 13.6 cm, so it is a real curtsy and the cues match. From the az -160 rear camera the cross reads only modestly, since the feet look nearly in line. The author's hero sheet shows a standing frame at t=0.375. That is a render glitch: my re-render from the shipped bake is correct, and FK has frame 42 in the deep lunge."
   }
 }

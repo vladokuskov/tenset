@@ -38,9 +38,13 @@
     224
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "lateral-raise",
+    "params": {
+      "implement": "band",
+      "posture": "standing",
+      "grip": "neutral"
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: FK matches the dumbbell arc: plane 20, elevation 10 to 85, elbow 15. The palm turns from facing the thigh to facing down at the top (hand normal y -0.99). The band runs fist, under both soles, fist, and stretches from 2.16 to 3.79 m. It stays at least 64 mm off the shanks, and the sole contact is only 1-2 mm deep, which is intended."
   }
 }

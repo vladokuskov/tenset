@@ -40,9 +40,14 @@
     113
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "horizontal-press",
+    "params": {
+      "implement": "dumbbell",
+      "grip": "neutral",
+      "squeeze": true,
+      "elbowFlare": 30
+    },
     "mapView": "F"
   },
   "cues": [
@@ -59,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Heads overlap 0.5 mm the whole rep (within the 3 mm equipment tolerance). Bottom elbow 125 with the upper arms ~31 deg from the trunk (tucked), and the dumbbells rest on the mid chest (3 mm sink, tol 10). The az -60 / elev 0.45 camera keeps the chest visible under the dumbbells. Reads clearly as a squeeze press, not as 102/118."
   }
 }

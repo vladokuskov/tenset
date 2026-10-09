@@ -133,4 +133,36 @@ describe('vertical-pull template', () => {
     const e = qrot(qconj(th), sub(segPos(skel, f, 'forearm_r'), segPos(skel, f, 'thorax2')))
     expect(Math.abs(e[0])).toBeLessThan(0.33)
   })
+
+  it('scapular pull-up (342): shoulders draw down from the dead hang with the elbows straight, the body rising a few cm', () => {
+    const b = get('342-scapular-pull-up')
+    expect(gripError(b)).toBeLessThan(0.005)
+    for (let i = 0; i < b.frames; i += 5) expect(frameQ(b, i)[skel.dof['elbow_l.flex']]).toBeLessThan(10)
+    expect(dof(b, 0.625, 'clavicle_l.elev')).toBeGreaterThan(15)
+    expect(dof(b, 0, 'clavicle_l.elev')).toBeLessThan(0)
+    const rise = dof(b, 0, 'pelvis.ty') - dof(b, 0.625, 'pelvis.ty')
+    expect(rise).toBeGreaterThan(0.03)
+    expect(rise).toBeLessThan(0.15)
+  })
+
+  it('band-assisted pull-up (334): the pull-up with a band from the bar round the left shin', () => {
+    const b = get('334-band-assisted-pull-up')
+    expect(gripError(b)).toBeLessThan(0.005)
+    const f = fk(skel, frameQ(b, 0))
+    expect(sitePos(skel, f, 'chin')[1]).toBeGreaterThan(2.4)
+    const knee = frameImplements(b, 0)[b.implements.findIndex((s) => s.id === 'band_knee')].pos
+    expect(dist(knee, segPos(skel, f, 'tibia_l'))).toBeLessThan(1e-4)
+  })
+
+  it('band pulldown (332): kneeling on the mat, the fists from up towards a high anchor down beside the upper chest', () => {
+    const b = get('332-band-lat-pulldown')
+    expect(gripError(b)).toBeLessThan(0.005)
+    const top = fk(skel, frameQ(b, at(b, 0.625))), end = fk(skel, frameQ(b, at(b, 0)))
+    expect(sitePos(skel, top, 'grip_l')[1]).toBeGreaterThan(segPos(skel, top, 'head')[1] + 0.2)
+    expect(sitePos(skel, end, 'grip_l')[1]).toBeLessThan(segPos(skel, end, 'head')[1])
+    // elbows by the sides at the finish: below the shoulders
+    expect(segPos(skel, end, 'forearm_l')[1]).toBeLessThan(segPos(skel, end, 'humerus_l')[1] - 0.15)
+    // kneeling: knees and the pelvis still
+    expect(Math.abs(dof(b, 0, 'pelvis.ty') - dof(b, 0.625, 'pelvis.ty'))).toBeLessThan(1e-6)
+  })
 })

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts, segmentDistance } from '../collide.ts'
-import { fk, segPos } from '../fk.ts'
+import { fk, segPos, sitePos } from '../fk.ts'
 import { cableForce } from '../implements.ts'
+import { dist } from '../math.ts'
 import { FLOOR_MAT } from '../implements/shared.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { contactError, frameAt, seamRatio } from './core/checks.ts'
@@ -22,7 +23,7 @@ function spineFlex(b: Baked, i: number) {
 
 describe('crunch template', () => {
   it('covers every family record', () => {
-    expect([...baked.keys()].sort()).toEqual([801, 805])
+    expect([...baked.keys()].sort()).toEqual([801, 805, 818, 834, 838, 840])
   })
 
   it.each([801, 805])('%s: contacts held, loop seam closes, flexion comes from the spine', (id) => {
@@ -100,5 +101,51 @@ describe('crunch template', () => {
   it('unsupported variants say so', () => {
     const t = getTemplate('crunch')
     expect(() => t.setup(parseParams('crunch', { implement: 'machine', posture: 'kneeling' }), skel)).toThrow(/variant not implemented yet/)
+  })
+
+  it.each([818, 834, 838, 840])('%s: contacts held, the loop closes', (id) => {
+    const b = get(id)
+    for (let i = 0; i < b.frames; i++) expect(contactError(skel, b, i)).toBeLessThan(0.005)
+    expect(seamRatio(skel, b)).toBeLessThan(1.5)
+  })
+
+  it.each([838, 818])('%s sit-up: the spine curls first, then the trunk rises from the hips, the seat stays down', (id) => {
+    const b = get(id)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    // the trunk turns ~60 deg up off the support (pelvis tilt) on top of the curl
+    expect(dof(b, top, 'pelvis.tilt') - dof(b, bottom, 'pelvis.tilt')).toBeGreaterThan(18)
+    expect(spineFlex(b, top) - spineFlex(b, bottom)).toBeGreaterThan(35)
+    expect(dof(b, top, 'hip_l.flex') - dof(b, bottom, 'hip_l.flex')).toBeGreaterThan(15)
+    // halfway up the spine has done most of its curl
+    const mid = frameAt(b, 0.85)
+    expect(spineFlex(b, mid) - spineFlex(b, bottom)).toBeGreaterThan(0.5 * (spineFlex(b, top) - spineFlex(b, bottom)))
+  })
+
+  it('818 decline sit-up: on the board, head end low, the rollers over the front of the ankles', () => {
+    const b = get(818)
+    const k = b.implements.findIndex((s) => s.kind === 'decline_board')
+    expect(k).toBeGreaterThanOrEqual(0)
+    const f = fk(skel, frameQ(b, frameAt(b, BOTTOM)))
+    expect(segPos(skel, f, 'head')[1]).toBeLessThan(segPos(skel, f, 'femur_l')[1] - 0.15)
+    const roller = b.implements[k].sites.roller.pos
+    for (const s of ['l', 'r']) expect(dist(segPos(skel, f, `foot_${s}`), [Math.sign(segPos(skel, f, `foot_${s}`)[0]) * 0.11, roller[1], roller[2]])).toBeLessThan(0.2)
+  })
+
+  it('834 weighted crunch: the plate rides on the chest, held by its rim, through the curl', () => {
+    const b = get(834)
+    const k = b.implements.findIndex((s) => s.id === 'plate')
+    for (let i = 0; i < b.frames; i++) expect(dist(frameImplements(b, i)[k].pos, sitePos(skel, fk(skel, frameQ(b, i)), 'sternum'))).toBeLessThan(0.08)
+    expect(spineFlex(b, frameAt(b, TOP)) - spineFlex(b, frameAt(b, BOTTOM))).toBeGreaterThan(15)
+  })
+
+  it('840 standing cable crunch: back to the stack, the ribs curl down with soft knees, the curl draws the cable out', () => {
+    const b = get(840)
+    const top = frameAt(b, TOP), bottom = frameAt(b, BOTTOM)
+    expect(spineFlex(b, top) - spineFlex(b, bottom)).toBeGreaterThan(40)
+    expect(dof(b, top, 'knee_l.flex')).toBeLessThan(30)
+    const pulley = b.cables![0].pulley
+    const k = b.implements.findIndex((s) => s.id === 'handle')
+    expect(pulley[2]).toBeLessThan(segPos(skel, fk(skel, frameQ(b, bottom)), 'head')[2])
+    expect(dist(frameImplements(b, top)[k].pos, pulley)).toBeGreaterThan(dist(frameImplements(b, bottom)[k].pos, pulley) + 0.1)
   })
 })

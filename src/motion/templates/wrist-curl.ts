@@ -10,6 +10,8 @@ import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
 import { memo, type Setup, type Template } from './types.ts'
+import { behindContext, sampleBehind } from './wrist/behind.ts'
+import { halfKneelContext, sampleHalfKneel } from './wrist/half-kneel.ts'
 
 // Wrist curl (F8): kneeling on a mat behind a flat bench that stands across the lifter, forearms resting on the pad
 // and the wrists just past its far edge. Only the wrists move; upper arms, forearms and body stay still. Palms up
@@ -17,6 +19,8 @@ import { memo, type Setup, type Template } from './types.ts'
 // flexion to extension, a shorter range against the load. Wrist ranges from the joint limits (Rajagopal model
 // flexion/extension +-70) less a margin; the rest is coaching standard (forearms flat, wrists over the edge).
 // Barbell (746, 747): the same pose with an unloaded bar across both hands instead of two dumbbells.
+// Standing behind-the-back barbell (749, wrist/behind.ts) and half-kneeling band extension, forearm on the front thigh
+// (750, wrist/half-kneel.ts) have their own bodies.
 
 type P = ParamsOf<'wrist-curl'>
 
@@ -197,11 +201,28 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   return { q, implements: [...dbs, v.bench, v.mat], contacts: v.setup.contacts }
 }
 
+type Variant = { setup: Setup; sample: (u: number) => Pose }
+
+const isVariant = (p: P) => p.posture === 'standing' || p.support === 'thigh'
+
+const variant = memo((p: P, skel: Skeleton): Variant => {
+  const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.implement === 'barbell' && p.posture === 'standing' && p.support === 'none') {
+    const v = behindContext(p, skel, tempo)
+    return { setup: v.setup, sample: (u) => sampleBehind(u, skel, v) }
+  }
+  if (p.implement === 'band' && p.posture === 'kneeling' && p.support === 'thigh' && p.grip === 'pronated' && p.laterality === 'unilateral') {
+    const v = halfKneelContext(p, skel, tempo)
+    return { setup: v.setup, sample: (u) => sampleHalfKneel(u, skel, v) }
+  }
+  throw new Error(`wrist-curl: variant not implemented yet (${p.implement}/${p.posture}/${p.support})`)
+})
+
 export const wristCurl: Template<P> = {
   id: 'wrist-curl',
   driver: 'joint',
   params: SCHEMAS['wrist-curl'],
   implemented: true,
-  setup: (p, skel) => context(p, skel).setup,
-  sample,
+  setup: (p, skel) => (isVariant(p) ? variant(p, skel).setup : context(p, skel).setup),
+  sample: (u, p, skel) => (isVariant(p) ? variant(p, skel).sample(u) : sample(u, p, skel)),
 }

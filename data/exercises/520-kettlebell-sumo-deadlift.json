@@ -46,8 +46,14 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "hinge",
+    "params": {
+      "implement": "kettlebell",
+      "hold": "hands",
+      "stance": "wide",
+      "toeOut": 45,
+      "start": "floor"
+    },
     "mapView": "B"
   },
   "cues": [
@@ -64,6 +70,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3b 2026-10-09: rated minor, owner review. minor: The author's note says the bell rests on the thighs at the top, and the bake says otherwise: the closest body/kb clearance is +62 mm, with the bell at z 0.238 against a hip crease at 0.048. At the bottom the base sits at y 0.0007 at z 0.002, on the floor between heels at x ±0.297. Knees go 8-92 deg and track the toes (knee x 0.425 vs ball x 0.411). The same 25 mm arm/chest tolerance applies, the top knee stays at 8 deg, and the note should be corrected."
   }
 }

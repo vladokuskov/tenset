@@ -41,6 +41,13 @@ export const FOOT_SINK = 65
  * the mesh) overlap ~41 mm when the feet stack 12 mm apart, mm (lead decision)
  */
 export const STACKED_THIGHS = 42
+/**
+ * Side plank hip dip: the hips sink towards the mat by side-bending the spine (the upper flank shortens), the lumbar
+ * spine taking this share; the legs keep aiming at the stacked feet (holdReach turns the pelvis), so the dip is the
+ * spine's bend between the fixed elbow and feet. The hips lower over the slow eccentric and drive up over the
+ * concentric; the top is the plain side plank.
+ */
+export const DIP = { lumbar: 0.6 } as const
 /** side plank raised arm: share of the zero pose's shoulder-to-grip distance, ~12 deg of elbow flexion */
 const REACH_SOFT = 1.006
 /** elbow joint height with the forearm on the mat, m (the upper arm's distal capsule radius, sunk into the mat) */
@@ -66,6 +73,8 @@ export type Plank = {
   toe?: number
   /** side plank: hip adduction (both legs) that stacks the feet, deg */
   upAbd?: number
+  /** side plank hip dip: spine side bend at the bottom, deg */
+  dip?: number
   /** hip to ankle distance of the straight legs, braced, m */
   legReach: Record<Side, number>
   mat: ImplementPose
@@ -164,9 +173,14 @@ function frontArms(skel: Skeleton, q: Float64Array, v: Plank) {
   mirrorArm(skel, q)
 }
 
-export function frontContext(skel: Skeleton, tempo: Tempo): Plank {
+/**
+ * Front plank; `ahead` (m) puts the elbows that far in front of the shoulders (long-lever plank): the upper arms lean
+ * forward and the shoulders sit lower, the body line a little longer over the same feet.
+ */
+export function frontContext(skel: Skeleton, tempo: Tempo, ahead = 0): Plank {
   const q = zeroQ(skel)
-  const shoulderY = ELBOW_Y + skel.segments[skel.seg.humerus_l].length
+  const upper = skel.segments[skel.seg.humerus_l].length
+  const shoulderY = ELBOW_Y + (ahead ? Math.sqrt(upper * upper - ahead * ahead) : upper)
   const target: V3 = [0, shoulderY, 0]
   // line: pelvis tilt and height so the shoulders sit over the elbows and the toes rest on the mat
   const res = (x: number[]) => {
@@ -195,8 +209,8 @@ export function frontContext(skel: Skeleton, tempo: Tempo): Plank {
   for (const side of ['l', 'r'] as const) {
     const sh = segPosOf(skel, f, `humerus_${side}`)
     const hand = fistHand([0, 0, 1])
-    const elbow: V3 = [sh[0] * 0.92, ELBOW_Y, sh[2]]
-    const wrist: V3 = [elbow[0], ELBOW_Y - 0.004, sh[2] + lf]
+    const elbow: V3 = [sh[0] * 0.92, ELBOW_Y, sh[2] + ahead]
+    const wrist: V3 = [elbow[0], ELBOW_Y - 0.004, sh[2] + ahead + lf]
     fists[side] = { pos: add(wrist, qrot(hand, skel.data.sites[`grip_${side}`].local)), hand, elbow }
   }
   const rest = palmRest({ id: 'fists', sites: { l: fists.l!.pos, r: fists.r!.pos } })
@@ -226,11 +240,11 @@ export function samplePlank(skel: Skeleton, v: Plank, c: number): Pose {
 
 // ---------- side plank ----------
 
-function sideBody(skel: Skeleton, q: Float64Array, c: number, angle: number, work: Side) {
+function sideBody(skel: Skeleton, q: Float64Array, c: number, angle: number, work: Side, dip = 0) {
   const s = work === 'r' ? 1 : -1
   setDofs(skel, q, {
-    'lumbar.bend': s * lerp(SIDE.bend[0], SIDE.bend[1], c),
-    'thorax.bend': s * lerp(SIDE.thorax[0], SIDE.thorax[1], c),
+    'lumbar.bend': s * (lerp(SIDE.bend[0], SIDE.bend[1], c) + DIP.lumbar * dip),
+    'thorax.bend': s * (lerp(SIDE.thorax[0], SIDE.thorax[1], c) + (1 - DIP.lumbar) * dip),
     'lumbar.flex': 2,
     'thorax.flex': 0,
     'neck.flex': 0,
@@ -312,7 +326,33 @@ export function sideContext(p: P, skel: Skeleton, tempo: Tempo): Plank {
   return { kind: 'plank', side: true, tempo, setup, work, angle0: r.x[1], upAbd: r.x[2], legReach: legReach(skel, f), shoulder: sh, feet, fists, rest, reach, mat, guess: [q[skel.dof['pelvis.tx']], q[skel.dof['pelvis.ty']]] }
 }
 
+function sideFrame(skel: Skeleton, v: Plank, c: number, dip: number): Float64Array {
+  const q = zeroQ(skel)
+  sideBody(skel, q, c, v.angle0, v.work, dip)
+  setDofs(skel, q, { 'hip_*.abd': v.upAbd! })
+  const at = (f: FK) => segPosOf(skel, f, `humerus_${v.work}`)
+  holdReach(skel, q, at, v, ['pelvis.tx', 'pelvis.ty'], 0, { dof: 'pelvis.list', base: q[skel.dof['pelvis.list']] })
+  legsToward(skel, q, v.feet, [0, 0, 1])
+  return q
+}
+
+const hipY = (skel: Skeleton, q: Float64Array) => {
+  const f = fk(skel, q)
+  return (segPosOf(skel, f, 'femur_l')[1] + segPosOf(skel, f, 'femur_r')[1]) / 2
+}
+
+/** hip dip: the spine bend that lowers the hip joints `drop` m below the braced side plank */
+export function dipFor(skel: Skeleton, v: Plank, drop: number): number {
+  const top = hipY(skel, sideFrame(skel, v, 1, 0))
+  return root1d((d) => top - hipY(skel, sideFrame(skel, v, 1, d)) - drop, 0, 40, { tol: 1e-5 }).x
+}
+
 function sampleSide(skel: Skeleton, v: Plank, c: number): Pose {
+  if (v.dip) {
+    const q = sideFrame(skel, v, c, v.dip * (1 - c))
+    const pos = sideArms(skel, q, v)
+    return { q, implements: [v.mat, { id: v.rest!.id, pos: [0, 0, 0], rot: qid() }, { id: 'reach', pos, rot: qid() }], contacts: v.setup.contacts }
+  }
   const q = zeroQ(skel)
   sideBody(skel, q, c, v.angle0, v.work)
   setDofs(skel, q, { 'hip_*.abd': v.upAbd! })

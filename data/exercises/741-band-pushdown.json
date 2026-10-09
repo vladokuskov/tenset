@@ -36,9 +36,16 @@
     717
   ],
   "media": {
-    "status": "card",
-    "template": null,
-    "params": {},
+    "status": "loop",
+    "template": "triceps-extension",
+    "params": {
+      "implement": "band",
+      "cableHeight": "high",
+      "grip": "pronated",
+      "posture": "standing",
+      "torsoAngle": 10,
+      "shoulderFlexion": 0
+    },
     "mapView": "B"
   },
   "cues": [
@@ -55,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3b 2026-10-09: rated ok by the lane review, auto-approved. ok: Elbow goes 4 to 108 with the upper arm 18 to 21 deg forward. Both strands run from the post hook (2.0 m) to the handles with at least 26 mm clearance from the forearms (my band check). Balance is within 33 of 50 mm, and the hands rise to about lower-chest height at the stretch, as cue 4 says."
   }
 }

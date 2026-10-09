@@ -1,7 +1,9 @@
 import { handFrame, implementFromHand, plantFoot, root1d, solveLegs, type FootTarget } from '../../constraints.ts'
 import { centerOfPressure, fk, localToWorld, segPos } from '../../fk.ts'
 import { cableForce, cableHandle, comWorld, type ImplementSpec, type Part } from '../../implements.ts'
-import { add, cross, dist, norm, qfromBasis, qfromTo, qid, qrot, reject, scale, sub, type V3 } from '../../math.ts'
+import { band, bandAnchor, bandPose } from '../../implements/index.ts'
+import { fistContacts, fistGrips, fistId, fistPoses } from '../band-pose.ts'
+import { add, cross, dist, norm, qaxis, qfromBasis, qfromTo, qid, qrot, reject, scale, sub, type V3 } from '../../math.ts'
 import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
 import type { Tempo } from '../../timing.ts'
 import { ARM_BALANCE_TOL, limitSway, makeStance, plantedContacts, setPelvis, stanceWidth, standBalanced, type StanceSetup, type Sway } from '../standing.ts'
@@ -16,6 +18,8 @@ import { elbowPole, lerp, monotoneCubic, other, phases, PROT, reach, working, ty
 // Single-arm (315): split stance (free-side foot forward), trunk ~10 deg forward; D-handle at chest height. The arm
 // reaches towards the pulley with the shoulder protracted and a few degrees of trunk rotation, then the scapula sets
 // back and the elbow drives the handle to the hip.
+// Band face pull (229): the face pull's arms with a band looped through a wall anchor at face height, an end bunched in
+// each fist (neutral); each half of the band pulls its fist towards the anchor.
 
 const FACE_PULLEY_Y = 1.6
 const ONE_PULLEY_Y = 1.25
@@ -44,7 +48,12 @@ export type StandingCable = {
   finish?: V3
   sh0?: V3
   sway?: Sway
+  /** band face pull: the anchor's pose (the band runs fist, anchor, fist) */
+  anchor?: ImplementPose
 }
+
+/** band face pull: anchor height, how far ahead of the shoulders (m), each half's pull (kg) */
+const BAND_FACE = { y: 1.6, ahead: 1.15, kg: 6 }
 
 const cyl = (a: V3, b: V3, r: number, pad = false): Part => ({ shape: 'cylinder', a, b, r, ...(pad ? { pad } : {}) })
 
@@ -163,11 +172,39 @@ function faceContext(p: P, skel: Skeleton, tempo: Tempo): StandingCable {
   return v
 }
 
+function bandFaceContext(p: P, skel: Skeleton, tempo: Tempo): StandingCable {
+  const stance = makeStance(skel, stanceWidth(skel, 'hip'), 8)
+  const q0 = zeroQ(skel)
+  faceTrunk(skel, q0, 0)
+  const sh = segPos(skel, fk(skel, q0), 'humerus_l')
+  const anchor = bandAnchor({ height: BAND_FACE.y, mount: 'wall' })
+  // the wall faces the lifter (-Z), its hook straight ahead of the shoulders
+  const rot = qaxis([0, 1, 0], Math.PI)
+  const pulley: V3 = [0, BAND_FACE.y, sh[2] + BAND_FACE.ahead]
+  const anchorPose: ImplementPose = { id: anchor.id, pos: sub(pulley, qrot(rot, anchor.sites.hook.pos)), rot }
+  const strip = band({ path: [{ implement: fistId('l'), site: 'a' }, { implement: fistId('l'), site: 'b' }, { implement: anchor.id, site: 'hook' }, { implement: fistId('r'), site: 'b' }, { implement: fistId('r'), site: 'a' }], size: 'medium' })
+  const cables = (['l', 'r'] as const).map((s) => ({ pulley, implement: fistId(s), point: [0, 0, 0] as V3, kg: BAND_FACE.kg }))
+  const v: StandingCable = { kind: 'cable', tempo, setup: undefined as never, variant: 'face', work: 'r', pulley, handle: anchor, stance, anchor: anchorPose }
+  v.setup = {
+    implements: [...fistGrips(), anchor, strip],
+    contacts: [...plantedContacts(skel, stance), ...fistContacts()],
+    tempo,
+    symmetric: p.laterality === 'bilateral',
+    balance: { point: 'com', over: 'midfoot', tol: ARM_BALANCE_TOL },
+    cables,
+  }
+  v.sway = limitSway((u, sway) => faceFrame(skel, zeroQ(skel), v, u, sway).bal)
+  return v
+}
+
 function faceFrame(skel: Skeleton, q: Float64Array, v: StandingCable, u: number, sway?: Sway) {
   const ph = phases(u, v.tempo)
   faceTrunk(skel, q, ph.s)
   const cable = v.setup.cables![0]
-  const measure = (qq: Float64Array) => {
+  const measure = v.anchor ? (qq: Float64Array) => {
+    const fists = fistPoses(skel, qq)
+    return centerOfPressure(skel, fk(skel, qq), [], v.setup.cables!.map((c, k) => cableForce(c, fists[k])))[1]
+  } : (qq: Float64Array) => {
     const kp = knotPose(skel, qq, v.pulley, v.handle)
     const { at, force } = cableForce(cable, kp)
     return centerOfPressure(skel, fk(skel, qq), [{ mass: 0.9, pos: comWorld(v.handle, kp) }], [{ at, force }])[1]
@@ -268,11 +305,16 @@ function dHandlePose(skel: Skeleton, q: Float64Array, v: StandingCable): Impleme
 // ---------- entry ----------
 
 export function cableContext(p: P, skel: Skeleton, tempo: Tempo): StandingCable {
+  if (p.implement === 'band') return bandFaceContext(p, skel, tempo)
   return p.finish === 'external_rotation' || p.attachment === 'rope' ? faceContext(p, skel, tempo) : oneContext(p, skel, tempo)
 }
 
 export function sampleCable(u: number, p: P, skel: Skeleton, v: StandingCable): Pose {
   const q = zeroQ(skel)
+  if (v.anchor) {
+    faceFrame(skel, q, v, u, v.sway)
+    return { q, implements: [...fistPoses(skel, q), v.anchor, bandPose()], contacts: v.setup.contacts }
+  }
   if (v.variant === 'face') {
     faceFrame(skel, q, v, u, v.sway)
     const knot = knotPose(skel, q, v.pulley, v.handle)

@@ -4,7 +4,8 @@ import { bodyCapsules, capsuleSolidClearance, placeParts, restAgainst } from '..
 import { centerOfMass, fk, localToWorld, type FK } from '../fk.ts'
 import { barbell, dumbbell, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
 import { CALF_SEATED, CALF_STANDING, calfStep, calfYoke, footBar, seatedLever } from '../implements/legs-hip-calf.ts'
-import { flatBench, wallSection, PLYO_BOX } from '../implements/shared.ts'
+import { flatBench, floorMat, plyoBox, wallSection, FLOOR_MAT, PLYO_BOX } from '../implements/shared.ts'
+import { band, bandNode, bandPose, segmentPose, type BandPoint } from '../implements/bands.ts'
 import { add, cross, DEG, dot, lerp, neg, norm, qaxis, qconj, qfromBasis, qid, qmul, qrot, scale, sub, type Quat, type V3 } from '../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
@@ -74,8 +75,9 @@ const PAD_FROM_KNEE = 0.09
 const THIGH_SINK = 0.008
 
 type Stand = {
-  /** machine: the yoke; step: free on a step (single leg, a hand on the wall); bar: a bar on the back on a step */
-  kind: 'machine' | 'step' | 'bar'
+  /** machine: the yoke; step: free on a step (single leg, a hand on the wall); bar: a bar on the back on a step;
+   * donkey: hinged over, the forearms on a padded box */
+  kind: 'machine' | 'step' | 'bar' | 'donkey'
   /** bar: the bar, its arm DOFs (solved once: the bar rides on the thorax), Smith rails (the hips keep a fixed z) */
   bar?: ImplementSpec
   barArms?: [number, number][]
@@ -90,6 +92,8 @@ type Stand = {
   wall?: { spec: ImplementSpec; pose: ImplementPose }
   box?: { spec: ImplementSpec; pose: ImplementPose }
   db?: ImplementSpec
+  /** donkey: the padded box the forearms rest on, the hands on it, and the pelvis tilt at the stretch and the top */
+  pad?: { pose: ImplementPose; hands: V3[]; tilt: [number, number] }
 }
 
 type Seated = {
@@ -126,7 +130,17 @@ type Perch = {
   dbs: { id: string; side: Side; pos: V3; rot: Quat }[]
 }
 
-type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | Press | Tib | Perch }
+/** seated on the floor, legs long: the feet pivot about the heels against a band looped over them */
+type LongSit = {
+  kind: 'longsit'
+  feet: { side: Side; pivot: V3; yaw: number }[]
+  hip: V3
+  hands: V3[]
+  /** the mat and the dumbbell anchoring the band (fixed) */
+  poses: ImplementPose[]
+}
+
+type Ctx = { tempo: Tempo; setup: Setup; v: Stand | Seated | Press | Tib | Perch | LongSit }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 const other = (s: Side): Side => (s === 'l' ? 'r' : 'l')
@@ -183,7 +197,10 @@ function gaze(skel: Skeleton, q: Float64Array, down = 0) {
 const dfAt = (c: number, df: { stretch: number; top: number }) => lerp(df.stretch, df.top, c)
 
 function unsupported(p: P): string | null {
+  if (p.direction === 'dorsiflexion' && p.implement === 'band') return p.posture === 'seated' && p.support === 'floor' ? null : `band dorsiflexion ${p.posture}/${p.support}`
   if (p.direction === 'dorsiflexion') return p.support === 'wall' && p.platform === 'floor' && p.implement === 'bodyweight' ? null : `dorsiflexion ${p.support}/${p.platform}`
+  if (p.support === 'bench') return p.implement === 'bodyweight' && p.posture === 'standing' && p.stance === 'hip' && p.platform === 'step' ? null : `${p.implement} bench-supported ${p.stance}/${p.platform}`
+  if (p.implement === 'band' || p.support === 'floor') return `${p.implement} ${p.direction} on the ${p.support}`
   if (p.implement === 'machine') {
     if (p.machine === 'calf_machine' && p.posture === 'standing' && p.stance === 'hip') return null
     if (p.machine === 'seated_calf' && p.posture === 'seated') return null
@@ -229,7 +246,7 @@ function hipHeight(skel: Skeleton, q: Float64Array, v: Stand, pitch: number, x: 
 function solveStand(skel: Skeleton, q: Float64Array, v: Stand, df: number): number {
   // the balls' midpoint (one foot: its ball)
   const ball = scale(v.feet.reduce((a, f) => add(a, f.ball), [0, 0, 0] as V3), 1 / v.feet.length)
-  const fixed = v.kind === 'machine' || !!v.rail
+  const fixed = v.kind === 'machine' || v.kind === 'donkey' || !!v.rail
   let x = fixed ? 0 : ball[0] * 1.8
   let z = fixed ? v.hipZ! : ball[2] - 0.1
   const pitchFor = () => root1d((pitch) => {
@@ -871,13 +888,223 @@ function samplePress(c: number, skel: Skeleton, ctx: Ctx, v: Press): Pose {
   }
 }
 
+// ---------- donkey: hinged over, forearms on a padded box ----------
+
+/**
+ * Donkey raise: the trunk hinged `torso` deg from vertical (params.torsoAngle), the spine flat, the hips over the feet
+ * (this far behind the balls, m); the forearms rest on a padded box whose top sits under the elbows. As the heels rise
+ * the hips rise with them, so the pelvis tilts a little more at the top to keep the shoulders level over the box.
+ */
+const DONKEY = { torso: 80, hipBack: 0.05, spine: { lumbar: 4, thorax: 6 }, padSink: 0.008, elbowBack: 0.02 }
+
+function donkeyUpper(skel: Skeleton, q: Float64Array) {
+  setDofs(skel, q, { 'lumbar.flex': DONKEY.spine.lumbar, 'thorax.flex': DONKEY.spine.thorax, 'clavicle_*.prot': 8, 'clavicle_*.elev': 6, 'grip_*.close': 0.3 })
+}
+
+const shoulderMid = (skel: Skeleton, q: Float64Array): V3 => {
+  const f = fk(skel, q)
+  return scale(add(f.pos[skel.seg.humerus_l], f.pos[skel.seg.humerus_r]), 0.5)
+}
+
+/** forearms on the pad: palms down, the elbows under the shoulders (left solved, right mirrored) */
+function donkeyArms(skel: Skeleton, q: Float64Array, hands: V3[]) {
+  attachHand(skel, q, 'l', { pos: hands[0], axis: [-1, 0, 0], palm: [0, -1, 0] }, { pole: [0.2, -1, -0.6], planeHint: 90 })
+  mirrorArm(skel, q)
+}
+
+function donkeyContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const half = stanceWidth(skel, 'hip') / 2
+  const feet = (['l', 'r'] as const).map((side) => ({ side, ball: [side === 'l' ? half : -half, STEP_BOX, 0] as V3, yaw: 4 }))
+  const step = calfStep({ id: 'box', height: STEP_BOX })
+  const stepPose: ImplementPose = { id: 'box', pos: [0, 0, -BALL_IN + PLYO_BOX.depth / 2], rot: qid() }
+  step.sites.ball = { pos: sub([0, STEP_BOX, 0], stepPose.pos), normal: [0, 1, 0] }
+  const torso = p.torsoAngle ?? DONKEY.torso
+  const tiltMid = torso - DONKEY.spine.lumbar - DONKEY.spine.thorax
+  const v: Stand = { kind: 'donkey', feet, tilt: tiltMid, df: STANDING_DF, hipZ: -DONKEY.hipBack, box: { spec: step, pose: stepPose } }
+  const q = zeroQ(skel)
+  donkeyUpper(skel, q)
+  solveStand(skel, q, v, dfAt(0.5, v.df))
+  // the pad top under the elbows hanging straight down from the shoulders, the forearms forward along it
+  const sh = shoulderMid(skel, q)
+  const upper = skel.segments[skel.seg.humerus_l].length, fore = skel.segments[skel.seg.forearm_l].length
+  const f0 = fk(skel, q)
+  const shX = f0.pos[skel.seg.humerus_l][0]
+  const elbowY = sh[1] - upper
+  const r = Math.max(...Object.values(skel.data.capsules).filter((c) => c.region === 'forearm_l').map((c) => c.r))
+  const top = elbowY - r + DONKEY.padSink
+  const hands: V3[] = [[shX, top + 0.03, sh[2] - DONKEY.elbowBack + fore], [-shX, top + 0.03, sh[2] - DONKEY.elbowBack + fore]]
+  const pad = plyoBox({ id: 'pad', height: top, width: 0.6, depth: 0.45 })
+  const padPose: ImplementPose = { id: 'pad', pos: [0, 0, sh[2] - DONKEY.elbowBack + fore / 2], rot: qid() }
+  for (const [k, side] of (['l', 'r'] as const).entries()) pad.sites[`hand_${side}`] = { pos: sub(hands[k], padPose.pos), axis: [side === 'l' ? -1 : 1, 0, 0], normal: [0, 1, 0] }
+  // pelvis tilt at the stretch and the top that keeps the shoulders at the mid-rep height
+  const tiltAt = (c: number) => root1d((t) => {
+    v.tilt = t
+    const qq = zeroQ(skel)
+    donkeyUpper(skel, qq)
+    solveStand(skel, qq, v, dfAt(c, v.df))
+    return shoulderMid(skel, qq)[1] - sh[1]
+  }, tiltMid - 25, tiltMid + 25, { tol: 1e-6 }).x
+  const tilt: [number, number] = [tiltAt(0), tiltAt(1)]
+  v.tilt = tiltMid
+  v.pad = { pose: padPose, hands, tilt }
+  const contacts: Contact[] = [
+    ...feet.map((ft): Contact => ({ site: `ball_${ft.side}`, kind: 'planted', target: { world: ft.ball } })),
+    { site: 'grip_l', kind: 'grip', target: { implement: 'pad', grip: 'hand_l' } },
+    { site: 'grip_r', kind: 'grip', target: { implement: 'pad', grip: 'hand_r' } },
+  ]
+  const setup: Setup = {
+    implements: [step, pad],
+    contacts,
+    tempo,
+    symmetric: true,
+    // the forearms on the pad carry the trunk: no balance over the balls to judge
+    rests: [{ implement: 'box', regions: ['foot_l', 'foot_r'], tol: FOREFOOT_REST }, { implement: 'pad', regions: ['forearm_l', 'forearm_r', 'hand_l', 'hand_r'], tol: 15 }],
+  }
+  return { tempo, v, setup }
+}
+
+function sampleDonkey(c: number, skel: Skeleton, ctx: Ctx, v: Stand): Pose {
+  const q = zeroQ(skel)
+  donkeyUpper(skel, q)
+  v.tilt = lerp(v.pad!.tilt[0], v.pad!.tilt[1], c)
+  const pitch = solveStand(skel, q, v, dfAt(c, v.df))
+  for (const f of v.feet) toes(skel, q, f.side, pitch)
+  donkeyArms(skel, q, v.pad!.hands)
+  // hinged over, the head stays in line with the trunk, eyes down and ahead
+  gaze(skel, q, 30)
+  return { q, implements: [v.box!.pose, v.pad!.pose], contacts: ctx.setup.contacts }
+}
+
+// ---------- seated band tibialis raise ----------
+
+/**
+ * Long sitting on a mat, the trunk leaning back `lean` deg on straight arms, hands on the mat behind; the legs long
+ * with the knees `knee` deg bent and the heels on the mat. The feet pivot about the heels from pointed (the band pulls
+ * the toes away) to pulled back towards the shins (ankle dorsiflexion, deg). A loop band runs over the tops of both
+ * feet to a heavy dumbbell lying on the mat in front.
+ */
+const LONG = { lean: 15, knee: 4, df: { stretch: -32, top: 10 }, hands: { reach: 0.6, out: 0.22, up: 0.035 }, sink: 0.008, anchorAhead: 0.42, anchorKg: 32 }
+/** the back of the heel (foot frame, m): resting on the mat it is the pivot the foot turns about */
+const HEEL_BACK: V3 = [0.006, -0.045, -0.075]
+/** band path points on the left foot (foot frame, m): outside edge, top of the forefoot, inside edge (mirror for the right) */
+const DORSUM_BAND = { outer: [0.052, -0.04, 0.13] as V3, top: [0.004, -0.012, 0.13] as V3, inner: [-0.044, -0.035, 0.13] as V3 }
+
+function longUpper(skel: Skeleton, q: Float64Array) {
+  setDofs(skel, q, { 'lumbar.flex': 4, 'thorax.flex': 6, 'clavicle_*.prot': -6, 'clavicle_*.elev': 4, 'grip_*.close': 0.2 })
+}
+
+/** the foot turned `a` deg about X from standing (toes up at -90), its heel pivot at `pivot` */
+function longFoot(side: Side, pivot: V3, yaw: number, a: number): FootTarget {
+  const rot = qmul(qaxis([0, 1, 0], (side === 'l' ? yaw : -yaw) * DEG), qaxis([1, 0, 0], a * DEG))
+  return { side, rot, ankle: sub(pivot, qrot(rot, [side === 'l' ? HEEL_BACK[0] : -HEEL_BACK[0], HEEL_BACK[1], HEEL_BACK[2]])) }
+}
+
+/**
+ * legs to the feet for keyed dorsiflexion: the foot turns about the back of the heel, which slides a little along the
+ * mat so the knees keep LONG.knee (nested 1-D root finds on the foot angle and the heel's z); returns the foot angle
+ */
+function longLegs(skel: Skeleton, q: Float64Array, v: Pick<LongSit, 'feet' | 'hip'>, df: number) {
+  setPelvis(skel, q, v.hip, -LONG.lean)
+  const legs = (a: number, dz: number) => legsTo(skel, q, v.feet.map((f) => longFoot(f.side, add(f.pivot, [0, 0, dz]), f.yaw, a)))[0]
+  const slide = (a: number) => root1d((dz) => LONG.knee - legs(a, dz).knee, -0.08, 0.08, { tol: 1e-9 }).x
+  const a = root1d((x) => legs(x, slide(x)).ankle[0] - df, -150, -30, { tol: 1e-8 }).x
+  legs(a, slide(a))
+  return a
+}
+
+function longContext(skel: Skeleton, tempo: Tempo): Ctx {
+  const q = zeroQ(skel)
+  longUpper(skel, q)
+  // the buttocks sink onto the mat
+  const matTop = FLOOR_MAT.thick
+  const seat = (y: number) => {
+    setPelvis(skel, q, [0, y, 0], -LONG.lean)
+    const caps = bodyCapsules(skel, fk(skel, q)).filter((c) => c.region === 'trunk')
+    return Math.min(...caps.map((c) => Math.min(c.a[1], c.b[1]) - c.r)) - (matTop - LONG.sink)
+  }
+  const hip: V3 = [0, root1d(seat, 0, 0.4, { tol: 1e-8 }).x, 0]
+  // legs long and slightly bent, the heels down on the mat: the leg's pitch puts the heel pad on it
+  const legAt = (pitch: number) => {
+    setDofs(skel, q, { 'hip_*.flex': 90 - LONG.lean - pitch, 'knee_*.flex': LONG.knee, 'ankle_*.df': 0 })
+    setPelvis(skel, q, hip, -LONG.lean)
+    return localToWorld(skel, fk(skel, q), 'foot_l', HEEL_BACK)
+  }
+  const pitch = root1d((x) => legAt(x)[1] - (matTop + 0.004), -10, 30, { tol: 1e-8 }).x
+  const heel = legAt(pitch)
+  const feet = (['l', 'r'] as const).map((side) => ({ side, pivot: [side === 'l' ? heel[0] : -heel[0], heel[1], heel[2]] as V3, yaw: 4 }))
+  const v: LongSit = { kind: 'longsit', feet, hip, hands: [], poses: [] }
+  const mat = floorMat({ id: 'mat' })
+  const matPose: ImplementPose = { id: 'mat', pos: [0, 0, heel[2] - FLOOR_MAT.length / 2 + 0.25], rot: qid() }
+  // hands behind on the mat, the arms near straight from the shoulders
+  const sh = fk(skel, q).pos[skel.seg.humerus_l]
+  const dy = sh[1] - (matTop + LONG.hands.up), dx = LONG.hands.out - sh[0]
+  const back = Math.sqrt(Math.max(0, LONG.hands.reach ** 2 - dy * dy - dx * dx))
+  v.hands = (['l', 'r'] as const).map((side) => [side === 'l' ? LONG.hands.out : -LONG.hands.out, matTop + LONG.hands.up, sh[2] - back] as V3)
+  for (const [k, side] of (['l', 'r'] as const).entries()) mat.sites[`hand_${side}`] = { pos: sub(v.hands[k], matPose.pos), axis: [side === 'l' ? 1 : -1, 0, 0], normal: [0, 1, 0] }
+  // the band: from the dumbbell's handle round the outside of the left foot, over both forefeet, round the right and back
+  const anchor = dumbbell({ id: 'anchor', mass: LONG.anchorKg })
+  const headR = (anchor.parts[1] as Extract<Part, { shape: 'cylinder' }>).r
+  const anchorPose: ImplementPose = { id: 'anchor', pos: [0, matTop + headR, heel[2] + LONG.anchorAhead], rot: qid() }
+  const mirror = (p: V3): V3 => [-p[0], p[1], p[2]]
+  const pt = (node: string, at: V3, face: V3): BandPoint => ({ implement: node, at, face })
+  const loop = band({
+    path: [
+      { implement: 'anchor', at: [0.045, 0.02, -0.01] },
+      pt('foot_node_l', DORSUM_BAND.outer, [1, 0, 0]),
+      pt('foot_node_l', DORSUM_BAND.top, [0, 1, 0]),
+      pt('foot_node_l', DORSUM_BAND.inner, [-1, 0, 0]),
+      pt('foot_node_r', mirror(DORSUM_BAND.inner), [1, 0, 0]),
+      pt('foot_node_r', mirror(DORSUM_BAND.top), [0, 1, 0]),
+      pt('foot_node_r', mirror(DORSUM_BAND.outer), [-1, 0, 0]),
+      { implement: 'anchor', at: [-0.045, 0.02, -0.01] },
+      { implement: 'anchor', at: [-0.045, -0.02, 0.01] },
+      { implement: 'anchor', at: [0.045, -0.02, 0.01] },
+    ],
+    closed: true,
+    size: 'medium',
+  })
+  // the heels rest on the mat (no skeleton site at the back of the heel: the floor and mat gates hold them there)
+  const contacts: Contact[] = [
+    { site: 'grip_l', kind: 'grip', target: { implement: 'mat', grip: 'hand_l' } },
+    { site: 'grip_r', kind: 'grip', target: { implement: 'mat', grip: 'hand_r' } },
+  ]
+  const setup: Setup = {
+    implements: [mat, anchor, bandNode('foot_node_l'), bandNode('foot_node_r'), loop],
+    contacts,
+    tempo,
+    symmetric: true,
+    rests: [{ implement: 'mat', regions: ['trunk', 'thigh_l', 'thigh_r', 'shank_l', 'shank_r', 'foot_l', 'foot_r', 'hand_l', 'hand_r'], tol: 15 }],
+  }
+  v.poses = [matPose, anchorPose]
+  return { tempo, v, setup }
+}
+
+function sampleLong(c: number, skel: Skeleton, ctx: Ctx, v: LongSit): Pose {
+  const q = zeroQ(skel)
+  longUpper(skel, q)
+  longLegs(skel, q, v, lerp(LONG.df.stretch, LONG.df.top, c))
+  for (const f of v.feet) q[skel.dof[`toe_${f.side}.flex`]] = -6 * c
+  // palms flat on the mat, fingers pointing back
+  attachHand(skel, q, 'l', { pos: v.hands[0], axis: [1, 0, 0], palm: [0, -1, 0] }, { pole: [0.4, 0.2, -1], planeHint: -60 })
+  mirrorArm(skel, q)
+  gaze(skel, q, 18)
+  const f = fk(skel, q)
+  return {
+    q,
+    implements: [...v.poses, segmentPose(skel, f, 'foot_node_l', 'foot_l'), segmentPose(skel, f, 'foot_node_r', 'foot_r'), bandPose()],
+    contacts: ctx.setup.contacts,
+  }
+}
+
 // ---------- template ----------
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const why = unsupported(p)
   if (why) throw new Error(`calf-raise: variant not implemented yet (${why})`)
   const tempo = p.tempo ?? DEFAULT_TEMPO
+  if (p.direction === 'dorsiflexion' && p.implement === 'band') return longContext(skel, tempo)
   if (p.direction === 'dorsiflexion') return tibContext(skel, tempo)
+  if (p.support === 'bench') return donkeyContext(p, skel, tempo)
   if (p.machine === 'seated_calf') return seatedContext(p, skel, tempo)
   if (p.machine === 'leg_press') return pressContext(skel, tempo)
   if (p.implement === 'dumbbell' && p.posture === 'seated') return perchContext(p, skel, tempo)
@@ -893,6 +1120,8 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
   if (v.kind === 'press') return samplePress(c, skel, ctx, v)
   if (v.kind === 'bar') return sampleBar(c, skel, ctx, v)
   if (v.kind === 'perch') return samplePerch(c, skel, ctx, v)
+  if (v.kind === 'longsit') return sampleLong(c, skel, ctx, v)
+  if (v.kind === 'donkey') return sampleDonkey(c, skel, ctx, v)
   return sampleStand(c, skel, ctx, v)
 }
 

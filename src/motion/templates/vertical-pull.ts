@@ -2,6 +2,11 @@ import { attachHand, plantFoot, root1d, solveLegs, type FootTarget } from '../co
 import { bodyCapsules, restAgainst } from '../collide.ts'
 import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { cableHandle, pullupBar, siteWorld, type ImplementSpec, type Part } from '../implements.ts'
+import { around, band, bandAnchor, bandNode, bandPose, segmentPose } from '../implements/index.ts'
+import { drape, fistContacts, fistGrips, fistId, fistPoses } from './band-pose.ts'
+import { matClearance, SINK } from './core/floor.ts'
+import { floorMat } from '../implements/shared.ts'
+import { dls } from '../ik.ts'
 import { add, DEG, lerp, norm, qfromBasis, qid, qrot, scale, sub, type V3 } from '../math.ts'
 import { setDofs, setScapula, shoulderRhythm, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
@@ -15,6 +20,16 @@ import { memo, type Setup, type Template } from './types.ts'
 // up with the body. Seated cable pulldown: the pelvis is fixed to the seat under the thigh pad and the bar moves on a
 // line from arms-overhead to the upper chest while the trunk leans back a little. Endpoint angles are author judgment
 // (no clean primary-source table), to be fitted from video.
+// Scapular pull-up (342, range scapular): the dead hang with the shoulders shrugged up, then the shoulder blades draw
+// down and back with the elbows held straight, so the body rises a few cm (author judgment: clavicle elevation
+// ~20 -> -4, retraction, the arms' elevation easing ~165 -> 152 as the scapulae rotate down).
+// Band-assisted pull-up (334, implement band): the pull-up with a heavy loop band choked round the bar over the left
+// knee, the left shin resting in the loop (the band's lift is not in the balance; the COM still hangs under the bar).
+// Three free path points on each strand drape it over the front of the knee, thigh and trunk where it would cut
+// through them.
+// Band pulldown (332, implement band, kneeling): tall kneeling on a mat facing a wall anchor high in front, an end of
+// the band in each fist (pronated); the fists travel on a line from arms up and forward towards the anchor to beside
+// the upper chest, elbows driving down to the sides, the chest lifting a little as in the seated pulldown.
 
 type P = ParamsOf<'vertical-pull'>
 
@@ -51,8 +66,19 @@ const UNDER_TILT = 15 * DEG
 /** arm elevation at the hang and at the top, for the scapular upward rotation the lead curve moves between */
 const HANG_ELEV = 165
 const TOP_ELEV = 45
+/** scapular pull-up: arm elevation the scapulae ease to at the top, deg */
+const SCAP_TOP_ELEV = 152
 
-type Hang = { kind: 'hang'; bar: ImplementSpec; barPose: ImplementPose; yHang: number; yTop: number; kneeling: boolean; height: (c: number) => number }
+type Hang = { kind: 'hang'; bar: ImplementSpec; barPose: ImplementPose; yHang: number; yTop: number; kneeling: boolean; height: (c: number) => number; bandX?: number }
+
+/**
+ * assist band: wrapped round the bar and under the left shin below the knee (tibia frame, m: on the front shank
+ * capsule's axis, radius the shank's plus half the band and its clearance); free points along each strand at
+ * fractions of the way up from the shin (closer near the knee), draped forward and out (lateral strand) or in
+ * (medial strand) round the thigh and trunk
+ */
+const ASSIST = { barR: 0.021, shin: [0.013, -0.13, -0.02] as V3, shinR: 0.07, strand: [0.06, 0.2, 0.5], side: [0.6, 0.6] }
+const strandNodes = (s: 'front' | 'back') => ASSIST.strand.map((_, k) => `band_${s}${k}`)
 type Seated = {
   kind: 'seated'
   handle: ImplementSpec
@@ -67,7 +93,7 @@ type Seated = {
   /** single-arm pulldown: the resting hand's grip-site target on the thigh pad */
   rest?: V3
 }
-type Ctx = { tempo: Tempo; setup: Setup; v: Hang | Seated }
+type Ctx = { tempo: Tempo; setup: Setup; v: Hang | Seated | Kneel }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 
@@ -148,6 +174,23 @@ function barSpec(p: P, skel: Skeleton): ImplementSpec {
 function hangBody(skel: Skeleton, q: Float64Array, c: number, p: P, kneeling: boolean) {
   const bent = p.legs !== 'straight'
   const sc = scapularLead(c)
+  if (p.range === 'scapular') {
+    setDofs(skel, q, {
+      'clavicle_*.elev': lerp(20, -4, sc),
+      'clavicle_*.prot': lerp(4, -10, sc),
+      'thorax.flex': lerp(0, -5, sc),
+      'lumbar.flex': lerp(-2, -3, sc),
+      'neck.flex': lerp(0, -4, sc),
+      'head.flex': 0,
+      'hip_*.flex': bent ? 18 : 4,
+      'hip_*.abd': 3,
+      'knee_*.flex': bent ? 75 : 6,
+      'ankle_*.df': -28,
+      'grip_*.close': 1,
+    })
+    q[skel.dof['pelvis.tilt']] = lerp(-3, -5, sc)
+    return
+  }
   setDofs(skel, q, {
     'clavicle_*.elev': lerp(20, -4, sc),
     'clavicle_*.prot': lerp(4, -12, sc),
@@ -172,7 +215,7 @@ function hangPose(skel: Skeleton, c: number, y: number, p: P, v: Pick<Hang, 'bar
   const q = zeroQ(skel)
   hangBody(skel, q, c, p, v.kneeling)
   q[skel.dof['pelvis.ty']] = y
-  const up = leadUprot(c)
+  const up = p.range === 'scapular' ? shoulderRhythm(lerp(HANG_ELEV, SCAP_TOP_ELEV, scapularLead(c)), 20).uprot : leadUprot(c)
   // the body hangs with its centre of mass under the grips (neutral handles run forward of the bar)
   const under = (siteWorld(v.bar, v.barPose, 'l').pos[2] + siteWorld(v.bar, v.barPose, 'r').pos[2]) / 2
   const r = root1d((z) => {
@@ -204,15 +247,33 @@ function hangContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   const elbow = (c: number, y: number) => hangPose(skel, c, y, p, base)[skel.dof['elbow_l.flex']]
   const yHang = root1d((y) => elbow(0, y) - HANG_ELBOW, BAR_HEIGHT - 1.6, BAR_HEIGHT - 0.9, { tol: 1e-6 }).x
   const chin = (y: number) => sitePos(skel, fk(skel, hangPose(skel, 1, y, p, base)), 'chin')[1] - (BAR_HEIGHT + CHIN_CLEARANCE)
-  const yTop = root1d(chin, yHang, yHang + 0.7, { tol: 1e-6 }).x
+  // scapular: the elbows stay straight, so the top is where they are as straight as at the hang
+  const scap = p.range === 'scapular'
+  const yTop = scap ? root1d((y) => elbow(1, y) - HANG_ELBOW, yHang - 0.05, yHang + 0.2, { tol: 1e-6 }).x : root1d(chin, yHang, yHang + 0.7, { tol: 1e-6 }).x
   // body height along the rep: solved at a few points so the elbows follow a lagging curve while the scapulae lead
   // (the first part of the pull is the shoulders coming down with the arms still long)
   const topElbow = elbow(1, yTop)
   const cs = Array.from({ length: 9 }, (_, k) => k / 8)
-  const ys = cs.map((c, k) => (k === 0 ? yHang : k === 8 ? yTop : root1d((y) => elbow(c, y) - lerp(HANG_ELBOW, topElbow, c ** ELBOW_LAG), yHang - 0.1, yTop + 0.05, { tol: 1e-6 }).x))
+  const ys = cs.map((c, k) => (k === 0 ? yHang : k === 8 ? yTop : root1d((y) => elbow(c, y) - lerp(HANG_ELBOW, topElbow, scap ? c : c ** ELBOW_LAG), yHang - 0.1, yTop + 0.05, { tol: 1e-6 }).x))
   const height = monotoneCubic(cs, ys)
   const implements_: ImplementSpec[] = [bar]
   if (kneeling) implements_.push({ id: 'pad', kind: 'bench', mass: 0, com: [0, 0, 0], parts: [KNEE_PAD], sites: {} })
+  let bandX: number | undefined
+  if (p.implement === 'band') {
+    bandX = segPos(skel, fk(skel, hangPose(skel, 0, yHang, p, base)), 'tibia_l')[0]
+    const front = strandNodes('front'), back = strandNodes('back')
+    const strip = band({
+      path: [
+        ...around(bar.id, { r: ASSIST.barR, from: 90, to: -90, axis: 'x', center: [bandX, 0, 0] }),
+        ...back,
+        ...around('band_knee', { r: ASSIST.shinR, from: 0, to: 180, axis: 'y', center: ASSIST.shin }),
+        ...front,
+      ],
+      closed: true,
+      size: 'heavy',
+    })
+    implements_.push(bandNode('band_knee'), ...[...front, ...back].map((id) => bandNode(id)), strip)
+  }
   const setup: Setup = {
     implements: implements_,
     contacts: gripContacts(bar.id),
@@ -220,7 +281,7 @@ function hangContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
     symmetric: p.laterality === 'bilateral',
     balance: { point: 'com', over: { implement: bar.id, sites: ['l', 'r'] }, tol: 0.025 },
   }
-  return { tempo, setup, v: { kind: 'hang', ...base, yHang, yTop, height } }
+  return { tempo, setup, v: { kind: 'hang', ...base, yHang, yTop, height, bandX } }
 }
 
 function sampleHang(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Hang): Pose {
@@ -228,7 +289,29 @@ function sampleHang(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Hang): Pose {
   const q = hangPose(skel, c, v.height(c), p, v)
   const implements_ = [v.barPose]
   if (v.kneeling) implements_.push(padPose(skel, q))
+  if (v.bandX !== undefined) implements_.push(...assistPoses(skel, q, v))
   return { q, implements: implements_, contacts: ctx.setup.contacts }
+}
+
+/** the shin node and the strands' free points (each run from the bar to the knee kept off the body) */
+function assistPoses(skel: Skeleton, q: Float64Array, v: Hang): ImplementPose[] {
+  const f = fk(skel, q)
+  const knee = segmentPose(skel, f, 'band_knee', 'tibia_l')
+  const shin = (deg: number): V3 => {
+    const a = (deg * Math.PI) / 180
+    return add(knee.pos, qrot(knee.rot, add(ASSIST.shin, [ASSIST.shinR * Math.cos(a), 0, ASSIST.shinR * Math.sin(a)])))
+  }
+  const bar = (deg: number): V3 => {
+    const a = (deg * Math.PI) / 180
+    return add(v.barPose.pos, [v.bandX!, ASSIST.barR * Math.cos(a), ASSIST.barR * Math.sin(a)])
+  }
+  // each strand hangs in front of the body from the bar to the shin (the wrap itself holds the shin)
+  const off = (c: { region: string }) => !c.region.startsWith('hand_') && !c.region.startsWith('shank_l')
+  const back = drape(skel, q, bar(-90), shin(0), ASSIST.strand.map((t) => 1 - t).reverse(), norm([ASSIST.side[0], 0, 1]), off)
+  const front = drape(skel, q, shin(180), bar(90), ASSIST.strand, norm([-ASSIST.side[1], 0, 1]), off)
+  const id = [0, 0, 0, 1] as [number, number, number, number]
+  const nodes = (ids: string[], pts: V3[]) => ids.map((x, k) => ({ id: x, pos: pts[k], rot: id }))
+  return [knee, ...nodes(strandNodes('front'), front), ...nodes(strandNodes('back'), back), bandPose()]
 }
 
 // ---------- seated pulldown ----------
@@ -394,9 +477,97 @@ function sampleSeated(u: number, p: P, skel: Skeleton, ctx: Ctx, v: Seated): Pos
   return { q, implements: [hp, { id: 'station', pos: [0, 0, 0], rot: qid() }], contacts: ctx.setup.contacts }
 }
 
+// ---------- kneeling band pulldown ----------
+
+/** kneeling: thighs this far forward of vertical, toes tucked; anchor height and distance ahead of the shoulders, m;
+ * hands' width (gripWidth x shoulder width) */
+const KNEEL = { thigh: 4, toes: -55, anchorY: 2.05, ahead: 0.38, topElbow: 12, finish: [0, 0.03, 0.07] as V3 }
+
+type Kneel = { kind: 'kneel'; ty: number; knee: number; top: V3; bottom: V3; hook: V3; anchor: ImplementPose; mat: ImplementPose; g: number }
+
+function kneelBody(skel: Skeleton, q: Float64Array, c: number, ty: number, knee: number) {
+  const sc = scapularLead(c)
+  setDofs(skel, q, {
+    'clavicle_*.elev': lerp(16, -4, sc),
+    'clavicle_*.prot': lerp(4, -12, sc),
+    'thorax.flex': lerp(2, -8, c),
+    'lumbar.flex': lerp(0, -4, c),
+    'neck.flex': lerp(-8, 0, c),
+    'head.flex': lerp(-4, 0, c),
+    'hip_*.flex': KNEEL.thigh,
+    'hip_*.abd': 3,
+    'knee_*.flex': knee,
+    'ankle_*.df': 0,
+    'toe_*.flex': KNEEL.toes,
+    'grip_*.close': 1,
+  })
+  setPelvis(skel, q, [0, ty, 0], 0)
+}
+
+/** both fists on the line's point `center`, `g` either side, pronated (palms towards the anchor) */
+function kneelArms(skel: Skeleton, q: Float64Array, center: V3, g: number, c: number) {
+  // elbows out at the top, driving down to the sides at the finish
+  const pole = norm(add(scale([1, 0, 0.3], 1 - c), scale([0.55, -1, -0.05], c)))
+  attachHand(skel, q, 'l', { pos: add(center, [g, 0, 0]), axis: [1, 0, 0], palm: [0, 0, 1] }, { pole, planeHint: 20, uprot: leadUprot(c, 30) })
+  for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
+}
+
+function kneelContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
+  const legs = (c: { region: string }) => c.region.startsWith('shank_') || c.region.startsWith('thigh_')
+  const fore = (c: { name: string }) => c.name.startsWith('forefoot_')
+  const rest = (x: number[]) => {
+    const q = zeroQ(skel)
+    kneelBody(skel, q, 0, x[0], x[1])
+    const caps = bodyCapsules(skel, fk(skel, q))
+    return [(matClearance(caps.filter(legs)) + SINK) * 100, (matClearance(caps.filter(fore)) + SINK / 2) * 100]
+  }
+  const [ty, knee] = dls(rest, [0.62, 95], { tol: 1e-8, iters: 80 }).x
+  const q0 = zeroQ(skel)
+  kneelBody(skel, q0, 0, ty, knee)
+  const f0 = fk(skel, q0)
+  const gh = scale(add(segPos(skel, f0, 'humerus_l'), segPos(skel, f0, 'humerus_r')), 0.5)
+  const g = (p.gripWidth * skel.data.shoulderWidth) / 2
+  const hook: V3 = [0, KNEEL.anchorY, gh[2] + KNEEL.ahead]
+  // start: the fists reach up and forward towards the anchor until the elbows are nearly straight
+  const dir = norm(sub(hook, gh))
+  const elbowAt = (d: number) => {
+    const q = Float64Array.from(q0)
+    kneelArms(skel, q, add(gh, scale(dir, d)), g, 0)
+    return q[skel.dof['elbow_l.flex']]
+  }
+  const top = add(gh, scale(dir, root1d((d) => elbowAt(d) - KNEEL.topElbow, 0.3, 0.8, { tol: 1e-6 }).x))
+  const q1 = zeroQ(skel)
+  kneelBody(skel, q1, 1, ty, knee)
+  const bottom = add(sitePos(skel, fk(skel, q1), 'front_rack'), KNEEL.finish)
+  const anchor = bandAnchor({ height: KNEEL.anchorY, mount: 'wall' })
+  const rot = qaxisY(Math.PI)
+  const anchorPose: ImplementPose = { id: anchor.id, pos: sub(hook, qrot(rot, anchor.sites.hook.pos)), rot }
+  const strip = band({ path: [{ implement: fistId('l'), site: 'b' }, { implement: fistId('l'), site: 'a' }, { implement: anchor.id, site: 'hook' }, { implement: fistId('r'), site: 'a' }, { implement: fistId('r'), site: 'b' }], size: 'medium' })
+  // mat under the knees and feet
+  const knees = segPos(skel, f0, 'tibia_l'), toes = sitePos(skel, f0, 'toe_l')
+  const matSpec = floorMat({ length: 1.0 })
+  const mat: ImplementPose = { id: matSpec.id, pos: [0, 0, (knees[2] + 0.18 + toes[2] - 0.1) / 2], rot: qid() }
+  const contacts: Contact[] = [...fistContacts()]
+  for (const side of ['l', 'r'] as const) for (const site of ['ball', 'toe']) contacts.push({ site: `${site}_${side}`, kind: 'planted', target: { world: sitePos(skel, f0, `${site}_${side}`) } })
+  const setup: Setup = { implements: [...fistGrips(), anchor, strip, matSpec], contacts, tempo, symmetric: p.laterality === 'bilateral' }
+  return { tempo, setup, v: { kind: 'kneel', ty, knee, top, bottom, hook, anchor: anchorPose, mat, g } }
+}
+
+function sampleKneel(u: number, _p: P, skel: Skeleton, ctx: Ctx, v: Kneel): Pose {
+  const c = phaseAt(u, ctx.tempo).c
+  const q = zeroQ(skel)
+  kneelBody(skel, q, c, v.ty, v.knee)
+  const center = add(add(scale(v.top, 1 - c), scale(v.bottom, c)), [0, 0, BOW * Math.sin(Math.PI * c)])
+  kneelArms(skel, q, center, v.g, c)
+  return { q, implements: [...fistPoses(skel, q), v.anchor, bandPose(), v.mat], contacts: ctx.setup.contacts }
+}
+
+const qaxisY = (a: number): [number, number, number, number] => [0, Math.sin(a / 2), 0, Math.cos(a / 2)]
+
 const context = memo((p: P, skel: Skeleton): Ctx => {
   const tempo = p.tempo ?? DEFAULT_TEMPO
-  if (p.implement === 'bodyweight' && p.posture === 'hanging') return hangContext(p, skel, tempo)
+  if ((p.implement === 'bodyweight' || p.implement === 'band') && p.posture === 'hanging') return hangContext(p, skel, tempo)
+  if (p.implement === 'band' && p.posture === 'kneeling') return kneelContext(p, skel, tempo)
   if (p.implement === 'machine' && p.machine === 'assisted_pullup') return hangContext(p, skel, tempo)
   if ((p.implement === 'cable' || p.machine === 'lat_pulldown') && p.posture === 'seated') return seatedContext(p, skel, tempo)
   throw new Error(`vertical-pull: variant not implemented yet (${p.implement}/${p.machine ?? '-'}/${p.posture})`)
@@ -404,6 +575,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
 
 function sample(u: number, p: P, skel: Skeleton): Pose {
   const ctx = context(p, skel)
+  if (ctx.v.kind === 'kneel') return sampleKneel(u, p, skel, ctx, ctx.v)
   return ctx.v.kind === 'hang' ? sampleHang(u, p, skel, ctx, ctx.v) : sampleSeated(u, p, skel, ctx, ctx.v)
 }
 

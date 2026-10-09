@@ -29,14 +29,15 @@ const series = (b: Baked, name: string) => Array.from({ length: b.frames }, (_, 
 describe('rear-raise template', () => {
   it('covers every rear-raise record', () => {
     expect([...baked.keys()]).toEqual([
-      '205-reverse-pec-deck', '210-bent-over-rear-delt-fly', '213-cable-rear-delt-fly', '230-incline-prone-rear-delt-raise', '231-prone-t-raise',
+      '205-reverse-pec-deck', '210-bent-over-rear-delt-fly', '213-cable-rear-delt-fly', '228-band-pull-apart', '230-incline-prone-rear-delt-raise',
+      '231-prone-t-raise',
     ])
   })
 
   it.each([...baked.keys()])('%s: horizontal abduction from in front to in line with the shoulders, elbows soft, no shrug', (slug) => {
     const b = get(slug)
-    // research: horizontal abduction ~-90 -> 0
-    expect(arm(b, BOTTOM).plane).toBeGreaterThan(75)
+    // research: horizontal abduction ~-90 -> 0 (the pull-apart starts a little wider so the light band stretches less)
+    expect(arm(b, BOTTOM).plane).toBeGreaterThan(b.params.implement === 'band' ? 70 : 75)
     expect(Math.abs(arm(b, TOP).plane)).toBeLessThan(10)
     // prone on the 45 deg pad the arms hang at 45 deg of flexion, then rise level with the shoulders
     const low = b.params.posture === 'lying_prone' ? 40 : 70
@@ -145,6 +146,33 @@ describe('rear-raise template', () => {
     // the trunk's front faces the floor prone, so palms down is along the thorax's forward axis
     expect(palmAtTop('230-incline-prone-rear-delt-raise').fwd).toBeGreaterThan(0.7)
     expect(palmAtTop('231-prone-t-raise').up).toBeGreaterThan(0.7)
+  })
+
+  it('band pull-apart (228): arms straight in front at shoulder height open to the shoulder line, the band across the chest', () => {
+    const b = get('228-band-pull-apart')
+    const start = arm(b, BOTTOM), end = arm(b, TOP)
+    expect(start.plane).toBeGreaterThan(70)
+    expect(end.plane).toBeLessThan(12)
+    // pronated: palms face the floor through the whole arc, so the band runs along the knuckles
+    for (let i = 0; i < b.frames; i += 5) {
+      const q = frameQ(b, i)
+      const f = fk(skel, q)
+      for (const s of ['l', 'r'] as const) expect(dot(handFrame(skel, f, s).palm, thoraxFrame(skel, q).up)).toBeLessThan(-0.9)
+    }
+    for (const a of [start, end]) {
+      expect(a.elev).toBeGreaterThan(80)
+      expect(a.elev).toBeLessThan(95)
+    }
+    expect(Math.max(...series(b, 'elbow_l.flex'))).toBeLessThan(10)
+    // shoulder blades set back at the finish
+    expect(series(b, 'clavicle_l.prot')[at(b, TOP)]).toBeLessThan(series(b, 'clavicle_l.prot')[at(b, BOTTOM)] - 10)
+    // the band's free point stays in front of the chest
+    for (let i = 0; i < b.frames; i += 5) {
+      const q = frameQ(b, i)
+      const mid = frameImplements(b, i)[b.implements.findIndex((s) => s.id === 'band_mid')].pos
+      const f = fk(skel, q)
+      expect(dot(sub(mid, segPos(skel, f, 'thorax2')), thoraxFrame(skel, q).fwd)).toBeGreaterThan(0.08)
+    }
   })
 
   it('unsupported variants throw', () => {
