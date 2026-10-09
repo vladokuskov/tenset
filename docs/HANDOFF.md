@@ -14,6 +14,7 @@ Tenset (repo `gym-builder`): no-backend, phone-first PWA for planning a weekly g
 - The owner delegated decisions: accept the recommended option and record it in docs/PLAN.md.
 
 ## State
+- Polish pass (2026-10-09, branch feat/polish): new QA gates, all 298 animated loops pass. 316, 427 and 730 are animated and pending owner review; 532 and 535 stay cards. Catalog review applied with 12 verified citations.
 - 2026-10-09: the owner approved every pending loop from waves 3b and 3c, so 295 of 300 exercises are animated and live. The 5 cards are 316, 427, 532, 535 and 730.
 - Wave 3c (2026-10-09, branch feat/motion-3c): 66 more animated (295 of 300). 30 approved, 36 pending owner review on /dev/review. Cards left: 316, 427, 532, 535, 730.
 - Wave 3b (2026-10-09, branch feat/motion-3b): 75 more animated (229 of 300). 34 are approved and live, and 41 are pending owner review on /dev/review. The remaining 71 cards are 13 3a leftovers needing props, 4 3b deferrals and the 54 tier-C exercises.

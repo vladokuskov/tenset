@@ -147,7 +147,7 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 234,plate-front-raise,Plate Front Raise,shoulders,front-raise,plate,nice,todo,todo,done,approved,
 235,dumbbell-z-press,Dumbbell Z Press,shoulders,vertical-press,dumbbell,nice,todo,todo,done,approved,
 236,dumbbell-scaption-raise,Dumbbell Scaption Raise,shoulders,front-raise,dumbbell,nice,todo,todo,done,approved,
-316,t-bar-row,T-Bar Row,back,,t_bar,nice,todo,todo,todo,todo,row
+316,t-bar-row,T-Bar Row,back,row,t_bar,nice,todo,todo,done,todo,
 317,landmine-meadows-row,Landmine Meadows Row,back,row,landmine;barbell,nice,todo,todo,done,approved,
 318,pendlay-row,Pendlay Row,back,row,barbell,nice,todo,todo,done,approved,
 319,seal-row,Seal Row,back,row,barbell;flat_bench,nice,todo,todo,done,approved,
@@ -188,7 +188,7 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 424,barbell-reverse-lunge,Barbell Reverse Lunge,squat,lunge,barbell;rack,nice,todo,todo,done,approved,
 425,dumbbell-forward-lunge,Dumbbell Forward Lunge,squat,lunge,dumbbell,nice,todo,todo,done,approved,
 426,dumbbell-lateral-lunge,Dumbbell Lateral Lunge,squat,lunge,dumbbell,nice,todo,todo,done,approved,
-427,cossack-squat,Cossack Squat,squat,,,nice,todo,todo,todo,todo,lunge
+427,cossack-squat,Cossack Squat,squat,lunge,,nice,todo,todo,done,todo,
 428,sissy-squat,Sissy Squat,squat,squat,,nice,todo,todo,done,approved,
 429,single-leg-leg-press,Single-Leg Leg Press,squat,squat,leg_press,variant,todo,todo,done,approved,
 430,bodyweight-split-squat,Bodyweight Split Squat,squat,lunge,,nice,todo,todo,done,approved,
@@ -241,7 +241,7 @@ id,slug,name,family,template,equipment,priority,data,cues,motion,owner,plannedTe
 727,band-curl,Band Curl,arms,curl,band,nice,todo,todo,done,approved,
 728,ez-bar-reverse-preacher-curl,EZ-Bar Reverse Preacher Curl,arms,curl,ez_bar;preacher_bench,nice,todo,todo,done,approved,
 729,high-cable-curl,High Cable Curl,arms,curl,cable,nice,todo,todo,done,approved,
-730,waiter-curl,Waiter Curl,arms,,dumbbell,nice,todo,todo,todo,todo,curl
+730,waiter-curl,Waiter Curl,arms,curl,dumbbell,nice,todo,todo,done,todo,
 731,jm-press,JM Press,arms,triceps-extension,barbell;flat_bench;rack,nice,todo,todo,done,approved,
 732,diamond-push-up,Diamond Push-Up,arms,push-up,,nice,todo,todo,done,approved,
 733,bench-dip,Bench Dip,arms,dip,flat_bench,nice,todo,todo,done,approved,

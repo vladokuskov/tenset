@@ -65,9 +65,11 @@
     "Finish tall with your hips and knees locked out together"
   ],
   "basis": [
+    "camara-2016",
+    "swinton-2011",
     "anatomy-general"
   ],
-  "confidence": "low",
+  "confidence": "medium",
   "status": "active",
   "replacedBy": null,
   "qa": {

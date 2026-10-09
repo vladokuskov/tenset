@@ -1,9 +1,10 @@
 // Bakes the motion of every exercise record whose template is implemented, round-trips it through the compact
-// format and runs numeric gates on every frame (contacts, limits, flips, loop seam, symmetry, balance,
-// penetration). Writes <out>/<slug>.motion.json (shipping format), <slug>.qa.json (gates, ranges, per-pair
-// clearances), <slug>.angles.png and, with --sheet, <slug>.sheet.png. Fails every exercise when skeleton.json is
-// stale against the body model, and any exercise whose shipped baked file (--baked) was baked against another
-// skeleton or no longer matches this bake. Exits non-zero when any gate fails.
+// format and runs numeric gates on every frame (contacts, stepping feet, limits, flips, loop seam, symmetry, balance
+// fore-aft, lateral and over hands on the floor, declared hand rests, machine travel, penetration of the body, props,
+// drawn bands and straps, machines and standing equipment). Writes <out>/<slug>.motion.json (shipping format),
+// <slug>.qa.json (gates, ranges, per-pair clearances), <slug>.angles.png and, with --sheet, <slug>.sheet.png. Fails
+// every exercise when skeleton.json is stale against the body model, and any exercise whose shipped baked file
+// (--baked) was baked against another skeleton or no longer matches this bake. Exits non-zero when any gate fails.
 // --only / --family pick records (ids, <id>-<slug>, F1..F9 or a family name) even before their template is flagged
 // implemented, and merge into <out>/report.json instead of replacing it.
 // node pipeline/motion/qa.ts [--only 301,711] [--family F1] [--sheet] [--out qa/out/motion] [--baked src/features/figure/motion/baked]
@@ -76,7 +77,7 @@ function check(v: (typeof exercises)[number], t0: number) {
   if (values.sheet) stickSheet(shipped, skel, `${v.slug} (${v.template})`, path.join(out, `${v.slug}.sheet.png`))
   const failed = gates.filter((g) => !g.pass).map((g) => `${g.name} ${g.value}${g.unit === 'bytes' || !g.unit ? '' : ' ' + g.unit} > ${g.limit}${g.detail ? ` (${g.detail}${g.frame !== undefined ? ` @${g.frame}` : ''})` : ''}`)
   summary.push({ slug: v.slug, template: v.template, pass, bytes, failed, ms })
-  const closest = clear.filter((r) => r.kind === 'body').slice(0, 1).concat(clear.filter((r) => r.kind === 'prop').slice(0, 1))
+  const closest = (['body', 'prop', 'strap'] as const).flatMap((k) => clear.filter((r) => r.kind === k).slice(0, 1))
   console.log(`${pass ? 'PASS' : 'FAIL'} ${v.slug.padEnd(30)} ${String(bytes).padStart(6)} B  ${String(ms).padStart(5)} ms  closest: ${closest.map((r) => `${r.pair} ${r.min} mm`).join('; ')}${failed.length ? '\n     ' + failed.join('\n     ') : ''}`)
 }
 

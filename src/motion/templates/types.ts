@@ -45,6 +45,14 @@ export type Tolerances = {
   horizontalAbduction?: number
   /** how far the centre of pressure may sit past the feet's outer edge laterally, mm (default 0) */
   lateral?: number
+  /** how far a drawn-only band or ring strap may pass into a body region it does not wrap, mm (default 10) */
+  strap?: number
+  /** how far the centre of pressure may sit outside the hands-and-feet support polygon of a floor plank, mm (default 15) */
+  support?: number
+  /** how far a moving foot may slide while it is down on the floor between steps, mm (default 5) */
+  stepSlip?: number
+  /** how far two pieces of standing equipment may overlap, mm (default 5) */
+  fixed?: number
 }
 
 export type Setup = {

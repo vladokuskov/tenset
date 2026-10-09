@@ -26,8 +26,8 @@
   "heads": {
     "semitendinosus": 1,
     "biceps_femoris_short": 0.75,
-    "biceps_femoris_long": 0.75,
-    "semimembranosus": 0.75
+    "biceps_femoris_long": 0.5,
+    "semimembranosus": 0.5
   },
   "stabilizers": [
     "glute_max",
@@ -57,6 +57,7 @@
     "Curl yourself back up by pulling your heels into the hooks"
   ],
   "basis": [
+    "bourne-2017",
     "anatomy-general"
   ],
   "confidence": "medium",

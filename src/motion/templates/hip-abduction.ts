@@ -7,8 +7,9 @@ import { around, band, bandNode, bandPose, flatBench, segmentPose } from '../imp
 import { palmRests } from '../implements/hinge.ts'
 import { ankleStrap, GRAB, grabHandle, HIP_MACHINE, hipArm, hipSeat, STRAP_ABOVE_ANKLE } from '../implements/legs-hip-calf.ts'
 import { add, clamp, DEG, lerp, neg, norm, qaxis, qfromBasis, qid, qmul, qrot, reject, scale, sub, type Quat, type V3 } from '../math.ts'
-import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
+import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { floorMat, FLOOR_MAT } from '../implements/shared.ts'
+import { poseArm } from './isolation.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { setPelvis } from './standing.ts'
@@ -357,9 +358,12 @@ function sampleCable(c: number, skel: Skeleton, ctx: Ctx, v: Cable): Pose {
  */
 const LYING = { abd: [0, 38], bottomHip: 40, bottomKnee: 75, sink: 0.004 } as const
 const MAT_Y = FLOOR_MAT.thick
-/** bottom arm overhead along the mat, the shoulder shrugged up towards the ear (deg) so the upper arm lies under the
- * head; its elevation is solved */
-const PILLOW = { arm: { 'shoulder_*.plane': 0, 'shoulder_*.rot': 0, 'elbow_*.flex': 10, 'forearm_*.pro': 60, 'wrist_*.flex': 0, 'grip_*.close': 0.3 }, shrug: 40 }
+/** mat margin past the body's footprint, m */
+const MAT_MARGIN = 0.05
+/** bottom arm as a pillow: the upper arm overhead along the mat under the head, the shoulder shrugged up towards the
+ * ear (deg), the elbow bent so the forearm folds back along the mat in front of the face, palm down on it; the arm's
+ * elevation is solved so the upper arm rests on the mat */
+const PILLOW = { plane: 0, elbow: 140, shrug: 40, close: 0.3 }
 const PILLOW_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev', 'grip_*.close']
 
 type LyingBody = Pick<Lying, 'work' | 'y' | 'bend' | 'neck' | 'bottomAbd' | 'pillowArm'>
@@ -398,26 +402,31 @@ function lyingContext(p: P, skel: Skeleton, tempo: Tempo): Ctx {
   // the bottom knee and foot come down onto the mat (adduction lifts the bottom leg)
   v.bottomAbd = root1d(set('bottomAbd', () => low((c) => c.region === `shank_${b}` || c.region === `foot_${b}`) - MAT_Y + LYING.sink), -30, 0, { tol: 1e-6 }).x
   // the bottom arm reaches overhead along the mat (elevated until the upper arm rests on it), the head rests on it
-  const armAt = (elev: number) => {
+  const armAt = (elev: number, tilt = 0) => {
     lyingBody(skel, q, v, LYING.abd[0])
-    setDofs(skel, q, { ...Object.fromEntries(Object.entries(PILLOW.arm).map(([k, x]) => [k.replace('*', b), x])), [`shoulder_${b}.elev`]: elev })
-    setScapula(skel, q, b)
+    const front = qrot(fk(skel, q).rot[skel.seg.pelvis], [0, 0, 1])
+    poseArm(skel, q, b, { plane: PILLOW.plane, elev, elbow: PILLOW.elbow, bend: norm(add(front, [0, -tilt, 0])), palm: [0, -1, 0], close: PILLOW.close })
     setDofs(skel, q, { [`clavicle_${b}.elev`]: PILLOW.shrug })
     v.pillowArm = PILLOW_DOFS.map((k) => [skel.dof[k.replace('*', b)], q[skel.dof[k.replace('*', b)]]] as [number, number])
     return low((c) => c.region === `upperarm_${b}`) - MAT_Y + LYING.sink
   }
-  armAt(root1d(armAt, 120, 180, { tol: 1e-6 }).x)
+  // the upper arm rests on the mat, then the forearm tilts down until the hand lies on it too
+  const elev = root1d((e) => armAt(e), 120, 180, { tol: 1e-6 }).x
+  root1d((t) => (armAt(elev, t), low((c) => c.region === `hand_${b}`) - MAT_Y + LYING.sink), -0.5, 2, { tol: 1e-6 })
   const hand = () => caps().filter((c) => c.region === `upperarm_${b}`)
   v.neck = root1d(set('neck', () => {
     const h = caps().filter((c) => c.region === 'head')
     return Math.min(...h.flatMap((x) => hand().map((a) => capsuleClearance(x, a))), lowest(h) - MAT_Y) + LYING.sink
   }), -35, 35, { tol: 1e-6 }).x
   lyingBody(skel, q, v, LYING.abd[0])
-  const f = fk(skel, q)
-  const top = segPos(skel, f, 'head'), feet = segPos(skel, f, `foot_${work}`)
-  const mat: ImplementPose = { id: 'mat', pos: [(top[0] + feet[0]) / 2, 0, 0.1], rot: qaxis([0, 1, 0], Math.PI / 2) }
+  // the mat under the whole body, the pillow arm and the bent bottom leg included, with a margin all round
+  const foot = bodyCapsules(skel, fk(skel, q)).flatMap((c) => [[c.a[0] - c.r, c.a[2] - c.r], [c.a[0] + c.r, c.a[2] + c.r], [c.b[0] - c.r, c.b[2] - c.r], [c.b[0] + c.r, c.b[2] + c.r]])
+  const [x0, x1] = [Math.min(...foot.map((p) => p[0])), Math.max(...foot.map((p) => p[0]))]
+  const [z0, z1] = [Math.min(...foot.map((p) => p[1])), Math.max(...foot.map((p) => p[1]))]
+  const size = (lo: number, hi: number, min: number) => Math.max(min, Math.ceil((hi - lo + 2 * MAT_MARGIN) * 20) / 20)
+  const mat: ImplementPose = { id: 'mat', pos: [(x0 + x1) / 2, 0, (z0 + z1) / 2], rot: qaxis([0, 1, 0], Math.PI / 2) }
   const setup: Setup = {
-    implements: [floorMat()],
+    implements: [floorMat({ length: size(x0, x1, FLOOR_MAT.length), width: size(z0, z1, FLOOR_MAT.width) })],
     contacts: [],
     tempo,
     symmetric: false,

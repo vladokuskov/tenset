@@ -49,6 +49,7 @@
     "Keep your toes forward and your torso still"
   ],
   "basis": [
+    "distefano-2009",
     "anatomy-general"
   ],
   "confidence": "medium",

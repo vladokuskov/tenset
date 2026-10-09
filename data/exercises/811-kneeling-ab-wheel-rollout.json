@@ -55,9 +55,10 @@
     "Keep your lower back from sagging as you pull the wheel home"
   ],
   "basis": [
+    "escamilla-2006",
     "anatomy-general"
   ],
-  "confidence": "medium",
+  "confidence": "high",
   "status": "active",
   "replacedBy": null,
   "qa": {

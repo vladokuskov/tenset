@@ -22,8 +22,8 @@
     "reps": "8-12"
   },
   "groups": {
-    "lats": "primary",
     "upper_back": "primary",
+    "lats": "secondary",
     "rear_delt": "secondary",
     "biceps": "secondary"
   },

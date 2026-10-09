@@ -2,12 +2,14 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { bake, compactSize, decode, encode, frameImplements, frameQ, type Baked, type CompactMotion } from '../../src/motion/bake.ts'
 import { fk } from '../../src/motion/fk.ts'
-import { placeParts } from '../../src/motion/collide.ts'
+import { qconj, qrot } from '../../src/motion/math.ts'
+import { bodyCapsules, placeParts } from '../../src/motion/collide.ts'
 import type { Part } from '../../src/motion/implements.ts'
+import type { BandSpec } from '../../src/motion/implements/bands.ts'
 import { createSkeleton, type SkeletonData } from '../../src/motion/skeleton.ts'
 import { dumbbellPoses } from '../../src/motion/templates/arms.ts'
 import { getTemplate, parseParams } from '../../src/motion/templates/index.ts'
-import { armAngles, clearances, HORIZONTAL_ABDUCTION, PROP_TOL, runGates, skeletonGate } from './gates.ts'
+import { armAngles, clearances, frames, HORIZONTAL_ABDUCTION, PROP_TOL, runGates, skeletonGate } from './gates.ts'
 import { loadMotionExercises, loadSkeleton, skeletonSourceIssue } from './load.ts'
 
 const skel = loadSkeleton()
@@ -337,5 +339,134 @@ describe('lateral balance gate', () => {
     expect(declared.value).toBeGreaterThan(100)
     const curl = bakeRecord(711)
     expect(gate({ ...curl, balance: { ...curl.balance!, lateral: false } }).detail).toBe('not judged: declared off')
+  })
+})
+
+describe('wave 3 gates', () => {
+  const shippedBake = (id: number) => {
+    const file = readdirSync(BAKED).find((f) => f.startsWith(`${id}-`))!
+    return decode((JSON.parse(readFileSync(new URL(file, BAKED), 'utf8')) as { motion: CompactMotion }).motion, skel)
+  }
+  const gate = (x: Baked, name: string) => runGates(x, skel).find((g) => g.name === name)!
+  /** move implement `id` by `d` (m) on every frame, or pin it to its frame 0 pose */
+  const moveImplement = (x: Baked, id: string, d: [number, number, number] | 'freeze'): Baked => {
+    const ip = x.ip.slice()
+    const k = x.implements.findIndex((s) => s.id === id)
+    const n = x.implements.length
+    for (let i = 0; i < x.frames; i++) {
+      const o = (i * n + k) * 7
+      if (d === 'freeze') ip.set(x.ip.subarray(k * 7, k * 7 + 7), o)
+      else for (let j = 0; j < 3; j++) ip[o + j] += d[j]
+    }
+    return { ...x, ip }
+  }
+
+  it('checks drawn-only bands against the body, except the fists, the wrapped segments and their folds', { timeout: 30_000 }, () => {
+    const pull = shippedBake(334)
+    expect(gate(pull, 'penetration body-strap').pass).toBe(true)
+    // without its draped points the band runs straight from the bar to the shin node, through the thigh
+    const knee = pull.implements.findIndex((s) => s.id === 'band_knee')
+    const straight = moveImplement(pull, 'band_knee', [0, 0, 0])
+    for (const id of ['band_front0', 'band_front1', 'band_front2', 'band_back0', 'band_back1', 'band_back2']) {
+      const k = pull.implements.findIndex((s) => s.id === id)
+      for (let i = 0; i < pull.frames; i++) straight.ip.set(pull.ip.subarray((i * pull.implements.length + knee) * 7, (i * pull.implements.length + knee) * 7 + 3), (i * pull.implements.length + k) * 7)
+    }
+    const g = gate(straight, 'penetration body-strap')
+    expect(g.pass).toBe(false)
+    expect(g.detail).toMatch(/strap:band/)
+    expect(gate({ ...straight, tolerances: { strap: 500 } }, 'penetration body-strap').pass).toBe(true)
+    // the knee band of the lateral walk and the Spanish squat band behind the knees sit on the legs they wrap
+    for (const id of [537, 436]) expect(gate(shippedBake(id), 'penetration body-strap').pass, `${id}`).toBe(true)
+  })
+
+  it('checks a band between riding nodes past the wrapped ends: a knee-to-knee band through the thighs fails', { timeout: 30_000 }, () => {
+    const walk = shippedBake(537)
+    // the crossing runs between the knees are checked against the thighs now, not skipped as jointed segments
+    expect(clearances(walk, skel).some((r) => r.kind === 'strap' && /^thigh_[lr] \/ strap:band$/.test(r.pair))).toBe(true)
+    // a straight strip from 20 cm outside the left knee to 20 cm outside the right one runs through both thighs
+    const ip0 = frameImplements(walk, 0)
+    const local = (id: string, d: [number, number, number]) => qrot(qconj(ip0.find((p) => p.id === id)!.rot), d)
+    const band = walk.implements.find((s) => s.id === 'band') as BandSpec
+    const through = { ...band, band: { ...band.band, closed: false, path: [{ implement: 'knee_l', at: local('knee_l', [0.2, 0, 0]) }, { implement: 'knee_r', at: local('knee_r', [-0.2, 0, 0]) }] } }
+    const g = gate({ ...walk, implements: walk.implements.map((s) => (s.id === 'band' ? through : s)) }, 'penetration body-strap')
+    expect(g.pass).toBe(false)
+    expect(g.detail).toMatch(/^thigh_[lr] \/ strap:band/)
+  })
+
+  it('judges stepping loops: the planted stretches of a foot hold still, the lateral balance covers them', { timeout: 30_000 }, () => {
+    const walk = shippedBake(537)
+    expect(gate(walk, 'foot slip (stepping)').pass).toBe(true)
+    expect(gate(walk, 'balance (lateral, past the feet)').detail).not.toMatch(/not judged/)
+    // both feet slide 20 mm sideways while they stand between the steps
+    const q = walk.q.slice()
+    for (let i = 84; i < 120; i++) q[i * walk.nDof + skel.dof['pelvis.tx']] += 0.02 * Math.min(1, (i - 84) / 10)
+    const slip = gate({ ...walk, q }, 'foot slip (stepping)')
+    expect(slip.pass).toBe(false)
+    expect(slip.value).toBeGreaterThan(15)
+    // a lunge lands its stepping foot inside the glide allowance
+    expect(gate(shippedBake(424), 'foot landing glide (stepping)').pass).toBe(true)
+  })
+
+  it('fails a machine lever that does not travel', { timeout: 30_000 }, () => {
+    const row = shippedBake(338)
+    expect(gate(row, 'machine travel').pass).toBe(true)
+    const frozen = gate(moveImplement(row, 'tbar_lever', 'freeze'), 'machine travel')
+    expect(frozen.pass).toBe(false)
+    expect(frozen.detail).toBe('tbar_lever')
+    // an isometric hold with a free weight has no lever
+    expect(runGates(shippedBake(824), skel).some((g) => g.name === 'machine travel')).toBe(false)
+  })
+
+  it('fails standing equipment inside other standing equipment', { timeout: 30_000 }, () => {
+    const thrust = shippedBake(531)
+    expect(gate(thrust, 'penetration fixed equipment').pass).toBe(true)
+    // the thrust bench pushed 20 cm sideways stands in the Smith frame
+    const g = gate(moveImplement(thrust, 'thrust_bench', [0.2, 0, 0]), 'penetration fixed equipment')
+    expect(g.pass).toBe(false)
+    expect(g.detail).toMatch(/smith-reversed.*thrust-bench|thrust-bench.*smith-reversed/)
+  })
+
+  it('judges hand-supported floor work against the support polygon of hands and feet', { timeout: 30_000 }, () => {
+    const name = 'balance (support polygon, hands on the floor)'
+    const plank = shippedBake(804)
+    expect(gate(plank, name).pass).toBe(true)
+    expect(gate(plank, name).detail).toBeUndefined()
+    // a 60 kg pull sideways at the hips puts the pressure well outside the hands and feet
+    const pulled = { ...plank, implements: [...plank.implements], cables: [{ pulley: [3, 0.4, 0.6] as [number, number, number], implement: 'mat', point: [0, 0.4, 0.6] as [number, number, number], kg: 60 }] }
+    const g = gate(pulled, name)
+    expect(g.pass).toBe(false)
+    expect(g.value).toBeGreaterThan(15)
+    expect(gate({ ...pulled, tolerances: { support: 5000 } }, name).pass).toBe(true)
+    // lying and standing work is not judged
+    expect(gate(shippedBake(819), name).detail).toBe('not judged: lying on the floor')
+    expect(gate(shippedBake(711), name).detail).toBe('not judged: no hand on the floor')
+  })
+
+  it('judges a shoulder tap over the tripod of the planted hand and the feet', { timeout: 30_000 }, () => {
+    const name = 'balance (support polygon, hands on the floor)'
+    const tap = shippedBake(828)
+    expect(gate(tap, name).pass).toBe(true)
+    // the right hand is up at frame 60; a 20 kg pull at the hips towards it puts the pressure past the line from the
+    // left hand to the right foot while it taps
+    const F = frames(tap, skel)
+    expect(bodyCapsules(skel, F.f[60]).filter((c) => c.region === 'hand_r').every((c) => Math.min(c.a[1], c.b[1]) - c.r > 0.2)).toBe(true)
+    const hip = F.f[60].pos[skel.seg.pelvis]
+    const mat = F.impl[60].find((p) => p.id === 'mat')!.pos
+    const g = gate({ ...tap, cables: [{ pulley: [-3, hip[1], hip[2]], implement: 'mat', point: [hip[0] - mat[0], hip[1] - mat[1], hip[2] - mat[2]], kg: 20 }] }, name)
+    expect(g.pass).toBe(false)
+    expect(g.value).toBeGreaterThan(15)
+    expect(g.detail).not.toMatch(/hand_r/)
+    expect(g.detail).toMatch(/hand_l/)
+  })
+
+  it('fails a free hand declared to rest on a pad that floats off it', { timeout: 30_000 }, () => {
+    const name = 'declared hand rest contact'
+    const preacher = shippedBake(721)
+    expect(gate(preacher, name).pass).toBe(true)
+    const off = gate(moveImplement(preacher, 'preacher', [0, -0.05, 0]), name)
+    expect(off.pass).toBe(false)
+    expect(off.detail).toBe('hand_l / preacher')
+    // a gripping hand listed in a rest only gets a tolerance there
+    expect(runGates(shippedBake(828), skel).some((g) => g.name === name)).toBe(false)
   })
 })

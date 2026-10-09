@@ -3,7 +3,7 @@ import { bake, frameImplements, frameQ, type Baked } from '../bake.ts'
 import { bodyCapsules } from '../collide.ts'
 import { centerOfMass, fk, localToWorld, segPos, sitePos } from '../fk.ts'
 import { siteWorld } from '../implements.ts'
-import { dist } from '../math.ts'
+import { dist, sub } from '../math.ts'
 import { loopDuration } from '../timing.ts'
 import { motionRecords, testSkeleton } from '../testing.ts'
 import { getTemplate, parseParams } from './index.ts'
@@ -22,8 +22,8 @@ const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[
 const trunkLean = (b: Baked, u: number) => dof(b, u, 'pelvis.tilt') + dof(b, u, 'lumbar.flex') + dof(b, u, 'thorax.flex')
 
 describe('lunge template', () => {
-  it('covers every lunge record: split squats, reverse, forward, lateral and curtsy lunges, step-up, walking lunge', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 426, 430, 431, 433, 434])
+  it('covers every lunge record: split squats, reverse, forward, lateral and curtsy lunges, Cossack squat, step-up, walking lunge', () => {
+    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 426, 427, 430, 431, 433, 434])
   })
 
   it.each(variants.map((v) => [v.slug, v.id] as const))('%s: finite, planted feet still, dumbbells in the hands, loop closes', (_, id) => {
@@ -302,24 +302,41 @@ describe('lunge template', () => {
     expect(knee).toBeLessThan(top)
   })
 
-  // the cossack variant is kept in the template but no record uses it (427 reverted to a card in the 3c repair: too
-  // shallow for the name, a deeper fit broke the hip and ankle limits)
-  it('cossack squat variant: the hips sink over the right foot as far as its heel stays down, the left leg straight, its toes up', () => {
-    const b = bake(getTemplate('lunge'), parseParams('lunge', { implement: 'bodyweight', hold: 'hands', direction: 'cossack', torsoAngle: 45 }, 'alternating'), skel)
+  it('Cossack squat (427): very wide stance, the hips sink deep over the right foot with its heel down, the left leg straight, its toes up', () => {
+    const b = get(427)
     const u = bottomU(b)
-    // the right ankle stops at ~38 deg of dorsiflexion (heel down); the knee bends ~75-90
-    expect(dof(b, u, 'ankle_r.df')).toBeGreaterThan(36)
+    // knee ~110, hip ~93 (as deep as the bodyweight squat): the right heel stays down (ankle at its 38 deg cap)
+    expect(dof(b, u, 'knee_r.flex')).toBeGreaterThan(105)
+    expect(dof(b, u, 'hip_r.flex')).toBeGreaterThan(85)
     expect(dof(b, u, 'ankle_r.df')).toBeLessThan(38.6)
-    expect(dof(b, u, 'knee_r.flex')).toBeGreaterThan(72)
-    for (let i = 0; i < b.frames; i++) expect(frameQ(b, i)[skel.dof['knee_l.flex']]).toBeLessThan(6.5)
+    for (let i = 0; i < b.frames; i++) {
+      const q = frameQ(b, i)
+      expect(q[skel.dof['knee_l.flex']]).toBeLessThan(6.5)
+      // the straight leg stays inside the default hip abduction and rotation and ankle inversion limits
+      expect(q[skel.dof['hip_l.abd']]).toBeLessThan(50)
+      expect(q[skel.dof['hip_l.rot']]).toBeGreaterThan(-45)
+      expect(q[skel.dof['ankle_l.inv']]).toBeLessThan(30)
+    }
     const f0 = fk(skel, frameQ(b, 0)), fb = fk(skel, frameQ(b, at(b, u)))
-    // the hips move over the right foot; the left heel stays put while its toes rise ~45 deg
-    expect(segPos(skel, fb, 'pelvis')[0]).toBeLessThan(segPos(skel, f0, 'pelvis')[0] - 0.25)
+    // heels about a leg length plus hip width apart; the hips drop more than a quarter metre and move over the right foot
+    expect(sitePos(skel, f0, 'heel_l')[0] - sitePos(skel, f0, 'heel_r')[0]).toBeGreaterThan(1)
+    expect(segPos(skel, f0, 'pelvis')[1] - segPos(skel, fb, 'pelvis')[1]).toBeGreaterThan(0.24)
+    expect(segPos(skel, fb, 'pelvis')[0]).toBeLessThan(segPos(skel, f0, 'pelvis')[0] - 0.3)
+    // the left heel stays put while its toes rise; the right foot stays flat
     expect(dist(sitePos(skel, fb, 'heel_l'), sitePos(skel, f0, 'heel_l'))).toBeLessThan(0.002)
     expect(sitePos(skel, fb, 'toe_l')[1] - sitePos(skel, f0, 'toe_l')[1]).toBeGreaterThan(0.12)
-    // the right foot stays flat
     expect(Math.abs(sitePos(skel, fb, 'heel_r')[1] - sitePos(skel, fb, 'ball_r')[1])).toBeLessThan(0.002)
-  }, 30000)
+    // the trunk leans only a little sideways over the working leg (the spine takes back most of the pelvis's list)
+    const side = dof(b, u, 'pelvis.list') - dof(b, u, 'lumbar.bend') - dof(b, u, 'thorax.bend')
+    expect(Math.abs(side)).toBeLessThan(5)
+    // the arms reach forward, about level, at the top and the bottom
+    for (const uu of [0, u]) {
+      const f = fk(skel, frameQ(b, at(b, uu)))
+      const arm = sub(segPos(skel, f, 'hand_l'), segPos(skel, f, 'humerus_l'))
+      expect(arm[2]).toBeGreaterThan(0.4)
+      expect(Math.abs(arm[1])).toBeLessThan(0.25)
+    }
+  })
 
   it.each([
     ['cossack squat with dumbbells', { implement: 'dumbbell', hold: 'goblet', direction: 'cossack' }],

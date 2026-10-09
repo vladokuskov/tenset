@@ -68,7 +68,7 @@ const BAR = { plateKg: 20, grip: 2.1, wristBias: 10 }
 const BAR_REST = ['trunk', 'girdle_l', 'girdle_r', 'neck', 'upperarm_l', 'upperarm_r']
 const ARM_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev', 'grip_*.close']
 /** front midfoot to rear ball (split squat: to the rear ankle) as a fraction of stepLength x leg length */
-const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0, lateral: 0.55, curtsy: 0.7, cossack: 0.6 }
+const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0, lateral: 0.55, curtsy: 0.7, cossack: 1 }
 /** floor tolerance for a rear foot on its ball, mm: the rigid forefoot capsule sinks ~63 mm at REAR_PITCH.bottom */
 const REAR_FLOOR_TOL = 65
 /** the same for the step-up's trailing foot on its ball (heel up STEP.roll.off): ~33 mm (lead decision) */
@@ -143,11 +143,18 @@ const LATERAL = { inside: 0.03, straight: 6, toeOut: { work: 10, trail: 30 }, la
  * turned out `toeOut.work`, as deep as its heel stays down (ankle dorsiflexion `df`, capped by FRONT_KNEE_MAX.cossack),
  * shifting sideways exactly as far as keeps the left leg straight (knee LATERAL.straight); the centre of mass sits
  * `back` m behind the right midfoot, the trunk leans torsoAngle. The left foot, turned out `toeOut.trail`, rolls back
- * on its heel, toes up `lift` deg at the bottom. The arms reach forward for balance. The heel pivot sinks the rigid heel
- * capsule up to ~20 mm into the floor at full lift, where the real heel rolls (`floorTol`, mm, lead decision). Author
- * judgment; one working-side rep per loop (3b alternating precedent).
+ * on its heel, toes up `lift` deg at the bottom. The arms reach forward for balance, `reach` deg from the trunk plus its
+ * lean (just under level). The heel pivot sinks the rigid heel capsule up to ~20 mm into the floor at full lift, where
+ * the real heel rolls (`floorTol`, mm, lead decision). Author judgment; one working-side rep per loop (3b alternating
+ * precedent).
+ * Depth (wave 3 retry): the straight left leg reaching its heel sets how low the hips can go, so the stance is a full
+ * leg length plus hip width (STEP_SCALE.cossack 1, ~1.15 m heel to heel) and the pelvis lists `list` deg (left side up)
+ * by the bottom, the spine bending `unlist` of it back. That keeps the left hip inside its 50 deg abduction (~44) and
+ * reaches knee ~110 / hip ~93 with the right heel down (as deep as the bodyweight squat, 408); the left foot turned out
+ * `toeOut.trail` keeps its ankle inside 30 deg inversion as it rolls (left hip external rotation ~36-44 of 45). A
+ * heel-to-hip Cossack (knee ~140) needs hip abduction past 50 or ankle dorsiflexion past 40 on this skeleton.
  */
-const COSSACK = { toeOut: { work: 30, trail: 40 }, lift: 45, floorTol: 25, df: 38, back: 0.06 }
+const COSSACK = { toeOut: { work: 30, trail: 50 }, lift: 45, floorTol: 25, df: 38, back: 0.06, list: 12, unlist: 0.75, reach: 78 }
 /** goblet kettlebell reverse lunge: the back foot lifts off a little earlier, while the knee is still bent this far
  * (deg; with the upright goblet trunk the planted knee straightens faster through the rise) */
 const KB_OFF_KNEE = 92
@@ -507,8 +514,10 @@ function setArms(skel: Skeleton, ctx: Ctx, q: Float64Array) {
   else if (ctx.load === 'kb') kbGobletArms(skel, q, ctx.kb!)
   else if (ctx.load === 'goblet') gobletArms(skel, q, ctx.kb!)
   else if (ctx.kind === 'cossack') {
-    // arms reaching forward for balance, a little higher as the hips sink
-    setDofs(skel, q, { 'shoulder_*.plane': 90, 'shoulder_*.elev': 75, 'elbow_*.flex': 8, 'forearm_*.pro': 40, 'grip_*.close': 0.2 })
+    // arms reaching forward for balance, just under level whatever the trunk's lean
+    const up = qrot(fk(skel, q).rot[skel.seg.thorax2], [0, 1, 0])
+    const lean = Math.atan2(up[2], up[1]) / DEG
+    setDofs(skel, q, { 'shoulder_*.plane': 90, 'shoulder_*.elev': COSSACK.reach + lean, 'elbow_*.flex': 8, 'forearm_*.pro': 40, 'grip_*.close': 0.2 })
     setScapula(skel, q, 'l')
     setScapula(skel, q, 'r')
   } else {
@@ -586,10 +595,12 @@ function solve(skel: Skeleton, ctx: Ctx, s: State, feet: Feet, air?: number[]): 
   const top = ctx.hipSide === undefined ? ctx.hipTop : lerp(ctx.hipSide, ctx.hipTop, clamp((s.rear ?? 0) / STEP.topShare, 0, 1))
   const y = lerp(top, ctx.hipBottom, s.depth)
   const tilt = trunk(skel, q, 3 + (ctx.torso - 3) * s.depth) + hinge(ctx, s.depth)
+  // cossack: the spine bends back against the pelvis's list, so the trunk leans only a little over the working leg
+  if (ctx.kind === 'cossack') setDofs(skel, q, { 'lumbar.bend': COSSACK.unlist * 0.6 * COSSACK.list * s.depth, 'thorax.bend': COSSACK.unlist * 0.4 * COSSACK.list * s.depth })
   if (ctx.barArms) for (const [i, x] of ctx.barArms) q[i] = x
   else roughArms(skel, q)
   const place = (x: number, z: number) => {
-    setPelvis(skel, q, [x, y, z], tilt)
+    setPelvis(skel, q, [x, y, z], tilt, 0, ctx.kind === 'cossack' ? COSSACK.list * s.depth : 0)
     placeLegs(skel, q, feet, air)
   }
   const com = () => centerOfMass(skel, fk(skel, q), loads(skel, ctx, q))

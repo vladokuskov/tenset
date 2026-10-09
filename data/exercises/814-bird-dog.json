@@ -20,14 +20,14 @@
   },
   "groups": {
     "lower_back": "primary",
-    "glute_max": "secondary",
-    "obliques": "secondary"
+    "glute_max": "secondary"
   },
   "heads": {
     "quadratus_lumborum": 0.5
   },
   "stabilizers": [
     "abs",
+    "obliques",
     "glute_med",
     "front_delt",
     "upper_back"

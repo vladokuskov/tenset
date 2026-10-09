@@ -8,7 +8,7 @@ import { zeroQ, type ImplementPose, type Pose, type Skeleton } from '../../skele
 import type { Tempo } from '../../timing.ts'
 import { makeStance, plantedContacts, stand, stanceWidth, standBalanced, type StanceSetup } from '../standing.ts'
 import type { Setup } from '../types.ts'
-import { BOTTOM_ELBOW, trunk, trunkAngle } from './bent.ts'
+import { trunk, trunkAngle } from './bent.ts'
 import { ARM_DOFS, elbowPole, gripContacts, gripPath, mirrorArm, phases, reach, scapularLead, shoulderMid, type P } from './common.ts'
 
 // T-bar row (316) on a landmine: the bar pivots in a floor landmine behind the lifter and runs forward between the legs,
@@ -23,6 +23,11 @@ const PLATE_KG = 10
 /** the plates or handle stop this far off the trunk and head at the top, m */
 const TOP_GAP = 0.01
 const BALANCE_TOL = 0.025
+/**
+ * elbow at the hang, deg: a little softer than the bent row's, so the handle's arc has slack while the scapulae set back
+ * first (at the bent row's 8 the elbow snaps straight and back as the pull starts)
+ */
+const HANG_ELBOW = 11
 /**
  * the handle hangs this far ahead of the shoulders, m: its arc about the pivot behind runs up and back, so starting a
  * little forward brings it to the lower chest instead of into the stomach
@@ -47,8 +52,9 @@ export type Landmine = {
 function arms(skel: Skeleton, q: Float64Array, p: P, bar: ImplementSpec, pose: ImplementPose) {
   for (const k of ARM_DOFS) for (const s of ['l', 'r']) q[skel.dof[k.replace('*', s)]] = 0
   const g = siteWorld(bar, pose, 'v_l')
-  // neutral close grip: palms in, the handle along the bar; elbows tucked to the sides
-  reach(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: [-1, 0, 0] }, { pole: elbowPole(skel, q, 'l', p.elbowFlare, 0.6), planeHint: 90 })
+  // neutral close grip: palms in, the handle along the bar; elbows tucked to the sides. The wrist's deviation band is the
+  // chest-supported T-bar's (338): ulnar deviation passes ~21 as the bar steepens near the top
+  reach(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm: [-1, 0, 0] }, { pole: elbowPole(skel, q, 'l', p.elbowFlare, 0.6), planeHint: 90, devBand: [-34, 25] })
   mirrorArm(skel, q)
 }
 
@@ -79,12 +85,12 @@ export function landmineContext(p: P, skel: Skeleton, tempo: Tempo): Landmine {
   }
   // hang: the handle just ahead of the shoulders with the elbows just short of straight; the pivot sits where that puts it
   for (let pass = 0; pass < 6; pass++) {
-    v.pitch[0] = root1d((a) => elbowAt(a).elbow - BOTTOM_ELBOW, -5, 40, { tol: 1e-6 }).x
+    v.pitch[0] = root1d((a) => elbowAt(a).elbow - HANG_ELBOW, -5, 40, { tol: 1e-6 }).x
     const { q } = elbowAt(v.pitch[0])
     const handle = siteWorld(bar, landminePose(bar.id, v.pivot, 0, v.pitch[0]), 'v_l').pos
     v.pivot = [0, v.pivot[1], v.pivot[2] + shoulderMid(skel, q)[2] + HANG_AHEAD - handle[2]]
   }
-  v.pitch[0] = root1d((a) => elbowAt(a).elbow - BOTTOM_ELBOW, -5, 40, { tol: 1e-6 }).x
+  v.pitch[0] = root1d((a) => elbowAt(a).elbow - HANG_ELBOW, -5, 40, { tol: 1e-6 }).x
   // top: the plates or the handle come up to the chest
   const gap = (pitch: number) => {
     const q = zeroQ(skel)

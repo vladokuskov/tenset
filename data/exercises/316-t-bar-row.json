@@ -46,15 +46,22 @@
   ],
   "media": {
     "status": "card",
-    "template": null,
-    "params": {},
+    "template": "row",
+    "params": {
+      "implement": "landmine",
+      "attachment": "v_bar",
+      "torsoAngle": 45,
+      "grip": "neutral",
+      "elbowFlare": 30,
+      "stance": "shoulder"
+    },
     "mapView": "B"
   },
   "cues": [
-    "Straddle the bar and grip the handles next to the plates",
+    "Straddle the bar and grip the V-handle under it",
     "Hinge until your torso is about 45 degrees to the floor",
     "Row the plates toward your chest, elbows close to your sides",
-    "Keep your back flat and your hips still"
+    "Keep your back flat and your torso angle steady"
   ],
   "basis": [
     "mannarino-2021",
@@ -65,6 +72,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Polish pass 2026-10-09: animated on retry, rated minor, owner review. See docs/PLAN.md \"Polish pass\" for the compromise."
   }
 }

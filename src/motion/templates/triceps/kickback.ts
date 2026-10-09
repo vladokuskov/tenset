@@ -158,7 +158,8 @@ export function kickbackContext(p: P, skel: Skeleton, tempo: Tempo): Kickback {
     { site: `grip_${free}`, kind: 'support', target: { implement: benchSpec.id, grip: 'hand' } },
     { site: `grip_${work}`, kind: 'grip', target: { implement: db.id, grip: 'c' } },
   ]
-  const setup: Setup = { implements: [db, benchSpec], contacts, tempo, symmetric: false }
+  // the supporting palm rests on the pad
+  const setup: Setup = { implements: [db, benchSpec], contacts, tempo, symmetric: false, rests: [{ implement: benchSpec.id, regions: [`hand_${free}`], tol: 15 }] }
   // upper arm level with the floor: extended past the trunk line by the trunk's rise from level
   const flex = -(90 - p.torsoAngle)
   return { kind: 'kickback', tempo, setup, work, free, hip, tilt, feet, db, benchPose, support: { pos: supportPos, hand }, flex }

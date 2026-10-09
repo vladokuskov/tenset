@@ -54,9 +54,10 @@
     "Stop before your torso starts to roll back"
   ],
   "basis": [
+    "reinold-2004",
     "anatomy-general"
   ],
-  "confidence": "medium",
+  "confidence": "high",
   "status": "active",
   "replacedBy": null,
   "qa": {

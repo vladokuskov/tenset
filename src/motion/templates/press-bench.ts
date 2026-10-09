@@ -467,6 +467,9 @@ export function benchContext(p: PressParams, skel: Skeleton, tempo: Tempo): Benc
     const rack = benchRack({ hookHeight: top[1] - RACK_DROP })
     implements_.push(rack)
     fixed.push({ id: 'rack', pos: [0, 0, top[2] - RACK_BACK - rack.sites.l.pos[2]], rot: qid() })
+    // the uprights' rear floor member crosses the decline bench's floor rail under the head end (30 mm, at floor
+    // level, so 35 leaves a margin); the clean fix is drawing the decline rack and bench as one frame
+    if (decline) setup.tolerances = { ...setup.tolerances, fixed: 35 }
   }
   return { kind: 'bench', tempo, setup, hold, base, bar, along, top, bottom, strokes, fixed }
 }

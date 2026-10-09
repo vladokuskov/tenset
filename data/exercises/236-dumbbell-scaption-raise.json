@@ -22,7 +22,7 @@
   },
   "groups": {
     "front_delt": "primary",
-    "side_delt": "secondary",
+    "side_delt": "primary",
     "rotator_cuff": "secondary",
     "upper_traps": "secondary"
   },
