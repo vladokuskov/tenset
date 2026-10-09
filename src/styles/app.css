@@ -256,6 +256,32 @@
   padding-bottom: calc(var(--chrome-bottom) + var(--actions-h) + 1.5rem);
 }
 
+/* Fades the edges of a scroll container that has more content past them; flags come from useScrollFade. */
+@property --fade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@utility scroll-fade {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
+  transition:
+    --fade-top 0.2s linear,
+    --fade-bottom 0.2s linear;
+  &[data-more-above] {
+    --fade-top: 1.25rem;
+  }
+  &[data-more-below] {
+    --fade-bottom: 2.5rem;
+  }
+}
+
 @utility scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) transparent;

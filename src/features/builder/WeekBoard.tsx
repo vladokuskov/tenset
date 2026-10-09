@@ -12,7 +12,7 @@ import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
 import { useRoles } from '../catalog'
-import { cx } from '../../ui'
+import { cx, useScrollFade } from '../../ui'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './desktop/board'
 import { SORT_LABEL, SortableLists, type OtherDrag, type SortMove } from './dnd'
 import { useSortableItem, useSortableList } from './useSortable'
@@ -117,6 +117,7 @@ function BoardColumn({
   const locale = useLocale()
   const m = builderMessages[locale]
   const { ref, isDropTarget } = useSortableList(String(day), drops ? DRAWER_ITEM : undefined)
+  const fadeRef = useScrollFade<HTMLUListElement>()
   const { program, week, days } = view
   const d = program.days[day]
   const s = days[day]
@@ -164,7 +165,7 @@ function BoardColumn({
       <div className="flex h-12 shrink-0 items-center justify-center px-2 [@media(max-height:52rem)]:hidden">
         {!rest && s.exercises > 0 && <PulseMini view="both" groups={groups} scale="day" height={44} pulseScope={day} />}
       </div>
-      <ul className="scrollbar-thin flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-1.5 pb-1 pt-1">
+      <ul ref={fadeRef} className="scroll-fade scrollbar-thin flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain px-1.5 pb-1 pt-1">
         {ids.map((id, index) => {
           const entry = byId.get(id)
           const ex = entry ? exerciseFor(entry.exerciseId, catalog, program) : null

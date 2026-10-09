@@ -8,7 +8,7 @@ import { useMessages } from '../../../i18n/messages'
 import { usePrefsStore } from '../../../store/prefs.store'
 import { useProgramStore } from '../../../store/program.store'
 import { InstallNudge } from '../../../sw'
-import { IconButton, Page, PageBody, PageHeader, Sheet, useSheet } from '../../../ui'
+import { IconButton, Page, PageBody, PageHeader, Sheet, useScrollFade, useSheet } from '../../../ui'
 import { defaultReps, defaultSets, type AnyExercise } from '../labels'
 import { useChange } from '../useChange'
 import { DESKTOP_QUERY, useMediaQuery, writeFlag } from '../useMediaQuery'
@@ -62,6 +62,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
   const map = useSheet('map')
   const m = useMessages(desktopMessages)
 
+  const fadeRef = useScrollFade<HTMLElement>()
   const [drawerPref, setDrawerPref] = useState(readDrawer)
   const [focus, setFocus] = useState<Focus | null>(null)
   const [dragGroups, setDragGroups] = useState<string[] | null>(null)
@@ -171,7 +172,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
               onDropExercise={drawerOpen ? add : undefined}
               onDragExercise={onDragExercise}
             />
-            <aside aria-label={m.weekMap} className="scrollbar-thin min-h-0 overflow-y-auto overscroll-contain rounded-xl">
+            <aside ref={fadeRef} aria-label={m.weekMap} className="scroll-fade scrollbar-thin min-h-0 overflow-y-auto overscroll-contain rounded-xl">
               {panel}
             </aside>
           </div>
