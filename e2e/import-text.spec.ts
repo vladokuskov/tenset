@@ -23,7 +23,8 @@ test('pasted text becomes a new program after the review', async ({ page }) => {
 
   await sheet.getByRole('button', { name: 'Change match for Zercher carry' }).click()
   await sheet.getByRole('button', { name: 'Add as my own exercise' }).click()
-  await sheet.getByRole('combobox', { name: 'Main muscle group' }).selectOption({ label: 'Glutes' })
+  await sheet.getByRole('button', { name: 'Main muscle group' }).click()
+  await page.getByRole('listbox', { name: 'Main muscle group' }).getByRole('option', { name: 'Glutes' }).click()
   await expect(sheet.getByText('Zercher carry (my own exercise)')).toBeVisible()
   await expect(sheet.getByText('Check this one')).toHaveCount(0)
 

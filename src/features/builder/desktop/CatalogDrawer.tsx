@@ -1,6 +1,6 @@
 import { PointerSensor, useDraggable } from '@dnd-kit/react'
 import { ChevronDown, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from 'lucide-react'
-import { useId, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { dayName, type DayIndex } from '../../../app/days'
 import { useCatalog } from '../../../app/useCatalog'
 import { availableSet, hasEquipment } from '../../../domain/equipment'
@@ -9,7 +9,7 @@ import { groupIds } from '../../../domain/taxonomy'
 import { common } from '../../../i18n/common'
 import { useLocale } from '../../../i18n/messages'
 import { usePrefsStore } from '../../../store/prefs.store'
-import { Button, IconButton, cx } from '../../../ui'
+import { Button, IconButton, Select, cx } from '../../../ui'
 import { ExerciseCardMedia, buildIndex, filterExercises, primaryGroupNames, useRoles } from '../../catalog'
 import { FilterSelect } from '../../catalog/FilterSelect'
 import { groupName, matchesQuery, rowMeta, type AnyExercise } from '../labels'
@@ -30,31 +30,22 @@ const primariesOf = (roles: Record<string, Role>) =>
     .map(([g]) => g)
 
 function DaySelect({ value, order, onChange }: { value: DayIndex; order: readonly DayIndex[]; onChange: (d: DayIndex) => void }) {
-  const id = useId()
   const locale = useLocale()
   const m = desktopMessages[locale]
   return (
-    <span className="relative inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-line-strong px-3 text-sm font-medium text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-      <label htmlFor={id} className="sr-only">
-        {m.addToDay}
-      </label>
+    <Select
+      label={m.addToDay}
+      variant="custom"
+      value={value}
+      groups={[{ options: order.map((d) => ({ value: d, label: dayName(d, 'long', locale) })) }]}
+      onChange={onChange}
+      className="hit inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-line-strong px-3 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
+    >
       <span aria-hidden>
         <span className="text-ink-2">{m.addToPrefix}</span> {dayName(value, 'short', locale)}
       </span>
       <ChevronDown size={14} strokeWidth={2} aria-hidden className="text-ink-3" />
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="absolute inset-x-0 -inset-y-[7px] cursor-pointer appearance-none opacity-0"
-      >
-        {order.map((d) => (
-          <option key={d} value={d}>
-            {dayName(d, 'long', locale)}
-          </option>
-        ))}
-      </select>
-    </span>
+    </Select>
   )
 }
 

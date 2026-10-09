@@ -7,6 +7,9 @@ export const uiMessages = defineMessages({
     back: ', back',
     decrease: 'Decrease',
     increase: 'Increase',
+    search: 'Search',
+    noMatches: 'No matches',
+    language: { en: 'English', uk: 'Ukrainian' },
   },
   uk: {
     nav: { main: 'Головне', plan: 'План', body: 'Тіло', exercises: 'Вправи', settings: 'Налаштування' },
@@ -14,5 +17,8 @@ export const uiMessages = defineMessages({
     back: ', назад',
     decrease: 'Зменшити',
     increase: 'Збільшити',
+    search: 'Пошук',
+    noMatches: 'Нічого не знайдено',
+    language: { en: 'Англійська', uk: 'Українська' },
   },
 })

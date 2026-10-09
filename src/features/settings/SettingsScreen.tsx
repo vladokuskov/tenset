@@ -39,7 +39,7 @@ export function SettingsScreen() {
       <PageHeader title={m.title} back={{ to: '/', label: m.plan }} />
       <PageBody>
         <Section title={LANGUAGE_LABEL}>
-          <LanguageToggle size="md" block />
+          <LanguageToggle block />
         </Section>
 
         <Section title={m.goal} description={m.goalHint[s.goal]}>

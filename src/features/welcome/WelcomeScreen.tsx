@@ -16,7 +16,7 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { DayPicker } from '../builder'
 import { EquipmentPicker } from '../settings/EquipmentPicker'
-import { Button, LanguageToggle, Page, PageBody, StickyActions, cx, showToast } from '../../ui'
+import { Button, LanguageCards, Page, PageBody, StickyActions, cx, showToast } from '../../ui'
 import { welcomeMessages } from './messages'
 import { TemplateCard } from './TemplateCard'
 
@@ -102,15 +102,13 @@ export function WelcomeScreen() {
       <div className="pt-safe">
         <PageBody className="flex h-16 items-center justify-between">
           <BrandMark size={32} />
-          <div className="flex items-center gap-2">
-            {step === 1 && <LanguageToggle />}
-            <Button variant="ghost" size="sm" onClick={skip}>
-              {m.skip}
-            </Button>
-          </div>
+          <Button variant="ghost" size="sm" onClick={skip}>
+            {m.skip}
+          </Button>
         </PageBody>
       </div>
       <PageBody className="pt-2">
+        {step === 1 && <LanguageCards className="mb-6" />}
         <div className="flex items-center gap-1.5" aria-hidden>
           {Array.from({ length: STEPS }, (_, i) => (
             <span key={i} className={cx('h-1 flex-1 rounded-full', i < step ? 'bg-ink' : 'bg-line')} />

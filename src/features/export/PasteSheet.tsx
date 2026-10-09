@@ -21,7 +21,7 @@ import { compareText } from '../../i18n/format'
 import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { programStore, useProgramStore } from '../../store/program.store'
-import { Button, Pill, Sheet, showToast } from '../../ui'
+import { Button, Pill, Select, Sheet, showToast } from '../../ui'
 import { withUniqueNames } from './backup'
 import { createMatcher, type MatchCandidate, type MatchConfidence, type Matcher } from './importMatch'
 import { exportMessages } from './messages'
@@ -402,21 +402,20 @@ function ReviewRow({ row, matcher, onChoice }: { row: Row; matcher: Matcher; onC
               {m.skip}
             </Button>
             {choice.kind === 'custom' ? (
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-ink-2">{m.customGroup}</span>
-                <select
+              <div>
+                <span aria-hidden className="mb-1.5 block text-sm font-medium text-ink-2">
+                  {m.customGroup}
+                </span>
+                <Select
+                  label={m.customGroup}
+                  variant="field"
+                  placeholder={m.noGroup}
                   value={choice.group}
-                  onChange={(e) => onChoice({ kind: 'custom', group: e.target.value })}
-                  className="h-11 w-full rounded-md border border-line-strong bg-raised px-3 text-ink"
-                >
-                  <option value="">{m.noGroup}</option>
-                  {groupOptions.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  active={choice.group !== ''}
+                  groups={[{ options: [{ value: '', label: m.noGroup }] }, { options: groupOptions.map((g) => ({ value: g.id, label: g.name })) }]}
+                  onChange={(group) => onChoice({ kind: 'custom', group })}
+                />
+              </div>
             ) : (
               <Button size="sm" variant="ghost" className="justify-start" onClick={() => onChoice({ kind: 'custom', group: '' })}>
                 {m.asCustom}
