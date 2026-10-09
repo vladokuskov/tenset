@@ -6,6 +6,11 @@ No accounts and no backend: programs live in the browser (localStorage), and sha
 
 Live: https://gym-builder-nine.vercel.app
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phones-dark.png">
+  <img src="docs/screenshots/phones-light.png" alt="Tenset on a phone: the week plan, a training day, the body map, the exercise catalog and an animated exercise">
+</picture>
+
 ## Docs
 
 - `docs/PLAN.md`: scope, architecture and every lead and owner decision (source of truth)
@@ -53,6 +58,7 @@ The figure, motions, loops and posters are generated locally and committed; CI n
 | Bake loops and posters | `node pipeline/render/bake-loops.ts --qa qa/out/loops` (`--only <ids>`; a full run prunes stale files) |
 | Stale-media check | `node pipeline/render/check-media.ts` |
 | Approved renders unchanged | `node pipeline/render/verify-posters.ts` |
+| README phone screenshots (after `pnpm build`) | `node pipeline/render/readme-shots.ts` |
 
 An exercise shows its animation in production only when its record has `media.status: "loop"` (owner-approved). Dev shows every baked motion.
 
