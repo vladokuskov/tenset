@@ -3,7 +3,8 @@ import { attachHand, handFrame, implementFromHand, plantFoot, root1d, solveLegs,
 import { fk, segPos, sitePos } from '../../fk.ts'
 import { dumbbell, ezBar, siteWorld, type ImplementSpec } from '../../implements.ts'
 import { preacherBench, preacherFrame } from '../../implements/stations.ts'
-import { add, clamp, DEG, dot, lerp, norm, qaxis, qconj, qfromTo, qmul, qrot, RAD, scale, sub, type V3 } from '../../math.ts'
+import { dls } from '../../ik.ts'
+import { add, clamp, cross, DEG, dot, lerp, qaxis, qconj, qrot, RAD, scale, sub, type V3 } from '../../math.ts'
 import { setDofs, setScapula, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
 import { phaseAt, type Tempo } from '../../timing.ts'
 import { footContacts } from '../isolation.ts'
@@ -37,13 +38,15 @@ export const PRE = {
   /** upper arms, buttocks and chest sink this far into the pads, m */
   sink: 0.005,
   elbow: [15, 120] as const,
-  /** upper arms turned out on the pad (about its normal), deg: dumbbell, EZ bar */
-  abd: { dumbbell: 4, bar: 2 },
+  /** upper arms turned about the pad normal (negative: elbows in, the whole upper arm on the pad), deg: dumbbell, EZ bar */
+  abd: { dumbbell: -5, bar: -5 },
   kg: 12,
   barPlate: 5,
   /** EZ bar palms up: forearms supinated; dumbbell: full supination; palms down: pronated */
   pro: -80,
-  pronated: 75,
+  pronated: 70,
+  /** bar hold: reference humeral twist (deg); residual weights (grip error in m, axis cross, then deg per unit) */
+  barHold: { rot: 0, w: { pos: 300, axis: 20, rot: 4, pro: 15, wrist: 12, pitch: 90 } },
   /** the free hand (one dumbbell): this far down the pad from its top edge and out from the midline, the grip site this far above the surface, m */
   freeHand: { along: 0.2, x: 0.08, above: 0.04 },
 }
@@ -98,9 +101,11 @@ const ARM = ['scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder
 function barOf(p: P, skel: Skeleton): NonNullable<Preacher['bar']> {
   const g = (p.gripWidth * skel.data.shoulderWidth) / 2
   if (p.grip !== 'pronated') return { spec: ezBar({ plateKg: PRE.barPlate, inner: g }), sites: ['l_in', 'r_in'] }
-  const base = ezBar({ plateKg: PRE.barPlate })
-  const x = 0.265
-  const z = 0.03 * (1 - (x - 0.25) / 0.1)
+  // the inner bends a little narrower than the default bar so the outer bends sit under the hands of the tucked elbows
+  const inner = 0.19
+  const base = ezBar({ plateKg: PRE.barPlate, inner })
+  const x = inner + 0.065
+  const z = 0.03 * (1 - (x - inner - 0.05) / 0.1)
   return { spec: { ...base, sites: { ...base.sites, lp: { pos: [x, 0, z], axis: base.sites.l.axis }, rp: { pos: [-x, 0, z], axis: base.sites.r.axis } } }, sites: ['lp', 'rp'] }
 }
 
@@ -111,19 +116,37 @@ function barPose(bar: NonNullable<Preacher['bar']>, center: V3, pitch: number): 
   return { id: bar.spec.id, pos: sub(center, qrot(rot, mid)), rot }
 }
 
-/** bar: both arms on the reference path, then the hands solved onto the bar (left solved, right mirrored) */
+/**
+ * bar: both humeri pinned on the pad (plane and elevation fixed, only a little twist), the elbow on its path, then
+ * the forearm turn, the wrist and the bar's height and roll solved so the left hand holds its grip (right mirrored)
+ */
 function barArms(skel: Skeleton, q: Float64Array, v: Pick<Preacher, 'bar' | 'dir'>, e: number, pro: number): ImplementPose {
   const bar = v.bar!
   arm(skel, q, 'l', v.dir.l, e, pro)
   arm(skel, q, 'r', v.dir.r, e, pro)
-  const f = fk(skel, q)
-  const g = sitePos(skel, f, 'grip_l')
-  const fore = sub(segPos(skel, f, 'hand_l'), segPos(skel, f, 'forearm_l'))
-  const pose = barPose(bar, [0, g[1], g[2]], Math.atan2(fore[2], -fore[1]) * RAD)
-  const site = siteWorld(bar.spec, pose, bar.sites[0])
-  const h = handFrame(skel, f, 'l')
-  const across = dot(h.axis, site.axis!) < 0 ? scale(site.axis!, -1) : site.axis!
-  attachHand(skel, q, 'l', { pos: site.pos, axis: site.axis!, palm: h.palm, hand: qmul(qfromTo(h.axis, norm(across)), h.rot) }, { pole: add(v.dir.l, [0.15, 0, 0]), planeHint: 90 })
+  const f0 = fk(skel, q)
+  const g0 = sitePos(skel, f0, 'grip_l')
+  const fore = sub(segPos(skel, f0, 'hand_l'), segPos(skel, f0, 'forearm_l'))
+  const pitch0 = Math.atan2(fore[2], -fore[1]) * RAD
+  const idx = ['shoulder_l.rot', 'forearm_l.pro', 'wrist_l.flex', 'wrist_l.dev'].map((n) => skel.dof[n])
+  const lim = idx.map((i) => [skel.dofs[i].min, skel.dofs[i].max])
+  const { rot, w } = PRE.barHold
+  const at = (x: number[]) => {
+    for (let i = 0; i < 4; i++) q[idx[i]] = x[i]
+    const pose = barPose(bar, [0, x[4], x[5]], x[6])
+    return { pose, site: siteWorld(bar.spec, pose, bar.sites[0]) }
+  }
+  const residual = (x: number[]) => {
+    const { site } = at(x)
+    const f = fk(skel, q)
+    const c = cross(handFrame(skel, f, 'l').axis, site.axis!)
+    const d = sub(sitePos(skel, f, 'grip_l'), site.pos)
+    return [...scale(d, w.pos), ...scale(c, w.axis), (x[0] - rot) / w.rot, (x[1] - pro) / w.pro, x[2] / w.wrist, x[3] / w.wrist, (x[6] - pitch0) / w.pitch]
+  }
+  const lo = [...lim.map((l) => l[0]), -Infinity, -Infinity, -Infinity]
+  const hi = [...lim.map((l) => l[1]), Infinity, Infinity, Infinity]
+  const { x } = dls(residual, [rot, pro, 0, 0, g0[1], g0[2], pitch0], { lo, hi, iters: 40, h: 1e-6 })
+  const { pose } = at(x)
   for (const k of ARM) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
   return pose
 }
@@ -188,7 +211,7 @@ export function preacherContext(p: P, skel: Skeleton, tempo: Tempo): Preacher {
     )
   }
   if (v.bar) {
-    // the hands on the bar turn the upper arms a little: drop the pad so the arms sink at most `sink` over the rep
+    // the pad under the deepest frame of the bar hold, so the arms sink at most `sink` over the rep
     const armCaps = (q: Float64Array) => bodyCapsules(skel, fk(skel, q)).filter((k) => k.region.startsWith('upperarm_'))
     const pad = placeParts(benchSpec, bench)[0]
     let gap = Infinity

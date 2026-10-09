@@ -62,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Hip 0 -> 80 with the legs level; the thighs rest on the pad at -8 mm in every frame and the feet are hooked (slip 0.04 mm). The pad nose sits 24 cm short of the hip joints (mid-thigh), so cue 1 ('just below your hip crease') overstates it. The committed side sheet has two blank cells (t=0.25, 0.375); my re-render shows it was a render flake, but those cells were not actually reviewed."
   }
 }

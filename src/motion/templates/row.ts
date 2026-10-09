@@ -10,6 +10,8 @@ import { sampleSeal, sealContext, type Seal } from './row/seal.ts'
 import { sampleTbar, tbarContext, type Tbar } from './row/tbar.ts'
 import { landmineContext, sampleLandmine, type Landmine } from './row/landmine.ts'
 import { pendlayContext, samplePendlay, type Pendlay } from './row/pendlay.ts'
+import { meadowsContext, sampleMeadows, type Meadows } from './row/meadows.ts'
+import { renegadeContext, sampleRenegade, type Renegade } from './row/renegade.ts'
 import { invertedContext, sampleInverted, type Inverted } from './row/inverted.ts'
 import { sampleSeated, seatedContext, type Seated } from './row/seated.ts'
 import { SCHEMAS } from './schemas.ts'
@@ -19,18 +21,20 @@ import { memo, type Template } from './types.ts'
 // no torso yank (row/common.ts). Variants:
 // - bent: standing barbell or Smith row, trunk hinged to torsoAngle (row/bent.ts); Pendlay row from the floor
 //   (start floor, row/pendlay.ts)
-// - landmine: T-bar row, a landmine bar with a V-handle straddled (row/landmine.ts)
+// - landmine: T-bar row, a landmine bar with a V-handle straddled (row/landmine.ts); Meadows row, one hand on the
+//   loaded sleeve standing side-on in a staggered stance (row/meadows.ts)
 // - rings: ring row, the inverted row under gymnastic rings, palms turning in (row/rings.ts)
 // - seal: seal row, face down on a raised bench, the bar rowed to its underside (row/seal.ts)
 // - tbar: chest-supported T-bar row on the T-bar station, close neutral or wide grip (row/tbar.ts)
 // - seated: cable row on the row station, V-bar or wide bar (row/seated.ts)
 // - cable: standing face pull with a rope, single-arm row with a D-handle (row/cable.ts)
 // - inverted: body under a racked bar, heels down, pivoting about the ankles (row/inverted.ts)
+// - renegade: renegade row, a high plank on two dumbbells rowing one (row/renegade.ts)
 // - bench: one-arm dumbbell or kettlebell row off a flat bench, chest-supported dumbbell row on an incline pad (row/bench.ts)
 // - floor: band seated row, sitting on a mat with the band round the feet (row/floor-band.ts); the band face pull is in
 //   row/cable.ts
 
-type Ctx = Bent | Seated | BenchRow | Inverted | StandingCable | FloorBand | Pendlay | Landmine | Tbar | Seal | RingRow
+type Ctx = Bent | Seated | BenchRow | Inverted | StandingCable | FloorBand | Pendlay | Landmine | Tbar | Seal | RingRow | Meadows | Renegade
 
 function unsupported(p: P): string {
   return `${p.implement}/${p.posture}/${p.support}${p.attachment ? `/${p.attachment}` : ''}`
@@ -43,6 +47,8 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.implement === 'barbell' && p.posture === 'lying_prone' && p.support === 'bench' && p.laterality === 'bilateral') return sealContext(p, skel, tempo)
   if (p.implement === 'machine' && p.posture === 'lying_prone' && p.support === 'chest_pad' && p.laterality === 'bilateral' && (p.grip === 'neutral' || p.grip === 'pronated')) return tbarContext(p, skel, tempo)
   if (p.implement === 'landmine' && p.posture === 'standing' && p.attachment === 'v_bar' && p.laterality === 'bilateral') return landmineContext(p, skel, tempo)
+  if (p.implement === 'landmine' && p.posture === 'standing' && p.attachment === undefined && p.stance === 'split' && p.laterality === 'unilateral') return meadowsContext(p, skel, tempo)
+  if (p.implement === 'dumbbell' && p.posture === 'lying_prone' && p.support === 'floor' && p.laterality === 'alternating') return renegadeContext(p, skel, tempo)
   if (p.implement === 'dumbbell' && ((p.support === 'bench' && p.posture === 'standing') || (p.support === 'chest_pad' && p.posture === 'lying_prone'))) return benchContext(p, skel, tempo)
   if (p.implement === 'kettlebell' && p.support === 'bench' && p.posture === 'standing' && p.laterality === 'unilateral') return benchContext(p, skel, tempo)
   if (p.implement === 'barbell' && p.posture === 'lying_supine') return invertedContext(p, skel, tempo)
@@ -79,6 +85,10 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
       return sampleSeal(u, p, skel, ctx)
     case 'rings':
       return sampleRings(u, p, skel, ctx)
+    case 'meadows':
+      return sampleMeadows(u, p, skel, ctx)
+    case 'renegade':
+      return sampleRenegade(u, p, skel, ctx)
   }
 }
 

@@ -42,7 +42,7 @@
     804
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "rollout",
     "params": {
       "posture": "standing",
@@ -64,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Standing pike to near-horizontal extension. Hands go from z 0.50 to 1.95 m with the feet fixed (ball slip 0.43 mm), elbows stay at 18 deg and the grips are closed. At full reach there is a ~28 deg break at the hips (thigh 24 deg, trunk -4 deg), which fits the cue 'only as far as your lower back stays flat'. Floor tolerance of 65 mm follows the hand-plank precedent."
   }
 }

@@ -60,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: The humerus is fixed (elev 164, plane 141, rot 123), elbow 5 to 138, and the seam is clean. At the stretch the grip is 25 cm behind the head centre but at neck height (y 1.47 vs head 1.62) and 15 cm to the side, so from the az -55 hero it reads as the hand beside the head. Cue 3 says 'behind your head'. The free arm hangs abducted (elev 8, plane 70)."
   }
 }

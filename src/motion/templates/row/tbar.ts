@@ -18,8 +18,8 @@ import { ARM_DOFS, elbowPole, ELBOW_LAG, gripContacts, lerp as slerp, mirrorArm,
 // Chest-supported T-bar row (338 close neutral handles, 339 wide pronated ends) on the T-bar station: the chest on the
 // inclined pad (40 deg), feet on the platform behind with soft knees, body still. The arms hang to the lever's handles
 // with the shoulders protracted (elbows ~8 deg), then the scapulae set back and the elbows drive the lever up about its
-// pivot until the elbows pass the trunk (elbow ~0 -> ~100-115 deg; close grip elbows tucked ~30, wide flared ~70, the
-// upper back's row). The chest stays on the pad.
+// pivot until the elbows pass the trunk (elbow ~8 -> ~115 deg; close grip elbows tucked ~30, wide flared ~70, the upper
+// back's row). The chest stays on the pad.
 
 /** chest sink into the pad, m */
 const SINK = 0.012
@@ -32,19 +32,27 @@ const FEET_X = 0.13
 /** lever parts and hands stop this far off the pad and the body at the top, m */
 const TOP_GAP = 0.012
 const TOP_ELBOW = 115
+/** when the lever's arc passes the elbows' most bent point first, the top stops this far short of it, deg */
+const PEAK_BACKOFF = 3
 /** close grip: upper arm against the ribs, mm (the default trunk / upper arm allowance is 20) */
 const TUCK_TOL = 30
 /** close neutral grip: the handle crosses the palm this far off the grip line, deg, which keeps the wrist off its deviation stop */
-const NEUTRAL_OBLIQUE = 15
+const NEUTRAL_OBLIQUE = 5
+/** close neutral grip: comfortable wrist deviation band, deg (ulnar deviation passes ~30 mid-pull) */
+const NEUTRAL_DEV: [number, number] = [-34, 25]
 /** chest pad length, m: the sternum's length, so the belly, hips and thighs clear its lower end */
 const PAD_LEN = 0.32
-/** chest pad width, m: narrow enough for the tucked upper arms to pass its edges */
-const PAD_WIDTH = 0.22
 /**
- * the lever's neutral handles this far ahead of the pad's top end (frame z), m: the arms hang a little forward and the
- * forearms rise in front of the pad instead of into its top edge
+ * chest pad width by grip, m: narrow enough for the tucked upper arms and, with the close neutral handles (0.22 m apart),
+ * the forearms to pass its edges as the handles come up beside it
  */
-const HANDLE_AHEAD = 0.12
+const PAD_WIDTH = { neutral: 0.14, wide: 0.22 }
+/**
+ * the lever's handles this far ahead of the pad's top end (frame z), m: a little behind it, beside the pad, so the hands
+ * come up to the lower chest and the elbows pass the trunk (ahead of the top end the hands stay in front of the shoulders
+ * and the elbows stop ~75-85, in front of the trunk). Further back the close hands meet the pad's frame
+ */
+const HANDLE_AHEAD = -0.1
 /** lever pivot (frame), further forward than the default so the handles' arc stays near vertical under the shoulders */
 const PIVOT: V3 = [0, 0.3, 1.7]
 
@@ -89,7 +97,7 @@ function arms(skel: Skeleton, q: Float64Array, p: P, v: Pick<Tbar, 'lever' | 'si
   const g = siteWorld(v.lever, pose, v.sites[0])
   // neutral: palms in, the handles front to back; wide: overhand on the cross bar, palms back towards the feet
   const palm: V3 = p.grip === 'neutral' ? [-1, 0, 0] : [0, -0.3, -1]
-  reach(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm, ...(hand ? { hand } : {}) }, { pole: elbowPole(skel, q, 'l', p.elbowFlare, 0.6), planeHint: 90, devBand: [-28, 25] })
+  reach(skel, q, 'l', { pos: g.pos, axis: g.axis!, palm, ...(hand ? { hand } : {}) }, { pole: elbowPole(skel, q, 'l', p.elbowFlare, 0.6), planeHint: 90, devBand: p.grip === 'neutral' ? NEUTRAL_DEV : [-28, 25] })
   mirrorArm(skel, q)
 }
 
@@ -102,6 +110,7 @@ export function frame(skel: Skeleton, p: P, v: Omit<Tbar, 'kind' | 'tempo' | 'se
 }
 
 export function tbarContext(p: P, skel: Skeleton, tempo: Tempo): Tbar {
+  const neutral = p.grip === 'neutral'
   const lever = tbarLever({ pivot: PIVOT, handle: [0, TBAR.handle[1], HANDLE_AHEAD] })
   const { along, normal } = tbarFrame()
   const top = TBAR.pad.top
@@ -136,7 +145,7 @@ export function tbarContext(p: P, skel: Skeleton, tempo: Tempo): Tbar {
   }, [0.3, v.hip[2] - 0.2], { tol: 1e-8, iters: 80 })
   v.feet = feetAt(fr.x[0], fr.x[1])
   const platform: V3 = [0, fr.x[0], fr.x[1] - 0.04]
-  const stationSpec = tbarStation({ platform, padLen: PAD_LEN, padWidth: PAD_WIDTH, pivot: PIVOT })
+  const stationSpec = tbarStation({ platform, padLen: PAD_LEN, padWidth: neutral ? PAD_WIDTH.neutral : PAD_WIDTH.wide, pivot: PIVOT })
   // the hands hold one orientation round the handles (the forearms stay near vertical under the elbows): neutral palms
   // in, index fingers forward; wide overhand, palms towards the feet
   const axis = siteWorld(lever, leverPose(lever.id, PIVOT, 10), sites[0]).axis!
@@ -165,7 +174,15 @@ export function tbarContext(p: P, skel: Skeleton, tempo: Tempo): Tbar {
       ;[last, best] = [d, e]
       continue
     }
-    if (e < best - 0.01 || gap(d) < 0) break
+    if (e < best - 0.01) {
+      // the elbows have passed their most bent point on the arc: finish a little short of it, where the lever still
+      // moves steadily with the elbow (at the very peak a small elbow change is a large lever swing)
+      const target = best - PEAK_BACKOFF
+      last = root1d((dd) => elbowAt(dd, 1) - target, v.deg[0], last, { tol: 1e-6 }).x
+      best = target
+      break
+    }
+    if (gap(d) < 0) break
     last = d
     best = e
     if (e >= TOP_ELBOW) break
@@ -179,6 +196,10 @@ export function tbarContext(p: P, skel: Skeleton, tempo: Tempo): Tbar {
   const angle = monotoneCubic(cs, ds)
   // wide overhand: the bar lies obliquely across the flared hands, so the hand's roll is solved free at knots and smoothed
   if (!fixed) hand = handSchedule(skel, (c) => frame(skel, p, v, scapularLead(c), angle(c)).q)
+  // close neutral: the fixed hand as the wrist settles round it at a few knots, smoothed, so the deviation's soft stop
+  // eases in (the forearm's pitch against the front-to-back handle is wrist deviation in this grip)
+  else hand = handSchedule(skel, (c) => frame(skel, p, v, scapularLead(c), angle(c), fixed).q, 9)
+
   const contacts: Contact[] = [...footContacts(skel, v.feet), ...gripContacts(lever.id, sites)]
   const setup: Setup = {
     implements: [stationSpec, lever],

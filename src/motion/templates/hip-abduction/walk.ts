@@ -3,7 +3,7 @@ import { centerOfPressure, fk, sitePos } from '../../fk.ts'
 import { around, band, bandNode, bandPose, segmentPose } from '../../implements/index.ts'
 import { add, clamp, lerp } from '../../math.ts'
 import { setDofs, zeroQ, type Pose, type Side, type Skeleton } from '../../skeleton.ts'
-import { DEFAULT_TEMPO, minJerk, type Tempo } from '../../timing.ts'
+import { minJerk, type Tempo } from '../../timing.ts'
 import { palmRests } from '../../implements/hinge.ts'
 import { arms, PALMS } from '../back-extension.ts'
 import type { ParamsOf } from '../schemas.ts'
@@ -13,9 +13,9 @@ import { memo, type Setup } from '../types.ts'
 // Band lateral walk (hip-abduction, band, standing): a mini band round both legs just above the knees, a shallow
 // athletic squat with the toes forward and the arms crossed on the chest. One loop is four steps that end where they began:
 // the right foot steps out to the right and the left follows, then the left steps out to the left and the right
-// follows. Each step shifts the centre of pressure over the stance foot (its inner edge), lifts the moving foot a few
-// centimetres, carries it sideways flat and sets it down; the trunk keeps its lean and faces forward. The band stretches
-// as each lead step widens the stance (hip abduction of the lead leg ~0 -> 15-20 deg).
+// follows. Before each follow step the weight moves slowly across the wide stance onto the lead foot's inner edge; the
+// moving foot lifts a few centimetres, travels sideways flat and sets down; the trunk keeps its lean and faces forward.
+// The band stretches as each lead step widens the stance (hip abduction of the lead leg ~0 -> 15-20 deg).
 // Research (motion-authoring, hip-abduction): abduction against the band 0 -> ~20 deg with neutral hip rotation; the
 // gait here is author judgment.
 
@@ -24,7 +24,7 @@ type P = ParamsOf<'hip-abduction'>
 export const WALK = {
   /** narrow stance between the feet's spots, m, and the step's length */
   width: 0.26,
-  step: 0.18,
+  step: 0.14,
   /** knee flexion in the narrow, centred stance (sets the hip height), deg; trunk lean (pelvis tilt), deg */
   knee: 28,
   tilt: 14,
@@ -33,8 +33,14 @@ export const WALK = {
   /** the centre of pressure sits this far inside the stance foot's inner edge, m (the foot capsule is ~96 mm wide) */
   inside: 0.012,
 }
-/** a step's share of its quarter of the loop: settle, weight shift, swing (the rest settles after touch-down) */
-const STEP = { hold: 0.08, shift: 0.27, swing: 0.5 }
+/**
+ * seconds at WALK_TEMPO: a foot's swing, the weight shift across the wide stance between a lead step and its follow
+ * step, and the settle between two steps over the same stance foot. Shifts stay slow (under 0.6 m/s at the pelvis), so
+ * the torso glides rather than lurches
+ */
+export const TIME = { swing: 0.4, shift: 1.25, settle: 0.2 }
+/** 4.5 s a loop (four steps); the concentric covers the left lead step and the shift onto it */
+export const WALK_TEMPO: Tempo = [1.9, 0.2, 1.6, 0.8]
 /** band round the thigh this far above the knee joint (m), radius (m) */
 const BAND = { above: 0.075, r: 0.068 }
 const FOOT_HALF = 0.048
@@ -57,46 +63,55 @@ type Walk = {
 /** the four steps: which foot moves */
 const MOVER: Side[] = ['r', 'l', 'l', 'r']
 
-/** loop position: step k (0..3) and the fraction t within it */
-const at = (u: number): [number, number] => {
-  const x = (((u % 1) + 1) % 1) * 4
-  const k = Math.min(3, Math.floor(x))
-  return [k, x - k]
+const stanceOf = (k: number): Side => (MOVER[k % 4] === 'l' ? 'r' : 'l')
+
+/**
+ * the loop's timeline (seconds at WALK_TEMPO), from the middle of a settle: step k's swing, then a weight shift when
+ * the next step stands on the other foot, else a settle
+ */
+type Seg = { k: number; kind: 'swing' | 'shift' | 'settle'; t0: number; t1: number }
+const SEGS: Seg[] = (() => {
+  const out: Seg[] = []
+  let t = TIME.settle / 2
+  for (let k = 0; k < 4; k++) {
+    out.push({ k, kind: 'swing', t0: t, t1: (t += TIME.swing) })
+    const shift = stanceOf(k) !== stanceOf(k + 1)
+    const d = shift ? TIME.shift : k === 3 ? TIME.settle / 2 : TIME.settle
+    out.push({ k, kind: shift ? 'shift' : 'settle', t0: t, t1: (t += d) })
+  }
+  return out
+})()
+const LOOP = SEGS[SEGS.length - 1].t1
+
+/** the segment at loop fraction u and the fraction s within it */
+const at = (u: number): [Seg, number] => {
+  const t = (((u % 1) + 1) % 1) * LOOP
+  const seg = t < SEGS[0].t0 ? SEGS[SEGS.length - 1] : SEGS.find((g) => t < g.t1) ?? SEGS[SEGS.length - 1]
+  return [seg, clamp((t - seg.t0) / (seg.t1 - seg.t0), 0, 1)]
 }
 
 /** where the centre of pressure sits during step k's swing: inside the stance foot's inner edge */
 function copTarget(v: Walk, k: number): number {
-  const stance: Side = MOVER[k] === 'l' ? 'r' : 'l'
+  k %= 4
+  const stance = stanceOf(k)
   const x = v.feet[stance][k]
   const towards = Math.sign(v.feet[MOVER[k]][k] - x)
   return x + towards * (FOOT_HALF - WALK.inside)
 }
 
-/** the centre of pressure's target x at loop fraction u: held over the stance foot during a swing, eased between */
+/** the centre of pressure's target x at loop fraction u: held over the stance foot, eased across in a shift */
 function copAt(v: Walk, u: number): number {
-  const [k, t] = at(u)
-  const a = STEP.hold, b = a + STEP.shift
-  const cur = copTarget(v, k)
-  if (t >= b) {
-    // swing, then ease towards the next step's stance foot over the settle and the next shift
-    const end = b + STEP.swing
-    if (t <= end) return cur
-    const next = copTarget(v, (k + 1) % 4)
-    const span = 1 - end + a + STEP.shift
-    return lerp(cur, next, minJerk((t - end) / span))
-  }
-  // before the swing: still easing in from the previous step's stance foot
-  const prev = copTarget(v, (k + 3) % 4)
-  const span = 1 - (b + STEP.swing) + b
-  return lerp(prev, cur, minJerk((t + 1 - (b + STEP.swing)) / span))
+  const [seg, s] = at(u)
+  return seg.kind === 'shift' ? lerp(copTarget(v, seg.k), copTarget(v, seg.k + 1), minJerk(s)) : copTarget(v, seg.k)
 }
 
 /** a foot's ankle x and lift at loop fraction u */
 function footAt(v: Walk, side: Side, u: number): { x: number; lift: number } {
-  const [k, t] = at(u)
+  const [seg, s] = at(u)
+  const k = seg.k
+  if (seg.kind !== 'swing') return { x: v.feet[side][(k + 1) % 4], lift: 0 }
   const from = v.feet[side][k], to = v.feet[side][(k + 1) % 4]
   if (MOVER[k] !== side) return { x: from, lift: 0 }
-  const s = clamp((t - STEP.hold - STEP.shift) / STEP.swing, 0, 1)
   return { x: lerp(from, to, minJerk(s)), lift: WALK.lift * Math.sin(Math.PI * s) ** 2 }
 }
 
@@ -150,7 +165,7 @@ function solve(skel: Skeleton, v: Walk, u: number): Float64Array {
 }
 
 export const walkContext = memo((p: P, skel: Skeleton): Walk => {
-  const tempo = p.tempo ?? DEFAULT_TEMPO
+  const tempo = p.tempo ?? WALK_TEMPO
   const { width: w, step: d } = WALK
   // stance changes, lifter's right = -X: right steps out, left follows, left steps out, right follows
   const feet: Walk['feet'] = { l: [w / 2, w / 2, w / 2 - d, w / 2], r: [-w / 2, -w / 2 - d, -w / 2 - d, -w / 2 - d] }
@@ -173,7 +188,8 @@ export const walkContext = memo((p: P, skel: Skeleton): Walk => {
   })
   v.setup = {
     implements: [...nodes, loop, palmRests({ id: 'palms', ...PALMS })],
-    // both feet step, so neither is a fixed contact; the lateral gate judges the double-support frames
+    // both feet step, so neither is a fixed contact and the QA lateral and foot slip gates skip the loop; walk.test.ts
+    // judges both per stance phase
     contacts: [{ site: 'grip_l', kind: 'grip', target: { implement: 'palms', grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: 'palms', grip: 'r' } }],
     tempo,
     symmetric: false,

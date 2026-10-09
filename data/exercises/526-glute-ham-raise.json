@@ -64,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Knee 90 -> 5 with the hips held straight, which matches the cues; feet held to 0.08 mm. In the upright frames (about f0-40) the thighs are 16 mm and the shins 37 mm above the round pad, so the kneeling body hangs from the ankle rollers and only touches the pad from about f50. This is barely visible at 480 px, but there is no knee or thigh support at the top."
   }
 }

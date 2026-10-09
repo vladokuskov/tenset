@@ -1,6 +1,6 @@
 import type { Pose, Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt } from '../timing.ts'
-import { climberContext, sampleClimber, type Climber } from './floor-core/climber.ts'
+import { CLIMBER_TEMPO, climberContext, sampleClimber, type Climber } from './floor-core/climber.ts'
 import { dragonContext, sampleDragon, type Dragon } from './floor-core/dragon.ts'
 import { quadrupedContext, sampleQuadruped, type Quadruped } from './floor-core/quadruped.ts'
 import { proneContext, sampleProne, type Prone } from './floor-core/prone.ts'
@@ -17,7 +17,7 @@ type P = ParamsOf<'floor-core'>
 type Ctx = Supine | Prone | Quadruped | Climber | Dragon
 
 const context = memo((p: P, skel: Skeleton): Ctx => {
-  const tempo = p.tempo ?? DEFAULT_TEMPO
+  const tempo = p.tempo ?? (p.kind === 'mountain_climber' ? CLIMBER_TEMPO : DEFAULT_TEMPO)
   const floor = (p.support ?? 'floor') === 'floor'
   if (floor && (p.kind === 'dead_bug' || p.kind === 'bicycle' || p.kind === 'v_up')) return supineContext(p, skel, tempo)
   if (floor && p.kind === 'superman') return proneContext(skel, tempo)

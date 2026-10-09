@@ -43,7 +43,7 @@
     202
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-press",
     "params": {
       "implement": "landmine",
@@ -66,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Right (pressing) knee is on the mat with toes tucked and the left foot flat in front, as cue 1 says. Only the right arm moves (the left hangs still) and the pelvis is fixed. Hand goes from 8 cm below and 22 cm ahead of the shoulder to lockout at 41 deg above horizontal, elbow 166 deg. Baked frames are monotonic and the loop closes. The figure-side sheet shows lockout at t=0.625 while the baked bottom lasts to about f77, so that sheet is a render artifact, not the motion. DOF jerk is at 89% of the gate."
   }
 }

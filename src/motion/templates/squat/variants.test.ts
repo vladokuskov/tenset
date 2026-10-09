@@ -78,6 +78,9 @@ describe('squat tier C variants', () => {
     expect(dof(b, bottom(b), 'pelvis.tilt')).toBeGreaterThan(-5)
     expect(dof(b, bottom(b), 'knee_l.flex')).toBeGreaterThan(105)
     expect(dof(b, bottom(b), 'ankle_l.df')).toBeLessThan(40)
+    // the hip joints end ~4 cm below the knees
+    const f = fk(skel, frameQ(b, bottom(b)))
+    expect(segPos(skel, f, 'tibia_l')[1] - segPos(skel, f, 'femur_l')[1]).toBeGreaterThan(0.035)
   })
 
   it('belt squat: the trunk stays near upright, the chain keeps its length, the hands stay on the grab bar', () => {

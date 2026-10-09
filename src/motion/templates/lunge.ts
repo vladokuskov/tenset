@@ -68,7 +68,7 @@ const BAR = { plateKg: 20, grip: 2.1, wristBias: 10 }
 const BAR_REST = ['trunk', 'girdle_l', 'girdle_r', 'neck', 'upperarm_l', 'upperarm_r']
 const ARM_DOFS = ['clavicle_*.prot', 'clavicle_*.elev', 'scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev', 'grip_*.close']
 /** front midfoot to rear ball (split squat: to the rear ankle) as a fraction of stepLength x leg length */
-const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0, lateral: 0.55, curtsy: 0.7, cossack: 0.9 }
+const STEP_SCALE: Record<Kind, number> = { split: 0.72, split_floor: 0.7, reverse: 0.84, forward: 0.84, step_up: 0, lateral: 0.55, curtsy: 0.7, cossack: 0.6 }
 /** floor tolerance for a rear foot on its ball, mm: the rigid forefoot capsule sinks ~63 mm at REAR_PITCH.bottom */
 const REAR_FLOOR_TOL = 65
 /** the same for the step-up's trailing foot on its ball (heel up STEP.roll.off): ~33 mm (lead decision) */
@@ -147,7 +147,7 @@ const LATERAL = { inside: 0.03, straight: 6, toeOut: { work: 10, trail: 30 }, la
  * capsule up to ~20 mm into the floor at full lift, where the real heel rolls (`floorTol`, mm, lead decision). Author
  * judgment; one working-side rep per loop (3b alternating precedent).
  */
-const COSSACK = { toeOut: { work: 30, trail: 40 }, lift: 45, floorTol: 25, df: 42, back: 0.15 }
+const COSSACK = { toeOut: { work: 30, trail: 40 }, lift: 45, floorTol: 25, df: 38, back: 0.06 }
 /** goblet kettlebell reverse lunge: the back foot lifts off a little earlier, while the knee is still bent this far
  * (deg; with the upright goblet trunk the planted knee straightens faster through the rise) */
 const KB_OFF_KNEE = 92

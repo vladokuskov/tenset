@@ -85,7 +85,7 @@ export function crossBench(o: { id?: string; seatHeight: number }): ImplementSpe
 }
 
 /** angled pushdown V-bar: hub `hub` m below the carabiner, handles `len` long sloping `slope` deg below horizontal from `inner` m either side */
-export const PUSHDOWN_V = { hub: 0.07, inner: 0.08, len: 0.12, slope: 12, r: 0.015 }
+export const PUSHDOWN_V = { hub: 0.06, inner: 0.07, len: 0.12, slope: 40, r: 0.015 }
 
 /**
  * The angled V-bar for pushdowns (wave 3c): a cable attachment (kind cable_handle, drawn by props/cable.ts as the

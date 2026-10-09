@@ -46,15 +46,8 @@
   ],
   "media": {
     "status": "card",
-    "template": "row",
-    "params": {
-      "implement": "landmine",
-      "attachment": "v_bar",
-      "grip": "neutral",
-      "torsoAngle": 45,
-      "stance": "shoulder",
-      "elbowFlare": 55
-    },
+    "template": null,
+    "params": {},
     "mapView": "B"
   },
   "cues": [

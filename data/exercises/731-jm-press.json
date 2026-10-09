@@ -39,7 +39,7 @@
     738
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "triceps-extension",
     "params": {
       "implement": "barbell",
@@ -65,6 +65,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: FK matches the constants. At the bottom the elbow is 125 deg flexion, the upper arm leans 45 deg toward the feet, and the bar comes 16 cm toward the head on a straight line to 11.7 cm above the chin, over the throat, as cue 3 says ('a hand above'). Lockout is over the shoulders (bar z within 1 cm). Bar clears the head by 129 mm and the rack by 93 mm."
   }
 }

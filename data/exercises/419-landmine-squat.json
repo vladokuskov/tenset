@@ -64,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: The motion reads well: deep goblet-style squat (knee 112, hip 94), hands cupping the sleeve end at the chest, bar on its arc, trunk 6 to 21. Balance is the problem. At the bottom the body COM is 62 mm behind the heels (z -169 vs -107). Even with ~30 kg at the hands the combined COP is still ~7 mm behind the heel, and cupped hands can't pull the bar. That contradicts cue 2 ('lean into the bar'). There is no fore-aft gate to catch it. Fix: shift the hips or trunk forward ~5 cm at depth."
   }
 }

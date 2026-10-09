@@ -191,7 +191,7 @@ export function strapPose(skel: Skeleton, f: FK, side: Side, pulley: V3): Implem
 const HAND_ON_HIP: Quat = qfromBasis([1, 0, 0], norm([0, 0.6, -1]))
 
 /** hand on the side of the pelvis, thumb back, fingers forward and down */
-export function handOnHip(skel: Skeleton, q: Float64Array, side: Side, lying = false) {
+function handOnHip(skel: Skeleton, q: Float64Array, side: Side, lying = false) {
   const f = fk(skel, q)
   const pos = localToWorld(skel, f, 'pelvis', [sx(side) * 0.2, 0.075, 0.035])
   setDofs(skel, q, { [`grip_${side}.close`]: 0.35 })

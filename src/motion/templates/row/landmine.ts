@@ -2,14 +2,14 @@ import { root1d } from '../../constraints.ts'
 import { bodyCapsules, capsuleSolidClearance, placeParts } from '../../collide.ts'
 import { centerOfMass, fk } from '../../fk.ts'
 import { comWorld, siteWorld, type ImplementSpec } from '../../implements.ts'
-import { landmine, landmineBar, landminePose } from '../../implements/index.ts'
+import { landmine, landmineBar, landminePitchFor, landminePose } from '../../implements/index.ts'
 import { lerp, type V3 } from '../../math.ts'
 import { zeroQ, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
 import type { Tempo } from '../../timing.ts'
 import { makeStance, plantedContacts, stand, stanceWidth, standBalanced, type StanceSetup } from '../standing.ts'
 import type { Setup } from '../types.ts'
 import { BOTTOM_ELBOW, trunk, trunkAngle } from './bent.ts'
-import { ARM_DOFS, elbowPole, gripContacts, mirrorArm, phases, reach, scapularLead, shoulderMid, type P } from './common.ts'
+import { ARM_DOFS, elbowPole, gripContacts, gripPath, mirrorArm, phases, reach, scapularLead, shoulderMid, type P } from './common.ts'
 
 // T-bar row (316) on a landmine: the bar pivots in a floor landmine behind the lifter and runs forward between the legs,
 // a close-grip V-handle hooked under it by the plates. Straddling the bar, hips hinged to torsoAngle (45) with soft
@@ -40,6 +40,8 @@ export type Landmine = {
   pivot: V3
   /** bar pitch at the hang and at the top, deg */
   pitch: [number, number]
+  /** bar pitch by contraction, deg */
+  pitchAt: (c: number) => number
 }
 
 function arms(skel: Skeleton, q: Float64Array, p: P, bar: ImplementSpec, pose: ImplementPose) {
@@ -69,7 +71,7 @@ export function landmineContext(p: P, skel: Skeleton, tempo: Tempo): Landmine {
     return q
   }
   const tilt = root1d((t) => trunkAngle(skel, base(0.5, t)) - p.torsoAngle, 0, 85, { tol: 1e-5 }).x
-  const v: Landmine = { kind: 'landmine', tempo, setup: undefined as never, stance, tilt, bar, base: { id: unit.id, pos: [0, 0, 0], rot: [0, 0, 0, 1] }, pivot: [0, unit.sites.pivot.pos[1], -1.5], pitch: [10, 30] }
+  const v: Landmine = { kind: 'landmine', tempo, setup: undefined as never, stance, tilt, bar, base: { id: unit.id, pos: [0, 0, 0], rot: [0, 0, 0, 1] }, pivot: [0, unit.sites.pivot.pos[1], -1.5], pitch: [10, 30], pitchAt: () => 0 }
   const elbowAt = (pitch: number) => {
     const q = zeroQ(skel)
     frame(skel, q, p, v, 0, pitch)
@@ -94,6 +96,12 @@ export function landmineContext(p: P, skel: Skeleton, tempo: Tempo): Landmine {
   }
   v.pitch[1] = root1d(gap, v.pitch[0] + 2, 60, { tol: 1e-5 }).x
   v.base = { id: unit.id, pos: [0, 0, v.pivot[2]], rot: [0, 0, 0, 1] }
+  // the bar's pitch along the pull: the handle rises from the hang, which follows the shoulders as the scapulae set back
+  // first (the plates lift a little with them), to the top along the lagging grip path
+  const handleY = (pitch: number) => siteWorld(bar, landminePose(bar.id, v.pivot, 0, pitch), 'v_l').pos[1]
+  const shY = (sc: number) => shoulderMid(skel, base(sc, v.tilt))[1]
+  const [y0, y1, sh0] = [handleY(v.pitch[0]), handleY(v.pitch[1]), shY(0)]
+  v.pitchAt = (c: number) => landminePitchFor(bar, 'v_l', v.pivot, 0, lerp(y0 + shY(scapularLead(c)) - sh0, y1, gripPath(c))) ?? v.pitch[1]
   const contacts = [...plantedContacts(skel, stance), ...gripContacts(bar.id, ['v_l', 'v_r'])]
   v.setup = { implements: [bar, unit], contacts, tempo, symmetric: true, balance: { point: 'com', over: 'midfoot', tol: BALANCE_TOL } }
   return v
@@ -102,7 +110,6 @@ export function landmineContext(p: P, skel: Skeleton, tempo: Tempo): Landmine {
 export function sampleLandmine(u: number, p: P, skel: Skeleton, v: Landmine): Pose {
   const ph = phases(u, v.tempo)
   const q = zeroQ(skel)
-  // the scapulae set back with the bar's first travel: the handle on its arc cannot follow the shoulders up
-  const { pose } = frame(skel, q, p, v, scapularLead(ph.g), lerp(v.pitch[0], v.pitch[1], ph.g))
+  const { pose } = frame(skel, q, p, v, ph.s, v.pitchAt(ph.c))
   return { q, implements: [pose, v.base], contacts: v.setup.contacts }
 }

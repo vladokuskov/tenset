@@ -1,4 +1,5 @@
 import { root1d } from '../../constraints.ts'
+import { fk, segPos } from '../../fk.ts'
 import { lerp, type V3 } from '../../math.ts'
 import { zeroQ, type Contact, type Pose, type Skeleton } from '../../skeleton.ts'
 import { DEFAULT_TEMPO, phaseAt, type Tempo } from '../../timing.ts'
@@ -96,15 +97,24 @@ function grips(id: string, swap = false): Contact[] {
 /**
  * Pendulum squat: the lifter leans back `lean` deg on the pad standing tall with the feet well ahead on a platform
  * tilted toes-up `platform`; the arm pivots `reach` m behind the shoulder line, `pitch` deg below it, so the pad swings
- * down and back to about upright at the bottom while the knees travel far forward (author judgment, fitted so the hips
- * fold to ~110 at a knee bend of 108 and the ankles stay under ~38 deg of dorsiflexion).
+ * down and back to about upright at the bottom while the knees travel far forward. The bottom is where the hip joints
+ * sit PEND_BELOW m below the knees (full: the hips ~100 at a knee bend of ~109, the ankles ~30 deg of dorsiflexion).
+ * A pivot level with or above the shoulders keeps the knees behind the toes and stops them short of ~100 deg (author
+ * judgment).
  */
-const PEND = { ahead: 0.5, lean: 20, pitch: -15, reach: 1.0, platform: 15, shallower: 4, spine: { 'lumbar.flex': 0, 'thorax.flex': 0, 'neck.flex': 6 } as Record<string, number> }
+const PEND = { ahead: 0.5, lean: 20, pitch: -15, reach: 1.0, platform: 15, spine: { 'lumbar.flex': 0, 'thorax.flex': 0, 'neck.flex': 6 } as Record<string, number> }
+/** pendulum squat: hip joints below the knee joints at the bottom, m (negative: above) */
+const PEND_BELOW: Record<P['depth'], number> = { quarter: -0.25, parallel: 0, full: 0.04 }
 
 function pendulum(p: P, skel: Skeleton, tempo: Tempo): Variant {
   const s = pendulumSetup(skel, { tilt: 0, spine: PEND.spine, pole: [0.25, 0, -1], width: skel.data.hipWidth + 0.03, toeOut: Math.min(p.toeOut, HACK_TOE_OUT), lean: PEND.lean, reach: PEND.reach, pitch: PEND.pitch, platformTilt: PEND.platform, topKnee: SLED_TOP_KNEE, feetAhead: PEND.ahead })
   const q = zeroQ(skel)
-  const bottom = root1d((deg) => pendulumKnee(skel, q, s, deg) - (SLED_KNEE[p.depth] - PEND.shallower), 0, 35, { tol: 1e-7, scan: 35 }).x
+  const below = (deg: number) => {
+    pendulumKnee(skel, q, s, deg)
+    const f = fk(skel, q)
+    return segPos(skel, f, 'tibia_l')[1] - segPos(skel, f, 'femur_l')[1]
+  }
+  const bottom = root1d((deg) => below(deg) - PEND_BELOW[p.depth], 0, 35, { tol: 1e-7, scan: 35 }).x
   const ride = { ...s, swing: [bottom, 0] as [number, number] }
   const contacts: Contact[] = [...plantedOn(skel, s.feet), ...grips(s.arm.id)]
   const setup: Setup = {

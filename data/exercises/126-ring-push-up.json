@@ -62,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: Hands start under the shoulders (grip x 0.23, z 1.15, same as the shoulder joint) and the elbows go to 57 deg interior at the bottom. Feet do not slide (0.16 mm). Foot sink is 57 mm against 65 tolerance, the same as approved push-up 113 (62 mm). Straps are not gated, so I measured them: the strap axis passes 69 mm from the humerus axis at the bottom (f67) and 89 mm from the shoulder segment. That is close to the surface but not through it. The hero is busy at t=0.625, and straps run out of frame with no anchor shown."
   }
 }

@@ -21,13 +21,14 @@ type P = ParamsOf<'swing'>
 
 /**
  * A swing is ballistic: about 0.6 s down, a short turn in the hike, a hip snap of about the same length and a brief float
- * at the top (about 1.4 s a rep). The slow 2 s eccentric of the strength tempo would read as a lowered bell, not a
+ * at the top (about 1.5 s a rep). The slow 2 s eccentric of the strength tempo would read as a lowered bell, not a
  * swing (lead decision)
  */
-export const SWING_TEMPO: Tempo = [0.7, 0.06, 0.6, 0.24]
+export const SWING_TEMPO: Tempo = [0.7, 0.06, 0.6, 0.12]
 export const KG = 16
-/** arm angle from straight down, deg (+ forward of the shoulders): float at the top, forearms at the groin, the hike */
-export const ARM = { top: 88, groin: 16, hike: 10 }
+/** arm angle from straight down, deg (+ forward of the shoulders): float at the top (hands between sternum and shoulder
+ * height), forearms at the groin, the hike */
+export const ARM = { top: 78, groin: 16, hike: 10 }
 /** hip and knee flexion at the hike, deg; the knees stay soft at the top */
 export const HIKE = { hip: 82, knee: 24 }
 export const TOP = { hip: 2, knee: 3 }

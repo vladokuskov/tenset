@@ -39,7 +39,7 @@
     511
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hip-kickback",
     "params": {
       "attachment": "ankle_strap",
@@ -61,6 +61,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Hip goes 32 -> -15 relative to the pelvis and the knee 42 -> 15; the swing foot clears the floor by 15-17 mm and the stance foot slips 0.23 mm. CoP stays over the stance foot (x 85 mm, inside 44..158). The stack rises with the ankle, the cable runs to the low pulley, both hands are closed on the grab handles, and only the right glute and hamstring pulse."
   }
 }

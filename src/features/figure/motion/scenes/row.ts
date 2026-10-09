@@ -7,6 +7,9 @@ export const row: SceneSpec = {
     // T-bar on a landmine: from the side, so the bar's run from the pivot behind, the handle under the chest and the
     // plates coming up read beside the body (from behind the hips hide all three)
     if (params.implement === 'landmine' && params.attachment === 'v_bar') return { az: -100, elev: 0.22 }
+    // Meadows row: rear three-quarter on the working side, so the elbow passing the back, the sleeve in the hand and the
+    // bar running out to its pivot on that side read (from square on the side the bar points at the camera)
+    if (params.implement === 'landmine') return { az: params.side === 'left' ? 140 : -140, elev: 0.26 }
     // standing bar row: round towards the side so the hinge and the bar path read beside the back
     if (params.implement === 'barbell' && params.posture !== 'lying_supine') return { az: -120, elev: 0.24 }
     // inverted row: the back faces the floor, and from the side the near front upright hides the hands and the chest at
@@ -19,6 +22,9 @@ export const row: SceneSpec = {
     // chest-supported: the lifter faces -Z on the incline, so this is behind its right shoulder and high enough that the
     // upper back, both flared elbows and the incline read
     if (params.support === 'chest_pad') return { az: 42, elev: 0.38 }
+    // renegade row: from the working side and a little behind the shoulder, high enough that the dumbbell coming up
+    // beside the ribs, the straight support arm and the plank's line read (from behind the hips hide the pull)
+    if (params.support === 'floor' && params.posture === 'lying_prone') return { az: params.side === 'left' ? 115 : -115, elev: 0.3 }
     // one-arm on the bench: from the working side and behind, the bench beyond the body
     if (params.support === 'bench') return { az: params.side === 'left' ? 105 : -105, elev: 0.22 }
     // face pull: rear three-quarter turned to the side, so the rope reads in front of the face, not across the back

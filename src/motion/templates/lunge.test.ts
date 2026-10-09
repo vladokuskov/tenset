@@ -22,8 +22,8 @@ const dof = (b: Baked, u: number, name: string) => frameQ(b, at(b, u))[skel.dof[
 const trunkLean = (b: Baked, u: number) => dof(b, u, 'pelvis.tilt') + dof(b, u, 'lumbar.flex') + dof(b, u, 'thorax.flex')
 
 describe('lunge template', () => {
-  it('covers every lunge record: split squats, reverse, forward, lateral and curtsy lunges, step-up, walking lunge, cossack', () => {
-    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 426, 427, 430, 431, 433, 434])
+  it('covers every lunge record: split squats, reverse, forward, lateral and curtsy lunges, step-up, walking lunge', () => {
+    expect(variants.map((v) => v.id).sort()).toEqual([403, 409, 410, 411, 423, 424, 425, 426, 430, 431, 433, 434])
   })
 
   it.each(variants.map((v) => [v.slug, v.id] as const))('%s: finite, planted feet still, dumbbells in the hands, loop closes', (_, id) => {
@@ -302,8 +302,10 @@ describe('lunge template', () => {
     expect(knee).toBeLessThan(top)
   })
 
-  it('cossack squat (427): the hips sink over the right foot as deep as its heel stays down, the left leg straight, its toes up', () => {
-    const b = get(427)
+  // the cossack variant is kept in the template but no record uses it (427 reverted to a card in the 3c repair: too
+  // shallow for the name, a deeper fit broke the hip and ankle limits)
+  it('cossack squat variant: the hips sink over the right foot as far as its heel stays down, the left leg straight, its toes up', () => {
+    const b = bake(getTemplate('lunge'), parseParams('lunge', { implement: 'bodyweight', hold: 'hands', direction: 'cossack', torsoAngle: 45 }, 'alternating'), skel)
     const u = bottomU(b)
     // the right ankle stops at ~38 deg of dorsiflexion (heel down); the knee bends ~75-90
     expect(dof(b, u, 'ankle_r.df')).toBeGreaterThan(36)
@@ -317,7 +319,7 @@ describe('lunge template', () => {
     expect(sitePos(skel, fb, 'toe_l')[1] - sitePos(skel, f0, 'toe_l')[1]).toBeGreaterThan(0.12)
     // the right foot stays flat
     expect(Math.abs(sitePos(skel, fb, 'heel_r')[1] - sitePos(skel, fb, 'ball_r')[1])).toBeLessThan(0.002)
-  })
+  }, 30000)
 
   it.each([
     ['cossack squat with dumbbells', { implement: 'dumbbell', hold: 'goblet', direction: 'cossack' }],

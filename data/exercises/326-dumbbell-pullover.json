@@ -40,7 +40,7 @@
     303
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "pullover",
     "params": {
       "implement": "dumbbell",
@@ -64,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Two-hand dumbbell pullover from over the chest to behind the head (shoulder elev 90 to 150), fixed elbow bend, the trunk rests on the pad (-10 mm vs 15 tol). Grip error 3.06 mm is the highest of the lane but within 5."
   }
 }

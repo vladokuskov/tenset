@@ -62,6 +62,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: At the start the arm is 24 deg forward of vertical (hands ~0.28 m ahead of the shoulders), which contradicts the cue 'wheel under your shoulders'. At full reach the thigh is 28 deg up and the trunk 7 deg, a ~20 deg hip break, so 'body nearly lines up knees to hands' is only loosely met. Gates are clean."
   }
 }

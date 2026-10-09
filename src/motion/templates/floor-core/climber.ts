@@ -16,14 +16,16 @@ import type { Setup } from '../types.ts'
 
 type P = ParamsOf<'floor-core'>
 
-/** the driving leg at the top, deg: hip flexion (from the plank's), knee flexion, adduction back towards the midline,
- * ankle; toes relaxed off the mat */
 /** the driving foot at the top: ankle height and distance ahead of its hip joint, m; the path's lift mid-way, m; the
  * foot's turn towards pointing back, deg */
 export const CLIMBER = { footY: 0.25, footAhead: -0.28, arc: 0.06, point: 50 } as const
 /** the hips rise this far as the thigh swings through under them and stay up with the knee in (the knee passes
  * clear of the mat), m */
 export const LIFT = 0.07
+
+/** a quicker knee drive, about 1.7 s in and back (the motion gates cap it there): the strength tempo's 2 s eccentric reads as a slow step, not a climber
+ * (template-own when params.tempo is unset, the swing precedent; lead decision pending) */
+export const CLIMBER_TEMPO: Tempo = [0.8, 0, 0.8, 0.1]
 
 export type Climber = { kind: 'climber'; tempo: Tempo; setup: Setup; work: Side; plank: HandPlank }
 

@@ -40,7 +40,7 @@
     303
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-pull",
     "params": {
       "implement": "rings",
@@ -64,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Ring pull-up from a full hang (elbow 6) to 133 with the rings turning the palms in, rig framed whole, feet clear (61 mm). All gates green, no camera change, approved vertical-pull bakes untouched."
   }
 }

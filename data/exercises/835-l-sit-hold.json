@@ -40,7 +40,7 @@
     815
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hold",
     "params": {
       "kind": "l_sit",
@@ -63,6 +63,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Elbows at 7 deg, clavicle depressed -8 (shoulders pushed down), fists closed on the bars, hip 73-76 + lumbar 10-12 deg so the legs sit roughly at hip height (heels 1.35-1.40 m vs hip crease 1.50 m). COM balance is 0.03 mm, the breathing sway is 3 deg, and only additive branches were added to hold.ts."
   }
 }

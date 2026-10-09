@@ -2,8 +2,9 @@ import { attachHand, root1d } from '../../constraints.ts'
 import { bodyCapsules, capsuleClearance, capsuleSolidClearance, placeParts } from '../../collide.ts'
 import { fk, segPos } from '../../fk.ts'
 import { cableHandle, type Cable, type ImplementSpec, type Part } from '../../implements.ts'
-import { add, lerp, norm, qfromBasis, qrot, sub, type V3 } from '../../math.ts'
+import { add, lerp, norm, qfromBasis, qrot, sub, type Quat, type V3 } from '../../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../../skeleton.ts'
+import { handSchedule } from '../row/hand.ts'
 import { phaseAt, type Tempo } from '../../timing.ts'
 import { pressureZ } from '../isolation.ts'
 import { monotoneCubic } from '../solve.ts'
@@ -25,13 +26,15 @@ const KNEE = 6
 const CABLE = { pulleyY: 0.08, ahead: 0.5, kg: 15 }
 const BAR_Y = -0.05
 /** the bar keeps this far off the thighs and trunk on its way up, m */
-const BODY_GAP = 0.03
+const BODY_GAP = 0.035
 const HANG_ELBOW = 8
 /** humerothoracic elevation at the top (elbows at shoulder height), deg */
 const TOP_ELEV = 85
 /** clavicle elevation and protraction at the hang and the top, deg (the upper traps lift the girdle late) */
 const CLAV = { elev: [-2, 18], prot: [-2, 4] }
 const BALANCE_TOL = 0.035
+/** palm hint (world, y and z) at the hang and the top: the hemisphere the solver keeps the palm in */
+const PALM = { hang: [0, 0, -1], top: [0, -1, 0.3] }
 
 const cyl = (a: V3, b: V3, r: number): Part => ({ shape: 'cylinder', a, b, r })
 
@@ -44,6 +47,8 @@ export type UprightRow = {
   cable: Cable
   /** bar centre relative to the pelvis by bar-height fraction e */
   path: (e: number) => V3
+  /** the left hand's orientation by contraction (smooth) */
+  hand?: (c: number) => Quat
   sway?: Sway
 }
 
@@ -72,12 +77,14 @@ function barPose(spec: ImplementSpec, center: V3, pulley: V3): ImplementPose {
   return { id: spec.id, pos: sub(center, qrot(rot, [0, BAR_Y, 0])), rot }
 }
 
-function arms(skel: Skeleton, q: Float64Array, v: Pick<UprightRow, 'bar' | 'cable'>, c: number, center: V3) {
+function arms(skel: Skeleton, q: Float64Array, v: Pick<UprightRow, 'bar' | 'cable' | 'hand'>, c: number, center: V3) {
   setDofs(skel, q, { 'clavicle_*.elev': lerp(CLAV.elev[0], CLAV.elev[1], c * c), 'clavicle_*.prot': lerp(CLAV.prot[0], CLAV.prot[1], c) })
   const pose = barPose(v.bar, center, v.cable.pulley)
   const g = add(pose.pos, qrot(pose.rot, v.bar.sites.l.pos))
-  // overhand, palms towards the body; the elbows lead out and up
-  attachHand(skel, q, 'l', { pos: g, axis: [1, 0, 0], palm: [0, 0, -1] }, { pole: norm([1, lerp(-0.2, 0.9, c), -0.3]), planeHint: 10, devBand: [-22, 25] })
+  // overhand, palms towards the body, turning down over the bar as the elbows lead out and up: the palm hint follows
+  // c so the hand's roll search stays on one forearm rotation branch through the whole rep
+  const hand = v.hand?.(c)
+  attachHand(skel, q, 'l', { pos: g, axis: [1, 0, 0], palm: norm([0, lerp(PALM.hang[1], PALM.top[1], c), lerp(PALM.hang[2], PALM.top[2], c)]), ...(hand ? { hand } : {}) }, { pole: norm([1, lerp(-0.2, 0.9, c), -0.3]), planeHint: 10, devBand: [-30, 25] })
   for (const k of ['scapula_*.uprot', 'shoulder_*.plane', 'shoulder_*.elev', 'shoulder_*.rot', 'elbow_*.flex', 'forearm_*.pro', 'wrist_*.flex', 'wrist_*.dev']) {
     q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
   }
@@ -124,6 +131,9 @@ export function uprightContext(p: P, skel: Skeleton, tempo: Tempo): UprightRow {
   const rel = es.map((e) => sub(at(lerp(yHang, yTop, e)), pel0))
   const [fy, fz] = [1, 2].map((i) => monotoneCubic(es, rel.map((r) => r[i])))
   v.path = (e) => [0, fy(e), fz(e)]
+  // the hand's roll solved free at knots and smoothed: the wrist eases onto its deviation stop as the elbows pass ~90
+  // instead of meeting it in one frame
+  v.hand = handSchedule(skel, (c) => frame(skel, v, c).q, 9)
   const contacts: Contact[] = [...plantedContacts(skel, stance), { site: 'grip_l', kind: 'grip', target: { implement: spec.id, grip: 'l' } }, { site: 'grip_r', kind: 'grip', target: { implement: spec.id, grip: 'r' } }]
   v.setup = {
     implements: [spec, barStack(cable.pulley)],
@@ -132,7 +142,7 @@ export function uprightContext(p: P, skel: Skeleton, tempo: Tempo): UprightRow {
     symmetric: true,
     cables: [cable],
     balance: { point: 'com', over: 'midfoot', tol: BALANCE_TOL },
-    rests: [{ implement: spec.id, regions: ['thigh_l', 'thigh_r', 'trunk'], tol: -(BODY_GAP * 1000 - 18) }],
+    rests: [{ implement: spec.id, regions: ['thigh_l', 'thigh_r', 'trunk'], tol: -(BODY_GAP * 1000 - 25) }],
   }
   v.sway = limitSway((u, sway) => frame(skel, v, phaseAt(u, tempo).c, sway).bal, BALANCE_TOL - 0.005)
   void capsuleClearance

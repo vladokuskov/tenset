@@ -321,6 +321,10 @@ function lyingBody(skel: Skeleton, q: Float64Array, p: P, ctx: Pick<Lying, 'tilt
   restOnMat(skel, q, p.pelvisCurl ? TRUNK_SEAT : TRUNK)
 }
 
+/** flutter kick: short quick strokes, a leg up and down in about 1 s (about 2 strokes a s): the strength tempo's 2 s
+ * eccentric reads as a slow scissor (template-own when params.tempo is unset, the swing precedent; lead decision pending) */
+export const FLUTTER_TEMPO: Tempo = [0.5, 0, 0.5, 0.1]
+
 /**
  * Flutter kick (lying, alternating): straight legs kick in opposite directions between bottomHipAngle and topHipAngle
  * above the mat, the working leg rising on the concentric (one stroke each way per loop); the lower back stays pressed
@@ -399,7 +403,7 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   if (p.support === 'elbow_pads' && p.posture === 'hanging' && !p.toBar && !p.twist) return chairContext(p, skel, tempo)
   if (p.support !== 'none') throw new Error(`leg-raise: variant not implemented yet (support ${p.support})`)
   if (p.posture === 'hanging') return hangContext(p, skel, tempo)
-  return lyingContext(p, skel, tempo)
+  return lyingContext(p, skel, p.tempo ?? (p.laterality === 'alternating' ? FLUTTER_TEMPO : tempo))
 })
 
 function sample(u: number, p: P, skel: Skeleton): Pose {

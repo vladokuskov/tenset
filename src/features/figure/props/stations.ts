@@ -308,11 +308,11 @@ export function buildPendulumArm(spec: ImplementSpec): PropBuild<StationSockets>
     }
   }
   kit.tube([-bx, 0, 0], [bx, 0, 0], 0.06, 0.06, 'frame', { side: YA })
-  // counter-lever behind the pivot with a loaded horn
-  const away = t.clone().negate().setX(0).normalize()
-  const hornAt = away.clone().multiplyScalar(0.38)
-  kit.tube([0, 0, 0], hornAt, 0.06, 0.06, 'frame', { side: XA, cap: 'b' })
-  for (const s of [-1, 1]) horn(kit, hornAt.clone().setX(s * 0.04), hornAt.clone().setX(s * 0.3), 1)
+  // the load on the pad side of the pivot, halfway along the beams, so the plates go down with the pads: a cross
+  // member between the beams with a loaded horn out from each
+  const mid = new Vector3(0, plateY, (B.from + 0.08 + B.to - 0.1) / 2).applyMatrix4(m).multiplyScalar(0.5)
+  kit.tube(mid.clone().setX(-bx), mid.clone().setX(bx), 0.06, 0.06, 'frame', { side: YA })
+  for (const s of [-1, 1]) horn(kit, mid.clone().setX(s * (bx + 0.04)), mid.clone().setX(s * (bx + 0.3)), 1)
   return finish(kit, socketsOf(spec, ['handle_l', 'handle_r']))
 }
 
@@ -563,23 +563,26 @@ export function buildSealBench(spec: ImplementSpec): PropBuild<StationSockets> {
 
 // ---------- reverse hyper ----------
 
-export function buildReverseHyper(spec: ImplementSpec): PropBuild<StationSockets> {
+/** `pendulum: false` draws the frame without the pendulum's bearings, axle and rear base: a high padded bench */
+export function buildReverseHyper(spec: ImplementSpec, o: { pendulum?: boolean } = {}): PropBuild<StationSockets> {
   const kit = new Kit()
   const [p] = boxes(spec)
   const [hL, hR] = cyls(spec)
   const pivot = V(spec.sites.pivot.pos)
   const board = pad(kit, p, YA)
   const { pad: P } = REVERSE_HYPER
+  const pendulum = o.pendulum !== false
   // side frames outside the pendulum: posts on the pivot line up to a cross member under the pad
   const sx = 0.34
   const under = board.y - 0.03
+  const rear = pendulum ? -0.62 : pivot.z - 0.06
   for (const s of [-1, 1]) {
     kit.tube([s * sx, 0.05, pivot.z], [s * sx, under, pivot.z], 0.07, 0.07, 'frame')
-    kit.rod([s * (sx - 0.035), pivot.y, pivot.z], [s * (sx - 0.08), pivot.y, pivot.z], 0.04, 'frameDark', 24)
-    rail(kit, s * sx, -0.62, P.len + 0.2)
+    if (pendulum) kit.rod([s * (sx - 0.035), pivot.y, pivot.z], [s * (sx - 0.08), pivot.y, pivot.z], 0.04, 'frameDark', 24)
+    rail(kit, s * sx, rear, P.len + 0.2)
   }
   kit.tube([-sx - 0.035, under, pivot.z], [sx + 0.035, under, pivot.z], 0.07, 0.06, 'frame', { side: ZA, cap: 'both' })
-  kit.rod([-sx + 0.035, pivot.y, pivot.z], [sx - 0.035, pivot.y, pivot.z], 0.016, 'steel', 16)
+  if (pendulum) kit.rod([-sx + 0.035, pivot.y, pivot.z], [sx - 0.035, pivot.y, pivot.z], 0.016, 'steel', 16)
   kit.tube([0, under, pivot.z], [0, under, P.len - 0.06], 0.06, 0.05, 'frame', { side: XA })
   // front post with outriggers to the handles
   const fz = P.len - 0.08
@@ -589,8 +592,8 @@ export function buildReverseHyper(spec: ImplementSpec): PropBuild<StationSockets
     kit.tube([0, h.a[1] - 0.03, fz], [h.a[0], h.a[1] - 0.03, h.a[2] + 0.03], 0.045, 0.04, 'frame', { side: YA })
     kit.rod([h.a[0], h.a[1] - 0.03, h.a[2] + 0.03], [h.a[0], h.a[1], h.a[2] + 0.03], 0.016, 'steel', 16)
   }
-  for (const z of [-0.56, fz, P.len + 0.14]) kit.tube([-sx + 0.035, 0.025, z], [sx - 0.035, 0.025, z], 0.07, 0.05, 'frame', { side: ZA })
-  kit.tube([0, 0.03, fz], [0, 0.03, pivot.z], 0.05, 0.05, 'frame', { side: XA })
+  for (const z of [pendulum ? -0.56 : pivot.z, fz, P.len + 0.14]) kit.tube([-sx + 0.035, 0.025, z], [sx - 0.035, 0.025, z], 0.07, 0.05, 'frame', { side: ZA })
+  if (pendulum) kit.tube([0, 0.03, fz], [0, 0.03, pivot.z], 0.05, 0.05, 'frame', { side: XA })
   return finish(kit, socketsOf(spec, ['handle_l', 'handle_r']))
 }
 
@@ -661,7 +664,9 @@ export const layouts: LayoutSource = (b: Baked) => {
   for (const spec of b.implements) {
     const fixed = FIXED[spec.kind]
     if (fixed) {
-      out.push(fixedLayout(spec.id, poseMatrix4(firstPose(b, spec.id)!), fixed(spec).pieces, { holds: HELD.has(spec.kind) ? [spec.id] : [], whole: WHOLE.has(spec.kind) }))
+      // the reverse hyper frame without its pendulum is drawn as a plain high bench
+      const built = spec.kind === 'reverse_hyper' ? buildReverseHyper(spec, { pendulum: b.implements.some((s) => s.kind === 'hyper_lever') }) : fixed(spec)
+      out.push(fixedLayout(spec.id, poseMatrix4(firstPose(b, spec.id)!), built.pieces, { holds: HELD.has(spec.kind) ? [spec.id] : [], whole: WHOLE.has(spec.kind) }))
       continue
     }
     switch (spec.kind) {

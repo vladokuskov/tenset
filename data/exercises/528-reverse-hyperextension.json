@@ -41,7 +41,7 @@
     511
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "hip-kickback",
     "params": {
       "implement": "bodyweight",
@@ -64,6 +64,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. needs work: Motion is fine: straight legs, hip 84 -> -6, feet 147 mm off the floor. The station is the INFRA-B reverse_hyper frame with its pendulum pivot axle and bearings still drawn (buildReverseHyper) and no pendulum, so it reads as a machine missing a part, not as the record's flat_bench. The cue was changed to 'Hold the bench handles' to fit this prop. | ok: buildReverseHyper now takes {pendulum?: boolean}, default true, so the gallery scene and the station tests are unchanged. The layout passes pendulum: false when the bake has no hyper_lever. That drops the pivot bearings, the steel axle, the floor spine to the pivot and the long rear base: the rails start just behind the posts and the rear cross member sits at the post line. The sheet now reads as a high padded bench with handles, and the cue 'Hold the bench handles' matches it. Motion is unchanged, the bake is unchanged and QA passes. reverse_hyper is used only by 528, so no approved render is affected."
   }
 }

@@ -209,9 +209,9 @@ Driver: implement.
 
 | key | values | default |
 |---|---|---|
-| implement | barbell, dumbbell, cable, machine, bodyweight, smith, band, kettlebell | barbell |
+| implement | barbell, dumbbell, cable, machine, bodyweight, smith, band, kettlebell, landmine (a bar pivoting in a floor landmine: T-bar row with `attachment: v_bar`, Meadows row one hand on the sleeve with `stance: split`), rings, machine = the chest-supported T-bar station | barbell |
 | posture | standing, seated, lying_prone, lying_supine, kneeling | standing |
-| support | none, bench, chest_pad, floor | none |
+| support | none, bench, chest_pad, floor (dumbbell lying_prone on the floor, alternating = renegade row from a high plank) | none |
 | torsoAngle | 0..90 | 45 |
 | benchAngle | -30..90 | (optional) |
 | grip | pronated, supinated, neutral, mixed | pronated |
@@ -221,7 +221,8 @@ Driver: implement.
 | elbowFlare | 0..90 | 30 |
 | finish | none, external_rotation | none |
 | barHeight | low, mid, high | mid |
-| stance | hip, shoulder, split | hip |
+| stance | hip, shoulder, split, wide | hip |
+| start | hang, floor (the bar returns to the floor each rep: Pendlay row) | (optional) |
 
 ### vertical-pull
 
@@ -229,7 +230,7 @@ Driver: root. **sample() implemented.**
 
 | key | values | default |
 |---|---|---|
-| implement | bodyweight, cable, machine, band | bodyweight |
+| implement | bodyweight, cable, machine, band, rings (hanging from gymnastic rings, the palms turning in as the body rises) | bodyweight |
 | machine | lat_pulldown, assisted_pullup | (optional) |
 | posture | hanging, seated, kneeling | hanging |
 | grip | pronated, supinated, neutral | pronated |
@@ -248,6 +249,7 @@ Driver: joint.
 | posture | standing, seated | standing |
 | grip | pronated, neutral, mixed | neutral |
 | gripWidth | 0.5..2.6 | 1.1 |
+| movement | shrug, upright_row (the bar rises close up the body, elbows leading to shoulder height; cable only) | (optional, shrug) |
 
 ### squat
 

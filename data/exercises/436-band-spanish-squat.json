@@ -34,7 +34,7 @@
     405
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "band",
@@ -57,6 +57,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Shins stay vertical (df 3 to 6, knee z moves 22 mm). Hips sit back 0.44 m to parallel (hip y 541 vs knee 533), knee 95, hip 113. The band stays taut from the knee loop to a knee-height anchor. COM is 155 mm behind the heels, which needs ~215 N of band pull at knee height, plausible for a heavy band. The trunk leans 29 deg forward, slightly more than 'lean back into the band' suggests, but acceptable."
   }
 }

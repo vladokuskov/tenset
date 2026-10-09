@@ -277,22 +277,27 @@ describe('curl template', () => {
     const k = b.implements.findIndex((i) => i.kind === 'preacher_bench')
     const pad = placeParts(b.implements[k], frameImplements(b, 0)[k])[0]
     let lo = Infinity, hi = -Infinity
+    const rot: number[] = []
     for (let i = 0; i < b.frames; i++) {
       const f = fk(skel, frameQ(b, i))
       const h = humerusSwing(b, i, s)
       lo = Math.min(lo, h)
       hi = Math.max(hi, h)
-      // the back of the upper arm rests on the pad: never more than a centimetre in, and (bars: the hands turn the arms
-      // a little, so the pad sits under the deepest frame) at most 2.5 cm off it
+      // the back of the upper arm rests on the pad: never more than a centimetre in, never more than 8 mm off it
       const gap = Math.min(...bodyCapsules(skel, f).filter((c) => c.region === `upperarm_${s}`).map((c) => capsuleSolidClearance(c, pad)))
       expect(gap).toBeGreaterThan(-0.01)
-      expect(gap).toBeLessThan(0.025)
+      expect(gap).toBeLessThan(0.008)
+      // the elbow sits on the pad, inside its edge
+      expect(Math.abs(segPos(skel, f, `forearm_${s}`)[0])).toBeLessThan(0.22)
+      rot.push(dof(b, i / b.frames, `shoulder_${s}.rot`))
     }
+    // the humerus barely twists: the forearm turn and the wrist take the bar
+    expect(Math.max(...rot) - Math.min(...rot)).toBeLessThan(15)
     // the pad holds the upper arm about 45 deg forward of vertical in the side view
     expect(hi - lo).toBeLessThan(7)
     expect(Math.abs((hi + lo) / 2 - 45)).toBeLessThan(6)
     // almost straight at the bottom (the bar's grips leave the elbows a few degrees more bent than the dumbbell)
-    expect(dof(b, 0.625, `elbow_${s}.flex`)).toBeLessThan(b.params.implement === 'dumbbell' ? 18 : 25)
+    expect(dof(b, 0.625, `elbow_${s}.flex`)).toBeLessThan(18)
     expect(dof(b, 0, `elbow_${s}.flex`)).toBeGreaterThan(110)
     handsOn(b)
   })

@@ -30,7 +30,7 @@
     236
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "front-raise",
     "params": {
       "implement": "cable",
@@ -55,6 +55,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Fists are a fixed 0.20 m apart with thumbs up. Elevation goes from 32 to 96 deg (DB front raise 209: 22 to 95), so the bottom is solved off the thighs. Top grip is at shoulder height (y 1.47 equals the shoulder), elbows are soft at 163 deg, and the trunk is still. The cable runs between the legs below the crotch and the stack moves with the raise."
   }
 }

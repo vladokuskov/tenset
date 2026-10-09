@@ -42,7 +42,7 @@
     201
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "vertical-press",
     "params": {
       "implement": "landmine",
@@ -66,6 +66,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Staggered stance with the left foot 0.36 m forward (opposite the right pressing arm). One-hand press from 9 cm in front of the shoulder to lockout at 1.78 m, elbow 42 to 166 deg interior, trunk fixed (no rotation), feet still. Matches all four cues."
   }
 }

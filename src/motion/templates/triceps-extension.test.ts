@@ -71,10 +71,10 @@ const STRETCH: Record<number, [number, number]> = {
   // ring extension: the forehead between the rings
   743: [100, 120],
 }
-/** lockout short of straight, deg: the V-bar's close hands stop the elbows ~10 deg short (fully straight, the upper arms press into the ribs) */
-const LOCK: Record<number, number> = { 735: 12, 743: 12 }
-/** the upper arm moves on purpose, deg: the JM press's elbows drift towards the feet, the ring extension's body tips forward */
-const DRIFT: Record<number, number> = { 731: 50, 743: 30 }
+/** lockout short of straight, deg */
+const LOCK: Record<number, number> = { 743: 12 }
+/** the upper arm moves on purpose, deg: the JM press's elbows drift towards the feet, the ring extension's body tips forward, the V-bar's close hands tuck the elbows against the ribs at lockout */
+const DRIFT: Record<number, number> = { 731: 50, 743: 30, 735: 12 }
 /** the Tate press flares the elbows as they bend (its upper arm is checked on its own below) */
 const FLARES = new Set([744])
 
@@ -330,7 +330,14 @@ describe('triceps-extension template', () => {
       expect(dist(sitePos(skel, f, 'grip_l'), sitePos(skel, f, 'grip_r'))).toBeLessThan(0.3)
     }
     const h = v.implements.find((s) => s.id === 'handle')!
-    expect(h.sites.l.axis![1]).toBeGreaterThan(0.1)
+    expect(h.sites.l.axis![1]).toBeGreaterThan(0.5)
+    // thumbs on top, palms angled in: the forearm turn stays within 30-55 deg all rep, the humerus twisting little
+    const turn = Array.from({ length: v.frames }, (_, i) => frameQ(v, i)[skel.dof['forearm_l.pro']])
+    expect(Math.min(...turn)).toBeGreaterThan(30)
+    expect(Math.max(...turn)).toBeLessThan(55)
+    expect(Math.max(...turn) - Math.min(...turn)).toBeLessThan(16)
+    const twist = Array.from({ length: v.frames }, (_, i) => frameQ(v, i)[skel.dof['shoulder_l.rot']])
+    expect(Math.max(...twist) - Math.min(...twist)).toBeLessThan(20)
     // single arm overhead and cable kickback: one D-handle, the pulley low; the overhead one behind, the kickback in front
     for (const [id, behind] of [[737, true], [740, false]] as const) {
       const b = get(id)

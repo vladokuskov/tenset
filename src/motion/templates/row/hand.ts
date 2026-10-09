@@ -9,12 +9,12 @@ import { naturalCubic } from '../solve.ts'
 
 const DISTAL: V3 = [0, -1, 0]
 
-/** the left hand's world orientation by contraction c, from free solves at `n` knots (`solve(c)` returns the pose) */
-export function handSchedule(skel: Skeleton, solve: (c: number) => Float64Array, n = 17): (c: number) => Quat {
-  const axisL = skel.data.sites.grip_l.axis!
+/** a hand's world orientation (left by default) by contraction c, from free solves at `n` knots (`solve(c)` returns the pose) */
+export function handSchedule(skel: Skeleton, solve: (c: number) => Float64Array, n = 17, side: 'l' | 'r' = 'l'): (c: number) => Quat {
+  const axisL = skel.data.sites[`grip_${side}`].axis!
   const cs = Array.from({ length: n }, (_, k) => k / (n - 1))
   const frames = cs.map((c) => {
-    const rot = fk(skel, solve(c)).rot[skel.seg.hand_l]
+    const rot = fk(skel, solve(c)).rot[skel.seg[`hand_${side}`]]
     return [...qrot(rot, axisL), ...qrot(rot, DISTAL)]
   })
   const curves = [0, 1, 2, 3, 4, 5].map((i) => naturalCubic(cs, frames.map((fr) => fr[i])))

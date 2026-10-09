@@ -33,7 +33,7 @@
     804
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "floor-core",
     "params": {
       "kind": "dead_bug"
@@ -55,6 +55,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: Contralateral as cued: right shoulder flexion 90 to 170 deg while the left leg goes from 85/90 deg hip/knee to 9/4 deg. The far side holds tabletop 85/90 deg, lumbar flexion is fixed at 3 deg, hands are open, and the loop returns to tabletop (seam 0)."
   }
 }

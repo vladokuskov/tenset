@@ -20,11 +20,13 @@ import type { Setup } from '../types.ts'
 
 type P = ParamsOf<'rotation'>
 
-/** deg at either end of the arc: pelvis yaw, lumbar and thoracic rotation, the pivoting foot's heel lift and turn in */
-export const RAINBOW = { yaw: 14, lumbar: 8, thorax: 18, heel: 16, pivot: 18, neck: 8 } as const
+/** deg at either end of the arc: pelvis yaw, lumbar and thoracic rotation, the pivoting foot's heel lift and turn in,
+ * the hip hinge as the bar end comes down to hip height. The knot solve trims the thoracic turn to keep both arms long
+ * (about 34 deg of trunk turn in all at the ends) */
+export const RAINBOW = { yaw: 20, lumbar: 8, thorax: 18, heel: 16, pivot: 18, neck: 8, hinge: 16 } as const
 /** grip point (between the cupped hands) at the middle and the ends of the arc, m: height, sideways out, distance
  * ahead of the hip line */
-export const ARC = { top: 1.22, side: 1.0, out: 0.32, ahead: [0.7, 0.26] } as const
+export const ARC = { top: 1.22, side: 0.95, out: 0.45, ahead: [0.74, 0.26] } as const
 /** plates on the free end, kg (a light rotation) */
 const PLATE_KG = 10
 /** the forefoot capsule dips where the pivoting foot's toes lie flat, mm (rotation.ts FOOT_SINK, a lead decision) */
@@ -32,8 +34,8 @@ export const FOOT_SINK = 22
 const TOE_OUT = 15
 /** each cupped hand's grip site this far from the bar's axis, m */
 const CUP_HALF = 0.048
-/** shoulder to cupped hand as a share of the straight arm: soft elbows */
-const REACH = 0.95
+/** shoulder to cupped hand as a share of the straight arm: nearly straight (elbows about 20-30 deg) */
+const REACH = 0.97
 
 export type Landmine = {
   kind: 'landmine'
@@ -103,7 +105,7 @@ function body(skel: Skeleton, q: Float64Array, v: Landmine, t: number, adj: numb
     'grip_*.close': 0,
   })
   const drop = 0.04 * t * t
-  setPelvis(skel, q, [0.03 * turn + adj[0], v.hipY - drop, adj[1]], 2, RAINBOW.yaw * turn)
+  setPelvis(skel, q, [0.03 * turn + adj[0], v.hipY - drop, adj[1]], 2 + RAINBOW.hinge * t * t, RAINBOW.yaw * turn)
   // the foot on the side the bar leaves pivots on its ball as the turn passes the middle
   const k = (x: number) => smoothstep(Math.max(0, Math.min(1, (x + 0.1) / 1.1)))
   const lift = [v.feet[0].side === 'l' ? k(-turn) : k(turn), v.feet[1].side === 'l' ? k(-turn) : k(turn)]
@@ -148,11 +150,10 @@ export function landmineContext(p: P, skel: Skeleton, tempo: Tempo): Landmine {
       arms(skel, q, v, pose)
       const f = fk(skel, q)
       const d = (['l', 'r'] as const).map((sd) => dist(f.pos[skel.seg[`humerus_${sd}`]], siteWorld(bar, pose, `cup_${sd}`).pos) - REACH * L)
-      // only a hand out of reach pulls the body after it (a smooth hinge); a nearer hand just bends its elbow more
-      const over = (e: number) => 0.01 * Math.log1p(Math.exp(e / 0.01))
-      return [over(d[0]) * 100, over(d[1]) * 100, x[0] * 2, x[1] * 2, x[2] * 0.05]
+      // both hands at REACH: a nearer hand would fold its elbow (the arm crossing the body at the ends)
+      return [d[0] * 100, d[1] * 100, x[0] * 6, x[1] * 2, x[2] * 0.05]
     }
-    return (guess = dls(res, guess, { tol: 1e-9, iters: 40, lo: [-0.12, -0.04, -12], hi: [0.12, 0.04, 12] }).x)
+    return (guess = dls(res, guess, { tol: 1e-9, iters: 40, lo: [-0.12, -0.04, -12], hi: [0.12, 0.08, 12] }).x)
   })
   const sp = [0, 1, 2].map((k) => naturalCubic(ts, knots.map((x) => x[k])))
   v.adj = (t) => sp.map((f) => f(t))

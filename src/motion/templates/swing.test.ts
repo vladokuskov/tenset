@@ -42,7 +42,7 @@ describe('swing template', () => {
     for (const d of skel.dofs) if (d.unit === 'deg') expect(Math.abs(a[d.index] - z[d.index])).toBeLessThan(3)
   })
 
-  it('ballistic tempo: a rep takes about 1.6 s, not the 3.7 s strength tempo', () => {
+  it('ballistic tempo: a rep takes about 1.5 s, not the 3.7 s strength tempo', () => {
     expect(b.duration).toBeCloseTo(T, 5)
     expect(T).toBeLessThan(2)
   })
@@ -54,7 +54,8 @@ describe('swing template', () => {
     const sh = (sitePos(skel, f, 'grip_l')[1] + sitePos(skel, f, 'grip_r')[1]) / 2
     const chest = f.pos[skel.seg.humerus_l][1]
     expect(Math.abs(sh - chest)).toBeLessThan(0.12)
-    expect(ARM.top).toBeGreaterThan(80)
+    expect(ARM.top).toBeGreaterThan(70)
+    expect(sh).toBeLessThan(chest)
     expect(dof(0, 'elbow_l.flex')).toBeLessThan(10)
   })
 

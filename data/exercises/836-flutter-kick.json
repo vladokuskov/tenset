@@ -35,7 +35,7 @@
     819
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "leg-raise",
     "params": {
       "posture": "lying_supine",
@@ -58,6 +58,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. needs work: The stroke is right (straight legs alternating 10-32 deg, lumbar fixed at 9 deg, palms flat), but one up/down swap takes the full 3.7 s DEFAULT_TEMPO loop (2 s eccentric). The cue asks for 'short, quick alternating strokes', and a flutter kick normally runs ~1-2 strokes/s, so the loop reads as a slow scissor, not a flutter. | ok: Changed: added a template-own FLUTTER_TEMPO [0.45, 0, 0.45, 0.1] (1.0 s loop) in leg-raise.ts, used only for lying alternating when params.tempo is unset. No approved leg-raise record is lying plus alternating: 807 and 819 are bilateral. Each leg now goes up and down in ~1 s (~2 strokes/s), which matches 'short, quick alternating strokes'. Stroke shape unchanged (10-32 deg, lumbar fixed). Re-baked (30 frames); QA passes, no flip-gate issues; fresh; hero sheet checked. Like 816, the tempo constant is a lead decision (swing precedent) and the lead may revise it."
   }
 }

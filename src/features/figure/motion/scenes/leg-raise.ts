@@ -10,7 +10,6 @@ export const legRaise: SceneSpec = {
     if (params.support === 'elbow_pads') return { az: -50, elev: 0.15 }
     return params.posture === 'hanging' ? { az: -58, elev: 0.18 } : { az: -58, elev: 0.36 }
   },
-  // palms flat on the mat
   // palms flat on the mat; the captain's chair's upright handles in a neutral fist
   grip: (ctx) => (ctx.spec.kind === 'palm_rest' ? 'open' : ctx.spec.kind === 'captains_chair' ? 'neutral' : undefined),
 }

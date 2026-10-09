@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { bake, frameQ, type Baked } from '../../bake.ts'
 import { bodyCapsules } from '../../collide.ts'
-import { fk, sitePos } from '../../fk.ts'
+import { centerOfPressure, fk, sitePos } from '../../fk.ts'
 import { motionRecords, testSkeleton } from '../../testing.ts'
 import { getTemplate, parseParams } from '../index.ts'
-import { WALK } from './walk.ts'
+import { TIME, WALK } from './walk.ts'
 
 const skel = testSkeleton()
 const rec = motionRecords('hip-abduction').find((r) => r.id === 537)!
@@ -56,6 +56,35 @@ describe('hip-abduction band lateral walk', () => {
         expect(q[skel.dof[`knee_${s}.flex`]]).toBeLessThan(45)
       }
       expect(q[skel.dof['pelvis.tilt']]).toBeCloseTo(WALK.tilt, 6)
+    }
+  })
+
+  it('weight shifts are slow: the pelvis moves sideways at most 0.6 m/s, each shift takes at least 0.8 s', () => {
+    const dt = b.duration / b.frames
+    let peak = 0
+    for (let i = 1; i < b.frames; i++) peak = Math.max(peak, Math.abs(frameQ(b, i)[skel.dof['pelvis.tx']] - frameQ(b, i - 1)[skel.dof['pelvis.tx']]) / dt)
+    expect(peak).toBeLessThan(0.6)
+    expect(TIME.shift).toBeGreaterThanOrEqual(0.8)
+  })
+
+  it('lateral balance and foot slip per stance phase: the pressure stays over the feet on the floor, which hold still', () => {
+    const down: Record<string, number[] | null> = { l: null, r: null }
+    for (let i = 0; i < b.frames; i++) {
+      const f = fk(skel, frameQ(b, i))
+      const caps = bodyCapsules(skel, f)
+      const xs: number[] = []
+      for (const s of ['l', 'r'] as const) {
+        const feet = caps.filter((c) => c.region === `foot_${s}`)
+        const sole = Math.min(...feet.map((c) => Math.min(c.a[1], c.b[1]) - c.r))
+        if (sole <= 0.01) xs.push(...feet.flatMap((c) => [c.a[0] - c.r, c.a[0] + c.r, c.b[0] - c.r, c.b[0] + c.r]))
+        const heel = sitePos(skel, f, `heel_${s}`)
+        if (sole > 0.001) down[s] = null
+        else if (!down[s]) down[s] = heel
+        else expect(Math.hypot(heel[0] - down[s]![0], heel[1] - down[s]![1], heel[2] - down[s]![2])).toBeLessThan(0.002)
+      }
+      const [x] = centerOfPressure(skel, f)
+      expect(x).toBeGreaterThanOrEqual(Math.min(...xs))
+      expect(x).toBeLessThanOrEqual(Math.max(...xs))
     }
   })
 })

@@ -37,7 +37,7 @@
     401
   ],
   "media": {
-    "status": "card",
+    "status": "loop",
     "template": "squat",
     "params": {
       "implement": "machine",
@@ -60,6 +60,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "approved",
+    "note": "Wave 3c 2026-10-09: rated ok by the lane review, auto-approved. ok: COM 14 mm behind midfoot at the bottom (gate 25). Trunk 2 to 22, knee 108, hip 89, knees out with hip abduction 6 to 16. The lever plate goes down as the lifter descends, so the load is correct, and the chain length holds. Ankle df sits at the 40 joint max at the bottom: fine, but note it. Grab-bar hands are closed with no forearm flips."
   }
 }

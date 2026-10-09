@@ -87,7 +87,8 @@ const THUMBS = { start: [-0.25, 1, 0] as V3, end: [1, 0.5, 1] as V3 }
  * in both fists, the handle's rods off the lower forearm) */
 const LIFT_THUMBS = { start: [0, 0.5, 1] as V3, end: [0.55, 1, 0.4] as V3 }
 
-type Path = { body: typeof CHOP | typeof LIFT; aim: typeof AIM; thumbs: typeof THUMBS; neck: [number, number]; clav: { prot: [number, number]; elev: [number, number] }; pulleyY: number }
+type Body = { [K in keyof typeof CHOP]: (typeof CHOP)[K] extends readonly number[] ? readonly [number, number] : number }
+type Path = { body: Body; aim: typeof AIM; thumbs: typeof THUMBS; neck: [number, number]; clav: { prot: [number, number]; elev: [number, number] }; pulleyY: number }
 const PATHS: Record<'high_to_low' | 'low_to_high', Path> = {
   high_to_low: { body: CHOP, aim: AIM, thumbs: THUMBS, neck: [-4, 12], clav: { prot: [12, 8], elev: [8, 4] }, pulleyY: 2.0 },
   low_to_high: { body: LIFT, aim: LIFT_AIM, thumbs: LIFT_THUMBS, neck: [10, -6], clav: { prot: [8, 12], elev: [4, 8] }, pulleyY: 0.1 },

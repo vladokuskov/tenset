@@ -72,6 +72,7 @@
   "replacedBy": null,
   "qa": {
     "data": "pending",
-    "motion": "pending"
+    "motion": "pending",
+    "note": "Wave 3c 2026-10-09: rated minor, owner review. minor: At the floor the trunk is 53 deg from vertical, the hip joint is at 0.69 m and the knee at 84 deg. Conventional 508 is 70 deg and 0.79 m, so this is a credible, more upright trap-bar start; the plates rest on the floor (sleeve at 0.226 m) and the bar stays over the midfoot. Owner should look at two things: the near hand is hidden behind the plate in the hero view at the bottom, and thigh/trunk(lumbar3) reaches -70 mm under the reused FLOOR_START_TOL (72)."
   }
 }
