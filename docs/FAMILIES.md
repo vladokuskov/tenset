@@ -92,7 +92,7 @@ Portable equipment (wave 3b) works the same way: factories in `src/motion/implem
 - `data/backlog.csv`: only your rows, one targeted Edit at a time.
 - Never write the shared `dist/` (`pnpm vite build --outDir <scratch>`). No git commit, stash or checkout. Never kill processes you did not start. `still.ts` and `bake-loops.ts` start their own dev server on the first free port from 5190 / 5191, so each run gets its own port.
 - Never run `BAKE_MOTION=1 pnpm vitest ...` (it re-bakes and deletes across families) or `bake-loops.ts` without `--only` / `--family` (a full run prunes, lead only).
-- `pnpm test` also sees other families' work in progress: `bake.test.ts` wants a baked file for every implemented template's records, and `compose.test.ts` frames every baked loop. A red caused by another family's ids is theirs. Run your own tests plus the suites that touch your files.
+- `pnpm test:motion` also sees other families' work in progress: `bake.test.ts` wants a baked file for every implemented template's records, and `compose.test.ts` frames every baked loop. A red caused by another family's ids is theirs. Run your own tests plus the suites that touch your files.
 
 ## Definition of done (per exercise)
 

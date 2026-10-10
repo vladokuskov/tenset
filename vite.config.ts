@@ -8,6 +8,7 @@ import { reviewPlugin } from './src/features/review/devServer.ts'
 
 // Everything the service worker precaches. Raise deliberately when baked media lands.
 const PRECACHE_BUDGET = 8 * 1024 * 1024
+const MOTION_TESTS = ['src/motion/**/*.test.ts', 'src/features/figure/motion/**/*.test.ts', 'pipeline/motion/**/*.test.ts']
 
 function precacheBudget<T extends { url: string; size: number }>(entries: T[]) {
   const total = entries.reduce((s, e) => s + e.size, 0)
@@ -82,7 +83,18 @@ export default defineConfig({
   ],
   optimizeDeps: { entries: ['index.html'] },
   test: {
-    include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts', 'api/**/*.test.ts'],
     environment: 'node',
+    // motion re-bakes and judges every shipped loop (minutes of CPU); pnpm test leaves it to pnpm test:motion and CI
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts', 'api/**/*.test.ts'],
+          exclude: [...MOTION_TESTS, '**/node_modules/**'],
+        },
+      },
+      { extends: true, test: { name: 'motion', include: MOTION_TESTS } },
+    ],
   },
 })

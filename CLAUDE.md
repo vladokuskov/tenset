@@ -26,4 +26,4 @@ Vite 8, React 19, TypeScript 6, Tailwind 4, TanStack Router (file routes in `src
 - Match surrounding code. Small focused modules.
 
 ## Commands
-`pnpm dev`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm e2e`.
+`pnpm dev`, `pnpm test` (fast unit suite), `pnpm test:motion` (re-bakes and judges every animation loop, minutes of CPU; run it when touching `src/motion`, figure motion, `pipeline/motion` or exercise `media`), `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm e2e`.

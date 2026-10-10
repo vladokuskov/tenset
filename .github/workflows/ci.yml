@@ -38,6 +38,8 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: pnpm test
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: pnpm test:motion
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
 
       # Third-party cue corpus (never committed): two files pinned by commit and sha256 in cues.ts.
       - id: corpus

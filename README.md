@@ -31,6 +31,7 @@ Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js
 | Owner review of animations | `pnpm dev`, then `/dev/review` (dev only) |
 | Types, lint | `pnpm typecheck`, `pnpm lint` |
 | Unit tests | `pnpm test` |
+| Animation tests (slow, re-bake every loop) | `pnpm test:motion` |
 | Cue originality and license allowlist | `pnpm test:cues`, `pnpm licenses:check` |
 | Production build | `pnpm build` (fails if the service worker precache goes over 8 MiB) |
 | End-to-end tests (desktop and iPhone profiles) | `pnpm e2e` |
