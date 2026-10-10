@@ -74,6 +74,14 @@ export function localizeExercise(e: Exercise, locale: Locale): Exercise {
   return { ...e, name: t.name, cues: t.cues, aliases: [...new Set([...t.aliases, e.name, ...e.aliases])] }
 }
 
+/** Names and aliases in every translation, for matching text in any language. */
+export function translatedNames(id: number): string[] {
+  return Object.values(TEXT).flatMap((t) => {
+    const x = t.exercises[String(id)]
+    return x ? [x.name, ...x.aliases] : []
+  })
+}
+
 /** Template text in the given language; session labels fall back one by one. */
 export function localizeSplit(s: SplitTemplate, locale: Locale): SplitTemplate {
   const t = TEXT[locale].splits[s.id]

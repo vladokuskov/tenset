@@ -39,12 +39,54 @@ describe('parseLine', () => {
     ['Lunge 3x10 1:30', { name: 'Lunge', sets: 3, reps: '10', restSec: 90 }],
     ['Тяга 3x10 відпочинок 90 с', { name: 'Тяга', sets: 3, reps: '10', restSec: 90 }],
     ['Pull-up', { name: 'Pull-up' }],
+    // Ways of writing sets and reps
+    ['Жим лежа 3 по 10', { name: 'Жим лежа', sets: 3, reps: '10' }],
+    ['Згинання ніг 3 рази по 15', { name: 'Згинання ніг', sets: 3, reps: '15' }],
+    ['Приседания 4 подхода по 8 повторений', { name: 'Приседания', sets: 4, reps: '8' }],
+    ['10 reps x 3 sets cable fly', { name: 'cable fly', sets: 3, reps: '10' }],
+    ['12x3 curls', { name: 'curls', sets: 3, reps: '12' }],
+    ['Curl 8x3', { name: 'Curl', sets: 8, reps: '3' }],
+    ['Bench 10/8/6', { name: 'Bench', sets: 3, reps: '6-10' }],
+    ['Row 4x12,10,8,6', { name: 'Row', sets: 4, reps: '6-12' }],
+    ['Squat 12-10-8', { name: 'Squat', sets: 3, reps: '8-12' }],
+    // Weights are not part of the plan
+    ['Bench 80kg 3x8', { name: 'Bench', sets: 3, reps: '8' }],
+    ['Тяга гантелі по 24 кг 3х10', { name: 'Тяга гантелі', sets: 3, reps: '10' }],
+    ['Squat 3x5 @ 75%', { name: 'Squat', sets: 3, reps: '5' }],
+    ['Squat 100x5x5', { name: 'Squat', sets: 5, reps: '5' }],
+    ['Row 60x10, 70x8, 80x6', { name: 'Row', sets: 3, reps: '6-10' }],
+    ['Bench 3x8 @ 80', { name: 'Bench', sets: 3, reps: '8' }],
+    // Failure, reserve, time
+    ['Pull ups 3xAMRAP', { name: 'Pull ups', sets: 3, rir: 0 }],
+    ['Підтягування 3х макс', { name: 'Підтягування', sets: 3, rir: 0 }],
+    ['Squat 3x5 до відмови', { name: 'Squat', sets: 3, reps: '5', rir: 0 }],
+    ['Тяга 3х10 2 в запасі', { name: 'Тяга', sets: 3, reps: '10', rir: 2 }],
+    ['Plank 3x60s', { name: 'Plank', sets: 3, reps: '60s' }],
+    ['Plank 3 x 1 min', { name: 'Plank', sets: 3, reps: '60s' }],
+    ['Планка 45 сек', { name: 'Планка', reps: '45s' }],
+    ['Dead hang 1:00', { name: 'Dead hang', reps: '60s' }],
+    ['Row 3x10, 90s rest', { name: 'Row', sets: 3, reps: '10', restSec: 90 }],
+    ['Жим 3х8 с отдыхом 2 мин', { name: 'Жим', sets: 3, reps: '8', restSec: 120 }],
+    // What is left of the name
+    ['A1. Bench 3x8', { name: 'Bench', sets: 3, reps: '8' }],
+    ['✅ Leg press 4x12', { name: 'Leg press', sets: 4, reps: '12' }],
+    ['- [ ] Face pull 3x15', { name: 'Face pull', sets: 3, reps: '15' }],
+    ['Lunges 3x10 each leg', { name: 'Lunges', sets: 3, reps: '10' }],
+    ['Випади 3х12 на кожну ногу', { name: 'Випади', sets: 3, reps: '12' }],
+    ['Жим гантелей сидячи — 3×12 (повільно)', { name: 'Жим гантелей сидячи', sets: 3, reps: '12' }],
+    ['Hack squat 3x8 - slow negatives', { name: 'Hack squat', sets: 3, reps: '8' }],
+    ['Pulldown 3x10 wide grip', { name: 'Pulldown wide grip', sets: 3, reps: '10' }],
+    ['Присед 3х5 с паузой', { name: 'Присед с паузой', sets: 3, reps: '5' }],
+    ['Calf raise 4x15 tempo 3-1-1-0', { name: 'Calf raise', sets: 4, reps: '15' }],
+    ['SS bar squat 3x5', { name: 'SS bar squat', sets: 3, reps: '5' }],
+    ['Ｂench ３x８', { name: 'Bench', sets: 3, reps: '8' }],
   ])('%s', (line, want) => {
     expect(fields(line)).toEqual(want)
   })
 
   it('clamps sets, reps, rest and RIR', () => {
-    expect(fields('Curl 30x10')?.sets).toBe(20)
+    expect(fields('Curl 20x10')?.sets).toBe(20)
+    expect(fields('Curl 30x10')).toEqual({ name: 'Curl', reps: '10' })
     expect(fields('Curl 0x10')?.sets).toBe(1)
     expect(fields('Curl 3x10 rest 20 min')?.restSec).toBe(600)
     expect(fields('Curl 3x10 rest 50s')?.restSec).toBe(45)
@@ -86,6 +128,16 @@ describe('parseHeader', () => {
     ['Відпочинок', { day: null, rest: true }],
     ['Sunday: rest', { day: 6, rest: true }],
     ['Нд - відпочинок', { day: 6, rest: true }],
+    ['Среда (ноги)', { day: 2, label: 'ноги', rest: false }],
+    ['Вс - отдых', { day: 6, rest: true }],
+    ['Пн 12.10 Upper', { day: 0, label: 'Upper', rest: false }],
+    ["П'ятниця 12 жовтня", { day: 4, rest: false }],
+    ['У вівторок', { day: 1, rest: false }],
+    ['Mon/Thu: Upper', { day: 0, label: 'Upper', rest: false, also: [3] }],
+    ['Пн і Чт - верх', { day: 0, label: 'верх', rest: false, also: [3] }],
+    ['Тренировка А', { day: null, label: 'Тренировка А', rest: false }],
+    ['Тренування №2', { day: null, label: 'Тренування №2', rest: false }],
+    ['1-й день', { day: null, label: '1-й день', rest: false }],
   ])('%s', (line, want) => {
     expect(parseHeader(line)).toEqual(want)
   })
@@ -133,9 +185,49 @@ describe('parseProgramText', () => {
   })
 
   it('skips noise lines', () => {
-    const t = parseProgramText('Week 1\n---\nSquat 3x5\n\n***')
+    const t = parseProgramText('Week 1\n---\nSquat 3x5\n\n***\n# Неделя 2\n12.10.2026\n💪💪')
     expect(t.warnings).toEqual([])
     expect(t.days[0].lines).toHaveLength(1)
+  })
+
+  it('reads a line of session words as a header, not as an exercise', () => {
+    const t = parseProgramText('Push day\nBench 3x8\nСпина + біцепс\nТяга 3x8\nCalves 4x15\nBack extension')
+    expect(t.days.map((d) => [d.label, d.lines.map((l) => l.name)])).toEqual([
+      ['Push day', ['Bench']],
+      ['Спина + біцепс', ['Тяга', 'Calves', 'Back extension']],
+    ])
+  })
+
+  it('skips a title only when a blank line parts it from the first day', () => {
+    expect(parseProgramText('My program\n\nMonday\nSquat 3x5').days.flatMap((d) => d.lines.map((l) => l.name))).toEqual(['Squat'])
+    expect(parseProgramText('Squat\nMonday\nBench 3x5').days.flatMap((d) => d.lines.map((l) => l.name))).toEqual(['Squat', 'Bench'])
+  })
+
+  it('pairs supersets: A1/A2, SS: lines, and two names joined by +', () => {
+    const pairs = (text: string) => parseProgramText(text).days[0].lines.map((l) => [l.name, !!l.withPrev])
+    expect(pairs('A1 Curl 3x10\nA2 Pushdown 3x10\nA3 Wrist curl 3x10')).toEqual([
+      ['Curl', false],
+      ['Pushdown', true],
+      ['Wrist curl', false],
+    ])
+    expect(pairs('SS: Curl 3x10\nSS: Pushdown 3x10\nSS: Fly 3x10')).toEqual([
+      ['Curl', false],
+      ['Pushdown', true],
+      ['Fly', false],
+    ])
+    expect(pairs('B1 Curl 3x10\nRow 3x10\nB2 Pushdown 3x10').map(([, p]) => p)).toEqual([false, false, false])
+    expect(parseProgramText('Curl + Pushdown 3x12').days[0].lines).toMatchObject([
+      { name: 'Curl', sets: 3, reps: '12' },
+      { name: 'Pushdown', sets: 3, reps: '12', withPrev: true },
+    ])
+  })
+
+  it('copies a session written for two weekdays', () => {
+    const t = assignDays(parseProgramText('Mon/Thu: Upper\nBench 3x8').days)
+    expect(t.days.map((d) => [d.day, d.label, d.lines.length])).toEqual([
+      [0, 'Upper', 1],
+      [3, 'Upper', 1],
+    ])
   })
 
   it('caps the input', () => {
@@ -234,5 +326,16 @@ describe('buildImportedProgram', () => {
     expect(p.days[0].entries[1]).toMatchObject({ exerciseId: 'c1', sets: 3 })
     expect(p.days[3].entries[0]).toMatchObject({ exerciseId: 'c1', sets: 2 })
     expect(p.custom).toHaveLength(1)
+  })
+
+  it('links supersets only where a pair is allowed', () => {
+    const p = buildImportedProgram(
+      'p1',
+      'Imported program',
+      [{ day: 0, rest: false, entries: [{ ref: 101, withPrev: true }, { ref: 102 }, { ref: 103, withPrev: true }, { ref: 104, withPrev: true }] }],
+      sequentialIds('e'),
+    )
+    expect(Program.safeParse(p).success).toBe(true)
+    expect(p.days[0].entries.map((e) => !!e.withPrev)).toEqual([false, false, true, false])
   })
 })

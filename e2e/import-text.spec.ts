@@ -79,3 +79,33 @@ test('a pasted share link saves as a new program', async ({ page }) => {
   await expect(page.getByRole('status').filter({ hasText: 'Created "Upper/Lower 4x 2"' })).toBeVisible()
   expect(Object.keys((await storedPrograms(page)).programs)).toHaveLength(2)
 })
+
+test('Ukrainian and Russian notes match the catalog in an English UI', async ({ page }) => {
+  await startFromTemplate(page, 'Upper/Lower 4x')
+  const sheet = await openPaste(page)
+  await sheet
+    .getByRole('textbox', { name: 'Program text or share link' })
+    .fill('Понеділок - груди\nЖим лежачи 4х8\nА1. Розводка гантелей 3х12\nА2. Віджимання 3х макс\n\nСреда\nПрисед 5х5 по 100кг\nСтановая тяга 3 по 5')
+  await sheet.getByRole('button', { name: 'Read it' }).click()
+
+  for (const name of ['Barbell Bench Press', 'Dumbbell Fly', 'Push-Up', 'Barbell Back Squat', 'Conventional Deadlift']) {
+    await expect(sheet.getByText(name, { exact: true })).toBeVisible()
+  }
+  await expect(sheet.getByText('Check this one')).toHaveCount(0)
+  await expect(sheet.getByText('Superset with the line above')).toHaveCount(1)
+  await sheet.getByRole('button', { name: 'Create program' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Created "Imported program"' })).toBeVisible()
+
+  const { programs, activeId } = await storedPrograms(page)
+  const added = programs[activeId!]
+  expect(added.days[0]).toMatchObject({ kind: 'train', label: 'груди' })
+  expect(added.days[0].entries.map((e) => [e.sets, e.reps ?? null, e.rir ?? null, !!e.withPrev])).toEqual([
+    [4, '8', null, false],
+    [3, '12', null, false],
+    [3, null, 0, true],
+  ])
+  expect(added.days[2].entries.map((e) => [e.sets, e.reps ?? null])).toEqual([
+    [5, '5'],
+    [3, '5'],
+  ])
+})
