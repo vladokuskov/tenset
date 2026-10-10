@@ -1,9 +1,9 @@
 # Handoff (2026-10-01)
 
 ## Project
-Tenset (repo `gym-builder`): no-backend, phone-first PWA for planning a weekly gym program, with a head-level body map, and every exercise animated by our own procedural 3D figure (illustration style: gray muscular figure, red/orange muscle highlights, white background).
-- Repo: ~/projects/gym-builder (its own git repo; `~` is a separate repo). Remote: private github.com/vladokuskov/gym-builder.
-- Deployed on Vercel from `main` (every push deploys): https://gym-builder-nine.vercel.app
+Tenset: no-backend, phone-first PWA for planning a weekly gym program, with a head-level body map, and every exercise animated by our own procedural 3D figure (illustration style: gray muscular figure, red/orange muscle highlights, white background).
+- Repo: ~/projects/tenset (its own git repo; `~` is a separate repo). Remote: private github.com/vladokuskov/tenset.
+- Deployed on Vercel from `main` (every push deploys): https://tenset-app.vercel.app
 - Source of truth: `docs/PLAN.md` (scope and every decision), `docs/FAMILIES.md` (motion families, extension points, gates, definition of done), `CLAUDE.md` (hard rules), `README.md` (commands and deploy).
 
 ## Owner decisions that must hold

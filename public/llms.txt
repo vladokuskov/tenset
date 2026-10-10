@@ -6,14 +6,14 @@ AI agents can build a program for the user and hand back that link. Nothing is s
 
 ## Option 1: MCP server (preferred)
 
-- URL: `https://gym-builder-nine.vercel.app/api/mcp` (Streamable HTTP, stateless, no auth)
-- Claude Code: `claude mcp add --transport http tenset https://gym-builder-nine.vercel.app/api/mcp`
+- URL: `https://tenset-app.vercel.app/api/mcp` (Streamable HTTP, stateless, no auth)
+- Claude Code: `claude mcp add --transport http tenset https://tenset-app.vercel.app/api/mcp`
 - claude.ai: Settings, Connectors, Add custom connector, paste the URL.
 - Tools: `get_reference`, `search_exercises`, `list_splits`, `create_program`, `read_program`
 
 ## Option 2: plain HTTP (no MCP client needed)
 
-Same tools, JSON responses, CORS open. Base: `https://gym-builder-nine.vercel.app/api/agent/`
+Same tools, JSON responses, CORS open. Base: `https://tenset-app.vercel.app/api/agent/`
 
 - `GET /api/agent/reference`: muscle group, equipment, pattern and day ids, plus input limits
 - `GET /api/agent/splits`: ready-made split templates with ranked exercise options per slot
@@ -56,4 +56,4 @@ Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what
 
 Example (Monday squat, bench, row; Thursday Romanian deadlift):
 
-https://gym-builder-nine.vercel.app/api/agent/program?program=%7B%22name%22%3A%22Full%20body%22%2C%22days%22%3A%5B%7B%22day%22%3A0%2C%22entries%22%3A%5B%7B%22exerciseId%22%3A401%2C%22sets%22%3A3%7D%2C%7B%22exerciseId%22%3A101%2C%22sets%22%3A3%7D%2C%7B%22exerciseId%22%3A304%2C%22sets%22%3A3%7D%5D%7D%2C%7B%22day%22%3A3%2C%22entries%22%3A%5B%7B%22exerciseId%22%3A501%2C%22sets%22%3A3%7D%5D%7D%5D%7D
+https://tenset-app.vercel.app/api/agent/program?program=%7B%22name%22%3A%22Full%20body%22%2C%22days%22%3A%5B%7B%22day%22%3A0%2C%22entries%22%3A%5B%7B%22exerciseId%22%3A401%2C%22sets%22%3A3%7D%2C%7B%22exerciseId%22%3A101%2C%22sets%22%3A3%7D%2C%7B%22exerciseId%22%3A304%2C%22sets%22%3A3%7D%5D%7D%2C%7B%22day%22%3A3%2C%22entries%22%3A%5B%7B%22exerciseId%22%3A501%2C%22sets%22%3A3%7D%5D%7D%5D%7D

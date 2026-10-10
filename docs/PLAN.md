@@ -1,6 +1,6 @@
 # Gym Program Builder: implementation plan
 
-Working name / dir: `~/projects/gym-builder` (own `git init`; `~` is itself a repo with no commits, so check `git rev-parse --show-toplevel` before committing).
+Working name / dir: `~/projects/tenset` (own `git init`; `~` is itself a repo with no commits, so check `git rev-parse --show-toplevel` before committing).
 
 ## Context
 Greenfield. A static, no-backend web app where the user:
@@ -74,7 +74,7 @@ Yes, procedurally. The agent can't produce raster images or video from a diffusi
 
 ### Repo layout
 ```
-gym-builder/
+tenset/
   pipeline/                  build-time only, never shipped
     .cache/                  gitignored: MPFB2 data, BodyParts3D zip (sha256-pinned)
     body/                    build-body (Blender+MPFB2 headless or Node loader), atlas.ts
