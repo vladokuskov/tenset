@@ -131,6 +131,9 @@ export const ExerciseText = z.object({
 
 export const ExerciseTextMap = z.record(z.string().regex(/^\d+$/), ExerciseText)
 
+/** Extra names people type in notes, keyed by exercise id. Read by the paste matcher only, never shown. */
+export const InputAliases = z.record(z.string().regex(/^\d+$/), z.array(z.string().min(2)))
+
 export const TaxonomyText = z.object({ groups: LabelMap, heads: LabelMap, deepHeads: LabelMap, untracked: LabelMap })
 
 export const EquipmentText = z.object({ groups: LabelMap, equipment: LabelMap, presets: LabelMap })

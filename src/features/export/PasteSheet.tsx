@@ -133,8 +133,10 @@ export function PasteSheet({ open, onClose }: PasteSheetProps) {
       day: d.day,
       label: d.label,
       rest: d.rest,
-      entries: d.rows.flatMap((r) => {
+      entries: d.rows.flatMap((r, i) => {
         const { sets, reps, restSec, rir } = r.line
+        // A pair only holds when the line it pairs with is kept.
+        const withPrev = !!r.line.withPrev && i > 0 && d.rows[i - 1].choice.kind !== 'skip'
         const ref =
           r.choice.kind === 'match'
             ? r.choice.pick.ref
@@ -148,7 +150,7 @@ export function PasteSheet({ open, onClose }: PasteSheetProps) {
                   },
                 }
               : null
-        return ref === null ? [] : [{ ref, sets, reps, restSec, rir }]
+        return ref === null ? [] : [{ ref, sets, reps, restSec, rir, withPrev }]
       }),
     }))
     save(buildImportedProgram('import', name.trim() || m.defaultName, days, () => randomId(8)))
@@ -310,6 +312,7 @@ function ReviewRow({ row, matcher, onChoice }: { row: Row; matcher: Matcher; onC
     m.setsReps(line.sets ?? DEFAULT_SETS, line.reps),
     line.restSec !== undefined ? m.rest(line.restSec) : null,
     line.rir !== undefined ? m.rir(line.rir) : null,
+    line.withPrev ? m.superset : null,
   ]
     .filter(Boolean)
     .join(' · ')

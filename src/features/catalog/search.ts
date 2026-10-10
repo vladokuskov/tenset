@@ -39,11 +39,19 @@ export function tokenize(text: string): string[] {
 
 export type CatalogIndex = MiniSearch<Doc>
 
-/** Pass already localized exercises (useCatalog); groups, equipment and patterns index in the same language. */
-export function buildIndex(exercises: readonly Exercise[], locale: Locale = getLocale()): CatalogIndex {
+/**
+ * Pass already localized exercises (useCatalog); groups, equipment and patterns index in the same language.
+ * processTerm applies to indexed and searched terms alike.
+ */
+export function buildIndex(
+  exercises: readonly Exercise[],
+  locale: Locale = getLocale(),
+  processTerm?: (term: string) => string,
+): CatalogIndex {
   const index = new MiniSearch<Doc>({
     fields: ['name', 'aliases', 'equipment', 'primary', 'secondary', 'pattern'],
     tokenize,
+    ...(processTerm ? { processTerm } : {}),
     searchOptions: {
       boost: { name: 3, aliases: 2.5, primary: 1.5, pattern: 1.2, secondary: 0.4 },
       prefix: true,
