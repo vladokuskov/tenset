@@ -1,5 +1,5 @@
-import { getRouteApi } from '@tanstack/react-router'
-import { ChevronDown, Ellipsis } from 'lucide-react'
+import { getRouteApi, Link } from '@tanstack/react-router'
+import { ChevronDown, ClipboardPaste, Ellipsis, Printer } from 'lucide-react'
 import { useEffect } from 'react'
 import { NotMedicalAdvice } from '../../app/brand'
 import { dayFromSlug, daySlug, todayIndex } from '../../app/days'
@@ -9,7 +9,7 @@ import { ProgramsSheet } from '../programs'
 import { ShareDialog } from '../share'
 import { useMessages } from '../../i18n/messages'
 import { InstallNudge } from '../../sw'
-import { Button, IconButton, Page, PageBody, PageHeader, Section, useSheet } from '../../ui'
+import { Button, buttonClass, IconButton, Page, PageBody, PageHeader, Section, useSheet } from '../../ui'
 import { AddSheet } from './AddSheet'
 import { CoverageCard } from './CoverageCard'
 import { NoProgram } from './NoProgram'
@@ -100,8 +100,21 @@ export function PlanScreen() {
   const header = <PageHeader title={title} actions={more} settings />
 
   if (desktop) {
+    // The board has room for the two actions people look for first; the rest stay in the menu.
+    const actions = (
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="sm" icon={ClipboardPaste} onClick={() => paste.show()}>
+          {m.menu.paste}
+        </Button>
+        <Link to="/print" className={buttonClass({ variant: 'ghost', size: 'sm' })}>
+          <Printer size={16} strokeWidth={1.75} aria-hidden className="shrink-0" />
+          {m.menu.print}
+        </Link>
+        {more}
+      </div>
+    )
     return (
-      <DesktopPlan view={view} title={title} actions={more} onAdd={(d) => add.show({ day: daySlug(d), tab: undefined, group: undefined })}>
+      <DesktopPlan view={view} title={title} actions={actions} onAdd={(d) => add.show({ day: daySlug(d), tab: undefined, group: undefined })}>
         {sheets}
       </DesktopPlan>
     )
