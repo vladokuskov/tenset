@@ -40,7 +40,7 @@ export type PageHeaderProps = {
   title: ReactNode
   subtitle?: ReactNode
   /** Pushed screens show a visible back button (Home Screen mode has no browser chrome). */
-  back?: BackTarget
+  back?: BackTarget & { className?: string }
   /** Trailing toolbar controls, usually IconButtons. */
   actions?: ReactNode
   /** Rendered under the title, e.g. day chips or a segmented control. */

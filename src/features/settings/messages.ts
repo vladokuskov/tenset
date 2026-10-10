@@ -8,6 +8,7 @@ export const settingsMessages = defineMessages({
   en: {
     title: 'Settings',
     plan: 'Plan',
+    group: { general: 'General', training: 'Training', exercises: 'Exercises' },
     goal: 'Goal',
     goalHint: {
       hypertrophy: 'Bands follow the weekly set ranges used in muscle growth research.',
@@ -114,6 +115,7 @@ export const settingsMessages = defineMessages({
   uk: {
     title: 'Налаштування',
     plan: 'План',
+    group: { general: 'Загальні', training: 'Тренування', exercises: 'Вправи' },
     goal: 'Мета',
     goalHint: {
       hypertrophy: 'Діапазони відповідають тижневій кількості підходів із досліджень росту мʼязів.',
