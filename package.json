@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings",
     "knip": "knip",
     "test": "vitest run --project unit",
     "test:motion": "vitest run --project motion",
