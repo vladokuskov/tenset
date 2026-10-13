@@ -82,7 +82,7 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 
 ## Entry fields
 
-`Entry` (`src/domain/schema.ts`): `id`, `exerciseId`, `sets`, optional `reps`, `restSec` (0-600, step 15; absent means the exercise default in the estimate), `rir` (0-5), `withPrev: true` (superset with the entry above; pairs only). Change them only through the program store (`setRestSec`, `setRir`, `linkWithPrev`), which keeps pairs consistent and undoable. Rows and cards label pairs with `supersetLabels(entries)` from `src/features/builder/labels.ts` (A1/A2, B1/B2; null for solo entries). Swap candidates are ranked by `rankAlternatives` in `src/features/catalog/alternatives.ts` (equipment, curated list, head overlap, level, id).
+`Entry` (`src/domain/schema.ts`): `id`, `exerciseId`, `sets`, optional `reps`, `restSec` (0-600, step 15; absent means the exercise default in the estimate), `rir` (0-5), `withPrev: true` (superset with the entry above; pairs only). Change them only through the program store (`setRestSec`, `setRir`, `linkWithPrev`), which keeps pairs consistent and undoable. Rows and cards label pairs with `supersetLabels(entries)` from `src/features/shared/exercise.ts` (A1/A2, B1/B2; null for solo entries). Swap candidates are ranked by `rankAlternatives` in `src/features/catalog/alternatives.ts` (equipment, curated list, head overlap, level, id).
 
 ## Shared component contracts
 

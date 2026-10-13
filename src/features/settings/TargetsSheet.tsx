@@ -8,7 +8,7 @@ import { common } from '../../i18n/common'
 import { useLocale, useMessages } from '../../i18n/messages'
 import { prefsStore, usePrefsStore } from '../../store/prefs.store'
 import { Button, ChipGroup, Sheet, Stepper, cx } from '../../ui'
-import { ChangeBar } from '../builder/ChangeBar'
+import { ChangeBar } from '../shared/ChangeBar'
 import { settingsMessages } from './messages'
 import { changedCount, customPref, modeOf, prefForMode, rangeText, TARGET_MODES } from './targetRanges'
 

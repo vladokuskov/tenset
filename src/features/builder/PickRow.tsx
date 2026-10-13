@@ -1,9 +1,9 @@
 import { ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
 import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
-import { rowMeta, type AnyExercise } from './labels'
+import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
+import { rowMeta, type AnyExercise } from '../shared/exercise'
 
 export type PickRowProps = {
   exercise: AnyExercise

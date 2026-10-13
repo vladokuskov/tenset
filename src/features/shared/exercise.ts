@@ -1,13 +1,7 @@
 import type { CustomExercise, Entry, Exercise, Prefs } from '../../domain/schema'
-import { groupName } from '../../data/localize'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
-import { builderMessages } from './messages'
-
-export const REPS_PRESETS = ['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'] as const
-export const SECONDS_PRESETS = ['15-30', '30-45', '30-60', '45-60'] as const
-
-export { groupName }
+import { sharedMessages } from './messages'
 
 export type AnyExercise = Exercise | CustomExercise
 
@@ -17,7 +11,7 @@ export function isCustom(e: AnyExercise): e is CustomExercise {
 
 /** Second line of an exercise row: primary muscles, flagged when the mapping is the user's own. */
 export function rowMeta(e: AnyExercise, primaries: readonly string[], locale: Locale = getLocale()): string {
-  const m = builderMessages[locale]
+  const m = sharedMessages[locale]
   const muscles = primaries.join(', ') || m.noMusclesMapped
   return isCustom(e) ? m.customMeta(muscles) : muscles
 }
@@ -37,7 +31,7 @@ export function defaultReps(e: AnyExercise, goal: Prefs['goal']): string | undef
 
 /** "8-12 reps", "30-45 s". */
 export function repsText(reps: string | undefined, unit: 'reps' | 'seconds', locale: Locale = getLocale()): string {
-  const m = builderMessages[locale]
+  const m = sharedMessages[locale]
   if (!reps) return unit === 'seconds' ? m.timeEmpty : m.repsEmpty
   // A pasted time target ("45s") reads as time whatever the exercise counts in.
   const time = /^(\d+(?:-\d+)?)s$/.exec(reps)

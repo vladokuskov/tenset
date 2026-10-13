@@ -1,11 +1,11 @@
 import { formatDelta } from '../../app/format'
+import { groupName } from '../../data/localize'
 import { resolveExercise, type Catalog, type ResolveContext } from '../../domain/resolve'
 import type { ExerciseRef, Prefs, Program } from '../../domain/schema'
 import { groupIds, isBanded } from '../../domain/taxonomy'
 import { computeWeek, type WeekResult } from '../../domain/volume'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
-import { groupName } from './labels'
 
 export type GroupDelta = { group: string; from: number; to: number }
 

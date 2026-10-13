@@ -1,4 +1,4 @@
-import type { AnyExercise } from '../labels'
+import type { AnyExercise } from '../../shared/exercise'
 
 /** dnd type of catalog drawer rows; the week board's day columns accept it. */
 export const DRAWER_ITEM = 'drawer-exercise'

@@ -1,7 +1,7 @@
 import {
   CODEC_EQUIPMENT_V1,
   CODEC_GROUPS_V1,
-  REPS_PRESETS,
+  CODEC_REPS_V1,
   ShareLinkError,
   decodeProgram,
   encodeProgram,
@@ -80,7 +80,7 @@ export function getReference() {
     muscleGroups: groups.map((g) => ({ id: g.id, name: g.name, area: g.area, banded: g.banded })),
     equipment: equipment.map((e) => ({ id: e.id, name: e.name })),
     patterns: Pattern.options,
-    repsPresets: REPS_PRESETS,
+    repsPresets: CODEC_REPS_V1,
     limits: {
       nameMax: NAME_MAX,
       labelMax: LABEL_MAX,

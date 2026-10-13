@@ -8,9 +8,9 @@ import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { programStore, useProgramStore } from '../../store/program.store'
 import { Button, ChipGroup, Sheet } from '../../ui'
-import { ChangeBar } from './ChangeBar'
+import { ChangeBar } from '../shared/ChangeBar'
+import { carryUndo, undoLastChange, useChange } from '../shared/useChange'
 import { builderMessages } from './messages'
-import { carryUndo, undoLastChange, useChange } from './useChange'
 
 const field = 'w-full rounded-md bg-surface-2 px-3 text-base text-ink placeholder:text-ink-3'
 

@@ -6,11 +6,11 @@ import type { DayIndex } from '../../app/days'
 import { formatDelta, joinMeta } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
-import { equipmentName, sessionLabel } from '../../data/localize'
+import { equipmentName, groupName, sessionLabel } from '../../data/localize'
 import { availableSet, equipment as equipmentItems, hasEquipment } from '../../domain/equipment'
 import { resolveExercise } from '../../domain/resolve'
-import { suggestedSections } from '../../domain/suggest'
 import type { Pattern } from '../../domain/schema'
+import { suggestedSections } from '../../domain/suggest'
 import { groupIds } from '../../domain/taxonomy'
 import { bandFor, type WeekResult } from '../../domain/volume'
 import { common } from '../../i18n/common'
@@ -19,24 +19,23 @@ import type { Locale } from '../../i18n/locale'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
-import { BodyMini } from '../bodymap'
 import { Button, ChipGroup, IconButton, SegmentedControl, Sheet, cx } from '../../ui'
-import { ChangeBar } from './ChangeBar'
-import { addPreview } from './delta'
+import { BodyMini } from '../bodymap'
 import { PATTERN_GROUPS, buildIndex, filterExercises, patternLabel } from '../catalog'
+import { ChangeBar } from '../shared/ChangeBar'
+import { addPreview } from '../shared/delta'
 import {
   defaultReps,
   defaultSets,
-  groupName,
   isCustom,
   matchesQuery,
   repsText,
   unitOf,
   type AnyExercise,
-} from './labels'
+} from '../shared/exercise'
+import { undoLastChange, useChange } from '../shared/useChange'
 import { builderMessages } from './messages'
 import { PickRow } from './PickRow'
-import { undoLastChange, useChange } from './useChange'
 
 export type AddTab = 'suggested' | 'muscle' | 'equipment' | 'pattern'
 

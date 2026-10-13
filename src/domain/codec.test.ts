@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CODEC_EQUIPMENT_V1, CODEC_GROUPS_V1, decodeProgram, encodeProgram } from './codec.ts'
+import { CODEC_EQUIPMENT_V1, CODEC_GROUPS_V1, CODEC_REPS_V1, decodeProgram, encodeProgram } from './codec.ts'
 import { equipmentIds } from './equipment.ts'
 import { sequentialIds } from './ids.ts'
 import type { Program } from './schema.ts'
@@ -185,6 +185,10 @@ describe('share codec', () => {
   it('wire tables cover every group and equipment id (append new ids, never reorder)', () => {
     for (const g of groupIds) expect(CODEC_GROUPS_V1, g).toContain(g)
     for (const e of equipmentIds) expect(CODEC_EQUIPMENT_V1, e).toContain(e)
+  })
+
+  it('reps preset table is frozen (UI presets live apart and may change)', () => {
+    expect(CODEC_REPS_V1).toEqual(['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'])
   })
 
   it('decodes frozen v1 strings forever', () => {

@@ -8,8 +8,8 @@ import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { useActiveProgram, useProgramStore } from '../../store/program.store'
 import { Button, Chip, ChipGroup, cx } from '../../ui'
-import { isCustom, type AnyExercise } from './labels'
-import { exerciseFor } from './lookup'
+import { isCustom, type AnyExercise } from '../shared/exercise'
+import { exerciseFor } from '../shared/lookup'
 import { builderMessages } from './messages'
 
 type Run = (message: string, action: () => void) => void

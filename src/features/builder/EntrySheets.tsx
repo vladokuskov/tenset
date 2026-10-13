@@ -14,14 +14,16 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, Chip, Sheet, Stepper, cx, useSheet } from '../../ui'
 import { rankAlternatives } from '../catalog'
-import { ChangeBar } from './ChangeBar'
+import { ChangeBar } from '../shared/ChangeBar'
+import { defaultReps, isCustom, repsText, unitOf, type AnyExercise } from '../shared/exercise'
+import { exerciseFor, findEntry } from '../shared/lookup'
+import { sharedMessages } from '../shared/messages'
+import { carryUndo, undoLastChange, useChange } from '../shared/useChange'
 import { EntryNoteField } from './EntryNoteField'
 import { RestPicker, RirPicker, SupersetToggle } from './EntryTargets'
-import { REPS_PRESETS, SECONDS_PRESETS, defaultReps, isCustom, repsText, unitOf, type AnyExercise } from './labels'
-import { exerciseFor, findEntry } from './lookup'
 import { builderMessages } from './messages'
 import { PickRow } from './PickRow'
-import { carryUndo, undoLastChange, useChange } from './useChange'
+import { REPS_PRESETS, SECONDS_PRESETS } from './presets'
 
 const rowClass = 'flex min-h-12 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-2'
 
@@ -85,6 +87,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   const change = useChange()
   const locale = useLocale()
   const m = builderMessages[locale]
+  const sm = sharedMessages[locale]
   const c = common[locale]
   const [status, setStatus] = useState<string | null>(null)
   const savedNote = data?.found.entry.note ?? ''
@@ -144,8 +147,8 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
         <h3 className="text-sm font-semibold">{m.hardSets}</h3>
         <Stepper
           value={entry.sets}
-          onChange={(v) => run(m.setsChanged(ex.name, v), () => setSets(entry.id, v))}
-          label={m.setsFor(ex.name)}
+          onChange={(v) => run(sm.setsChanged(ex.name, v), () => setSets(entry.id, v))}
+          label={sm.setsFor(ex.name)}
           unit={m.setsUnit}
           decrementLabel={m.fewerSets}
           incrementLabel={m.moreSets}

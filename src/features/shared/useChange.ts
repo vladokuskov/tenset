@@ -1,14 +1,14 @@
 import { useCallback } from 'react'
 import { toastWithUndo } from '../../app/undo'
 import { useCatalog } from '../../app/useCatalog'
-import { dismissToast } from '../../ui/toast'
-import { prefsStore } from '../../store/prefs.store'
 import type { Program } from '../../domain/schema'
-import { programStore, type ProgramState } from '../../store/program.store'
 import { common } from '../../i18n/common'
 import { getLocale } from '../../i18n/messages'
+import { prefsStore } from '../../store/prefs.store'
+import { programStore, type ProgramState } from '../../store/program.store'
+import { dismissToast } from '../../ui/toast'
 import { dayChanges, deltaText, weekDeltas, weekFor, type GroupDelta } from './delta'
-import { builderMessages } from './messages'
+import { sharedMessages } from './messages'
 import { triggerPulse } from './pulse'
 
 export type ChangeResult = { message: string; deltas: GroupDelta[] }
@@ -53,7 +53,7 @@ export function useChange() {
         )
       }
       const locale = getLocale()
-      const m = builderMessages[locale]
+      const m = sharedMessages[locale]
       const described = typeof describe === 'function' ? describe(deltas) : describe
       const split = options.noteSplit && before && after && before.id === after.id && pairCount(after) < pairCount(before)
       const base = split ? m.supersetSplit(described) : described

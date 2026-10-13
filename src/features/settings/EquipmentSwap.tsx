@@ -10,8 +10,8 @@ import { useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, VisuallyHidden, cx } from '../../ui'
-import { ChangeBar } from '../builder/ChangeBar'
-import { carryUndo, undoLastChange, useChange } from '../builder/useChange'
+import { ChangeBar } from '../shared/ChangeBar'
+import { carryUndo, undoLastChange, useChange } from '../shared/useChange'
 import { settingsMessages } from './messages'
 
 export type EquipmentSwapProps = {
