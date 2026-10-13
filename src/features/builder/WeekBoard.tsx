@@ -90,6 +90,12 @@ function BoardCard({
           )}
           {entry.reps ? `${entry.sets} × ${repsText(entry.reps, unitOf(exercise), locale)}` : common[locale].sets(entry.sets)}
         </span>
+        {entry.note && (
+          <span className="mt-0.5 line-clamp-2 break-words text-xs text-ink-2">
+            <span aria-hidden>{entry.note}</span>
+            <span className="sr-only">{m.noteOn(entry.note)}</span>
+          </span>
+        )}
       </Link>
     </li>
   )

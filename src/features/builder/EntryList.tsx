@@ -148,6 +148,12 @@ function EntryRowView({
         )}
         {entry.rir !== undefined && <span className={TAG}>{formatRir(entry.rir, locale)}</span>}
       </div>
+      {entry.note && (
+        <p className={cx('mt-1.5 break-words text-sm text-ink-2', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]', '@max-3xs:pl-0')}>
+          <span aria-hidden>{entry.note}</span>
+          <span className="sr-only">{m.noteOn(entry.note)}</span>
+        </p>
+      )}
     </li>
   )
 }
