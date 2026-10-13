@@ -1,4 +1,5 @@
 import { Printer } from 'lucide-react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Fragment, useEffect } from 'react'
 import { notMedicalAdvice } from '../../app/brand'
 import { dayName } from '../../app/days'
@@ -8,10 +9,11 @@ import { useWeek } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
 import { dateFormat } from '../../i18n/format'
 import { useLocale, useMessages } from '../../i18n/messages'
-import { BackButton, Button, EmptyState, LinkButton } from '../../ui'
+import { BackButton, Button, EmptyState, LinkButton, SegmentedControl } from '../../ui'
 import { BodyMap, VolumeLegend } from '../bodymap'
 import { supersetLabels } from '../builder/labels'
 import { exerciseName } from '../share/resolveNames'
+import { GymSheet } from './GymSheet'
 import { exportMessages } from './messages'
 
 const PRINT_CSS = `
@@ -48,12 +50,14 @@ function useLightThemeForPrint() {
   }, [])
 }
 
-/** Clean one-page week: table of days and exercises, front/back map, footer. */
+/** Clean one-page week (table of days and exercises, front/back map), or the gym sheet with boxes to fill in. */
 export function PrintPage() {
   const view = useWeek()
   const { catalog } = useCatalog()
   const m = useMessages(exportMessages)
   const locale = useLocale()
+  const layout = useSearch({ from: '/print' }).layout ?? 'week'
+  const navigate = useNavigate({ from: '/print' })
   useLightThemeForPrint()
 
   if (!view) {
@@ -77,6 +81,7 @@ export function PrintPage() {
   const totalSets = days.reduce((s, d) => s + d.hardSets, 0)
   const trainingDays = days.filter((d) => d.kind === 'train').length
   const untrained = coverage.untrained.required.map((u) => groupName(u.group, locale))
+  const today = dateFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())
 
   return (
     <div className="min-h-dvh pb-chrome print:min-h-0 print:pb-0">
@@ -93,93 +98,110 @@ export function PrintPage() {
       </div>
 
       <article className="print-sheet mx-auto w-full max-w-[var(--page-max)] px-gutter pb-6 pt-2 text-ink">
+        <SegmentedControl
+          label={m.layoutLabel}
+          block
+          equal
+          value={layout}
+          options={[
+            { value: 'week', label: m.layoutWeek },
+            { value: 'gym', label: m.layoutGym },
+          ]}
+          onChange={(v) => navigate({ search: v === 'gym' ? { layout: 'gym' } : {}, replace: true })}
+          className="mb-4 sm:max-w-sm print:hidden"
+        />
         <header className="border-b border-ink pb-2">
           <h1 className="text-xl font-bold tracking-[-0.01em]">{program.name}</h1>
           <p className="mt-0.5 text-sm text-ink-2 num">
-            {m.header(trainingDays, totalSets, dateFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()))}
+            {layout === 'gym' ? m.gymHeader(trainingDays, today) : m.header(trainingDays, totalSets, today)}
           </p>
         </header>
 
-        <div className="mt-4 grid gap-6 print:mt-3 print:grid-cols-[1fr_68mm] print:gap-5 sm:grid-cols-[1fr_12rem]">
-          <table className="w-full border-collapse text-left text-sm print:text-[9pt]">
-            <thead>
-              <tr className="border-b border-line-strong text-xs uppercase tracking-wide text-ink-2">
-                <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.day}</th>
-                <th scope="col" className="py-1.5 pr-2 font-semibold">{m.exercise}</th>
-                <th scope="col" className="w-10 py-1.5 pr-2 text-right font-semibold">{m.sets}</th>
-                <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.reps}</th>
-                <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.restCol}</th>
-                <th scope="col" className="w-10 py-1.5 font-semibold">{m.rirCol}</th>
-              </tr>
-            </thead>
-            {order.map((d) => {
-              const s = days[d]
-              const entries = s.kind === 'train' ? program.days[d].entries : []
-              const pairs = supersetLabels(entries)
-              const span = Math.max(1, entries.length + (entries.length && s.note ? 1 : 0))
-              const dayCell = (
-                <th scope="rowgroup" rowSpan={span} className="py-1.5 pr-2 align-top font-semibold">
-                  {dayName(d, 'short', locale)}
-                  {s.label && <span className="block text-xs font-normal text-ink-2">{s.label}</span>}
-                </th>
-              )
-              return (
-                <tbody key={d} className="border-b border-line">
-                  {entries.length === 0 ? (
-                    <tr>
-                      {dayCell}
-                      <td colSpan={5} className="py-1.5 text-ink-3">
-                        {s.kind === 'rest' ? m.rest : m.noExercisesYet}
-                        {s.note && <span className="ml-2 text-ink-2">{s.note}</span>}
-                      </td>
-                    </tr>
-                  ) : (
-                    entries.map((e, i) => (
-                      <Fragment key={e.id}>
-                        <tr>
-                          {i === 0 && dayCell}
-                          <td className="py-1 pr-2">
-                            {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
-                            {exerciseName(e.exerciseId, catalog, program.custom, locale)}
-                          </td>
-                          <td className="py-1 pr-2 text-right num">{e.sets}</td>
-                          <td className="py-1 pr-2 num">{e.reps ?? ''}</td>
-                          <td className="py-1 pr-2 num">{e.restSec === undefined ? '' : formatRest(e.restSec, locale)}</td>
-                          <td className="py-1 num">{e.rir ?? ''}</td>
-                        </tr>
-                        {i === entries.length - 1 && s.note && (
+        {layout === 'gym' ? (
+          <GymSheet view={view} catalog={catalog} />
+        ) : (
+          <div className="mt-4 grid gap-6 print:mt-3 print:grid-cols-[1fr_68mm] print:gap-5 sm:grid-cols-[1fr_12rem]">
+            <table className="w-full border-collapse text-left text-sm print:text-[9pt]">
+              <thead>
+                <tr className="border-b border-line-strong text-xs uppercase tracking-wide text-ink-2">
+                  <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.day}</th>
+                  <th scope="col" className="py-1.5 pr-2 font-semibold">{m.exercise}</th>
+                  <th scope="col" className="w-10 py-1.5 pr-2 text-right font-semibold">{m.sets}</th>
+                  <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.reps}</th>
+                  <th scope="col" className="w-14 py-1.5 pr-2 font-semibold">{m.restCol}</th>
+                  <th scope="col" className="w-10 py-1.5 font-semibold">{m.rirCol}</th>
+                </tr>
+              </thead>
+              {order.map((d) => {
+                const s = days[d]
+                const entries = s.kind === 'train' ? program.days[d].entries : []
+                const pairs = supersetLabels(entries)
+                const span = Math.max(1, entries.length + (entries.length && s.note ? 1 : 0))
+                const dayCell = (
+                  <th scope="rowgroup" rowSpan={span} className="py-1.5 pr-2 align-top font-semibold">
+                    {dayName(d, 'short', locale)}
+                    {s.label && <span className="block text-xs font-normal text-ink-2">{s.label}</span>}
+                  </th>
+                )
+                return (
+                  <tbody key={d} className="border-b border-line">
+                    {entries.length === 0 ? (
+                      <tr>
+                        {dayCell}
+                        <td colSpan={5} className="py-1.5 text-ink-3">
+                          {s.kind === 'rest' ? m.rest : m.noExercisesYet}
+                          {s.note && <span className="ml-2 text-ink-2">{s.note}</span>}
+                        </td>
+                      </tr>
+                    ) : (
+                      entries.map((e, i) => (
+                        <Fragment key={e.id}>
                           <tr>
-                            <td colSpan={5} className="pb-1.5 text-xs text-ink-2">
-                              {m.note(s.note)}
+                            {i === 0 && dayCell}
+                            <td className="py-1 pr-2">
+                              {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
+                              {exerciseName(e.exerciseId, catalog, program.custom, locale)}
+                              {e.note && <span className="block text-xs text-ink-2">{e.note}</span>}
                             </td>
+                            <td className="py-1 pr-2 text-right num">{e.sets}</td>
+                            <td className="py-1 pr-2 num">{e.reps ?? ''}</td>
+                            <td className="py-1 pr-2 num">{e.restSec === undefined ? '' : formatRest(e.restSec, locale)}</td>
+                            <td className="py-1 num">{e.rir ?? ''}</td>
                           </tr>
-                        )}
-                      </Fragment>
-                    ))
-                  )}
-                </tbody>
-              )
-            })}
-          </table>
+                          {i === entries.length - 1 && s.note && (
+                            <tr>
+                              <td colSpan={5} className="pb-1.5 text-xs text-ink-2">
+                                {m.note(s.note)}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      ))
+                    )}
+                  </tbody>
+                )
+              })}
+            </table>
 
-          <aside className="min-w-0">
-            <BodyMap
-              view="both"
-              values={{ heads: week.shade.weekly, groups: week.weekly }}
-              scale="week"
-              label={m.mapLabel}
-              className="mx-auto max-w-[16rem]"
-            />
-            <VolumeLegend scale="week" className="mt-3" />
-            <p className="mt-3 text-sm print:text-[8.5pt]">
-              <span className="num font-semibold">
-                {m.countOf(coverage.trainedBanded, coverage.totalBanded)}
-              </span>{' '}
-              {m.groupsTrained}
-              {untrained.length > 0 && <span className="text-ink-2">{m.notTrained(untrained.join(', '))}</span>}
-            </p>
-          </aside>
-        </div>
+            <aside className="min-w-0">
+              <BodyMap
+                view="both"
+                values={{ heads: week.shade.weekly, groups: week.weekly }}
+                scale="week"
+                label={m.mapLabel}
+                className="mx-auto max-w-[16rem]"
+              />
+              <VolumeLegend scale="week" className="mt-3" />
+              <p className="mt-3 text-sm print:text-[8.5pt]">
+                <span className="num font-semibold">
+                  {m.countOf(coverage.trainedBanded, coverage.totalBanded)}
+                </span>{' '}
+                {m.groupsTrained}
+                {untrained.length > 0 && <span className="text-ink-2">{m.notTrained(untrained.join(', '))}</span>}
+              </p>
+            </aside>
+          </div>
+        )}
 
         <footer className="mt-6 border-t border-line pt-2 text-xs text-ink-2 print:mt-4 print:text-[7.5pt]">
           {m.footer(notMedicalAdvice(locale))}
