@@ -44,11 +44,12 @@ function Row({ group, week, goal, day, selected, onSelect }: Omit<Props, 'covera
   const sets = week.weekly[group] ?? 0
   const band = week.bands[group]
   const daySets = day === null ? null : (week.daily[group]?.[day] ?? 0)
-  const meta = joinMeta([
+  const label = band && bandLabelFor(band, goal)
+  const parts = [
     daySets !== null && m.setsOnDay(daySets, day!),
     band ? bandTargetText(band, locale) : isBanded(group) ? m.noRangeSet : m.noBand,
     band?.optional && m.optional,
-  ])
+  ]
   return (
     <li>
       <button
@@ -62,11 +63,14 @@ function Row({ group, week, goal, day, selected, onSelect }: Omit<Props, 'covera
       >
         <Swatch group={group} sets={sets} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-base font-medium text-ink">{groupName(group, locale)}</span>
-          <span className="block truncate text-sm text-ink-2 num">{meta}</span>
+          <span className="block break-words hyphens-auto text-base font-medium text-ink">{groupName(group, locale)}</span>
+          <span className="block text-sm text-ink-2 num">
+            <span className="@max-xs:hidden">{joinMeta(parts)}</span>
+            <span className="hidden @max-xs:inline">{joinMeta([label, ...parts])}</span>
+          </span>
         </span>
         <span className="num text-md text-ink">{formatSets(sets, locale)}</span>
-        {band && <Pill className="w-[6.75rem] justify-center">{bandLabelFor(band, goal)}</Pill>}
+        {label && <Pill className="min-w-[6.75rem] justify-center @max-xs:hidden">{label}</Pill>}
         <ChevronRight size={18} className="-mr-1 shrink-0 text-ink-3" aria-hidden />
       </button>
     </li>
@@ -105,7 +109,7 @@ export function CoverageList({ week, coverage, goal, day, selected, onSelect }: 
         </div>
       )}
 
-      <Panel as="ul" className="divide-y divide-line overflow-hidden">
+      <Panel as="ul" className="@container divide-y divide-line overflow-hidden">
         {main.map((g) => (
           <Row key={g} group={g} {...rowProps} />
         ))}
@@ -119,7 +123,7 @@ export function CoverageList({ week, coverage, goal, day, selected, onSelect }: 
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-base font-medium text-ink">{m.optionalNotTrained}</span>
-                <span className="block truncate text-sm text-ink-2">
+                <span className="line-clamp-2 text-sm text-ink-2">
                   {untrainedOptional.map((g) => groupName(g, locale)).join(', ')}
                 </span>
               </span>
@@ -141,7 +145,7 @@ export function CoverageList({ week, coverage, goal, day, selected, onSelect }: 
       </Panel>
 
       <h3 className="mb-2 mt-5 px-1 text-sm font-medium text-ink-2">{m.alsoTracked}</h3>
-      <Panel as="ul" className="divide-y divide-line overflow-hidden">
+      <Panel as="ul" className="@container divide-y divide-line overflow-hidden">
         {unbanded.map((g) => (
           <Row key={g} group={g} {...rowProps} />
         ))}
