@@ -65,6 +65,7 @@ export async function startFromTemplate(page: Page, template = 'Upper/Lower 4x')
   await expect(page.getByRole('heading', { name: 'What can you use?' })).toBeVisible()
   await page.getByRole('button', { name: 'Show my week' }).click()
   await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('heading', { name: 'What can you use?' })).toBeHidden()
 }
 
 export function escape(s: string) {
