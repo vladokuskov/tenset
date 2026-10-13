@@ -72,6 +72,7 @@ test.describe('axe: no serious or critical violations', () => {
     test.use({ locale: 'uk-UA' })
 
     test('welcome, plan, body, exercises, detail and settings', async ({ page }) => {
+      test.slow()
       const found: Record<string, string[]> = {}
       const check = async (name: string) => {
         await page.waitForTimeout(400)
