@@ -59,3 +59,14 @@ test('move a whole day to another day swaps them', async ({ page }) => {
   await toast.getByRole('button', { name: 'Undo' }).click()
   await expect(entryRows(page)).toHaveCount(7)
 })
+
+test('the plan headline counts groups by band and lists the ones below range', async ({ page }) => {
+  const coverage = page.getByRole('region', { name: 'Week coverage' })
+  const headline = coverage.getByRole('button', { name: /^\d+ of 12 main groups in target range · \d+ below · \d+ above$/ })
+  await expect(headline).toHaveAttribute('aria-expanded', 'false')
+  const below = Number((await headline.textContent())!.match(/· (\d+) below/)![1])
+  await headline.click()
+  await expect(headline).toHaveAttribute('aria-expanded', 'true')
+  await expect(coverage.getByRole('heading', { name: 'Below target range' })).toBeVisible()
+  await expect(coverage.getByRole('link', { name: /\d/ })).toHaveCount(below)
+})

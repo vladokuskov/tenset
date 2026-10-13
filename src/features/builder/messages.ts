@@ -102,9 +102,11 @@ export const builderMessages = defineMessages({
     // Coverage card
     weekCoverage: 'Week coverage',
     weekCoverageMap: 'Week coverage, front and back',
-    allMainTrained: 'Every main muscle gets sets this week',
-    mainUntrained: (n: number) => `${n} main ${plural('en', n, { one: 'muscle has', other: 'muscles have' })} no sets yet`,
-    groupsOf: (trained: number, total: number) => `${trained} of ${total} muscle groups`,
+    bandInRange: (inTarget: number, total: number) =>
+      `${inTarget} of ${total} main ${plural('en', total, { one: 'group', other: 'groups' })} in target range`,
+    bandOutside: (below: number, above: number) => `${below} below · ${above} above`,
+    belowTarget: 'Below target range',
+    groupsOf: (trained: number, total: number) => `${trained} of ${total} muscle groups get sets`,
     hardSetsThisWeek: (n: number) => `${en.hardSets(n)} this week`,
     notTrainedYet: 'Not trained yet',
     optionalAtZero: (n: number) => `${n} optional ${plural('en', n, { one: 'group', other: 'groups' })} at 0 sets`,
@@ -338,15 +340,11 @@ export const builderMessages = defineMessages({
 
     weekCoverage: 'Охоплення тижня',
     weekCoverageMap: 'Охоплення тижня, спереду і ззаду',
-    allMainTrained: 'Кожен основний мʼяз отримує підходи цього тижня',
-    mainUntrained: (n) =>
-      `${n} ${plural('uk', n, {
-        one: 'основний мʼяз',
-        few: 'основні мʼязи',
-        many: 'основних мʼязів',
-        other: 'основного мʼяза',
-      })} поки без підходів`,
-    groupsOf: (trained, total) => `${trained} з ${total} груп мʼязів`,
+    bandInRange: (inTarget, total) =>
+      `${inTarget} з ${total} ${plural('uk', total, { one: 'основної групи', other: 'основних груп' })} у цільовому діапазоні`,
+    bandOutside: (below, above) => `${below} нижче · ${above} вище`,
+    belowTarget: 'Нижче цільового діапазону',
+    groupsOf: (trained, total) => `${trained} з ${total} груп мʼязів мають підходи`,
     hardSetsThisWeek: (n) => `${uk.hardSets(n)} цього тижня`,
     notTrainedYet: 'Ще не тренуються',
     optionalAtZero: (n) =>
