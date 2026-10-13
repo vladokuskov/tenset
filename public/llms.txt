@@ -2,7 +2,7 @@
 
 > Free, no-account web app for planning a weekly gym program. It shows weekly sets per muscle group on a body map. Programs live only in the user's browser; a share link (`/shared#...`) carries the whole program, and opening it shows a preview with a Save button.
 
-AI agents can build a program for the user and hand back that link. Nothing is stored or logged on the server.
+AI agents can build a program for the user and hand back that link. Nothing is stored on the server; send programs with POST so they stay out of request logs.
 
 ## Option 1: MCP server (preferred)
 
@@ -18,10 +18,12 @@ Same tools, JSON responses, CORS open. Base: `https://tenset-app.vercel.app/api/
 - `GET /api/agent/reference`: muscle group, equipment, pattern and day ids, plus input limits
 - `GET /api/agent/splits`: ready-made split templates with ranked exercise options per slot
 - `GET /api/agent/exercises?query=&group=&pattern=&equipment=&limit=`: search the catalog. `equipment` is a comma-separated list of what the user has (`equipment=` empty means bodyweight only)
-- `GET /api/agent/program?program=<url-encoded JSON>` or `POST /api/agent/program` with the JSON body: validates the program and returns `url` (the share link) plus weekly sets per muscle group
-- `GET /api/agent/read?link=<url-encoded share link>` or `POST /api/agent/read` with `{"link": "..."}`: turns a share link back into the program JSON so it can be edited
+- `POST /api/agent/program` with the JSON body: validates the program and returns `url` (the share link) plus weekly sets per muscle group
+- `POST /api/agent/read` with `{"link": "..."}`: turns a share link back into the program JSON so it can be edited
 
-Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what to fix.
+Send programs and links with POST. Only if your tool cannot POST, use `GET /api/agent/program?program=<url-encoded JSON>` or `GET /api/agent/read?link=<url-encoded share link>`: a GET puts the user's program in the request address, which hosting logs may keep for a short time.
+
+Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what to fix. Limits: 40 exercises per day, search queries up to 200 characters, request bodies up to 128 KB (larger bodies get HTTP 413).
 
 ## Workflow
 
@@ -56,4 +58,8 @@ Errors come back as HTTP 400 with `{"error", "problems": [...]}` describing what
 
 Example (Monday squat, bench, row; Thursday Romanian deadlift):
 
-https://tenset-app.vercel.app/api/agent/program?program=%7B%22name%22%3A%22Full%20body%22%2C%22days%22%3A%5B%7B%22day%22%3A0%2C%22entries%22%3A%5B%7B%22exerciseId%22%3A401%2C%22sets%22%3A3%7D%2C%7B%22exerciseId%22%3A101%2C%22sets%22%3A3%7D%2C%7B%22exerciseId%22%3A304%2C%22sets%22%3A3%7D%5D%7D%2C%7B%22day%22%3A3%2C%22entries%22%3A%5B%7B%22exerciseId%22%3A501%2C%22sets%22%3A3%7D%5D%7D%5D%7D
+```sh
+curl -X POST https://tenset-app.vercel.app/api/agent/program \
+  -H 'content-type: application/json' \
+  -d '{"name":"Full body","days":[{"day":0,"entries":[{"exerciseId":401,"sets":3},{"exerciseId":101,"sets":3},{"exerciseId":304,"sets":3}]},{"day":3,"entries":[{"exerciseId":501,"sets":3}]}]}'
+```
