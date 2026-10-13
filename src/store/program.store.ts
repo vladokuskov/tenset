@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 import { createStore } from 'zustand/vanilla'
 import { appMessages } from '../app/messages.ts'
 import { randomId, type IdFactory } from '../domain/ids.ts'
+import { applyEquipmentSwap, type EquipmentSwap } from '../domain/equipmentSwap.ts'
 import * as ops from '../domain/program.ts'
 import type { Catalog } from '../domain/resolve.ts'
 import { Program, type ExerciseRef, type SplitTemplate } from '../domain/schema.ts'
@@ -48,6 +49,8 @@ export type ProgramActions = {
   copyEntry(entryId: string, toDay: Day): void
   reorder(day: Day, from: number, to: number): void
   swapEntry(entryId: string, ref: ExerciseRef): void
+  /** Several swaps as one change, so one Undo reverts them all. */
+  swapEntries(swaps: readonly EquipmentSwap[]): void
   setSets(entryId: string, sets: number): void
   setReps(entryId: string, reps: string | undefined): void
   setRestSec(entryId: string, sec: number | undefined): void
@@ -190,6 +193,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           copyEntry: (entryId, toDay) => mutate('copyEntry', (p) => ops.copyEntry(p, entryId, toDay, makeId)),
           reorder: (day, from, to) => mutate('reorder', (p) => ops.reorder(p, day, from, to)),
           swapEntry: (entryId, ref) => mutate('swapEntry', (p) => ops.swapEntry(p, entryId, ref)),
+          swapEntries: (swaps) => mutate('swapEntries', (p) => applyEquipmentSwap(p, swaps)),
           setSets: (entryId, sets) => mutate('setSets', (p) => ops.setSets(p, entryId, sets)),
           setReps: (entryId, reps) => mutate('setReps', (p) => ops.setReps(p, entryId, reps)),
           setRestSec: (entryId, sec) => mutate('setRestSec', (p) => ops.setRestSec(p, entryId, sec)),
