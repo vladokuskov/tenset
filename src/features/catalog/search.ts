@@ -11,7 +11,8 @@ import { applyOverride } from './roles'
 export { tokenize, type CatalogIndex } from '../../domain/search'
 
 const labelsFor = (locale: Locale): SearchLabels => ({
-  group: (id) => groupName(id, locale),
+  // English group names stay searchable in every language: "chest" is common gym talk.
+  group: (id) => (locale === 'en' ? groupName(id, 'en') : `${groupName(id, locale)} ${groupName(id, 'en')}`),
   equipment: (id) => equipmentName(id, locale),
   pattern: (p) => patternLabel(p, locale),
   bodyweight: common[locale].bodyweight,

@@ -35,11 +35,18 @@ describe('muscle word queries', () => {
     ['груди', ['chest']],
     ['біцепс', ['biceps']],
     ['спина', ['lats', 'upper_back', 'lower_back']],
+    ['chest', ['chest']],
+    ['biceps', ['biceps']],
   ])('ranks "%s" primaries first in Ukrainian', (q, groups) => {
     const list = filterExercises(ukExercises, uk, { q })
     const { lastPrimary, firstOther } = split(list, groups)
     expect(lastPrimary).toBeGreaterThanOrEqual(0)
     if (firstOther >= 0) expect(lastPrimary).toBeLessThan(firstOther)
+  })
+
+  it('finds as many primaries for an English muscle word in Ukrainian', () => {
+    const primaries = (list: readonly Exercise[]) => list.filter((e) => e.groups.biceps === 'primary').length
+    expect(primaries(filterExercises(ukExercises, uk, { q: 'biceps' }))).toBe(primaries(filterExercises(activeExercises, en, { q: 'biceps' })))
   })
 
   it('applies muscle overrides to the ranking', () => {
