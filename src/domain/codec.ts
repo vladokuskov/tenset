@@ -12,7 +12,7 @@ export const CODEC_VERSION = 3
 const V1 = 1
 const V2 = 2
 
-export const REPS_PRESETS = ['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'] as const
+export const CODEC_REPS_V1 = ['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'] as const
 
 export const CODEC_GROUPS_V1 = [
   'chest', 'lats', 'upper_back', 'upper_traps', 'front_delt', 'side_delt', 'rear_delt', 'biceps', 'triceps',
@@ -182,7 +182,7 @@ export function encodeProgram(program: Program): string {
     w.varint(d.entries.length)
     for (const e of d.entries) {
       const custom = typeof e.exerciseId === 'string'
-      const preset = e.reps === undefined ? -1 : REPS_PRESETS.indexOf(e.reps as never)
+      const preset = e.reps === undefined ? -1 : CODEC_REPS_V1.indexOf(e.reps as never)
       const repsKind = e.reps === undefined ? REPS_NONE : preset >= 0 ? REPS_PRESET : REPS_TEXT
       w.u8((custom ? 1 : 0) | (repsKind << 1) | ((e.sets - 1) << 3))
       if (typeof e.exerciseId === 'string') w.u8(customNumber(e.exerciseId))
@@ -326,7 +326,7 @@ function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions, version: numb
       const ref: ExerciseRef = head & 1 ? `c${r.u8()}` : mapRetired(r.u16(), opts.replacedBy)
       const entry: Entry = { id: makeId(), exerciseId: ref, sets: (head >> 3) + 1 }
       if (repsKind === REPS_PRESET) {
-        const reps = REPS_PRESETS[r.u8()]
+        const reps = CODEC_REPS_V1[r.u8()]
         if (!reps) throw new CodecError('reps preset')
         entry.reps = reps
       } else if (repsKind === REPS_TEXT) entry.reps = r.str()
