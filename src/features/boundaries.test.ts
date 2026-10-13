@@ -30,12 +30,50 @@ function crossImports(test: (from: string, to: string, rest: string) => boolean)
   })
 }
 
+// Older reaches into another feature, to move behind an index or into shared. Nothing new goes here.
+const KNOWN = new Set([
+  'builder -> catalog/FilterSelect',
+  'builder -> settings/CustomExerciseSheet',
+  'catalog -> bodymap/anatomy',
+  'catalog -> bodymap/AnatomyFigure',
+  'catalog -> bodymap/fills',
+  'catalog -> figure/motion/clock',
+  'catalog -> figure/motion/compose',
+  'catalog -> figure/motion/library',
+  'catalog -> figure/motion/MotionStage',
+  'export -> bodymap/anatomy',
+  'export -> bodymap/messages',
+  'export -> catalog/search',
+  'export -> share/names',
+  'export -> share/resolveNames',
+  'review -> catalog/ExerciseMotion',
+  'review -> catalog/useRoles',
+  'review -> figure/highlight',
+  'welcome -> settings/EquipmentPicker',
+])
+
 describe('feature boundaries', () => {
-  it('other features use builder only through its index', () => {
-    expect(crossImports((_, to, rest) => to === 'builder' && rest !== '' && rest !== 'index')).toEqual([])
+  it('features use each other only through an index or shared', () => {
+    const edges = new Set<string>()
+    crossImports((from, to, rest) => {
+      if (to !== 'shared' && rest !== '' && rest !== 'index') edges.add(`${from} -> ${to}/${rest.replace(/\.tsx?$/, '')}`)
+      return false
+    })
+    expect([...edges].filter((e) => !KNOWN.has(e)).sort()).toEqual([])
   })
 
   it('shared imports no feature', () => {
     expect(crossImports((from) => from === 'shared')).toEqual([])
+  })
+
+  it('code outside features and routes imports no feature', () => {
+    const src = path.dirname(FEATURES)
+    const outside = ['app', 'data', 'domain', 'i18n', 'store', 'sw', 'ui'].flatMap((dir) => modules(path.join(src, dir)))
+    const reaches = outside.flatMap((file) =>
+      specifiers(file)
+        .filter((s) => s.startsWith('.') && path.resolve(path.dirname(file), s).startsWith(FEATURES + path.sep))
+        .map((s) => `${path.relative(src, file)} -> ${s}`),
+    )
+    expect(reaches).toEqual([])
   })
 })

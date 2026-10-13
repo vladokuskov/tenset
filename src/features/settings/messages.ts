@@ -54,18 +54,6 @@ export const settingsMessages = defineMessages({
     needOther: (n: number) =>
       `${common.en.exercises(n)} in your week ${plural('en', n, { one: 'needs', other: 'need' })} items you have not selected.`,
 
-    // EquipmentSwap
-    swap: {
-      action: 'Swap to my equipment',
-      needOther: (n: number) => `${common.en.exercises(n)} ${plural('en', n, { one: 'needs', other: 'need' })} items you have not selected.`,
-      keeps: 'Each swap keeps the same main muscles and movement.',
-      noFit: (n: number) =>
-        `${common.en.exercises(n)} without a fitting alternative ${plural('en', n, { one: 'stays', other: 'stay' })} as ${plural('en', n, { one: 'it is', other: 'they are' })}.`,
-      to: 'to',
-      apply: (n: number) => `Swap ${common.en.exercises(n)}`,
-      done: (n: number) => `Swapped ${common.en.exercises(n)}`,
-    },
-
     // OverridesSheet
     role: { primary: 'primary', secondary: 'secondary', none: 'not counted' },
     changeLine: (group: string, role: string, was: string) => `${group}: ${role} (was ${was})`,
@@ -186,17 +174,6 @@ export const settingsMessages = defineMessages({
     nothingSelected: 'Нічого не вибрано. Пропонуються лише вправи з власною вагою.',
     needOther: (n) =>
       `Для ${n} ${plural('uk', n, { one: 'вправи', few: 'вправ', many: 'вправ', other: 'вправи' })} у вашому тижні потрібне обладнання, яке ви не вибрали.`,
-
-    swap: {
-      action: 'Замінити під моє обладнання',
-      needOther: (n) => `Для ${n} ${plural('uk', n, { one: 'вправи', few: 'вправ', many: 'вправ', other: 'вправи' })} потрібне обладнання, яке ви не вибрали.`,
-      keeps: 'Кожна заміна зберігає ті самі основні мʼязи й тип руху.',
-      noFit: (n) =>
-        `${common.uk.exercises(n)} без відповідної заміни ${plural('uk', n, { one: 'лишається', few: 'лишаються', many: 'лишаються', other: 'лишаються' })} без змін.`,
-      to: 'на',
-      apply: (n) => `Застосувати заміни (${n})`,
-      done: (n) => `Замінено: ${common.uk.exercises(n)}`,
-    },
 
     role: { primary: 'основна', secondary: 'допоміжна', none: 'не рахується' },
     changeLine: (group, role, was) => `${group}: ${role} (було: ${was})`,

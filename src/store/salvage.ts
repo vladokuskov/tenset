@@ -1,4 +1,5 @@
-import { Prefs, Program } from '../domain/schema.ts'
+import { Prefs, type Program } from '../domain/schema.ts'
+import { repairProgram } from '../domain/validateProgram.ts'
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
@@ -15,8 +16,8 @@ export function salvagePrograms(persisted: unknown): SalvagedPrograms {
   const programs: Record<string, Program> = {}
   const rejected: Record<string, unknown> = {}
   for (const [key, raw] of Object.entries(persisted.programs)) {
-    const parsed = Program.safeParse(raw)
-    if (parsed.success) programs[key] = parsed.data
+    const program = repairProgram(raw)
+    if (program) programs[key] = program
     else rejected[key] = raw
   }
   const activeId = typeof persisted.activeId === 'string' ? persisted.activeId : null

@@ -51,6 +51,13 @@ export function tokenize(text: string): string[] {
   return out
 }
 
+// What people call these groups when the name says otherwise: "back" means the lats too.
+const GROUP_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  lats: ['back', 'спина'],
+  upper_back: ['спина'],
+  lower_back: ['спина'],
+}
+
 const groupNames = (groups: Readonly<Record<string, Role>>, role: Role, labels: SearchLabels) =>
   Object.entries(groups)
     .filter(([, r]) => r === role)
@@ -86,13 +93,13 @@ export function buildCatalogIndex(
     })),
   )
   const groupIds = new Set(exercises.flatMap((e) => Object.keys(e.groups)))
-  const groupTerms = new Map([...groupIds].map((id) => [id, tokenize(labels.group(id))]))
+  const groupTerms = new Map([...groupIds].map((id) => [id, [...tokenize(labels.group(id)), ...(GROUP_ALIASES[id] ?? [])]]))
   return Object.assign(index, { groupTerms })
 }
 
 const MUSCLE_QUERY_MIN = 3
 
-/** Groups whose name the query spells out or starts: "chest", "back" (upper and lower back), "біцепс". */
+/** Groups whose name the query spells out or starts: "chest", "back" (lats, upper and lower back), "біцепс". */
 export function muscleGroupsIn(index: CatalogIndex, query: string): string[] {
   const words = tokenize(query)
   if (words.join('').length < MUSCLE_QUERY_MIN) return []

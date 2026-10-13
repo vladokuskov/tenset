@@ -5,6 +5,7 @@ import { installChunkReload, isChunkLoadError } from '../app/chunkReload'
 import { needsWelcome } from '../app/firstRun'
 import { AppProviders } from '../app/providers'
 import { useFocusTitleOnNavigate } from '../app/routeFocus'
+import { useStorageUpkeep } from '../app/storageUpkeep'
 import { useUndoShortcut } from '../app/undo'
 import { StorageNotices } from '../features/export/StorageNotices'
 import { useDocumentLocale } from '../i18n/document'
@@ -31,6 +32,7 @@ function RootLayout() {
   const pathname = useLocation({ select: (l) => l.pathname })
   const bare = BARE.test(pathname)
   useUndoShortcut()
+  useStorageUpkeep()
   useFocusTitleOnNavigate()
   useDocumentTitle(pathname)
   // Subscribing here re-renders the whole tree when the language changes.

@@ -286,6 +286,30 @@ describe('program store', () => {
     stop()
   })
 
+  it('loads a saved program with a custom reference that does not resolve, without that entry', () => {
+    const storage = memoryStorage()
+    const p = blankProgram('old', 'Old')
+    p.days[0].entries.push({ id: 'e1', exerciseId: 'c1', sets: 3 }, { id: 'e2', exerciseId: BENCH.id, sets: 3 })
+    storage.setItem(PROGRAMS_KEY, JSON.stringify({ state: { programs: { old: p }, activeId: 'old' }, version: 2 }))
+    const { store } = make(storage)
+    expect(store.getState().programs.old.days[0].entries.map((e) => e.id)).toEqual(['e2'])
+    expect(listQuarantined(storage)).toEqual([])
+  })
+
+  it('writes a delete to zero programs once another tab brought valid ones in over unreadable data', () => {
+    const storage = memoryStorage()
+    storage.setItem(PROGRAMS_KEY, JSON.stringify({ state: { programs: { bad: { nope: true } }, activeId: 'bad' }, version: 2 }))
+    const tabA = make(storage).store
+    const tabB = createProgramStore({ storage, makeId: sequentialIds('f'), newProgramId: sequentialIds('q') })
+    expect(tabA.getState().programs).toEqual({})
+    tabB.getState().createBlank('Made in tab B')
+    tabA.persist.rehydrate()
+    expect(Object.keys(tabA.getState().programs)).toEqual(['q1'])
+    tabA.getState().deleteProgram('q1')
+    expect(saved(storage).state.programs).toEqual({})
+    expect(make(storage).store.getState().programs).toEqual({})
+  })
+
   it('migrates v0 state through the chain', () => {
     const storage = memoryStorage()
     const p = blankProgram('old', 'Old')
@@ -308,6 +332,18 @@ describe('program store', () => {
     expect(make(storage).store.getState().programs.old.days[0].entries[0].note).toBe('seat 4')
     store.getState().undo()
     expect(store.getState().programs.old.days[0].entries[0]).not.toHaveProperty('note')
+  })
+
+  it('stops saving when a newer version of the app saved here, so its fields survive', () => {
+    storageHealth.setState({ newerVersion: false })
+    const storage = memoryStorage()
+    const p = blankProgram('new', 'New')
+    const newer = JSON.stringify({ state: { programs: { new: { ...p, extra: 'kept' } }, activeId: 'new' }, version: 99 })
+    storage.setItem(PROGRAMS_KEY, newer)
+    const { store } = make(storage)
+    store.getState().createBlank('Stale tab')
+    expect(storage.getItem(PROGRAMS_KEY)).toBe(newer)
+    expect(storageHealth.getState().newerVersion).toBe(true)
   })
 
   it('works when storage throws and reports the failed write', () => {

@@ -67,7 +67,7 @@ Yes, procedurally. The agent can't produce raster images or video from a diffusi
 | PWA | vite-plugin-pwa 1.3 `injectManifest`, own `sw.ts`, `injectRegister: 'script'` |
 | Share | custom binary codec, base64url `#fragment`, version byte; uqr for QR |
 | Tests | Vitest 5 + Playwright 1.63 (+ axe) |
-| Hosting | Vercel static (moved from the planned Cloudflare Workers assets, 2026-09-28): `vercel.json` holds the CSP, cache headers and the SPA rewrite. Hobby plan terms are non-commercial |
+| Hosting | Vercel static (moved from the planned Cloudflare Workers assets, 2026-09-28): `vercel.json` holds the CSP, cache headers and the SPA rewrite. Hobby plan terms are non-commercial. The `/api/*` rate limit (a Firewall rule, 60 requests per minute per IP) lives in the Vercel dashboard, not the repo: check it exists after any project or domain change |
 | Compliance | CI license allowlist (MIT, ISC, BSD, 0BSD, Apache-2.0, CC0, OFL, BlueOak) + generated `THIRD_PARTY_NOTICES.txt` |
 
 **Zero third-party runtime requests** (license, privacy and offline): banned drei helpers `MatcapTexture`, `NormalTexture`, `Environment preset=`, `Cloud`, detect-gpu tiering, `<Text>` without a local font. Enforced by a strict CSP in `vercel.json` (`default-src 'self'`, `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'`, etc.) and an e2e test that fails on any non-app request.
@@ -274,6 +274,14 @@ a11y (axe), perf and precache budget, Lighthouse PWA, CSP, license allowlist, tr
 - Cues and Ukrainian: mismatched cues fixed where the cue was wrong (423, 822, 316, 427, 730); the others stay correct coaching with the compromise in qa.note. Bench is «лава» everywhere; glossary rows added for hip width, split stance, single cable handle, overhand grip, pull-up bar («турнік») and straight cable bar («прямий гриф»). Native review still needed.
 
 **v2 backlog**: BodyParts3D heads on the moving figure, female figure (same topology), ~300 exercises, secondary motion (breathing, head), optional fatigue-decay visual, workout logging, A/B day rotation (alternating sessions on the same weekday).
+
+## Audit follow-ups (deferred, 2026-10-13)
+
+From the UX and code audit; the rest is fixed on `feat/audit-fixes`.
+- Not done yet, by choice: "Shift week by one day" in the day options, a Move action on the desktop board card (the board still reorders by drag only), and `Intl.ListFormat` for joined lists (they still read "Груди, Трицепс" with no conjunction).
+- Manual step: the Vercel Firewall rate limit on `/api/*` above. Not visible from the repo, so it has to be checked by hand before each public deploy.
+- Older cross-feature imports are listed in `src/features/boundaries.test.ts` (KNOWN); each one should move behind an index or into `features/shared`. Nothing new may be added there.
+- A tab still running a build from before entry notes (programs v1) keeps saving over v2 data and drops the notes. Builds from now on stop saving and ask for a reload when a newer version wrote the programs.
 
 ## Verification
 - **Unit** (`pnpm test`): engine band edges at exactly 4/10/20/30 and fractional values; head shading; recovery gaps with cyclic wrap; overrides; primary-only mode; unilateral and duplicate entries; codec round-trip, retired-id decode, custom-exercise encoding; migrations. Taxonomy: each visible head has a path in every view its flag names, each deep head has a visible parent, each head belongs to exactly one group; every map group reachable by the ID-raster hit test.

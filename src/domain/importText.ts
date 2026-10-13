@@ -71,11 +71,12 @@ const SETS_WORD = `(?:sets?|підх${L}*\\.?|подх${L}*\\.?|сет${L}*)`
 const REPS_WORD = `(?:reps?|повт${L}*\\.?|раз${L}*)`
 // A lone Cyrillic "с" is also the Russian "with", so it only counts as seconds when no word follows.
 const SEC_UNIT = `(?:secs?|seconds?|s|сек${L}*\\.?|с(?!\\s*\\p{L})|"|”)`
-const MIN_UNIT = `(?:mins?|minutes?|хв${L}*\\.?|мин${L}*\\.?|мін${L}*\\.?|'|’)`
-// A bare "m" is minutes only next to a rest word ("rest 2m"); after a work target it is metres ("3x40m").
-const REST_MIN_UNIT = `(?:${MIN_UNIT}|m)`
-const DIST_UNIT = `(?:m|meters?|metres?|km|yds?|yards?|ft|feet|м|метр${L}*|км)`
+const MIN_UNIT = `(?:mins?|minutes?|m|хв${L}*\\.?|мин${L}*\\.?|мін${L}*\\.?|'|’)`
+const DIST_UNIT = `(?:meters?|metres?|km|yds?|yards?|ft|feet|м|метр${L}*|км)`
 const DIST = `\\d{1,4}(?:[.,]\\d{1,2})?\\s*${DIST_UNIT}`
+// A bare "m" is minutes for small numbers ("Bike 20m", "Plank 3x1m") and metres from 100, or from 15 on a carry or sprint.
+const METRES = '(?:\\d{3,4}(?:[.,]\\d{1,2})?\\s*m)'
+const METRES_MOVING = '(?:(?:1[5-9]|[2-9]\\d|\\d{3,4})(?:[.,]\\d{1,2})?\\s*m)'
 const WEIGHT_UNIT = `(?:kgs?|кг|lbs?|фунт${L}*|%)`
 const FAIL = `(?:(?:to\\s+)?failure|amrap|max|макс${L}*\\.?|(?:до\\s+)?відмов${L}*|(?:до\\s+)?отказ${L}*)`
 
@@ -94,9 +95,9 @@ const RX = {
   failTimes: re(`(?<![\\d.])(\\d{1,2})\\s*${TIMES}\\s*${FAIL}${E}`),
   fail: re(`${B}${FAIL}${E}`),
   rest: re(
-    `${B}(?:(?:with|з|із|с)\\s+)?(?:rest|відпочин${L}*|відп\\.?|пауза|отдых${L}*|отд\\.?)\\s*(?:between sets|між підходами|между подходами)?\\s*[:=-]?\\s*(\\d{1,3}(?:[.,]\\d)?)(?:\\s*[-–]\\s*\\d{1,3}(?:[.,]\\d)?)?\\s*(${REST_MIN_UNIT}|${SEC_UNIT}|:\\d{2})?${E}`,
+    `${B}(?:(?:with|з|із|с)\\s+)?(?:rest|відпочин${L}*|відп\\.?|пауза|отдых${L}*|отд\\.?)\\s*(?:between sets|між підходами|между подходами)?\\s*[:=-]?\\s*(\\d{1,3}(?:[.,]\\d)?)(?:\\s*[-–]\\s*\\d{1,3}(?:[.,]\\d)?)?\\s*(${MIN_UNIT}|${SEC_UNIT}|:\\d{2})?${E}`,
   ),
-  restAfter: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d)?)\\s*(${REST_MIN_UNIT}|${SEC_UNIT})\\s*(?:rest|відпочинку?|отдыха?)${E}`),
+  restAfter: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d)?)\\s*(${MIN_UNIT}|${SEC_UNIT})\\s*(?:rest|відпочинку?|отдыха?)${E}`),
   tempo: re(`${B}(?:tempo|темп)\\s*[:=]?\\s*[\\dxXхХ]{1,2}(?:[-/]?[\\dxXхХ]){2,3}${E}`),
   side: re(
     `(?:${B}(?:each|per)\\s+(?:side|leg|arm|hand|way)s?|${B}each|\\/\\s*(?:side|leg|arm)|${B}e\\/s|на\\s+кож(?:ну|ен|ну)\\s+(?:ногу|руку|сторону|бік)|на\\s+каждую\\s+(?:ногу|руку|сторону)|кожною\\s+(?:ногою|рукою)|каждой\\s+(?:ногой|рукой))${E}`,
@@ -104,8 +105,11 @@ const RX = {
   weight: re(`(?:@|${B}(?:по|with|з|с))?\\s*(?<![\\d.])\\d{1,3}(?:[.,]\\d{1,2})?\\s*${WEIGHT_UNIT}${E}`),
   triple: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d{1,2})?)\\s*${TIMES}\\s*(\\d{1,3})\\s*${TIMES}\\s*(\\d{1,3})${E}`),
   pair: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d{1,2})?)\\s*${TIMES}\\s*(\\d{1,2})(?![\\d.]|\\s*${TIMES})`, 'giu'),
-  setsDist: re(`(?<![\\d.])(\\d{1,2})\\s*${TIMES}\\s*${DIST}${E}`),
-  dist: re(`(?<![\\d.])${DIST}${E}`),
+  setsDist: re(`(?<![\\d.])(\\d{1,2})\\s*${TIMES}\\s*(?:${DIST}|${METRES})${E}`),
+  dist: re(`(?<![\\d.])(?:${DIST}|${METRES})${E}`),
+  moving: re(`${B}(?:carry|carries|walk|farmer${L}*|sled|sprints?|shuttle|run|прогулянк${L}*|фермер${L}*|сан${L}*|спринт${L}*|біг|прогулк${L}*|бег)${E}`),
+  setsDistMoving: re(`(?<![\\d.])(\\d{1,2})\\s*${TIMES}\\s*(?:${DIST}|${METRES_MOVING})${E}`),
+  distMoving: re(`(?<![\\d.])(?:${DIST}|${METRES_MOVING})${E}`),
   setsTimes: re(`(?<![\\d.])(\\d{1,3})\\s*${TIMES}\\s*(${SCHEME}|${RANGE})\\s*(${SEC_UNIT}|${MIN_UNIT}|${REPS_WORD})?${E}`),
   setsOf: re(
     `(?<![\\d.])(\\d{1,2})\\s*(?:${SETS_WORD}\\s*(?:of|x|×|х|по|by|,)?|(?:рази?|раза)\\s+по|по)\\s*(${RANGE})\\s*(?:${REPS_WORD})?${E}`,
@@ -125,7 +129,7 @@ const clampSets = (n: number) => Math.min(MAX_SETS, Math.max(1, Math.round(n) ||
 const clampRir = (n: number) => Math.min(RIR_MAX, Math.max(0, Math.round(n)))
 const cleanReps = (s: string) => s.replace(/\s+/g, '').replace(/[–—]/g, '-').slice(0, REPS_MAX) || undefined
 const num = (s: string) => Number(s.replace(',', '.'))
-const isMinutes = (unit: string) => re(`^${REST_MIN_UNIT}$`).test(unit.toLowerCase().trim())
+const isMinutes = (unit: string) => re(`^${MIN_UNIT}$`).test(unit.toLowerCase().trim())
 
 /** "2 min", "90s", "1:30", "90". A bare number up to 10 reads as minutes, above that as seconds. */
 export function parseDuration(value: string, unit?: string): number | undefined {
@@ -260,9 +264,11 @@ function readLine(raw: string): { line: ParsedLine; tag?: Tag } | null {
   }
   while (RX.weight.test(text)) [, text] = take(text, RX.weight)
   // Distance is not a rep or a time target: "Farmer's walk 3x40m" keeps its sets only.
-  ;[m, text] = take(text, RX.setsDist)
+  const moving = RX.moving.test(text)
+  ;[m, text] = take(text, moving ? RX.setsDistMoving : RX.setsDist)
   if (m) out.sets = clampSets(Number(m[1]))
-  while (RX.dist.test(text)) [, text] = take(text, RX.dist)
+  const dist = moving ? RX.distMoving : RX.dist
+  while (dist.test(text)) [, text] = take(text, dist)
 
   ;[m, text] = take(text, RX.failTimes)
   if (m) {
@@ -650,35 +656,35 @@ export function parseProgramText(input: string): ParsedText {
   let anchored = false
   let pairSection = false
 
-  // "Week 2", or a weekday that comes round again, starts the next week; only the first is read.
+  // "Week 2", or the weekdays coming round again, starts the next week; only the first is read.
   let week = 0
   let weekContent = false
-  let weekDays = new Set<DayIndex>()
+  let weekHeader = false
   let skippedWeeks = 0
   const nextWeek = () => {
     if (week > 0 && weekContent) skippedWeeks++
     week++
     weekContent = false
-    weekDays = new Set()
   }
 
   const clean = lines.map((l) => normalizeText(l).trim())
   const content = clean.map((_, i) => i).filter((i) => !isNoise(clean[i]))
+  const repeats = weekRepeats(clean)
+  const firstWeek = clean.findIndex(isWeek)
   // "My program" on top of notes that then start with a day: a title, not an exercise.
   const title = content.length > 1 && content[1] > content[0] + 1 && !/\d/.test(clean[content[0]]) && !parseHeader(clean[content[0]]) && !!parseHeader(clean[content[1]]) ? content[0] : -1
   clean.forEach((raw, i) => {
     if (i === title) return
     if (isWeek(raw)) {
       if (weekContent) nextWeek()
+      weekHeader = true
       return
     }
     if (isNoise(raw)) return
     const h: Header | null = parseHeader(raw) ?? (isSessionLabel(raw) ? { day: null, label: label(stripLead(raw).text), rest: false, section: true } : null)
-    if (h && h.day !== null) {
-      if (weekDays.has(h.day) && current()?.day !== h.day) nextWeek()
-      weekDays.add(h.day)
-    }
-    weekContent = true
+    if (repeats.has(i)) nextWeek()
+    // Intro lines before "Week 1" ("5/3/1 BBB", "Goal: strength") do not make it a second week.
+    if ((h && !h.section) || weekHeader) weekContent = true
     if (week > 0) return
     if (h) {
       prevTag = undefined
@@ -702,10 +708,13 @@ export function parseProgramText(input: string): ParsedText {
       return
     }
     const read = readLine(raw)
-    if (!read) {
+    // A program name or goal above "Week 1" is not an exercise; one with numbers is shown to check.
+    const intro = !days.length && i < firstWeek
+    if (!read || (intro && hasTarget(read.line))) {
       warnings.push({ kind: 'unreadable', line: i + 1, raw })
       return
     }
+    if (intro) return
     if (!days.length || current().rest) {
       open({ day: null, rest: false })
       anchored = false
@@ -726,6 +735,41 @@ export function parseProgramText(input: string): ParsedText {
     for (const day of more) days.push({ ...d, day, lines: d.lines.map((l) => ({ ...l })) })
   }
   return { days: days.filter((d) => d.rest || d.lines.length || d.day !== null || d.label), warnings }
+}
+
+/**
+ * Weekday headers that start a later week: a weekday seen before, followed by most of the first
+ * week's days again. A lone repeat ("Monday PM", one more Monday) is another session that day.
+ */
+function weekRepeats(clean: readonly string[]): Set<number> {
+  const seq: { i: number; day: DayIndex }[] = []
+  const breaks = new Set<number>()
+  clean.forEach((raw, i) => {
+    if (isWeek(raw)) breaks.add(seq.length)
+    if (isNoise(raw)) return
+    const h = parseHeader(raw)
+    if (h && h.day !== null) seq.push({ i, day: h.day })
+  })
+  const starts = new Set<number>()
+  let week: DayIndex[] = []
+  seq.forEach((s, k) => {
+    if (breaks.has(k)) week = []
+    if (!week.includes(s.day) || week[week.length - 1] === s.day) {
+      if (!week.includes(s.day)) week.push(s.day)
+      return
+    }
+    const next = new Set<DayIndex>()
+    for (const t of seq.slice(k)) {
+      if (next.has(t.day)) break
+      next.add(t.day)
+    }
+    const again = [...next].filter((d) => week.includes(d)).length
+    if (again >= 2 && again * 2 >= week.length) {
+      starts.add(s.i)
+      week = [...next]
+    }
+  })
+  return starts
 }
 
 // Days

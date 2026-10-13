@@ -111,7 +111,7 @@ export function PrintPage() {
           className="mb-4 sm:max-w-sm print:hidden"
         />
         <header className="border-b border-ink pb-2">
-          <h1 className="text-xl font-bold tracking-[-0.01em]">{program.name}</h1>
+          <h1 tabIndex={-1} className="text-xl font-bold tracking-[-0.01em] outline-none">{program.name}</h1>
           <p className="mt-0.5 text-sm text-ink-2 num">
             {layout === 'gym' ? m.gymHeader(trainingDays, today) : m.header(trainingDays, totalSets, today)}
           </p>

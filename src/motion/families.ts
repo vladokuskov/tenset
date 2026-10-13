@@ -37,10 +37,6 @@ export const FAMILY_NAMES = Object.keys(FAMILIES) as FamilyName[]
 /** templates approved before the family split */
 export const S1_TEMPLATES: TemplateId[] = ['squat', 'lateral-raise', 'vertical-pull', 'curl']
 
-export function isFamilyName(v: unknown): v is FamilyName {
-  return typeof v === 'string' && v in FAMILIES
-}
-
 /** exercise ids of a family, by code (F1) or name */
 export function familyExercises(family: string): number[] {
   const f = Object.entries(FAMILIES).find(([name, x]) => name === family || x.code === family.toUpperCase())?.[1]

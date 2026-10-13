@@ -346,8 +346,6 @@ export type Skeleton = {
   seg: Record<string, number>
 }
 
-export const DOF_NAMES: string[] = JOINTS.flatMap((j) => j.dofs.map((d) => `${j.name}.${d.key}`))
-
 export function createSkeleton(data: SkeletonData): Skeleton {
   const dofs: Dof[] = []
   const dof: Record<string, number> = {}
@@ -410,12 +408,6 @@ export function zeroQ(skel: Skeleton): Float64Array {
   return q
 }
 
-export function getDof(skel: Skeleton, q: Float64Array, name: string) {
-  const i = skel.dof[name]
-  if (i === undefined) throw new Error(`unknown dof ${name}`)
-  return q[i]
-}
-
 export function setDof(skel: Skeleton, q: Float64Array, name: string, v: number) {
   const i = skel.dof[name]
   if (i === undefined) throw new Error(`unknown dof ${name}`)
@@ -430,19 +422,6 @@ export function setDofs(skel: Skeleton, q: Float64Array, values: Record<string, 
       setDof(skel, q, k.replace('_*', '_r'), v)
     } else setDof(skel, q, k, v)
   }
-}
-
-/** DOFs whose sign flips when a pose is mirrored across the sagittal plane */
-const MIRROR_NEGATE = new Set(['pelvis.tx', 'pelvis.rot', 'pelvis.list', 'lumbar.bend', 'lumbar.rot', 'thorax.bend', 'thorax.rot', 'neck.bend', 'neck.rot', 'head.bend', 'head.rot'])
-
-export function mirrorQ(skel: Skeleton, q: Float64Array): Float64Array {
-  const out = new Float64Array(q.length)
-  for (const d of skel.dofs) {
-    const other = /_l\./.test(d.name) ? d.name.replace('_l.', '_r.') : /_r\./.test(d.name) ? d.name.replace('_r.', '_l.') : d.name
-    const v = q[skel.dof[other]]
-    out[d.index] = MIRROR_NEGATE.has(d.name) ? -v : v
-  }
-  return out
 }
 
 export function pairedDofs(skel: Skeleton): [number, number][] {

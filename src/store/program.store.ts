@@ -8,13 +8,14 @@ import { applyEquipmentSwap, type EquipmentSwap } from '../domain/equipmentSwap.
 import * as ops from '../domain/program.ts'
 import type { Catalog } from '../domain/resolve.ts'
 import { Program, type ExerciseRef, type SplitTemplate } from '../domain/schema.ts'
+import { validateProgram } from '../domain/validateProgram.ts'
 import { getMessages } from '../i18n/messages.ts'
+import { reportNewerVersion } from './health.ts'
 import { storeMessages } from './messages.ts'
 import { PROGRAMS_VERSION, programMigrations, runMigrations } from './migrations/index.ts'
 import { adoptLegacyBackup, quarantine } from './quarantine.ts'
 import { salvagePrograms } from './salvage.ts'
 import { browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
-import { validateProgram } from './validateProgram.ts'
 
 export const PROGRAMS_KEY = 'gb:programs'
 
@@ -92,14 +93,14 @@ function normalize(data: PersistedPrograms): PersistedPrograms {
   return { programs, activeId }
 }
 
-function swapDays(program: Program, from: Day, to: Day): Program {
-  const a = program.days[from]
-  const b = program.days[to]
-  if (!a || !b || from === to) return program
-  const days = [...program.days]
-  days[from] = b
-  days[to] = a
-  return { ...program, days }
+/** The version persist wrote last; it ends the saved JSON. */
+function storedVersion(storage: SyncStorage): number {
+  try {
+    const m = /"version":(\d+)\}$/.exec(storage.getItem(PROGRAMS_KEY) ?? '')
+    return m ? Number(m[1]) : 0
+  } catch {
+    return 0
+  }
 }
 
 /** Fits the localized "copy" name into NAME_MAX by shortening the original name, not the suffix. */
@@ -202,7 +203,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           setEntryNote: (entryId, note) => mutate('setEntryNote', (p) => ops.setEntryNote(p, entryId, note)),
           linkWithPrev: (entryId, on) => mutate('linkWithPrev', (p) => ops.linkWithPrev(p, entryId, on)),
           duplicateDay: (from, to) => mutate('duplicateDay', (p) => ops.duplicateDay(p, from, to, makeId)),
-          moveDay: (from, to) => mutate('moveDay', (p) => swapDays(p, from, to)),
+          moveDay: (from, to) => mutate('moveDay', (p) => ops.moveDay(p, from, to)),
           clearDay: (day) => mutate('clearDay', (p) => ops.clearDay(p, day)),
           setRest: (day) => mutate('setRest', (p) => ops.setRest(p, day)),
           setTrain: (day) => mutate('setTrain', (p) => ops.setTrain(p, day)),
@@ -237,6 +238,11 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
         storage: {
           ...json,
           setItem: (name, value) => {
+            // A stale tab would drop fields it does not know (entry notes) from what a newer one saved.
+            if (storedVersion(storage) > PROGRAMS_VERSION) {
+              reportNewerVersion()
+              return
+            }
             const empty = Object.keys(value.state.programs).length === 0
             if (empty && holdEmpty) return
             if (!empty) holdEmpty = false
@@ -256,10 +262,9 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           // Nothing stored means no programs, also when another tab deleted them.
           if (persisted === undefined || persisted === null) return { ...current, programs: {}, activeId: null, lastChange: null }
           const { programs, activeId, rejected } = salvagePrograms(persisted)
-          if (rejected !== null) {
-            quarantine(storage, PROGRAMS_KEY, rejected)
-            holdEmpty = Object.keys(programs).length === 0
-          }
+          if (rejected !== null) quarantine(storage, PROGRAMS_KEY, rejected)
+          // Re-checked on every hydrate, so valid programs from another tab release the hold.
+          holdEmpty = rejected !== null && Object.keys(programs).length === 0
           return { ...current, ...normalize({ programs, activeId }), lastChange: null }
         },
       },

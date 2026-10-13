@@ -107,6 +107,15 @@ describe('program ops', () => {
     expect(ops.duplicateDay(labelled, 0, 0, () => 'x')).toBe(labelled)
   })
 
+  it('moves a day by swapping it with another', () => {
+    const p = ops.setRest(ops.setLabel(base(), 0, 'Push'), 3)
+    const moved = ops.moveDay(p, 0, 3)
+    expect(moved.days[3]).toEqual(p.days[0])
+    expect(moved.days[0]).toEqual(p.days[3])
+    expect(ops.moveDay(p, 1, 1)).toBe(p)
+    expect(ops.moveDay(p, 1, 9)).toBe(p)
+  })
+
   it('clears a day but keeps its kind and label', () => {
     const p = ops.clearDay(ops.setLabel(base(), 0, 'Push'), 0)
     expect(p.days[0]).toEqual({ kind: 'train', label: 'Push', entries: [] })

@@ -22,7 +22,6 @@ export function mirrorArm(skel: Skeleton, q: Float64Array) {
 
 export const segPosOf = (skel: Skeleton, f: FK, seg: string) => f.pos[skel.seg[seg]]
 export const toWorld = (skel: Skeleton, f: FK, seg: string, local: V3): V3 => add(f.pos[skel.seg[seg]], qrot(f.rot[skel.seg[seg]], local))
-export const toLocal = (skel: Skeleton, f: FK, seg: string, world: V3): V3 => qrot(qconj(f.rot[skel.seg[seg]]), sub(world, f.pos[skel.seg[seg]]))
 
 /** lowest point of the capsules above the mat top (negative = sunk in), m */
 export function matClearance(caps: Capsule[]): number {

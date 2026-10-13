@@ -75,31 +75,6 @@ export function balanceDof(
   return r
 }
 
-// ---------- limits ----------
-
-export type Violation = { dof: string; value: number; min: number; max: number }
-
-export function limitViolations(skel: Skeleton, q: ArrayLike<number>, tol = 0): Violation[] {
-  const out: Violation[] = []
-  for (const d of skel.dofs) {
-    const v = q[d.index]
-    if (v < d.min - tol || v > d.max + tol) out.push({ dof: d.name, value: v, min: d.min, max: d.max })
-  }
-  return out
-}
-
-export function clampLimits(skel: Skeleton, q: Float64Array, names?: string[]) {
-  for (const d of skel.dofs) if (!names || names.includes(d.name)) q[d.index] = clamp(q[d.index], d.min, d.max)
-}
-
-/** keep lumbar and thoracic flexion within +-band of a neutral reference (deg) */
-export function spineBand(skel: Skeleton, q: Float64Array, band = 10, ref: { lumbar?: number; thorax?: number } = {}) {
-  for (const [dof, r] of [['lumbar.flex', ref.lumbar ?? 0], ['thorax.flex', ref.thorax ?? 0]] as const) {
-    const i = skel.dof[dof]
-    q[i] = clamp(q[i], r - band, r + band)
-  }
-}
-
 // ---------- planted feet ----------
 
 export type FootTarget = { side: Side; rot: Quat; ankle: V3 }
@@ -416,8 +391,3 @@ export function handFrame(skel: Skeleton, f: FK, side: Side): { pos: V3; rot: Qu
 export function implementFromHand(axis: V3, palm: V3): Quat {
   return qalign([1, 0, 0], [0, 1, 0], axis, norm(cross(cross(axis, palm), axis)))
 }
-
-export function midpoint(a: V3, b: V3): V3 {
-  return scale(add(a, b), 0.5)
-}
-

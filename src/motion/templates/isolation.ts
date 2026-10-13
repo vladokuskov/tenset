@@ -1,5 +1,5 @@
 import { handFrame, plantFoot, root1d, softBand, solveLegs, type FootTarget } from '../constraints.ts'
-import { centerOfPressure, fk, segPos, type PointForce, type PointMass } from '../fk.ts'
+import { centerOfPressure, fk, type PointForce, type PointMass } from '../fk.ts'
 import { cableForce, type Cable, type ImplementSpec } from '../implements.ts'
 import { add, cross, dot, norm, qfromBasis, qrot, reject, sub, type V3 } from '../math.ts'
 import { shoulderRhythm, type Contact, type ImplementPose, type Skeleton } from '../skeleton.ts'
@@ -211,11 +211,6 @@ export function footContacts(skel: Skeleton, feet: FootTarget[]): Contact[] {
     }
   }
   return out
-}
-
-/** shoulder joint centre (glenohumeral) */
-export function shoulderAt(skel: Skeleton, q: Float64Array, s: Side): V3 {
-  return segPos(skel, fk(skel, q), `humerus_${s}`)
 }
 
 /** plane of elevation and elevation (deg) of a world direction for the left arm in a thorax frame (inverse of armDir) */

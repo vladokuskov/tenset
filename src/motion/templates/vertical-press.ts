@@ -735,6 +735,3 @@ export const verticalPress: Template<P> = {
   setup: (p, skel) => (p.implement === 'landmine' ? landmineCtx(p, skel).setup : context(p, skel).setup),
   sample: (u, p, skel) => (p.implement === 'landmine' ? sampleLandmine(u, skel, landmineCtx(p, skel)) : sample(u, p, skel)),
 }
-
-/** internals for the unit tests */
-export const _verticalPress = { context, ARNOLD, KB_TURN, BAND_TURN }

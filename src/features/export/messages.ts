@@ -158,6 +158,8 @@ export const exportMessages = defineMessages({
       setAside: 'Some saved data could not be read, so it was set aside. Everything else is here.',
       downloadBackup: 'Download backup',
       download: 'Download',
+      newerVersion: 'A newer version of the app is open in another tab. Reload to keep saving changes here.',
+      reload: 'Reload',
     },
   },
   uk: {
@@ -310,6 +312,8 @@ export const exportMessages = defineMessages({
       setAside: 'Частину збережених даних не вдалося прочитати, тому їх відкладено окремо. Усе інше на місці.',
       downloadBackup: 'Завантажити резервну копію',
       download: 'Завантажити',
+      newerVersion: 'В іншій вкладці відкрито новішу версію застосунку. Перезавантажте сторінку, щоб зміни тут зберігалися.',
+      reload: 'Перезавантажити',
     },
   },
 })

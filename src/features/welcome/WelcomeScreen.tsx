@@ -127,7 +127,7 @@ export function WelcomeScreen() {
         <p className="num mt-4 text-sm text-ink-2">
           {m.step(step, STEPS)}
         </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-[-0.022em]">{heading}</h1>
+        <h1 tabIndex={-1} className="mt-1 text-2xl font-bold tracking-[-0.022em] outline-none">{heading}</h1>
         <p className="mt-2 text-base text-ink-2">{sub}</p>
 
         <div className="mt-6">

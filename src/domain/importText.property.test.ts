@@ -1,7 +1,7 @@
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { sequentialIds } from './ids.ts'
-import { IMPORT_MAX_CHARS, assignDays, buildImportedProgram, parseLine, parseProgramText, type ParsedLine } from './importText.ts'
+import { IMPORT_MAX_CHARS, assignDays, buildImportedProgram, parseHeader, parseLine, parseProgramText, type ParsedLine } from './importText.ts'
 import { MAX_SETS, REST_MAX, REST_STEP, RIR_MAX } from './program.ts'
 import { Program } from './schema.ts'
 
@@ -108,13 +108,22 @@ describe('paste parser properties', () => {
         const parsed = parseProgramText(text)
         const seen = new Set(parsed.days.flatMap((d) => d.lines.map((l) => l.raw)))
         const warned = new Set(parsed.warnings.flatMap((w) => (w.kind === 'unreadable' ? [w.raw] : [])))
-        // A weekday that comes round again starts a second week, which is left out with its own warning.
-        const laterWeeks = parsed.warnings.some((w) => w.kind === 'extra_weeks')
-        for (const raw of text.split('\n').map((l) => l.trim())) {
-          if (!/\d\s*(?:[xх×]|по|sets|підх|\/)/u.test(raw)) continue
+        // A weekday that comes round again can start a second week, which is left out with its own warning.
+        const lines = text.split('\n').map((l) => l.trim())
+        const seenDays = new Set<number>()
+        const secondWeek = lines.findIndex((l) => {
+          const day = parseHeader(l)?.day ?? null
+          if (day === null) return false
+          if (seenDays.has(day)) return true
+          seenDays.add(day)
+          return false
+        })
+        const laterWeeks = secondWeek >= 0 && parsed.warnings.some((w) => w.kind === 'extra_weeks')
+        lines.forEach((raw, i) => {
+          if (!/\d\s*(?:[xх×]|по|sets|підх|\/)/u.test(raw)) return
           const kept = [...seen].some((s) => s === raw || s.endsWith(raw) || raw.endsWith(s))
-          expect(kept || warned.has(raw) || laterWeeks, raw).toBe(true)
-        }
+          expect(kept || warned.has(raw) || (laterWeeks && i > secondWeek), raw).toBe(true)
+        })
       }),
       { numRuns: 300 },
     )

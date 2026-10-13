@@ -19,7 +19,7 @@ import { BENCH, benchDefaults, benchSockets, type BenchParams } from './sockets.
 // laid out as the scene composer (motion/compose.ts motionProps) lays the machines out. Held implements (bars,
 // attachments, the pull-up bar) are left out: the gate already checks them as the template's implements.
 
-export type { Collider, ColliderKind, MachineLayout, Poses } from './layout.ts'
+export type { Collider, MachineLayout, Poses } from './layout.ts'
 
 export type MachineColliders = {
   /** the composer's prop key */

@@ -12,7 +12,6 @@ export const X: V3 = [1, 0, 0]
 export const Y: V3 = [0, 1, 0]
 export const Z: V3 = [0, 0, 1]
 
-export const v3 = (x = 0, y = 0, z = 0): V3 => [x, y, z]
 export const add = (a: V3, b: V3): V3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 export const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 export const scale = (a: V3, s: number): V3 => [a[0] * s, a[1] * s, a[2] * s]
@@ -114,18 +113,6 @@ export function qexp(r: V3): Quat {
 /** fraction t of q's rotation about the same axis */
 export const qpow = (q: Quat, t: number): Quat => qexp(scale(qlog(q), t))
 
-export function qslerp(a: Quat, b: Quat, t: number): Quat {
-  let d = qdot(a, b)
-  const bb: Quat = d < 0 ? [-b[0], -b[1], -b[2], -b[3]] : b
-  d = Math.abs(d)
-  if (d > 0.9995) return qnorm([a[0] + (bb[0] - a[0]) * t, a[1] + (bb[1] - a[1]) * t, a[2] + (bb[2] - a[2]) * t, a[3] + (bb[3] - a[3]) * t])
-  const th = Math.acos(d)
-  const s = Math.sin(th)
-  const wa = Math.sin((1 - t) * th) / s
-  const wb = Math.sin(t * th) / s
-  return [a[0] * wa + bb[0] * wb, a[1] * wa + bb[1] * wb, a[2] * wa + bb[2] * wb, a[3] * wa + bb[3] * wb]
-}
-
 /** shortest rotation taking unit a to unit b */
 export function qfromTo(a: V3, b: V3): Quat {
   const d = dot(a, b)
@@ -212,12 +199,6 @@ export function eulerFrom(q: Quat, i: Axis, j: Axis, k: Axis): V3 {
   const a = Math.atan2(-e * r(j, k), r(k, k))
   const c = Math.atan2(-e * r(i, j), r(i, i))
   return [a, b, c]
-}
-
-const PRINCIPAL: V3[] = [X, Y, Z]
-
-export function eulerTo(i: Axis, j: Axis, k: Axis, a: number, b: number, c: number): Quat {
-  return qmul(qmul(qaxis(PRINCIPAL[i], a), qaxis(PRINCIPAL[j], b)), qaxis(PRINCIPAL[k], c))
 }
 
 /** wrap degrees to (-180, 180] */

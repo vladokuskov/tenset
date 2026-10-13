@@ -1,4 +1,4 @@
-import manifest from '../../../public/media/manifest.json'
+import manifest from '../../public/media/manifest.json'
 
 // Baked posters (pipeline/render/bake-loops.ts) by exercise id. Bundled so list cards know the hashed file name
 // without a request; the service worker caches each file on first view.

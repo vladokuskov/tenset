@@ -16,7 +16,7 @@ export type SuggestOptions = {
   overrides?: Overrides
   /** The open day: its existing muscles and label steer the order. */
   day: number
-  /** The day's label in English (template labels translated back), used to read the split focus. */
+  /** The day's label (template labels in English, typed ones as written), used to read the split focus. */
   label?: string
   /** Exercises already on the day. */
   exclude?: Iterable<number>
@@ -29,22 +29,26 @@ const PUSH = ['chest', 'front_delt', 'side_delt', 'triceps']
 const PULL = ['lats', 'upper_back', 'rear_delt', 'biceps', 'forearms', 'upper_traps']
 const areaGroups = (area: 'upper' | 'lower') => bandedGroupIds.filter((g) => getGroup(g)?.area === area)
 
-// Checked in order; the first word found in the label wins. 'full' means no focus.
+// Whole words in any script; JS \b only knows ASCII letters.
+const word = (src: string) => new RegExp(`(?<![\\p{L}\\d])(?:${src})(?![\\p{L}\\d])`, 'iu')
+
+// Checked in order; the first word found in the label wins. 'full' means no focus. English, Ukrainian and Russian.
+const FULL = word('full|все тіло|всё тело|все тело|фулбаді|фулбоді|фулбади')
 const FOCUS_WORDS: [RegExp, () => string[] | null][] = [
-  [/\bfull\b/, () => null],
-  [/\bupper\b/, () => areaGroups('upper')],
-  [/\b(lower|legs?)\b/, () => areaGroups('lower')],
-  [/\bpush\b/, () => PUSH],
-  [/\bpull\b/, () => PULL],
-  [/\bchest\b/, () => ['chest']],
-  [/\bback\b/, () => ['lats', 'upper_back', 'rear_delt', 'upper_traps', 'lower_back']],
-  [/\bshoulders?\b/, () => ['front_delt', 'side_delt', 'rear_delt', 'upper_traps']],
-  [/\barms?\b/, () => ['biceps', 'triceps', 'forearms']],
+  [FULL, () => null],
+  [word('upper|верх'), () => areaGroups('upper')],
+  [word('lower|legs?|низ|ноги|ніг|ног'), () => areaGroups('lower')],
+  [word('push|жими?|жимы'), () => PUSH],
+  [word('pull|тяги?'), () => PULL],
+  [word('chest|груди|грудь'), () => ['chest']],
+  [word('back|спина|спини|спины'), () => ['lats', 'upper_back', 'rear_delt', 'upper_traps', 'lower_back']],
+  [word('shoulders?|плечі|плечи|плечей|дельти|дельты'), () => ['front_delt', 'side_delt', 'rear_delt', 'upper_traps']],
+  [word('arms?|руки|рук'), () => ['biceps', 'triceps', 'forearms']],
 ]
 
 /** Groups a day label points at; null when the label says nothing (or says full body). */
 export function labelFocus(label: string | undefined): ReadonlySet<string> | null {
-  const text = label?.toLowerCase() ?? ''
+  const text = label ?? ''
   for (const [re, groups] of FOCUS_WORDS) {
     if (!re.test(text)) continue
     const g = groups()
@@ -53,14 +57,16 @@ export function labelFocus(label: string | undefined): ReadonlySet<string> | nul
   return null
 }
 
-const saysFull = (label: string | undefined) => /\bfull\b/.test(label?.toLowerCase() ?? '')
+const saysFull = (label: string | undefined) => FULL.test(label ?? '')
 
 /**
  * How well a group fits the open day: 2 when the day already trains it or its label names it,
  * 0 when the day has a focus (from its label, else the body areas it trains) that leaves the group out.
+ * With no focus, a group another day already carries comes after one no day trains.
  */
 export function dayFit(week: WeekResult, day: number, label: string | undefined): (group: string) => number {
   const onDay = (g: string) => (week.daily[g]?.[day] ?? 0) > 0
+  const elsewhere = (g: string) => (week.daily[g] ?? []).some((v, d) => d !== day && v > 0)
   const named = labelFocus(label)
   let focus: ReadonlySet<string> | null = named
   if (!focus && !saysFull(label)) {
@@ -71,7 +77,7 @@ export function dayFit(week: WeekResult, day: number, label: string | undefined)
   }
   return (g) => {
     if (onDay(g) || named?.has(g)) return 2
-    if (!focus || getGroup(g)?.area === 'core') return 1
+    if (!focus || getGroup(g)?.area === 'core') return elsewhere(g) ? 0.5 : 1
     return focus.has(g) ? 2 : 0
   }
 }

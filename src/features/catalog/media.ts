@@ -1,7 +1,7 @@
 import { Cable, Cog, Dumbbell, PersonStanding, Spline, type LucideIcon } from 'lucide-react'
 import type { CustomExercise, Exercise, Role } from '../../domain/schema'
 import { groupName } from '../../data/localize'
-import { getGroup, visibleHeads } from '../../domain/taxonomy'
+import { visibleHeads } from '../../domain/taxonomy'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
 import { hasMotion } from '../figure/motion/library'
@@ -43,18 +43,6 @@ export function cardView(e: CardExercise, roles: Readonly<Record<string, Role>>)
   const front = primaries.filter((g) => frontGroups.has(g)).length
   const back = primaries.filter((g) => backGroups.has(g)).length
   return back > front ? 'back' : 'front'
-}
-
-/** Body area most primaries sit in, used to crop small posters. */
-export function primaryArea(roles: Readonly<Record<string, Role>>): 'upper' | 'core' | 'lower' {
-  const count = { upper: 0, core: 0, lower: 0 }
-  for (const [g, r] of Object.entries(roles)) {
-    const area = getGroup(g)?.area
-    if (r === 'primary' && area) count[area]++
-  }
-  if (count.lower > count.upper && count.lower >= count.core) return 'lower'
-  if (count.core > count.upper) return 'core'
-  return 'upper'
 }
 
 export function primaryGroupNames(roles: Readonly<Record<string, Role>>, locale: Locale = getLocale()): string[] {

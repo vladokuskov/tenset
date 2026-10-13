@@ -4,7 +4,7 @@ import { listQuarantined, serializeQuarantined } from '../../store/quarantine'
 import { browserStorage } from '../../store/storage'
 import { backupFileName, createBackup, serializeBackup } from './backup'
 import { download } from './files'
-import { recordExport } from './lastExport'
+import { recordExport } from '../../store/lastExport'
 
 export function makeBackupFile(): File {
   const { programs, activeId } = programStore.getState()

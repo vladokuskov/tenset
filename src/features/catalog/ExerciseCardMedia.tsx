@@ -8,7 +8,7 @@ import { AnatomyFigure, type FigureVars } from '../bodymap/AnatomyFigure'
 import { tintVars } from '../bodymap/fills'
 import { cardView, equipmentGlyph, isCatalogExercise, showsMotion, type CardExercise } from './media'
 import { catalogMessages } from './messages'
-import { posterUrl } from './posters'
+import { posterUrl } from '../../data/posters'
 import { useRoles } from './useRoles'
 
 export type ExerciseCardMediaProps = {

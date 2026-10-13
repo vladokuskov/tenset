@@ -1,9 +1,16 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["pipeline/**/*.ts", "api/mcp.ts", "api/agent/*.ts", "src/routes/**/*.tsx", "e2e/**/*.ts"],
+  "entry": ["pipeline/**/*.ts", "api/mcp.ts", "api/agent/*.ts", "src/routes/**/*.tsx", "e2e/**/*.ts", "src/**/*.test.ts", "data/**/*.test.ts"],
   "project": ["src/**/*.{ts,tsx,css}", "api/**/*.ts", "pipeline/**/*.ts", "data/**/*.ts", "e2e/**/*.ts"],
   "ignoreExportsUsedInFile": true,
   "ignoreDependencies": ["axe-core"],
   "ignoreBinaries": ["ffmpeg", "ffprobe"],
-  "rules": { "exports": "warn", "types": "warn", "duplicates": "warn" }
+  "ignoreIssues": {
+    "src/ui/index.ts": ["exports", "types"],
+    "src/features/*/index.ts": ["exports", "types"],
+    "src/features/figure/motion/scenes/index.ts": ["exports", "types"],
+    "src/motion/implements/index.ts": ["exports", "types"],
+    "src/motion/templates/index.ts": ["exports", "types"],
+    "src/sw/index.ts": ["exports", "types"]
+  }
 }

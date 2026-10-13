@@ -1,30 +1,12 @@
 import { useEffect } from 'react'
 import { getMessages } from '../../i18n/messages'
 import { storageHealth, type StorageHealth } from '../../store/health'
-import { requestPersistentStorage } from '../../store/persist'
-import { prefsStore } from '../../store/prefs.store'
-import { programStore } from '../../store/program.store'
-import { syncAcrossTabs } from '../../store/sync'
 import { showToast } from '../../ui/toast'
 import { downloadBackup, downloadSetAside } from './backupFile'
 import { exportMessages } from './messages'
 
-/**
- * App-wide storage upkeep with no UI of its own: cross-tab sync, a persistent storage request after
- * the first change, and one toast per session when data was set aside or is not being saved.
- */
+/** One toast per session when data was set aside or is not being saved, with a download to keep a copy. */
 export function StorageNotices() {
-  useEffect(() => syncAcrossTabs(window, programStore, prefsStore), [])
-
-  useEffect(() => {
-    const unsubscribe = programStore.subscribe((s) => {
-      if (!s.lastChange) return
-      unsubscribe()
-      void requestPersistentStorage()
-    })
-    return unsubscribe
-  }, [])
-
   useEffect(() => {
     const shown = new Set<keyof StorageHealth>()
     const notify = (h: StorageHealth) => {
@@ -37,6 +19,10 @@ export function StorageNotices() {
         if (!h[kind] || shown.has(kind)) continue
         shown.add(kind)
         showToast({ message: m[kind], action: { label: m.downloadBackup, onAction: downloadBackup }, duration: 10000 })
+      }
+      if (h.newerVersion && !shown.has('newerVersion')) {
+        shown.add('newerVersion')
+        showToast({ message: m.newerVersion, action: { label: m.reload, onAction: () => window.location.reload() }, duration: 10000 })
       }
     }
     notify(storageHealth.getState())

@@ -415,4 +415,53 @@ export const CORPUS: readonly CorpusCase[] = [
     text: 'Прогулянка фермера 3х40 м\nШтовхання саней 4х20 м\nФермерская прогулка 3х40 метров',
     days: [{ day: 0, lines: ['Прогулянка фермера | 3x-', 'Штовхання саней | 4x-', 'Фермерская прогулка | 3x-'] }],
   },
+  {
+    id: 'en-title-before-week-one',
+    text: '5/3/1 strength\nGoal: get stronger\nWeek 1\nMonday\nSquat 3x5\nBench 5x10\nThursday\nDeadlift 3x5\nWeek 2\nMonday\nSquat 3x5\nThursday\nDeadlift 3x3',
+    days: [
+      { day: 0, lines: ['Squat | 3x5', 'Bench | 5x10'] },
+      { day: 3, lines: ['Deadlift | 3x5'] },
+    ],
+    unreadable: 1,
+    skippedWeeks: 1,
+  },
+  {
+    id: 'uk-title-before-week-one',
+    text: 'Програма на 8 тижнів\nТиждень 1\nПн\nЖим 4х8\nЧт\nПрисід 4х6\nТиждень 2\nПн\nЖим 4х9',
+    days: [
+      { day: 0, lines: ['Жим | 4x8'] },
+      { day: 3, lines: ['Присід | 4x6'] },
+    ],
+    skippedWeeks: 1,
+  },
+  {
+    id: 'ru-title-before-week-one',
+    text: 'Силовой блок\nЦель: сила\nНеделя 1\nПн\nЖим лежа 3х5\nЧт\nПрисед 3х5',
+    days: [
+      { day: 0, lines: ['Жим лежа | 3x5'] },
+      { day: 3, lines: ['Присед | 3x5'] },
+    ],
+  },
+  {
+    id: 'en-two-a-day-is-not-a-second-week',
+    text: 'Monday AM\nBench 3x8\nTuesday\nRow 3x8\nMonday PM\nSquat 3x5',
+    days: [
+      { day: 0, label: 'AM', lines: ['Bench | 3x8', 'Squat | 3x5'] },
+      { day: 1, lines: ['Row | 3x8'] },
+    ],
+  },
+  {
+    id: 'en-one-weekday-again-is-another-session',
+    text: 'Monday\nBench 3x8\nWednesday\nRow 3x10\nFriday\nSquat 3x5\nMonday\nDeadlift 1x5',
+    days: [
+      { day: 0, lines: ['Bench | 3x8', 'Deadlift | 1x5'] },
+      { day: 2, lines: ['Row | 3x10'] },
+      { day: 4, lines: ['Squat | 3x5'] },
+    ],
+  },
+  {
+    id: 'en-small-bare-m-is-minutes',
+    text: 'Conditioning:\nBike 10m\nTreadmill 20m\nPlank 3x1m',
+    days: [{ day: 0, label: 'Conditioning', lines: ['Bike | -x600s', 'Treadmill | -x1200s', 'Plank | 3x60s'] }],
+  },
 ]

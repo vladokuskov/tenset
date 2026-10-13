@@ -60,12 +60,13 @@ describe('backup', () => {
     expect(res.ok && res.backup.prefs).toBeNull()
   })
 
-  it('skips programs whose custom exercise references do not resolve', () => {
+  it('restores programs with a custom reference that does not resolve, without those entries', () => {
     const dangling = blankProgram('d', 'Dangling')
-    dangling.days[0].entries.push({ id: 'e1', exerciseId: 'c9', sets: 3 })
+    dangling.days[0].entries.push({ id: 'e1', exerciseId: 'c9', sets: 3 }, { id: 'e2', exerciseId: 101, sets: 3 })
     const res = parseBackup(serializeBackup(createBackup({ programs: { a, dangling }, activeId: 'a' }, prefs)))
-    expect(res.ok && res.backup.programs.map((p) => p.id)).toEqual(['a'])
-    expect(res.ok && res.backup.skipped).toBe(1)
+    expect(res.ok && res.backup.programs.map((p) => p.id)).toEqual(['a', 'd'])
+    expect(res.ok && res.backup.programs[1].days[0].entries.map((e) => e.id)).toEqual(['e2'])
+    expect(res.ok && res.backup.skipped).toBe(0)
   })
 
   it('gives imported programs free names, like share links', () => {

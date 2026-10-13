@@ -255,20 +255,6 @@ function arms(skel: Skeleton, q: Float64Array, ctx: Pick<Ctx, 'palms' | 'palmPos
   for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
 }
 
-/**
- * Both palms flat on a support (the left arm solved, the right mirrored): the left grip site at `pos`, fingers along the
- * horizontal `fingers`, the elbow towards `pole` (world); `seed`: the forearm pronation and wrist flexion the wrist
- * solve starts from and leans towards (deg). Shared with the bench dip.
- */
-export function flatPalmArms(skel: Skeleton, q: Float64Array, pos: V3, fingers: V3, pole: V3, o: { seed?: number[]; planeHint?: number; iters?: number } = {}) {
-  let hand = palmHand(skel, fingers)
-  for (let it = 0; it < (o.iters ?? 5); it++) {
-    attachHand(skel, q, 'l', { pos, axis: [-1, 0, 0], palm: [0, -1, 0], hand }, { pole, planeHint: o.planeHint ?? 90, ...FREE })
-    hand = wristAngles(skel, q, fingers, o.seed)
-  }
-  for (const k of MIRRORED) q[skel.dof[k.replace('*', 'r')]] = q[skel.dof[k.replace('*', 'l')]]
-}
-
 /** palms flat under a loaded forearm: the wrist limits the push-up and the bench dip pass to the joint-limit gate */
 export const PALM_WRIST_LIMITS = { 'wrist_l.flex': WRIST_FLEX, 'wrist_r.flex': WRIST_FLEX }
 /** flat palms on a padded box or bench top: how far the fist capsule sinks into it, mm (see HAND_SINK) */

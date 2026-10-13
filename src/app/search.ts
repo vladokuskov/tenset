@@ -9,7 +9,7 @@ import { DAY_SLUGS } from './days'
 export const optionalEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
   z.enum(values).optional().catch(undefined)
 
-export const sheetParam = optionalEnum
+export const sheetParam = <const T extends readonly [string, ...string[]]>(sheets: T) => optionalEnum(sheets)
 
 export const daySlugParam = optionalEnum(DAY_SLUGS)
 

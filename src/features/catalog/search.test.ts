@@ -22,7 +22,7 @@ function split(list: readonly Exercise[], groups: readonly string[]) {
 describe('muscle word queries', () => {
   it.each([
     ['chest', ['chest']],
-    ['back', ['upper_back', 'lower_back']],
+    ['back', ['lats', 'upper_back', 'lower_back']],
     ['biceps', ['biceps']],
   ])('ranks "%s" primaries first', (q, groups) => {
     const list = filterExercises(activeExercises, en, { q })
@@ -34,6 +34,7 @@ describe('muscle word queries', () => {
   it.each([
     ['груди', ['chest']],
     ['біцепс', ['biceps']],
+    ['спина', ['lats', 'upper_back', 'lower_back']],
   ])('ranks "%s" primaries first in Ukrainian', (q, groups) => {
     const list = filterExercises(ukExercises, uk, { q })
     const { lastPrimary, firstOther } = split(list, groups)

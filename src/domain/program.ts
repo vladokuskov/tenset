@@ -217,6 +217,17 @@ export function duplicateDay(program: Program, from: DayIndex, to: DayIndex, mak
   return updateDay(program, to, () => ({ ...src, entries: src.entries.map((e) => ({ ...e, id: makeId() })) }))
 }
 
+/** Swaps two whole days: kind, label, note and exercises. */
+export function moveDay(program: Program, from: DayIndex, to: DayIndex): Program {
+  const a = program.days[from]
+  const b = program.days[to]
+  if (!a || !b || from === to) return program
+  const days = [...program.days]
+  days[from] = b
+  days[to] = a
+  return { ...program, days }
+}
+
 export function clearDay(program: Program, day: DayIndex): Program {
   return updateDay(program, day, (d) => ({ ...d, entries: [] }))
 }

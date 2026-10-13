@@ -153,7 +153,10 @@ export function PasteSheet({ open, onClose }: PasteSheetProps) {
                   },
                 }
               : null
-        return ref === null ? [] : [{ ref, sets, reps, restSec, rir, withPrev }]
+        // "Row 5 min" matched to a barbell row: a time is no target for a reps exercise.
+        const pick = r.choice.kind === 'match' ? r.choice.pick.ref : null
+        const timeOnReps = typeof pick === 'number' && !!reps?.endsWith('s') && activeExercises.find((e) => e.id === pick)?.unit === 'reps'
+        return ref === null ? [] : [{ ref, sets, reps: timeOnReps ? undefined : reps, restSec, rir, withPrev }]
       }),
     }))
     save(buildImportedProgram('import', name.trim() || m.defaultName, days, () => randomId(8)))

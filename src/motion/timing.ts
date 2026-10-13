@@ -43,11 +43,6 @@ export function phaseAt(u: number, tempo: Tempo = DEFAULT_TEMPO, lag = 0): Phase
   return { name: 'top', c: 1, velocity: 0, progress: half > 0 ? t / half / 2 : 0 }
 }
 
-/** contraction only, the common case */
-export function contraction(u: number, tempo: Tempo = DEFAULT_TEMPO, lag = 0) {
-  return phaseAt(u, tempo, lag).c
-}
-
 /** number of frames for one loop at fps; frame i sits at u = i / n */
 export function frameCount(tempo: Tempo, fps: number) {
   return Math.max(2, Math.round(loopDuration(tempo) * fps))

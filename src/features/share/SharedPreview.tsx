@@ -15,9 +15,9 @@ import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, EmptyState, LinkButton, Page, PageBody, PageHeader, Panel, Section, StickyActions, showToast } from '../../ui'
 import { BodyMini } from '../bodymap'
-import { EquipmentSwapPanel } from '../settings/EquipmentSwap'
-import { settingsMessages } from '../settings/messages'
+import { EquipmentSwapPanel } from '../shared/EquipmentSwapPanel'
 import { supersetLabels } from '../shared/exercise'
+import { sharedMessages } from '../shared/messages'
 import { shareMessages } from './messages'
 import { uniqueName } from './names'
 import { exerciseName, isKnown } from './resolveNames'
@@ -37,7 +37,7 @@ export function SharedPreview() {
   const navigate = useNavigate()
   const router = useRouter()
   const m = useMessages(shareMessages)
-  const swapText = useMessages(settingsMessages).swap
+  const swapText = useMessages(sharedMessages).swap
   const locale = useLocale()
 
   const close = () => {
@@ -75,7 +75,7 @@ export function SharedPreview() {
     setSwapped({ hash, program: applyEquipmentSwap(shared, swaps) })
     const msgs = getMessages(common)
     showToast({
-      message: getMessages(settingsMessages).swap.done(swaps.length),
+      message: getMessages(sharedMessages).swap.done(swaps.length),
       action: {
         label: msgs.undo,
         onAction: () => {

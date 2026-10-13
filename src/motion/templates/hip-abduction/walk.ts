@@ -1,5 +1,5 @@
 import { legKinematics, plantFoot, root1d, writeLeg, type FootTarget } from '../../constraints.ts'
-import { centerOfPressure, fk, sitePos } from '../../fk.ts'
+import { centerOfPressure, fk } from '../../fk.ts'
 import { around, band, bandNode, bandPose, segmentPose } from '../../implements/index.ts'
 import { add, clamp, lerp } from '../../math.ts'
 import { setDofs, zeroQ, type Pose, type Side, type Skeleton } from '../../skeleton.ts'
@@ -205,6 +205,3 @@ export function sampleWalk(u: number, p: P, skel: Skeleton): Pose {
   const nodes = (['l', 'r'] as const).map((s) => segmentPose(skel, f, `knee_${s}`, `femur_${s}`, [0, -(skel.segments[skel.seg[`femur_${s}`]].length - BAND.above), 0]))
   return { q, implements: [...nodes, bandPose(), { id: 'palms', pos: f.pos[skel.seg.thorax2], rot: f.rot[skel.seg.thorax2] }], contacts: v.setup.contacts }
 }
-
-/** the soles stay flat: exported for tests */
-export const soleY = (skel: Skeleton, q: Float64Array, side: Side) => sitePos(skel, fk(skel, q), `heel_${side}`)[1]

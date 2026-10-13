@@ -12,7 +12,6 @@ import type { ImplementSpec } from '../../implements.ts'
 // laid under whatever the body covers.
 
 export const PELVIS = (c: Capsule) => c.segment === 'pelvis' || c.segment === 'lumbar1'
-export const LOW_BACK = (c: Capsule) => c.segment === 'pelvis' || c.segment === 'lumbar1' || c.segment === 'lumbar2'
 export const UPPER_BACK = (c: Capsule) => c.segment === 'thorax1' || c.segment === 'thorax2'
 export const LYING = (c: Capsule) => PELVIS(c) || UPPER_BACK(c)
 export const TRUNK = (c: Capsule) => c.region === 'trunk'

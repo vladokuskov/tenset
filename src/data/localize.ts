@@ -157,6 +157,3 @@ export function sessionLabel(label: string | undefined, locale: Locale = getLoca
   if (!label) return label
   return SESSION_LABELS.get(label.trim().toLowerCase())?.[locale] ?? label
 }
-
-/** Raw translation tables, for the data coverage test. */
-export const translations: Readonly<Record<Locale, Text>> = TEXT

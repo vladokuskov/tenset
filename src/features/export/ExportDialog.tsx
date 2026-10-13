@@ -11,7 +11,7 @@ import { showToast } from '../../ui/toast'
 import { parseBackup, withUniqueNames, type ParsedBackup } from './backup'
 import { downloadBackup, makeBackupFile } from './backupFile'
 import { canShareFiles } from './files'
-import { recordExport } from './lastExport'
+import { recordExport } from '../../store/lastExport'
 import { exportMessages } from './messages'
 
 export type ExportDialogProps = {

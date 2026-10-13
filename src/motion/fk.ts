@@ -48,18 +48,6 @@ export function sitePos(skel: Skeleton, f: FK, name: string): V3 {
   return localToWorld(skel, f, s.segment, s.local)
 }
 
-/** site position plus its axis/normal directions in world space when defined */
-export function siteFrame(skel: Skeleton, f: FK, name: string): { pos: V3; axis?: V3; normal?: V3 } {
-  const s = skel.data.sites[name]
-  if (!s) throw new Error(`unknown site ${name}`)
-  const r = f.rot[skel.seg[s.segment]]
-  return {
-    pos: localToWorld(skel, f, s.segment, s.local),
-    axis: s.axis ? qrot(r, s.axis) : undefined,
-    normal: s.normal ? qrot(r, s.normal) : undefined,
-  }
-}
-
 export type PointMass = { mass: number; pos: V3 }
 
 /** whole-body centre of mass (BODY_MASS kg) plus optional external loads, world space */

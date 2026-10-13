@@ -35,7 +35,7 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
   const [copied, setCopied] = useState(false)
   const m = useMessages(shareMessages)
   const url = useMemo(
-    () => (program && open ? shareUrl(program, window.location.origin, import.meta.env.BASE_URL) : ''),
+    () => (program && open ? shareUrl(program, window.location.origin, import.meta.env.BASE_URL) : null),
     [program, open],
   )
   const qr = useMemo(() => (url ? qrModules(url) : null), [url])
@@ -48,7 +48,7 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
   }, [copied])
 
   const copy = async () => {
-    if (await copyText(url, inputRef.current)) {
+    if (url && (await copyText(url, inputRef.current))) {
       setCopied(true)
       showToast({ message: getMessages(shareMessages).linkCopied })
     } else {
@@ -58,7 +58,7 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
 
   const share = async () => {
     try {
-      await navigator.share({ title: program?.name, text: program ? m.shareText(program.name) : undefined, url })
+      await navigator.share({ title: program?.name, text: program ? m.shareText(program.name) : undefined, url: url ?? undefined })
     } catch {
       // cancelled or unavailable; the copy button remains
     }
@@ -74,6 +74,8 @@ export function ShareDialog({ open, onClose }: ShareDialogProps) {
     >
       {!program ? (
         <p className="text-ink-2">{m.noProgram}</p>
+      ) : !url ? (
+        <p className="text-ink-2">{m.tooLarge}</p>
       ) : (
         <>
           <div className="flex justify-center">

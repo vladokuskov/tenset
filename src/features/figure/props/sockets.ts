@@ -51,16 +51,6 @@ export const dumbbellDefaults: Required<DumbbellParams> = { handle: 0.12, handle
 
 export const DUMBBELL_COLLAR = 0.014
 
-/** Sockets in the dumbbell's frame: the grip centre, with the handle along +X. */
-export function dumbbellSockets(p: DumbbellParams = {}) {
-  const o = { ...dumbbellDefaults, ...p }
-  return {
-    grip: { position: new Vector3(0, 0, 0), axis: new Vector3(1, 0, 0) },
-    length: o.handle + 2 * (DUMBBELL_COLLAR + o.headWidth),
-    headRadius: o.headRadius,
-  }
-}
-
 /** a grip point: handle centre under the hand, `axis` along the handle (little finger -> index, as src/motion Site.axis) */
 export type GripSocket = { position: Vector3; axis: Vector3 }
 

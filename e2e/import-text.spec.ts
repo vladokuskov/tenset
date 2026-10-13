@@ -146,3 +146,20 @@ test('later weeks and metres are not read into the week', async ({ page }) => {
   await expect(sheet.getByText('No match found')).toBeVisible()
   await expect(sheet.getByText('3 × 2400s')).toHaveCount(0)
 })
+
+test('a title above "Week 1" leaves the first week intact', async ({ page }) => {
+  await startFromTemplate(page, 'Upper/Lower 4x')
+  const before = await storedPrograms(page)
+  const sheet = await openPaste(page)
+  await sheet
+    .getByRole('textbox', { name: 'Program text or share link' })
+    .fill('Strength block\nGoal: get stronger\nWeek 1\nMonday\nBench press 3x8\nThursday\nSquat 5x5\nWeek 2\nMonday\nBench press 3x9')
+  await sheet.getByRole('button', { name: 'Read it' }).click()
+  await expect(sheet.getByText('Barbell Bench Press')).toBeVisible()
+  await sheet.getByRole('button', { name: 'Create program' }).click()
+
+  const after = await storedPrograms(page)
+  const added = Object.values(after.programs).find((p) => !before.programs[p.id])!
+  expect(added.days[0].entries.map((e) => e.reps)).toEqual(['8'])
+  expect(added.days[3].entries.map((e) => [e.sets, e.reps])).toEqual([[5, '5']])
+})

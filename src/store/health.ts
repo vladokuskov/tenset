@@ -7,9 +7,11 @@ export type StorageHealth = {
   writeFailed: boolean
   /** Quarantine keys written during this session. */
   quarantined: string[]
+  /** A newer version of the app saved here (another tab), so this one stopped saving until it reloads. */
+  newerVersion: boolean
 }
 
-export const storageHealth = createStore<StorageHealth>(() => ({ memoryOnly: false, writeFailed: false, quarantined: [] }))
+export const storageHealth = createStore<StorageHealth>(() => ({ memoryOnly: false, writeFailed: false, quarantined: [], newerVersion: false }))
 
 export function reportMemoryOnly(): void {
   if (!storageHealth.getState().memoryOnly) storageHealth.setState({ memoryOnly: true })
@@ -17,6 +19,10 @@ export function reportMemoryOnly(): void {
 
 export function reportWriteFailed(): void {
   if (!storageHealth.getState().writeFailed) storageHealth.setState({ writeFailed: true })
+}
+
+export function reportNewerVersion(): void {
+  if (!storageHealth.getState().newerVersion) storageHealth.setState({ newerVersion: true })
 }
 
 export function reportQuarantined(key: string): void {

@@ -1,7 +1,7 @@
-import { availableSet, hasEquipment } from '../../domain/equipment'
-import { resolveExercise, type ResolveContext } from '../../domain/resolve'
-import type { CustomExercise, Exercise } from '../../domain/schema'
-import { allHeadsOfGroup } from '../../domain/taxonomy'
+import { availableSet, hasEquipment } from './equipment.ts'
+import { resolveExercise, type ResolveContext } from './resolve.ts'
+import type { CustomExercise, Exercise } from './schema.ts'
+import { allHeadsOfGroup } from './taxonomy.ts'
 
 type AnyExercise = Exercise | CustomExercise
 

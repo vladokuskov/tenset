@@ -86,10 +86,6 @@ export function frameImplements(b: Baked, i: number): ImplementPose[] {
   })
 }
 
-export function framePose(b: Baked, i: number): Pose {
-  return { q: frameQ(b, i), implements: frameImplements(b, i), contacts: b.contacts }
-}
-
 const cr = (p0: number, p1: number, p2: number, p3: number, t: number) =>
   p1 + 0.5 * t * (p2 - p0 + t * (2 * p0 - 5 * p1 + 4 * p2 - p3 + t * (3 * (p1 - p2) + p3 - p0)))
 

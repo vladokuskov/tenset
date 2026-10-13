@@ -24,6 +24,31 @@ describe('labelFocus', () => {
     expect(labelFocus('Monday session')).toBeNull()
     expect(labelFocus(undefined)).toBeNull()
   })
+
+  it.each([
+    ['Верх', 'chest', 'calves'],
+    ['Верх A', 'lats', 'quads'],
+    ['Ноги', 'calves', 'chest'],
+    ['Низ B', 'hamstrings', 'biceps'],
+    ['Груди + трицепс', 'chest', 'lats'],
+    ['Спина', 'lats', 'chest'],
+    ['Жими A', 'triceps', 'lats'],
+    ['Тяги', 'biceps', 'chest'],
+    ['Плечі', 'side_delt', 'quads'],
+    ['Руки', 'biceps', 'quads'],
+    ['Верх тела', 'chest', 'calves'],
+    ['Ноги и ягодицы', 'quads', 'chest'],
+  ])('reads %s as a focus', (label, inFocus, outside) => {
+    const focus = labelFocus(label)
+    expect(focus?.has(inFocus)).toBe(true)
+    expect(focus?.has(outside)).toBe(false)
+  })
+
+  it('reads full body in Ukrainian and Russian as no focus', () => {
+    expect(labelFocus('Все тіло A')).toBeNull()
+    expect(labelFocus('Всё тело')).toBeNull()
+    expect(labelFocus('Тяжкий день')).toBeNull()
+  })
 })
 
 describe('dayFit', () => {
@@ -33,6 +58,11 @@ describe('dayFit', () => {
     expect(fit('lats')).toBe(2)
     expect(fit('calves')).toBe(0)
     expect(fit('abs')).toBe(1)
+  })
+
+  it('puts a group another day carries after one no day trains, on a day with no focus', () => {
+    const fit = dayFit(weekOf({ 1: [[CALF_RAISE.id, 3]] }), 0, undefined)
+    expect(fit('calves')).toBeLessThan(fit('lats'))
   })
 
   it('has no preference on an empty or full body day', () => {

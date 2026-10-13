@@ -18,8 +18,6 @@ export const highlightColors: Record<HighlightRole, string> = {
   secondary: '#f59a55',
 }
 
-export const noHighlight: FigureHighlight = {}
-
 function expand(ids: readonly string[] | undefined, out: Set<string>) {
   for (const id of ids ?? []) {
     if (isGroup(id)) for (const h of headsOfGroup(id)) out.add(h)
@@ -35,10 +33,6 @@ export function resolveHighlight(h: FigureHighlight | undefined): ResolvedHighli
   expand(h?.secondary, secondary)
   for (const id of primary) secondary.delete(id)
   return { primary, secondary, side: h?.side }
-}
-
-export function isEmptyHighlight(h: FigureHighlight | undefined) {
-  return !h?.primary?.length && !h?.secondary?.length
 }
 
 /** "biceps:p,brachialis:p,forearms:s,side=r" -> highlight (dev route and QA renders); a "head." prefix is ignored */

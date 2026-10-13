@@ -434,12 +434,6 @@ export function computeGrip(grip: GripName, diameter = defaultDiameter[grip]): G
 
 const POSED_BONES = HAND_BONES.filter((n) => !n.startsWith('metacarpal'))
 
-/** euler (ZYX, degrees) per posed bone, then handle centre and axis: the compact form of the baked table */
-export function packGrip(s: GripSolution) {
-  const r = (v: number, k: number) => Math.round(v * k) / k
-  return [...POSED_BONES.flatMap((n) => eulerDeg(s.deltas[n])), ...s.handle.center.toArray().map((v) => r(v, 1e6)), ...s.handle.axis.toArray().map((v) => r(v, 1e6))]
-}
-
 export function unpackGrip(grip: GripName, diameter: number, v: readonly number[]): GripSolution {
   const deltas: Deltas = {}
   POSED_BONES.forEach((n, i) => {
@@ -558,4 +552,3 @@ export function gripGaps(s: GripSolution) {
   }
   return out
 }
-

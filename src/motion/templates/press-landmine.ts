@@ -280,6 +280,3 @@ export function sampleLandmine(u: number, skel: Skeleton, ctx: LandmineCtx): Pos
   const { q, bar } = landmineFrame(skel, ctx, c)
   return { q, implements: [bar, ...ctx.fixed], contacts: ctx.setup.contacts }
 }
-
-/** the bar's angle above horizontal along the rep, deg (for the tests) */
-export const landminePitch = pitchAt

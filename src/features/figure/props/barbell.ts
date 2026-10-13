@@ -1,4 +1,3 @@
-import { Vector3 } from 'three'
 import { barbell as barbellSpec, ezBar as ezBarSpec, type ImplementSpec, type Part } from '../../../motion/implements.ts'
 import { finish, Kit, type PropBuild } from './kit.ts'
 import { gripSocket, type GripSocket } from './sockets.ts'
@@ -135,9 +134,4 @@ export function buildEzBar(p: EzBarParams = {}): PropBuild<BarSockets> {
     }
   }
   return finish(kit, sockets(spec, collarX))
-}
-
-/** a bar's grip socket after moving the bar by `pos` (no rotation) */
-export function shiftedGrip(g: GripSocket, pos: Vector3): GripSocket {
-  return { position: g.position.clone().add(pos), axis: g.axis.clone() }
 }

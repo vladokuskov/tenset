@@ -145,5 +145,3 @@ export function FigureStage({ pose, view, variant, correctives, focus, highlight
     </Canvas>
   )
 }
-
-export default FigureStage

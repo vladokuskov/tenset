@@ -1,10 +1,18 @@
 import { encode } from 'uqr'
-import { encodeProgram } from '../../domain/codec'
+import { ShareLinkError, encodeProgram } from '../../domain/codec'
 import type { Program } from '../../domain/schema'
 
-/** Absolute /shared link; the program travels in the fragment, which browsers never send to a server. */
-export function shareUrl(program: Program, origin: string, base = '/'): string {
-  return `${origin}${base.endsWith('/') ? base : `${base}/`}shared#${encodeProgram(program)}`
+/**
+ * Absolute /shared link; the program travels in the fragment, which browsers never send to a server.
+ * Null when the program is too large for a link.
+ */
+export function shareUrl(program: Program, origin: string, base = '/'): string | null {
+  try {
+    return `${origin}${base.endsWith('/') ? base : `${base}/`}shared#${encodeProgram(program)}`
+  } catch (e) {
+    if (e instanceof ShareLinkError) return null
+    throw e
+  }
 }
 
 export type QrModules = { size: number; path: string; version: number }

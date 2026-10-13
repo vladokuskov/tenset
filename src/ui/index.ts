@@ -3,7 +3,7 @@ export { Chip, ChipGroup, type ChipGroupProps, type ChipOption, type ChipProps }
 export { cx } from './cx'
 export { EmptyState, type EmptyStateProps } from './EmptyState'
 export { IconButton, type IconButtonProps } from './IconButton'
-export { IconLink, LinkButton } from './links'
+export { LinkButton } from './links'
 export { LanguageCards, LanguageToggle } from './LanguageToggle'
 export { NavRail } from './NavRail'
 export { NAV_ITEMS, type NavItem } from './nav'

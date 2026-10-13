@@ -1,6 +1,7 @@
 import { sequentialIds, type IdFactory } from './ids.ts'
 import { normalizeSupersets } from './program.ts'
-import { Program, type CustomExercise, type Day, type Entry, type ExerciseRef } from './schema.ts'
+import { validateProgram } from './validateProgram.ts'
+import type { CustomExercise, Day, Entry, ExerciseRef, Program } from './schema.ts'
 
 // Share link format. Version byte first, then a compact binary program, then base64url.
 // The tables below are part of the v1 wire format: append only, never reorder or remove.
@@ -246,16 +247,8 @@ export function decodeProgram(input: string, opts: DecodeOptions = {}): DecodeRe
     throw e
   }
 
-  const parsed = Program.safeParse(candidate)
-  if (!parsed.success) return { ok: false, error: 'invalid' }
-  const customIds = new Set(parsed.data.custom.map((c) => c.id))
-  if (customIds.size !== parsed.data.custom.length) return { ok: false, error: 'invalid' }
-  for (const d of parsed.data.days) {
-    for (const e of d.entries) {
-      if (typeof e.exerciseId === 'string' && !customIds.has(e.exerciseId)) return { ok: false, error: 'invalid' }
-    }
-  }
-  return { ok: true, program: parsed.data }
+  const program = validateProgram(candidate)
+  return program ? { ok: true, program } : { ok: false, error: 'invalid' }
 }
 
 function readExtension(r: ReturnType<typeof reader>, entry: Entry, version: number) {

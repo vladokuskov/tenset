@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { activeExercises, catalog, exerciseBySlug } from '../data/catalog'
 import type { CustomExercise } from '../domain/schema'
 import { programOf } from '../domain/test-fixtures'
-import { alternativesFor } from '../features/catalog/alternatives'
-import { posterUrl } from '../features/catalog/posters'
+import { alternativesFor } from '../domain/alternatives'
+import { posterUrl } from '../data/posters'
 import { programPosters, type WarmPrefs } from './warmPosters'
 
 const prefs: WarmPrefs = { equipment: ['barbell', 'dumbbell', 'flat_bench', 'adjustable_bench', 'rack', 'cable'], countingMode: 'fractional', overrides: {} }
