@@ -42,10 +42,10 @@ export function CoverageCard({ view, compact }: { view: WeekView; compact?: bool
   )
 
   return (
-    <section className="rounded-xl bg-surface p-4" aria-label={m.weekCoverage}>
+    <section className="@container rounded-xl bg-surface p-4" aria-label={m.weekCoverage}>
       <div className="flex items-center gap-4">
         {!compact && (
-          <PulseMini view="both" groups={week.weekly} height={112} pulseScope="week" label={m.weekCoverageMap} />
+          <PulseMini view="both" groups={week.weekly} height={112} pulseScope="week" label={m.weekCoverageMap} className="@max-xs:hidden" />
         )}
         <div className="min-w-0">
           {bands.below.length > 0 ? (

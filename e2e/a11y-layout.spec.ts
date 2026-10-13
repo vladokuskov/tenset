@@ -211,6 +211,19 @@ test.describe('200% text size', () => {
     expect(await horizontalOverflow(page), '/body').toBeLessThanOrEqual(0)
   })
 
+  test('the Plan headline stays inside its card in Ukrainian', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 })
+    await startInUkrainian(page)
+    await zoom(page)
+    const card = page.getByRole('region', { name: 'Охоплення тижня' })
+    await expect(card.getByRole('button', { name: /основних груп/ })).toBeVisible()
+    const spill = await card.evaluate((el) => {
+      const edge = el.getBoundingClientRect().right
+      return Math.max(0, ...[...el.querySelectorAll('*')].map((c) => c.getBoundingClientRect().right - edge))
+    })
+    expect(spill).toBeLessThanOrEqual(1)
+  })
+
   test('Day screen opens without horizontal scroll', async ({ page }) => {
     await startFromTemplate(page, 'Upper/Lower 4x')
     await openDay(page, 'Monday')
