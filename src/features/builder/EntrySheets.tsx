@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowLeftRight, CalendarArrowUp, ChevronRight, Copy, Info, Trash2, type LucideIcon } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { ArrowDown, ArrowLeftRight, ArrowUp, CalendarArrowUp, ChevronRight, Copy, Info, Trash2, type LucideIcon } from 'lucide-react'
+import { useRef, useState, type ReactNode, type Ref } from 'react'
 import { dayName, type DayIndex } from '../../app/days'
 import { formatDaySummary, joinMeta } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
@@ -24,10 +24,12 @@ import { undoLastChange, useChange } from './useChange'
 
 const rowClass = 'flex min-h-12 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-2'
 
-function ActionRow({ icon: Icon, label, onClick, tone }: { icon: LucideIcon; label: string; onClick: () => void; tone?: 'plain' }) {
+type ActionRowProps = { icon: LucideIcon; label: string; onClick: () => void; tone?: 'plain'; disabled?: boolean; ref?: Ref<HTMLButtonElement> }
+
+function ActionRow({ icon: Icon, label, onClick, tone, disabled, ref }: ActionRowProps) {
   return (
     <li>
-      <button type="button" onClick={onClick} className={rowClass}>
+      <button ref={ref} type="button" disabled={disabled} onClick={onClick} className={cx(rowClass, 'disabled:opacity-45 disabled:hover:bg-transparent')}>
         <Icon size={20} strokeWidth={1.75} className={cx('shrink-0', tone ? 'text-ink' : 'text-ink-2')} aria-hidden />
         <span className="flex-1">{label}</span>
       </button>
@@ -74,6 +76,10 @@ type EntryData = { found: { day: number; index: number; entry: Entry }; exercise
 function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: () => void; data: EntryData; onSwitch: (name: string) => void }) {
   const setSets = useProgramStore((s) => s.setSets)
   const removeEntry = useProgramStore((s) => s.removeEntry)
+  const reorder = useProgramStore((s) => s.reorder)
+  const view = useWeek()
+  const upRef = useRef<HTMLButtonElement>(null)
+  const downRef = useRef<HTMLButtonElement>(null)
   const change = useChange()
   const locale = useLocale()
   const m = builderMessages[locale]
@@ -86,13 +92,20 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   }
   if (!data) return <Sheet open={false} onClose={onClose} title={m.exercise} />
 
-  const { entry, day } = data.found
+  const { entry, day, index } = data.found
   const ex = data.exercise
-  const run = (message: string, action: () => void) => {
-    const res = change(message, action, { toast: false })
+  const run = (message: string, action: () => void, noteSplit?: boolean) => {
+    const res = change(message, action, { toast: false, noteSplit })
     if (res) setStatus(res.message)
   }
   const unit = unitOf(ex)
+  const count = view?.program.days[day]?.entries.length ?? 0
+  const move = (to: number) => {
+    run(m.movedToPosition(ex.name, to + 1), () => reorder(day, index, to), true)
+    // The pressed button is disabled at either end, so focus moves to the other one.
+    if (to === 0) downRef.current?.focus()
+    if (to === count - 1) upRef.current?.focus()
+  }
 
   return (
     <Sheet
@@ -120,6 +133,12 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
       <SupersetToggle entry={entry} index={data.found.index} day={day} exercise={ex} onChange={run} className="-mx-2 mt-4" />
 
       <ul className="-mx-2 mt-5 border-t border-line pt-2">
+        {count > 1 && (
+          <>
+            <ActionRow ref={upRef} icon={ArrowUp} label={m.moveUp} disabled={index === 0} onClick={() => move(index - 1)} />
+            <ActionRow ref={downRef} icon={ArrowDown} label={m.moveDown} disabled={index >= count - 1} onClick={() => move(index + 1)} />
+          </>
+        )}
         <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => onSwitch('swap')} />
         <ActionRow icon={CalendarArrowUp} label={m.moveOther} onClick={() => onSwitch('move')} />
         <ActionRow icon={Copy} label={m.copyOther} onClick={() => onSwitch('copy')} />
