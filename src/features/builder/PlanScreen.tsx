@@ -97,7 +97,7 @@ export function PlanScreen() {
     </button>
   )
   const more = <IconButton icon={Ellipsis} label={m.more} onClick={() => menu.show()} />
-  const header = <PageHeader title={title} actions={more} settings />
+  const header = <PageHeader title={title} compactTitle={view.program.name} actions={more} settings />
 
   if (desktop) {
     // The board has room for the two actions people look for first; the rest stay in the menu.

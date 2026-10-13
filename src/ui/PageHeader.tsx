@@ -38,6 +38,8 @@ export function BackButton({ to, label, iconOnly, className }: BackTarget & { ic
 
 export type PageHeaderProps = {
   title: ReactNode
+  /** Plain text for the toolbar copy when `title` holds a control (the copy is aria-hidden). */
+  compactTitle?: string
   subtitle?: ReactNode
   /** Pushed screens show a visible back button (Home Screen mode has no browser chrome). */
   back?: BackTarget & { className?: string }
@@ -54,7 +56,7 @@ export type PageHeaderProps = {
  * Sticky translucent toolbar plus a large title that scrolls away; the title moves into the
  * toolbar once it is out of view so context is never lost.
  */
-export function PageHeader({ title, subtitle, back, actions, children, settings, className }: PageHeaderProps) {
+export function PageHeader({ title, compactTitle, subtitle, back, actions, children, settings, className }: PageHeaderProps) {
   const m = useMessages(uiMessages)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [compact, setCompact] = useState(false)
@@ -91,7 +93,7 @@ export function PageHeader({ title, subtitle, back, actions, children, settings,
               compact ? 'opacity-100' : 'invisible opacity-0',
             )}
           >
-            {title}
+            {compactTitle ?? title}
           </p>
         </div>
         <div

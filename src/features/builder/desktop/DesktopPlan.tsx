@@ -109,6 +109,7 @@ export function DesktopPlan({ view, title, actions, onAdd, children }: DesktopPl
   const header = (
     <PageHeader
       title={title}
+      compactTitle={view.program.name}
       actions={
         <>
           {!wide && (

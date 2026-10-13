@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Page } from '@playwright/test'
-import { expect, openDay, openSheet, shareLink, startFromTemplate, test } from './fixtures'
+import { expect, isDesktop, openDay, openSheet, shareLink, startFromTemplate, test } from './fixtures'
 
 function axeSource(): string | null {
   try {
@@ -45,6 +45,12 @@ test.describe('axe: no serious or critical violations', () => {
       }
 
       await check('plan')
+      if (!isDesktop(page)) {
+        // Scrolled, the header repeats the title in its toolbar.
+        await page.mouse.wheel(0, 600)
+        await expect(page.locator('[data-compact]')).toBeAttached()
+        await check('plan scrolled')
+      }
       await openDay(page, 'Monday')
       await check('day')
       await page.getByRole('button', { name: 'Add exercise' }).click()
