@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BodyTooLarge, readBody } from './body.ts'
 import { ProgramInput, ReadInput, SearchInput } from './inputs.ts'
 import { ToolError, createProgram, getReference, listSplits, readProgram, searchExercises } from './tools.ts'
 
@@ -10,10 +11,10 @@ const ROUTES = [
   'GET /api/agent/reference',
   'GET /api/agent/splits',
   'GET /api/agent/exercises?query=&group=&pattern=&equipment=barbell,dumbbell&limit=',
-  'GET /api/agent/program?program=<url-encoded JSON>',
-  'POST /api/agent/program (JSON body)',
-  'GET /api/agent/read?link=<share link, url-encoded>',
-  'POST /api/agent/read ({"link": "..."})',
+  'POST /api/agent/program (JSON body, preferred)',
+  'GET /api/agent/program?program=<url-encoded JSON> (only if you cannot POST)',
+  'POST /api/agent/read ({"link": "..."}, preferred)',
+  'GET /api/agent/read?link=<share link, url-encoded> (only if you cannot POST)',
 ]
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type' }
@@ -47,8 +48,9 @@ function jsonParam(params: URLSearchParams, name: string): unknown {
 }
 
 async function body(request: Request): Promise<unknown> {
+  const text = await readBody(request)
   try {
-    return await request.json()
+    return JSON.parse(text)
   } catch {
     throw new BadInput(['body is not valid JSON'])
   }
@@ -95,6 +97,7 @@ export async function handleAgentRequest(request: Request): Promise<Response> {
     return reply(405, { error: `${request.method} is not supported here`, routes: ROUTES })
   } catch (e) {
     if (e instanceof BadInput || e instanceof ToolError) return reply(400, { error: 'Fix these and try again', problems: e.problems })
+    if (e instanceof BodyTooLarge) return reply(413, { error: e.message })
     throw e
   }
 }

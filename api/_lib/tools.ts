@@ -1,4 +1,11 @@
-import { CODEC_EQUIPMENT_V1, CODEC_GROUPS_V1, REPS_PRESETS, decodeProgram, encodeProgram } from '../../src/domain/codec.ts'
+import {
+  CODEC_EQUIPMENT_V1,
+  CODEC_GROUPS_V1,
+  REPS_PRESETS,
+  ShareLinkError,
+  decodeProgram,
+  encodeProgram,
+} from '../../src/domain/codec.ts'
 import { equipment, hasEquipment } from '../../src/domain/equipment.ts'
 import { sequentialIds } from '../../src/domain/ids.ts'
 import {
@@ -15,9 +22,11 @@ import {
 } from '../../src/domain/program.ts'
 import { isCustomRef } from '../../src/domain/resolve.ts'
 import { Pattern, Program, type CustomExercise, type Day, type Entry, type Exercise, type ExerciseRef } from '../../src/domain/schema.ts'
+import { buildCatalogIndex, englishSearchLabels, searchCatalog } from '../../src/domain/search.ts'
 import { groups } from '../../src/domain/taxonomy.ts'
 import { bandFor, computeWeek } from '../../src/domain/volume.ts'
 import { catalog, exercises, replacedBy, splits } from './catalog.ts'
+import { ENTRIES_MAX, QUERY_MAX } from './inputs.ts'
 
 export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 
@@ -40,6 +49,8 @@ export class ToolError extends Error {
   }
 }
 
+const activeExercises = exercises.filter((e) => e.status === 'active')
+
 const brief = (e: Exercise) => ({
   id: e.id,
   name: e.name,
@@ -53,16 +64,12 @@ const brief = (e: Exercise) => ({
 
 export type SearchInput = { query?: string; group?: string; pattern?: string; equipment?: string[]; limit?: number }
 
+const searchIndex = buildCatalogIndex(activeExercises, englishSearchLabels)
+
 export function searchExercises({ query, group, pattern, equipment: available, limit = 400 }: SearchInput) {
-  const words = query?.toLowerCase().split(/\s+/).filter(Boolean) ?? []
-  const matches = exercises.filter((e) => {
-    if (e.status !== 'active') return false
-    if (group && !e.groups[group]) return false
-    if (pattern && e.pattern !== pattern) return false
-    if (available && !hasEquipment(e, available)) return false
-    const haystack = [e.name, e.slug, ...e.aliases].join(' ').toLowerCase()
-    return words.every((w) => haystack.includes(w))
-  })
+  const matches = searchCatalog(activeExercises, searchIndex, query ?? '').filter(
+    (e) => (!group || e.groups[group]) && (!pattern || e.pattern === pattern) && (!available || hasEquipment(e, available)),
+  )
   if (group) matches.sort((a, b) => (a.groups[group] === b.groups[group] ? 0 : a.groups[group] === 'primary' ? -1 : 1))
   return { count: matches.length, exercises: matches.slice(0, limit).map(brief) }
 }
@@ -83,6 +90,8 @@ export function getReference() {
       restMaxSec: REST_MAX,
       restStepSec: REST_STEP,
       rirMax: RIR_MAX,
+      entriesPerDayMax: ENTRIES_MAX,
+      queryMax: QUERY_MAX,
     },
   }
 }
@@ -236,7 +245,14 @@ function summarize(program: Program) {
 
 export function createProgram(input: ProgramInput, origin: string) {
   const { program, notes } = buildProgram(input)
-  const url = `${origin.replace(/\/$/, '')}/shared#${encodeProgram(program)}`
+  let fragment: string
+  try {
+    fragment = encodeProgram(program)
+  } catch (e) {
+    if (e instanceof ShareLinkError) throw new ToolError([`program is too large for a share link (${e.message}), use fewer exercises`])
+    throw e
+  }
+  const url = `${origin.replace(/\/$/, '')}/shared#${fragment}`
   return { url, ...summarize(program), ...(notes.length ? { notes } : {}) }
 }
 

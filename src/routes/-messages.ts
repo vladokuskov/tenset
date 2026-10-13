@@ -230,6 +230,8 @@ export const privacyMessages = defineMessages({
     claudeTitle: 'Building a program with Claude',
     claude:
       "If you connect Claude to this site, Claude sends the program it drafts to this site's server, which checks it and turns it into a share link. The program is handled in memory and not stored. This only happens when you use that connection; the app itself never sends your programs anywhere. What you tell Claude is covered by Anthropic's terms, not this page.",
+    claudeGet:
+      "AI tools can also reach the same checks over plain web requests; when one sends the program in the request address (a GET request) instead of the request body, the program becomes part of the address requested, which Vercel may keep briefly in its logs.",
     hostingTitle: 'Hosting',
     hosting: (policy: ReactNode): ReactNode[] => [
       "The app's files are served by Vercel Inc. as a processor on our behalf. To deliver them, Vercel handles standard request data such as your IP address, browser type, the address requested and the time, and may keep it briefly in logs for security and reliability. See ",
@@ -272,6 +274,8 @@ export const privacyMessages = defineMessages({
     claudeTitle: 'Створення програми з Claude',
     claude:
       'Якщо ви підключите Claude до цього сайту, Claude надсилає складену програму на сервер цього сайту, який перевіряє її та перетворює на посилання. Програма обробляється в памʼяті й не зберігається. Це відбувається лише тоді, коли ви користуєтеся цим підключенням; сам застосунок ніколи нікуди не надсилає ваші програми. Те, що ви повідомляєте Claude, регулюють умови Anthropic, а не ця сторінка.',
+    claudeGet:
+      'AI-інструменти також можуть звертатися до тих самих перевірок звичайними вебзапитами; якщо такий інструмент надсилає програму в адресі запиту (GET-запит), а не в тілі запиту, програма стає частиною запитаної адреси, яку Vercel може ненадовго зберігати в журналах.',
     hostingTitle: 'Хостинг',
     hosting: (policy) => [
       'Файли застосунку надає Vercel Inc. як обробник даних від нашого імені. Щоб доставити їх, Vercel обробляє стандартні дані запиту, як-от вашу IP-адресу, тип браузера, запитану адресу та час, і може ненадовго зберігати їх у журналах для безпеки й надійності. Див. ',

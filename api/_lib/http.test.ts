@@ -13,6 +13,7 @@ type Body = {
   equipment: unknown[]
   exercises: { id: number; equipment: unknown[] }[]
   length: number
+  limits: object
 }
 
 async function call(path: string, init?: RequestInit) {
@@ -80,4 +81,29 @@ it('rejects unknown routes and methods', async () => {
   expect(missing.body.routes.length).toBeGreaterThan(0)
   expect((await call('reference', post({}))).status).toBe(405)
   expect((await handleAgentRequest(new Request(`${BASE}/program`, { method: 'OPTIONS' }))).status).toBe(204)
+})
+
+it('caps input sizes with clear errors', async () => {
+  const entries = Array.from({ length: 41 }, () => ({ exerciseId: 101, sets: 3 }))
+  const many = await call('program', post({ name: 'Big', days: [{ day: 0, entries }] }))
+  expect(many.status).toBe(400)
+  expect(many.body.problems.join()).toMatch(/at most 40 exercises per day/)
+
+  const query = await call(`exercises?query=${'a%20'.repeat(201)}`)
+  expect(query.status).toBe(400)
+  expect(query.body.problems.join()).toMatch(/query is over 200 characters/)
+
+  const link = await call('read', post({ link: `https://example.test/shared#${'A'.repeat(20000)}` }))
+  expect(link.status).toBe(400)
+  expect(link.body.problems.join()).toMatch(/link is over/)
+})
+
+it('refuses an oversized body', async () => {
+  const res = await call('program', post({ name: 'Big', days: [], pad: 'x'.repeat(200 * 1024) }))
+  expect(res.status).toBe(413)
+})
+
+it('lists the entry and query caps in the reference', async () => {
+  const ref = await call('reference')
+  expect(ref.body.limits).toMatchObject({ entriesPerDayMax: 40, queryMax: 200 })
 })

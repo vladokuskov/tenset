@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { decodeProgram } from '../../src/domain/codec.ts'
 import type { Exercise } from '../../src/domain/schema.ts'
-import { catalog } from './catalog.ts'
+import { buildCatalogIndex, englishSearchLabels, searchCatalog } from '../../src/domain/search.ts'
+import { catalog, exercises } from './catalog.ts'
 import { ToolError, createProgram, getReference, listSplits, readProgram, searchExercises, type ProgramInput } from './tools.ts'
 
 const ORIGIN = 'https://example.test'
@@ -145,6 +146,13 @@ describe('createProgram', () => {
   })
 })
 
+it('refuses a program its share link could not carry', () => {
+  const entries = Array.from({ length: 256 }, () => ({ exerciseId: 101, sets: 3 }))
+  expect(problemsOf(() => createProgram({ name: 'Big', days: [{ day: 0, entries }] }, ORIGIN))[0]).toMatch(/too large for a share link/)
+  const ok = createProgram({ name: 'Big', days: [{ day: 0, entries: entries.slice(0, 255) }] }, ORIGIN)
+  expect(decodeProgram(ok.url.split('#')[1]).ok).toBe(true)
+})
+
 describe('searchExercises', () => {
   it('filters by group, equipment and words', () => {
     const { exercises } = searchExercises({ group: 'chest', equipment: ['dumbbell', 'flat_bench', 'adjustable_bench'] })
@@ -152,6 +160,27 @@ describe('searchExercises', () => {
     expect(exercises[0].groups.chest).toBe('primary')
     for (const e of exercises) expect(e.equipment.every((x) => ['dumbbell', 'flat_bench', 'adjustable_bench'].includes(x))).toBe(true)
     expect(searchExercises({ query: 'bench press' }).exercises.map((e) => e.id)).toContain(101)
+  })
+
+  it('matches spellings the app search folds', () => {
+    const pullUps = (q: string) => searchExercises({ query: q }).exercises.map((e) => e.id)
+    expect(pullUps('pullup').toSorted()).toEqual(pullUps('pull-up').toSorted())
+    expect(pullUps('pullup').length).toBeGreaterThan(5)
+    expect(searchExercises({ query: 'bench pres' }).exercises.map((e) => e.id)).toContain(101)
+  })
+
+  it('uses the shared search core, so results match the app', () => {
+    const active = exercises.filter((e) => e.status === 'active')
+    const index = buildCatalogIndex(active, englishSearchLabels)
+    for (const q of ['pullup', 'pull up', 'bench pres', 'chinup', 'chest', 'row', 'cable curl']) {
+      expect(searchExercises({ query: q }).exercises.map((e) => e.id), q).toEqual(searchCatalog(active, index, q).map((e) => e.id))
+    }
+  })
+
+  it('ranks primary movers first for a muscle word', () => {
+    const list = searchExercises({ query: 'chest' }).exercises
+    const firstOther = list.findIndex((e) => e.groups.chest !== 'primary')
+    expect(list.slice(firstOther).every((e) => e.groups.chest !== 'primary')).toBe(true)
   })
 
   it('returns the whole active catalog without filters', () => {

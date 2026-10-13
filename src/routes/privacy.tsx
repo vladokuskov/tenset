@@ -56,6 +56,7 @@ function PrivacyPage() {
 
         <Section title={m.claudeTitle}>
           <p className="px-1">{m.claude}</p>
+          <p className="mt-3 px-1">{m.claudeGet}</p>
         </Section>
 
         <Section title={m.hostingTitle}>
