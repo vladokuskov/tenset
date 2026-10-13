@@ -141,6 +141,9 @@ test.describe('stale chunks after a deploy', () => {
     await navLink(page, 'Body').click()
     const retry = page.getByRole('button', { name: 'Try again' })
     await expect(retry).toBeVisible({ timeout: 10_000 })
+    // The error shows inside the app shell, so the other screens stay one tap away.
+    await expect(page.locator('#content').getByRole('heading', { name: 'This screen failed to load' })).toBeVisible()
+    await expect(navLink(page, 'Exercises')).toBeVisible()
     gone = false
     await retry.click()
     await expect(pageTitle(page)).toHaveText('Body')
@@ -186,6 +189,23 @@ test.describe('Ukrainian at 320px', () => {
   test('Plan week rows keep the day summary and muscles readable', async ({ page }) => {
     await startInUkrainian(page)
     expect(await clippedText(page, '[aria-label="Тиждень"] li a span')).toEqual([])
+  })
+
+  test('Settings keeps the goal options and current values readable', async ({ page }) => {
+    await startInUkrainian(page)
+    await page.goto('/settings')
+    await expect(pageTitle(page)).toHaveText('Налаштування')
+    expect(await clippedText(page, '#content [role="radio"], #content span.num')).toEqual([])
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  })
+
+  test('the This day card title stays on one line', async ({ page }) => {
+    await startInUkrainian(page)
+    await page.goto('/day/mon')
+    const title = page.getByRole('region', { name: 'Цей день' }).getByText('Цей день', { exact: true })
+    await expect(title).toBeVisible()
+    const lines = await title.evaluate((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight))
+    expect(lines).toBeLessThan(1.5)
   })
 
   test('Body coverage list keeps muscle names readable', async ({ page }) => {
@@ -259,6 +279,19 @@ test.describe('200% text size', () => {
     expect(Math.min(...nameWidths), 'exercise name column, in ems').toBeGreaterThanOrEqual(5)
   })
 
+  test('Day screen in Ukrainian at 320px keeps the title and Add button inside the screen', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 })
+    await startInUkrainian(page)
+    await page.goto('/day/mon')
+    await expect(pageTitle(page)).toBeVisible()
+    await zoom(page)
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+    const title = await pageTitle(page).evaluate((el) => el.scrollWidth - el.clientWidth)
+    expect(title, 'title overflow').toBeLessThanOrEqual(0)
+    const add = await page.getByRole('button', { name: 'Додати вправу' }).evaluate((el) => el.scrollWidth - el.clientWidth)
+    expect(add, 'Add button overflow').toBeLessThanOrEqual(0)
+  })
+
   test('day chips wrap in the day picker', async ({ page }) => {
     await startFromTemplate(page, 'Upper/Lower 4x')
     await page.goto('/exercise/barbell-bench-press')
@@ -290,5 +323,25 @@ test.describe('Phone at 390px', () => {
   test('Plan rows keep the session time', async ({ page }) => {
     await startFromTemplate(page, 'Upper/Lower 4x')
     expect(await clippedText(page, '[aria-label="Week"] li a span')).toEqual([])
+  })
+})
+
+test.describe('Ukrainian rail at 1280px', () => {
+  test.use({ viewport: { width: 1280, height: 800 } })
+
+  test('rail labels stay inside the rail', async ({ page }) => {
+    await startInUkrainian(page)
+    const rail = page.getByRole('navigation', { name: 'Головне' }).filter({ visible: true })
+    await expect(rail).toBeVisible()
+    const spill = await rail.evaluate((nav) => {
+      const { left, right } = nav.getBoundingClientRect()
+      return Math.max(0, ...[...nav.querySelectorAll('a')].map((a) => {
+        const text = document.createRange()
+        text.selectNodeContents(a)
+        const r = text.getBoundingClientRect()
+        return Math.max(left + 4 - r.left, r.right - (right - 4))
+      }))
+    })
+    expect(spill).toBeLessThanOrEqual(0)
   })
 })

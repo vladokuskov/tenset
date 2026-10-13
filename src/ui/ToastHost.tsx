@@ -38,17 +38,17 @@ export function ToastHost() {
         {toast && (
           <div
             key={toast.id}
-            className="toast-enter pointer-events-auto flex min-h-12 items-center gap-3 rounded-lg bg-ink py-1.5 pl-4 pr-1.5 text-on-ink shadow-float"
+            className="toast-enter pointer-events-auto flex min-h-12 flex-wrap items-center gap-x-3 rounded-lg bg-ink py-1.5 pl-4 pr-1.5 text-on-ink shadow-float"
             onPointerEnter={() => setPaused(true)}
             onPointerLeave={() => setPaused(false)}
             onFocus={() => setPaused(true)}
             onBlur={() => setPaused(false)}
           >
-            <p className="num min-w-0 flex-1 py-1.5 text-sm">{toast.message}</p>
+            <p className="num min-w-[min(12rem,100%)] flex-1 py-1.5 text-sm">{toast.message}</p>
             {toast.action && (
               <button
                 type="button"
-                className="hit h-10 shrink-0 rounded-md px-3 text-sm font-semibold text-accent-soft hover:bg-on-ink/10"
+                className="hit ml-auto h-10 shrink-0 rounded-md px-3 text-sm font-semibold text-accent-soft hover:bg-on-ink/10"
                 onClick={() => {
                   toast.action?.onAction()
                   dismissToast(toast.id)

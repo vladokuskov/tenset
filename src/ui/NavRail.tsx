@@ -25,7 +25,7 @@ function RailLink({ to, label, icon, current }: { to: LinkProps['to']; label: st
       >
         {icon}
       </span>
-      {label}
+      <span className="max-w-[calc(var(--rail-w)-1rem)] break-words text-center leading-tight hyphens-auto">{label}</span>
     </Link>
   )
 }

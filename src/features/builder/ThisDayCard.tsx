@@ -45,13 +45,13 @@ export function ThisDayCard({ view, day }: { view: WeekView; day: DayIndex }) {
         onClick={toggle}
         className="flex min-h-12 w-full items-center gap-3 px-4 text-left"
       >
-        <span className="flex-1 text-base font-semibold">{m.thisDay}</span>
+        <span className="shrink-0 text-base font-semibold">{m.thisDay}</span>
         {!open && top.length > 0 && (
-          <span className="num min-w-0 truncate text-sm text-ink-2">
+          <span className="num min-w-0 flex-1 truncate text-right text-sm text-ink-2">
             {m.mostSetsOn(top.slice(0, 2).map(([g]) => groupName(g, locale)).join(', '))}
           </span>
         )}
-        <ChevronDown size={18} strokeWidth={1.75} aria-hidden className={cx('shrink-0 text-ink-3 transition-transform', open && 'rotate-180')} />
+        <ChevronDown size={18} strokeWidth={1.75} aria-hidden className={cx('ml-auto shrink-0 text-ink-3 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
         <div id={bodyId} className="flex gap-4 px-4 pb-4">

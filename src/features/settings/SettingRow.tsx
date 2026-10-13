@@ -17,7 +17,7 @@ export function SettingRow({ label, hint, children }: { label: ReactNode; hint?:
 export function SettingValue({ children, action }: { children: ReactNode; action: ReactNode }) {
   return (
     <>
-      <span className="num min-w-0 flex-1 truncate text-base text-ink-2 md:text-right">{children}</span>
+      <span className="num min-w-0 flex-1 break-words text-base text-ink-2 md:text-right">{children}</span>
       {action}
     </>
   )

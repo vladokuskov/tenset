@@ -65,7 +65,7 @@ export function StickyActions({ children, className }: { children: ReactNode; cl
       className="glass fixed inset-x-0 z-20 border-t border-line"
       style={{ bottom: 'var(--chrome-bottom)', left: 'var(--chrome-left)' }}
     >
-      <div className={cx('mx-auto flex h-[4.75rem] w-full max-w-[var(--page-max)] items-center gap-3 px-gutter', className)}>
+      <div className={cx('mx-auto flex h-[4.75rem] w-full max-w-[var(--page-max)] items-center gap-3 px-gutter [&>*]:whitespace-normal', className)}>
         {children}
       </div>
     </div>

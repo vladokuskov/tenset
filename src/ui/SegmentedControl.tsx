@@ -72,7 +72,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             className={cx(
               // Each segment carries its own 44px hit area; one on the group would sit over the segments and swallow taps.
-              'hit flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-[calc(var(--radius-md)-2px)] px-3 font-medium transition-[background-color,color,box-shadow] duration-150',
+              'hit flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[calc(var(--radius-md)-2px)] px-3 text-center font-medium leading-tight transition-[background-color,color,box-shadow] duration-150',
               size === 'md' ? 'text-sm' : 'text-xs',
               checked ? 'bg-thumb text-ink shadow-thumb' : 'text-ink-2 hover:text-ink',
               'disabled:opacity-40',
