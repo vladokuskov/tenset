@@ -15,6 +15,7 @@ import {
 } from '../../src/domain/program.ts'
 import { isCustomRef } from '../../src/domain/resolve.ts'
 import { Pattern, Program, type CustomExercise, type Day, type Entry, type Exercise, type ExerciseRef } from '../../src/domain/schema.ts'
+import { buildCatalogIndex, englishSearchLabels, searchCatalog } from '../../src/domain/search.ts'
 import { groups } from '../../src/domain/taxonomy.ts'
 import { bandFor, computeWeek } from '../../src/domain/volume.ts'
 import { catalog, exercises, replacedBy, splits } from './catalog.ts'
@@ -40,6 +41,8 @@ export class ToolError extends Error {
   }
 }
 
+const activeExercises = exercises.filter((e) => e.status === 'active')
+
 const brief = (e: Exercise) => ({
   id: e.id,
   name: e.name,
@@ -53,16 +56,12 @@ const brief = (e: Exercise) => ({
 
 export type SearchInput = { query?: string; group?: string; pattern?: string; equipment?: string[]; limit?: number }
 
+const searchIndex = buildCatalogIndex(activeExercises, englishSearchLabels)
+
 export function searchExercises({ query, group, pattern, equipment: available, limit = 400 }: SearchInput) {
-  const words = query?.toLowerCase().split(/\s+/).filter(Boolean) ?? []
-  const matches = exercises.filter((e) => {
-    if (e.status !== 'active') return false
-    if (group && !e.groups[group]) return false
-    if (pattern && e.pattern !== pattern) return false
-    if (available && !hasEquipment(e, available)) return false
-    const haystack = [e.name, e.slug, ...e.aliases].join(' ').toLowerCase()
-    return words.every((w) => haystack.includes(w))
-  })
+  const matches = searchCatalog(activeExercises, searchIndex, query ?? '').filter(
+    (e) => (!group || e.groups[group]) && (!pattern || e.pattern === pattern) && (!available || hasEquipment(e, available)),
+  )
   if (group) matches.sort((a, b) => (a.groups[group] === b.groups[group] ? 0 : a.groups[group] === 'primary' ? -1 : 1))
   return { count: matches.length, exercises: matches.slice(0, limit).map(brief) }
 }
