@@ -1,0 +1,48 @@
+{
+  "state": {
+    "programs": {
+      "k3x9mq2v7a": {
+        "id": "k3x9mq2v7a",
+        "name": "Upper Lower",
+        "templateId": "upper-lower-4",
+        "days": [
+          {
+            "kind": "train",
+            "label": "Upper",
+            "note": "Bench first",
+            "entries": [
+              { "id": "a1b2c3d4", "exerciseId": 101, "sets": 3, "reps": "8-12", "restSec": 120, "rir": 2 },
+              { "id": "a1b2c3d5", "exerciseId": 205, "sets": 3, "reps": "10" },
+              { "id": "a1b2c3d6", "exerciseId": "c1", "sets": 2, "withPrev": true }
+            ]
+          },
+          { "kind": "train", "label": "Lower", "entries": [{ "id": "b1", "exerciseId": 301, "sets": 4, "reps": "5" }] },
+          { "kind": "rest", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "rest", "entries": [{ "id": "kept-on-rest", "exerciseId": 101, "sets": 1 }] },
+          { "kind": "rest", "entries": [] }
+        ],
+        "custom": [
+          { "id": "c1", "name": "Band pull-apart", "equipment": [], "laterality": "bilateral", "groups": { "rear_delt": "primary", "upper_back": "secondary" } }
+        ]
+      },
+      "z0z0z0z0z0": {
+        "id": "z0z0z0z0z0",
+        "name": "Моя програма",
+        "days": [
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] },
+          { "kind": "train", "entries": [] }
+        ],
+        "custom": []
+      }
+    },
+    "activeId": "z0z0z0z0z0"
+  },
+  "version": 1
+}

@@ -5,7 +5,9 @@ import { presetEquipment, presets } from '../domain/equipment.ts'
 import { Prefs, type TargetPref } from '../domain/schema.ts'
 import { detectLocale, type Locale } from '../i18n/locale.ts'
 import { PREFS_VERSION, prefsMigrations, runMigrations } from './migrations/index.ts'
-import { backupCorrupt, browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
+import { adoptLegacyBackup, quarantine } from './quarantine.ts'
+import { salvagePrefs } from './salvage.ts'
+import { browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
 
 export const PREFS_KEY = 'gb:prefs'
 
@@ -71,6 +73,7 @@ export type PrefsStoreOptions = { storage?: SyncStorage; locale?: string }
 
 export function createPrefsStore(options: PrefsStoreOptions = {}) {
   const storage = options.storage ?? browserStorage()
+  adoptLegacyBackup(storage, PREFS_KEY)
 
   return createStore<PrefsState>()(
     persist(
@@ -118,13 +121,10 @@ export function createPrefsStore(options: PrefsStoreOptions = {}) {
           }
         },
         merge: (persisted, current) => {
-          if (persisted === undefined || persisted === null) return current
-          const parsed = Prefs.safeParse(persisted)
-          if (!parsed.success) {
-            backupCorrupt(storage, PREFS_KEY, JSON.stringify(persisted))
-            return current
-          }
-          return { ...current, ...parsed.data, locale: parsed.data.locale ?? current.locale, targets: parsed.data.targets ?? {} }
+          if (persisted === undefined || persisted === null) return { ...current, ...defaultPrefs(options.locale), locale: current.locale }
+          const { prefs, rejected } = salvagePrefs(persisted)
+          if (rejected !== null) quarantine(storage, PREFS_KEY, rejected)
+          return { ...current, ...prefs, locale: prefs.locale ?? current.locale, targets: prefs.targets ?? current.targets }
         },
       },
     ),

@@ -8,7 +8,7 @@ export const settingsMessages = defineMessages({
   en: {
     title: 'Settings',
     plan: 'Plan',
-    group: { general: 'General', training: 'Training', exercises: 'Exercises' },
+    group: { general: 'General', training: 'Training', exercises: 'Exercises', data: 'Data' },
     goal: 'Goal',
     goalHint: {
       hypertrophy: 'Bands follow the weekly set ranges used in muscle growth research.',
@@ -111,11 +111,26 @@ export const settingsMessages = defineMessages({
     sides: 'Sides',
     laterality: { bilateral: 'Both at once', unilateral: 'One side', alternating: 'Alternating' },
     leaveEmpty: 'Leave empty for bodyweight.',
+
+    // DataSection
+    backup: 'Backup',
+    lastExported: (date: string) => `Last exported ${date}. Programs are kept only in this browser.`,
+    neverExported: 'Not exported yet. Programs are kept only in this browser.',
+    exportBackup: 'Export',
+    setAside: 'Set-aside data',
+    setAsideHint: 'Saved data that could not be read. Download it to keep a copy.',
+    download: 'Download',
+    deleteAll: 'Delete all data on this device',
+    deleteAllHint: 'Removes every program and setting from this browser.',
+    deleteAllButton: 'Delete all',
+    deleteAllConfirm: 'Delete every program and setting on this device? This cannot be undone. Export a backup first to keep a copy.',
+    deletedAll: 'All data on this device was deleted',
+    cancel: common.en.cancel,
   },
   uk: {
     title: 'Налаштування',
     plan: 'План',
-    group: { general: 'Загальні', training: 'Тренування', exercises: 'Вправи' },
+    group: { general: 'Загальні', training: 'Тренування', exercises: 'Вправи', data: 'Дані' },
     goal: 'Мета',
     goalHint: {
       hypertrophy: 'Діапазони відповідають тижневій кількості підходів із досліджень росту мʼязів.',
@@ -216,5 +231,21 @@ export const settingsMessages = defineMessages({
     sides: 'Сторони',
     laterality: { bilateral: 'Обидві разом', unilateral: 'Одна сторона', alternating: 'По черзі' },
     leaveEmpty: 'Залиште порожнім для вправ з власною вагою.',
+
+    backup: 'Резервна копія',
+    // the date already ends with «р.», so it closes the sentence
+    lastExported: (date) => `Програми зберігаються лише в цьому браузері. Останній експорт: ${date}`,
+    neverExported: 'Експорту ще не було. Програми зберігаються лише в цьому браузері.',
+    exportBackup: 'Експортувати',
+    setAside: 'Відкладені дані',
+    setAsideHint: 'Збережені дані, які не вдалося прочитати. Завантажте їх, щоб мати копію.',
+    download: 'Завантажити',
+    deleteAll: 'Видалити всі дані на цьому пристрої',
+    deleteAllHint: 'Видаляє всі програми й налаштування з цього браузера.',
+    deleteAllButton: 'Видалити все',
+    deleteAllConfirm:
+      'Видалити всі програми й налаштування на цьому пристрої? Це не можна скасувати. Щоб мати копію, спершу експортуйте резервну копію.',
+    deletedAll: 'Усі дані на цьому пристрої видалено',
+    cancel: common.uk.cancel,
   },
 })

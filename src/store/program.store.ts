@@ -8,8 +8,12 @@ import * as ops from '../domain/program.ts'
 import type { Catalog } from '../domain/resolve.ts'
 import { Program, type ExerciseRef, type SplitTemplate } from '../domain/schema.ts'
 import { getMessages } from '../i18n/messages.ts'
+import { storeMessages } from './messages.ts'
 import { PROGRAMS_VERSION, programMigrations, runMigrations } from './migrations/index.ts'
-import { backupCorrupt, browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
+import { adoptLegacyBackup, quarantine } from './quarantine.ts'
+import { salvagePrograms } from './salvage.ts'
+import { browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
+import { validateProgram } from './validateProgram.ts'
 
 export const PROGRAMS_KEY = 'gb:programs'
 
@@ -50,6 +54,8 @@ export type ProgramActions = {
   setRir(entryId: string, rir: number | undefined): void
   linkWithPrev(entryId: string, on: boolean): void
   duplicateDay(from: Day, to: Day): void
+  /** Swaps two whole days (kind, label, note and exercises). */
+  moveDay(from: Day, to: Day): void
   clearDay(day: Day): void
   setRest(day: Day): void
   setTrain(day: Day): void
@@ -82,10 +88,31 @@ function normalize(data: PersistedPrograms): PersistedPrograms {
   return { programs, activeId }
 }
 
+function swapDays(program: Program, from: Day, to: Day): Program {
+  const a = program.days[from]
+  const b = program.days[to]
+  if (!a || !b || from === to) return program
+  const days = [...program.days]
+  days[from] = b
+  days[to] = a
+  return { ...program, days }
+}
+
+/** Fits the localized "copy" name into NAME_MAX by shortening the original name, not the suffix. */
+function copyName(name: string): string {
+  const { copyName: format } = getMessages(storeMessages)
+  const over = format(name).length - ops.NAME_MAX
+  return over > 0 ? format(name.slice(0, Math.max(1, name.length - over)).trimEnd()) : format(name)
+}
+
 export function createProgramStore(options: ProgramStoreOptions = {}) {
   const storage = options.storage ?? browserStorage()
+  adoptLegacyBackup(storage, PROGRAMS_KEY)
   const makeId = options.makeId ?? (() => randomId(8))
   const newProgramId = options.newProgramId ?? (() => randomId(10))
+  const json = safeJSONStorage<PersistedPrograms>(storage)
+  // Set when hydrate found programs but none were usable: an empty list is then never written over them.
+  let holdEmpty = false
 
   return createStore<ProgramState>()(
     persist(
@@ -125,16 +152,16 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           },
 
           importProgram: (raw) => {
-            const parsed = Program.safeParse(raw)
-            if (!parsed.success) return null
-            return addProgram('importProgram', ops.normalizeProgramSupersets({ ...parsed.data, id: newProgramId() }))
+            const program = validateProgram(raw)
+            if (!program) return null
+            return addProgram('importProgram', ops.normalizeProgramSupersets({ ...program, id: newProgramId() }))
           },
 
           duplicateProgram: (id) => {
             const src = get().programs[id]
             if (!src) return null
             const copy = structuredClone(src)
-            return addProgram('duplicateProgram', ops.rename({ ...copy, id: newProgramId() }, `${src.name} copy`.slice(0, ops.NAME_MAX)))
+            return addProgram('duplicateProgram', ops.rename({ ...copy, id: newProgramId() }, copyName(src.name)))
           },
 
           // Switching drops the undo snapshot so Undo never edits a program that is not on screen.
@@ -169,6 +196,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           setRir: (entryId, rir) => mutate('setRir', (p) => ops.setRir(p, entryId, rir)),
           linkWithPrev: (entryId, on) => mutate('linkWithPrev', (p) => ops.linkWithPrev(p, entryId, on)),
           duplicateDay: (from, to) => mutate('duplicateDay', (p) => ops.duplicateDay(p, from, to, makeId)),
+          moveDay: (from, to) => mutate('moveDay', (p) => swapDays(p, from, to)),
           clearDay: (day) => mutate('clearDay', (p) => ops.clearDay(p, day)),
           setRest: (day) => mutate('setRest', (p) => ops.setRest(p, day)),
           setTrain: (day) => mutate('setTrain', (p) => ops.setTrain(p, day)),
@@ -200,7 +228,15 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
       {
         name: PROGRAMS_KEY,
         version: PROGRAMS_VERSION,
-        storage: safeJSONStorage<PersistedPrograms>(storage),
+        storage: {
+          ...json,
+          setItem: (name, value) => {
+            const empty = Object.keys(value.state.programs).length === 0
+            if (empty && holdEmpty) return
+            if (!empty) holdEmpty = false
+            json.setItem(name, value)
+          },
+        },
         partialize: (s) => ({ programs: s.programs, activeId: s.activeId }),
         migrate: (state, version) => {
           try {
@@ -210,13 +246,15 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           }
         },
         merge: (persisted, current) => {
-          if (persisted === undefined || persisted === null) return current
-          const parsed = PersistedPrograms.safeParse(persisted)
-          if (!parsed.success) {
-            backupCorrupt(storage, PROGRAMS_KEY, JSON.stringify(persisted))
-            return current
+          // Hydrating (also from another tab) drops the undo snapshot: it predates what was just loaded.
+          // Nothing stored means no programs, also when another tab deleted them.
+          if (persisted === undefined || persisted === null) return { ...current, programs: {}, activeId: null, lastChange: null }
+          const { programs, activeId, rejected } = salvagePrograms(persisted)
+          if (rejected !== null) {
+            quarantine(storage, PROGRAMS_KEY, rejected)
+            holdEmpty = Object.keys(programs).length === 0
           }
-          return { ...current, ...normalize(parsed.data) }
+          return { ...current, ...normalize({ programs, activeId }), lastChange: null }
         },
       },
     ),

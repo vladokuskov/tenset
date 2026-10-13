@@ -8,8 +8,10 @@ import { Button } from '../../ui/Button'
 import { LinkButton } from '../../ui/links'
 import { Sheet } from '../../ui/Sheet'
 import { showToast } from '../../ui/toast'
-import { backupFileName, createBackup, parseBackup, serializeBackup, withUniqueNames, type ParsedBackup } from './backup'
-import { canShareFiles, download } from './files'
+import { parseBackup, withUniqueNames, type ParsedBackup } from './backup'
+import { downloadBackup, makeBackupFile } from './backupFile'
+import { canShareFiles } from './files'
+import { recordExport } from './lastExport'
 import { exportMessages } from './messages'
 
 export type ExportDialogProps = {
@@ -17,12 +19,6 @@ export type ExportDialogProps = {
   onClose: () => void
   /** Opens the paste sheet in place of this one. */
   onPaste?: () => void
-}
-
-function makeFile(): File {
-  const { programs, activeId } = programStore.getState()
-  const text = serializeBackup(createBackup({ programs, activeId }, prefsStore.getState()))
-  return new File([text], backupFileName(), { type: 'application/json' })
 }
 
 type Pending = { name: string; backup: ParsedBackup; activeId: string | null }
@@ -84,7 +80,8 @@ export function ExportDialog({ open, onClose, onPaste }: ExportDialogProps) {
 
   const shareFile = async () => {
     try {
-      await navigator.share({ files: [makeFile()], title: getMessages(exportMessages).shareTitle })
+      await navigator.share({ files: [makeBackupFile()], title: getMessages(exportMessages).shareTitle })
+      recordExport()
     } catch {
       // cancelled
     }
@@ -98,7 +95,7 @@ export function ExportDialog({ open, onClose, onPaste }: ExportDialogProps) {
           {m.backupText(count, overrides)}
         </p>
         <div className="mt-3 flex gap-3">
-          <Button variant="primary" className="flex-1" icon={Download} disabled={count === 0} onClick={() => download(makeFile())}>
+          <Button variant="primary" className="flex-1" icon={Download} disabled={count === 0} onClick={downloadBackup}>
             {m.download}
           </Button>
           {canShareFiles() && (

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { equipmentIds, presetEquipment } from '../domain/equipment.ts'
 import { PREFS_KEY, createPrefsStore, defaultPrefs, localeWeekStart } from './prefs.store.ts'
+import prefsV1 from './fixtures/prefs.v1.json'
+import { listQuarantined } from './quarantine.ts'
 import { memoryStorage } from './storage.ts'
 
 describe('prefs store', () => {
@@ -76,17 +78,29 @@ describe('prefs store', () => {
     expect(Object.keys(raw.state).sort()).toEqual(['countingMode', 'equipment', 'goal', 'locale', 'overrides', 'targets', 'weekStart'])
   })
 
-  it('rehydrates valid prefs and rejects corrupt ones', () => {
+  it('rehydrates valid prefs and falls back field by field', () => {
     const storage = memoryStorage()
     storage.setItem(PREFS_KEY, JSON.stringify({ state: { ...defaultPrefs('pl-PL'), goal: 'general' }, version: 1 }))
     expect(createPrefsStore({ storage }).getState().goal).toBe('general')
 
     const bad = memoryStorage()
-    bad.setItem(PREFS_KEY, JSON.stringify({ state: { goal: 'bulk', weekStart: 12 }, version: 1 }))
+    const overrides = { '101': { triceps: 'none' } }
+    bad.setItem(PREFS_KEY, JSON.stringify({ state: { goal: 'bulk', weekStart: 12, countingMode: 'primary', overrides }, version: 1 }))
     const store = createPrefsStore({ storage: bad, locale: 'pl-PL' })
     expect(store.getState().goal).toBe('hypertrophy')
     expect(store.getState().weekStart).toBe(0)
-    expect(bad.getItem(`${PREFS_KEY}:corrupt`)).not.toBeNull()
+    expect(store.getState().countingMode).toBe('primary')
+    expect(store.getState().overrides).toEqual(overrides)
+    expect(listQuarantined(bad).map((i) => i.data)).toEqual([{ goal: 'bulk', weekStart: 12 }])
+  })
+
+  it('hydrates the frozen v1 fixture unchanged', () => {
+    const storage = memoryStorage()
+    storage.setItem(PREFS_KEY, JSON.stringify(prefsV1))
+    const s = createPrefsStore({ storage, locale: 'en-GB' }).getState()
+    const { locale, goal, equipment, countingMode, weekStart, overrides, targets } = s
+    expect({ locale, goal, equipment, countingMode, weekStart, overrides, targets }).toEqual(prefsV1.state)
+    expect(listQuarantined(storage)).toEqual([])
   })
 
   it('resets to defaults', () => {

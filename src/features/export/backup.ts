@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { Prefs, Program } from '../../domain/schema'
 import { runMigrations, type MigrationChain } from '../../store/migrations'
+import { validateProgram } from '../../store/validateProgram'
 import { uniqueName } from '../share/names'
 
 export const BACKUP_FORMAT = 'tenset-backup'
@@ -113,8 +114,8 @@ export function parseBackup(text: string): ParseBackupResult {
   const programs: Program[] = []
   let skipped = 0
   for (const p of file.data.programs) {
-    const parsed = Program.safeParse(p)
-    if (parsed.success) programs.push(parsed.data)
+    const program = validateProgram(p)
+    if (program) programs.push(program)
     else skipped++
   }
   const prefs = Prefs.safeParse(file.data.prefs)

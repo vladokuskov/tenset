@@ -1,4 +1,6 @@
 import type { PersistStorage } from 'zustand/middleware'
+import { reportMemoryOnly, reportWriteFailed } from './health.ts'
+import { quarantine } from './quarantine.ts'
 
 export type SyncStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
@@ -22,18 +24,11 @@ export function browserStorage(): SyncStorage {
   } catch {
     // fall through
   }
+  reportMemoryOnly()
   return memoryStorage()
 }
 
-export function backupCorrupt(storage: SyncStorage, name: string, raw: string): void {
-  try {
-    storage.setItem(`${name}:corrupt`, raw)
-  } catch {
-    // best effort
-  }
-}
-
-/** JSON persist storage that never throws; unreadable values are backed up under `<name>:corrupt` and treated as absent. */
+/** JSON persist storage that never throws; unreadable values are quarantined and treated as absent. */
 export function safeJSONStorage<S>(storage: SyncStorage): PersistStorage<S> {
   return {
     getItem(name) {
@@ -50,14 +45,15 @@ export function safeJSONStorage<S>(storage: SyncStorage): PersistStorage<S> {
       } catch {
         // corrupt JSON
       }
-      backupCorrupt(storage, name, raw)
+      quarantine(storage, name, raw)
       return null
     },
     setItem(name, value) {
       try {
         storage.setItem(name, JSON.stringify(value))
       } catch {
-        // quota or blocked storage: keep working in memory
+        // quota or blocked storage: keep working in memory and tell the user once
+        reportWriteFailed()
       }
     },
     removeItem(name) {

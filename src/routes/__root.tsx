@@ -4,6 +4,7 @@ import { BrandMark } from '../app/BrandMark'
 import { needsWelcome } from '../app/firstRun'
 import { AppProviders } from '../app/providers'
 import { useUndoShortcut } from '../app/undo'
+import { StorageNotices } from '../features/export/StorageNotices'
 import { useDocumentLocale } from '../i18n/document'
 import { useMessages } from '../i18n/messages'
 import { UpdatePrompt } from '../sw'
@@ -52,6 +53,7 @@ function RootLayout() {
       {!bare && <TabBar />}
       <ToastHost />
       <UpdatePrompt />
+      <StorageNotices />
     </AppProviders>
   )
 }
