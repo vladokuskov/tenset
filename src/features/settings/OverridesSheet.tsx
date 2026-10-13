@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useCatalog } from '../../app/useCatalog'
+import { groupName } from '../../data/localize'
 import { useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore, prefsStore } from '../../store/prefs.store'
 import { useActiveProgram } from '../../store/program.store'
 import { Button, Sheet } from '../../ui'
-import { ChangeBar } from '../builder/ChangeBar'
-import { groupName } from '../builder/labels'
+import { ChangeBar } from '../shared/ChangeBar'
 import { settingsMessages } from './messages'
 
 type OverrideRole = 'primary' | 'secondary' | 'none'

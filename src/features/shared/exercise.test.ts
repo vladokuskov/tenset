@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fixtureExercise } from '../../domain/test-fixtures'
-import { matchesQuery, normalize, repsText, rowMeta, supersetLabels } from './labels'
+import { matchesQuery, normalize, repsText, rowMeta, supersetLabels } from './exercise'
 
 const press = fixtureExercise(1, {
   name: 'Жим лежачи',

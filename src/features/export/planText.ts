@@ -3,9 +3,9 @@ import { formatRest, formatRir } from '../../app/format'
 import type { Catalog } from '../../domain/resolve'
 import type { Entry, Program } from '../../domain/schema'
 import type { Locale } from '../../i18n/locale'
-import { builderMessages } from '../builder/messages'
-import { supersetLabels } from '../builder/labels'
 import { exerciseName } from '../share/resolveNames'
+import { supersetLabels } from '../shared/exercise'
+import { sharedMessages } from '../shared/messages'
 import { exportMessages } from './messages'
 
 export type EntryText = {
@@ -19,7 +19,7 @@ export type EntryText = {
 /** Sets and reps, rest and RIR of one entry as short phrases. */
 export function entryParts(e: Pick<Entry, 'sets' | 'reps' | 'restSec' | 'rir'>, unit: 'reps' | 'seconds', locale: Locale): string[] {
   const m = exportMessages[locale]
-  const reps = e.reps && unit === 'seconds' ? builderMessages[locale].seconds(e.reps) : e.reps
+  const reps = e.reps && unit === 'seconds' ? sharedMessages[locale].seconds(e.reps) : e.reps
   const parts = [m.paste.setsReps(e.sets, reps)]
   if (e.restSec !== undefined) parts.push(m.restPart(formatRest(e.restSec, locale)))
   if (e.rir !== undefined) parts.push(formatRir(e.rir, locale))

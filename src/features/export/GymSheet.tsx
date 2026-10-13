@@ -4,9 +4,9 @@ import type { WeekView } from '../../app/useWeek'
 import type { Catalog } from '../../domain/resolve'
 import { common } from '../../i18n/common'
 import { useLocale, useMessages } from '../../i18n/messages'
-import { defaultReps, repsText, supersetLabels, unitOf } from '../builder/labels'
-import { exerciseFor } from '../builder/lookup'
 import { exerciseName } from '../share/resolveNames'
+import { defaultReps, repsText, supersetLabels, unitOf } from '../shared/exercise'
+import { exerciseFor } from '../shared/lookup'
 import { exportMessages } from './messages'
 
 /** One block per training day: each exercise with its targets and an empty box per set, for writing by hand. */

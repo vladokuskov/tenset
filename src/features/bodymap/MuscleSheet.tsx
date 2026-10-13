@@ -22,13 +22,13 @@ import { Sheet } from '../../ui/Sheet'
 import { Stepper } from '../../ui/Stepper'
 import { sheetState } from '../../ui/useSheet'
 import { DayPicker } from '../builder'
-import { ChangeBar } from '../builder/ChangeBar'
-import { builderMessages } from '../builder/messages'
-import { carryUndo, undoLastChange, useChange } from '../builder/useChange'
 import { ExerciseRow } from '../catalog'
+import { ChangeBar } from '../shared/ChangeBar'
+import { sharedMessages } from '../shared/messages'
+import { carryUndo, undoLastChange, useChange } from '../shared/useChange'
 import { scheduleText } from './copy'
-import { bodymapMessages } from './messages'
 import { DayStrip } from './DayStrip'
+import { bodymapMessages } from './messages'
 import { MuscleLocator } from './MuscleLocator'
 import { Why } from './Why'
 
@@ -112,7 +112,7 @@ function Body({
   const { catalog } = useCatalog()
   const locale = useLocale()
   const m = bodymapMessages[locale]
-  const b = builderMessages[locale]
+  const b = sharedMessages[locale]
   const setSets = useProgramStore((s) => s.setSets)
   const change = useChange()
   const nameOfHead = (id: string) => headName(id, locale)

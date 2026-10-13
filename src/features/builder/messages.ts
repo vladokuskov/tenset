@@ -12,14 +12,6 @@ const setWord = (n: number) => plural('en', n, { one: 'set', other: 'sets' })
 
 export const builderMessages = defineMessages({
   en: {
-    noMusclesMapped: 'No muscles mapped',
-    customMeta: (muscles: string) => `Custom, your mapping · ${muscles}`,
-    repsEmpty: 'Reps',
-    timeEmpty: 'Time',
-    reps: (reps: string) => `${reps} reps`,
-    seconds: (reps: string) => `${reps} s`,
-    withDelta: (base: string, detail: string) => `${base} · ${detail}`,
-
     plan: 'Plan',
     week: 'Week',
     today: 'Today',
@@ -157,13 +149,9 @@ export const builderMessages = defineMessages({
     repsSetTo: (reps: string) => `Reps set to ${reps}`,
     repsCleared: 'Reps cleared',
     hardSets: 'Working sets',
-    setsChanged: (name: string, n: number) => `${name}: ${n} ${setWord(n)}`,
-    setsFor: (name: string) => `Sets for ${name}`,
     setsUnit: 'sets',
     fewerSets: 'Fewer sets',
     moreSets: 'More sets',
-    fewerSetsOf: (name: string) => `Fewer sets of ${name}`,
-    moreSetsOf: (name: string) => `More sets of ${name}`,
     secondsPerSet: 'Seconds per set',
     repsPerSet: 'Reps per set',
     custom: 'Custom',
@@ -217,7 +205,6 @@ export const builderMessages = defineMessages({
     supersetBelowTaken: 'Already in a superset with the exercise below.',
     supersetMade: (above: string, name: string) => `Superset: ${above} and ${name}`,
     supersetRemoved: 'Superset removed',
-    supersetSplit: (base: string) => `${base}. Superset split`,
     supersetMarker: (letter: string, position: 1 | 2) => `Superset ${letter}, ${position === 1 ? 'first' : 'second'} of two`,
     restChip: (time: string) => `Rest ${time}`,
 
@@ -258,14 +245,6 @@ export const builderMessages = defineMessages({
     },
   },
   uk: {
-    noMusclesMapped: 'Мʼязи не позначено',
-    customMeta: (muscles) => `Власна, ваша розмітка · ${muscles}`,
-    repsEmpty: 'Повторення',
-    timeEmpty: 'Час',
-    reps: (reps) => `${reps} повт.`,
-    seconds: (reps) => `${reps} с`,
-    withDelta: (base, detail) => `${base} · ${detail}`,
-
     plan: 'План',
     week: 'Тиждень',
     today: 'Сьогодні',
@@ -411,13 +390,9 @@ export const builderMessages = defineMessages({
     repsSetTo: (reps) => `Повторення: ${reps}`,
     repsCleared: 'Повторення скинуто',
     hardSets: 'Робочі підходи',
-    setsChanged: (name, n) => `${name}: ${uk.sets(n)}`,
-    setsFor: (name) => `Підходи: ${name}`,
     setsUnit: 'підх.',
     fewerSets: 'Менше підходів',
     moreSets: 'Більше підходів',
-    fewerSetsOf: (name) => `Менше підходів: ${name}`,
-    moreSetsOf: (name) => `Більше підходів: ${name}`,
     secondsPerSet: 'Секунд у підході',
     repsPerSet: 'Повторень у підході',
     custom: 'Своє',
@@ -470,7 +445,6 @@ export const builderMessages = defineMessages({
     supersetBelowTaken: 'Уже в суперсеті з вправою нижче.',
     supersetMade: (above, name) => `Суперсет: ${above} і ${name}`,
     supersetRemoved: 'Суперсет прибрано',
-    supersetSplit: (base) => `${base}. Суперсет розділено`,
     supersetMarker: (letter, position) => `Суперсет ${letter}, ${position === 1 ? 'перша' : 'друга'} з двох`,
     restChip: (time) => `Відпочинок ${time}`,
 

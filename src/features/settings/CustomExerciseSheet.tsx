@@ -1,15 +1,14 @@
 import { useState } from 'react'
-import { equipmentName } from '../../data/localize'
+import { equipmentName, groupName } from '../../data/localize'
 import { equipment } from '../../domain/equipment'
 import { MAX_CUSTOM, NAME_MAX } from '../../domain/program'
 import type { CustomExercise, Role } from '../../domain/schema'
 import { groups as allGroups } from '../../domain/taxonomy'
 import { useLocale, useMessages } from '../../i18n/messages'
 import { useActiveProgram, useProgramStore } from '../../store/program.store'
-import { BodyMap } from '../bodymap'
 import { Button, ChipGroup, SegmentedControl, Sheet } from '../../ui'
-import { groupName } from '../builder/labels'
-import { useChange } from '../builder/useChange'
+import { BodyMap } from '../bodymap'
+import { useChange } from '../shared/useChange'
 import { settingsMessages } from './messages'
 
 type Laterality = CustomExercise['laterality']

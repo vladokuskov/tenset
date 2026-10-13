@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
-import { BodyMini, useAnatomy, type AnatomyView, type BodyMiniProps } from '../bodymap'
 import { cx } from '../../ui/cx'
-import { prefersReducedMotion, pulseStore } from './pulse'
+import { BodyMini, useAnatomy, type AnatomyView, type BodyMiniProps } from '../bodymap'
+import { prefersReducedMotion, pulseStore } from '../shared/pulse'
 
 export type PulseMiniProps = BodyMiniProps & {
   /** Which scope this map shows, so it only pulses for changes it displays. */

@@ -1,6 +1,6 @@
 import type { Catalog } from '../../domain/resolve'
 import type { Entry, ExerciseRef, Program } from '../../domain/schema'
-import type { AnyExercise } from './labels'
+import type { AnyExercise } from './exercise'
 
 export function exerciseFor(ref: ExerciseRef, catalog: Catalog, program: Program | null | undefined): AnyExercise | null {
   if (typeof ref === 'number') return catalog.get(ref) ?? null

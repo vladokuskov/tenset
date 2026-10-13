@@ -3,8 +3,8 @@ import { translatedNames } from '../../data/localize'
 import { parseLine } from '../../domain/importText'
 import type { CustomExercise, Exercise, ExerciseRef } from '../../domain/schema'
 import type { Locale } from '../../i18n/locale'
-import { matchesQuery, normalize } from '../builder/labels'
 import { buildIndex, tokenize } from '../catalog/search'
+import { matchesQuery, normalize } from '../shared/exercise'
 import { stem } from './stem'
 
 export type MatchCandidate = { ref: ExerciseRef; name: string }

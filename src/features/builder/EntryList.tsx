@@ -7,14 +7,15 @@ import type { Entry, Program } from '../../domain/schema'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
-import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
 import { IconButton, Stepper, cx } from '../../ui'
+import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
+import { defaultReps, isCustom, repsText, rowMeta, supersetLabels, unitOf, type AnyExercise, type SupersetLabel } from '../shared/exercise'
+import { exerciseFor } from '../shared/lookup'
+import { sharedMessages } from '../shared/messages'
+import { useChange } from '../shared/useChange'
 import { SORT_LABEL, SortableLists, type SortMove } from './dnd'
-import { useSortableItem } from './useSortable'
-import { defaultReps, isCustom, repsText, rowMeta, supersetLabels, unitOf, type AnyExercise, type SupersetLabel } from './labels'
-import { exerciseFor } from './lookup'
 import { builderMessages } from './messages'
-import { useChange } from './useChange'
+import { useSortableItem } from './useSortable'
 
 type Open = (entryId: string) => void
 
@@ -65,6 +66,7 @@ function EntryRowView({
   const reps = entry.reps ?? defaultReps(exercise, goal)
   const locale = useLocale()
   const m = builderMessages[locale]
+  const sm = sharedMessages[locale]
 
   const head = (
     <>
@@ -122,11 +124,11 @@ function EntryRowView({
         )}
         <Stepper
           value={entry.sets}
-          onChange={(v) => change(m.setsChanged(exercise.name, v), () => setSets(entry.id, v))}
-          label={m.setsFor(exercise.name)}
+          onChange={(v) => change(sm.setsChanged(exercise.name, v), () => setSets(entry.id, v))}
+          label={sm.setsFor(exercise.name)}
           unit={m.setsUnit}
-          decrementLabel={m.fewerSetsOf(exercise.name)}
-          incrementLabel={m.moreSetsOf(exercise.name)}
+          decrementLabel={sm.fewerSetsOf(exercise.name)}
+          incrementLabel={sm.moreSetsOf(exercise.name)}
         />
         <button
           type="button"
