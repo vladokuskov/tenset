@@ -1,12 +1,10 @@
 import { Check, ChevronDown, Minus } from 'lucide-react'
 import { useState } from 'react'
 import { gapNote } from '../../app/knownGaps'
-import { useCatalog } from '../../app/useCatalog'
 import { equipmentGroupName, equipmentName, presetName } from '../../data/localize'
 import {
   equipment,
   equipmentGroups,
-  exercisesNeedingOther,
   groupState,
   matchPreset,
   presetEquipment,
@@ -17,6 +15,7 @@ import { useLocale, useMessages } from '../../i18n/messages'
 import { useActiveProgram } from '../../store/program.store'
 import { cx } from '../../ui'
 import { equipmentSummary } from './equipmentSummary'
+import { ActiveProgramSwap } from './EquipmentSwap'
 import { settingsMessages } from './messages'
 
 const box = (on: boolean) =>
@@ -35,7 +34,6 @@ export function EquipmentPicker({
   onChange: (next: string[]) => void
   className?: string
 }) {
-  const { catalog } = useCatalog()
   const m = useMessages(settingsMessages)
   const locale = useLocale()
   const program = useActiveProgram()
@@ -45,7 +43,6 @@ export function EquipmentPicker({
     () => new Set(equipmentGroups.filter((g) => groupState(g, selected) === 'some').map((g) => g.id)),
   )
   const gaps = gapNote(value)
-  const needOther = program ? exercisesNeedingOther(program, catalog, value) : 0
 
   const commit = (next: Set<string>) => onChange(equipment.map((e) => e.id).filter((e) => next.has(e)))
   const toggle = (id: string) => {
@@ -176,11 +173,7 @@ export function EquipmentPicker({
 
       {value.length === 0 && <p className="mt-4 text-sm text-ink-2">{m.nothingSelected}</p>}
       {gaps && <p className="mt-4 text-sm text-ink-2">{gaps}</p>}
-      {needOther > 0 && (
-        <p className="mt-4 text-sm text-ink-2">
-          {m.needOther(needOther)}
-        </p>
-      )}
+      {program && <ActiveProgramSwap program={program} available={value} className="mt-4" />}
     </div>
   )
 }

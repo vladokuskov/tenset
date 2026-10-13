@@ -1,17 +1,23 @@
 import { useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 import { Link2Off } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { dayName } from '../../app/days'
 import { formatDaySummary, formatRest, formatRir, joinMeta, setsLabel } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
 import { decodeProgram } from '../../domain/codec'
+import { applyEquipmentSwap, type EquipmentSwap } from '../../domain/equipmentSwap'
+import type { Program } from '../../domain/schema'
+import { common } from '../../i18n/common'
 import { getMessages, useLocale, useMessages } from '../../i18n/messages'
+import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { Button, EmptyState, LinkButton, Page, PageBody, PageHeader, Panel, Section, StickyActions, showToast } from '../../ui'
 import { BodyMini } from '../bodymap'
 import { supersetLabels } from '../builder/labels'
+import { EquipmentSwapPanel } from '../settings/EquipmentSwap'
+import { settingsMessages } from '../settings/messages'
 import { shareMessages } from './messages'
 import { uniqueName } from './names'
 import { exerciseName, isKnown } from './resolveNames'
@@ -21,13 +27,17 @@ export function SharedPreview() {
   const hash = useLocation({ select: (l) => l.hash })
   const { catalog, replacedBy } = useCatalog()
   const result = useMemo(() => decodeProgram(hash, { replacedBy }), [hash, replacedBy])
-  const program = result.ok ? result.program : null
+  // Swaps edit the preview only; saving keeps them. Keyed by the link so another link starts fresh.
+  const [swapped, setSwapped] = useState<{ hash: string; program: Program } | null>(null)
+  const program = result.ok ? (swapped?.hash === hash ? swapped.program : result.program) : null
   const view = useWeek(program)
+  const equipment = usePrefsStore((s) => s.equipment)
   const importProgram = useProgramStore((s) => s.importProgram)
   const programs = useProgramStore((s) => s.programs)
   const navigate = useNavigate()
   const router = useRouter()
   const m = useMessages(shareMessages)
+  const swapText = useMessages(settingsMessages).swap
   const locale = useLocale()
 
   const close = () => {
@@ -59,6 +69,22 @@ export function SharedPreview() {
   const totalSets = days.reduce((s, d) => s + d.hardSets, 0)
   const trainingDays = days.filter((d) => d.kind === 'train').length
   const unknown = shared.days.flatMap((d) => d.entries).filter((e) => !isKnown(e.exerciseId, catalog, shared.custom)).length
+
+  const swap = (swaps: EquipmentSwap[]) => {
+    const before = swapped
+    setSwapped({ hash, program: applyEquipmentSwap(shared, swaps) })
+    const msgs = getMessages(common)
+    showToast({
+      message: getMessages(settingsMessages).swap.done(swaps.length),
+      action: {
+        label: msgs.undo,
+        onAction: () => {
+          setSwapped(before)
+          showToast({ message: msgs.undone })
+        },
+      },
+    })
+  }
 
   const save = () => {
     const name = uniqueName(shared.name, Object.values(programs).map((p) => p.name))
@@ -94,6 +120,13 @@ export function SharedPreview() {
           </p>
         )}
         <p className="mt-2 px-1 text-sm text-ink-3">{m.differs}</p>
+        <EquipmentSwapPanel
+          program={shared}
+          available={equipment}
+          describe={swapText.needOther}
+          onApply={swap}
+          className="mt-4"
+        />
 
         <Section title={m.week} className="mt-6">
           <Panel as="ul" className="divide-y divide-line">
