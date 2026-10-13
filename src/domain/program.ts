@@ -189,11 +189,11 @@ export function setRir(program: Program, entryId: string, rir: number | undefine
   )
 }
 
+/** Returns the same program when the cleaned note is unchanged, so a repeated save is not a change. */
 export function setEntryNote(program: Program, entryId: string, note: string | undefined): Program {
-  return updateEntry(program, entryId, ({ note: _drop, ...e }) => {
-    const clean = cleanText(note, ENTRY_NOTE_MAX)
-    return clean ? { ...e, note: clean } : e
-  })
+  const clean = cleanText(note, ENTRY_NOTE_MAX)
+  if (findEntry(program, entryId)?.entry.note === clean) return program
+  return updateEntry(program, entryId, ({ note: _drop, ...e }) => (clean ? { ...e, note: clean } : e))
 }
 
 /** Whether the entry can be paired with the one above it. */

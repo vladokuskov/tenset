@@ -259,6 +259,8 @@ describe('rest, RIR and supersets', () => {
     expect(ops.setEntryNote(p, 'e1', 'x'.repeat(90)).days[0].entries[0].note).toHaveLength(ops.ENTRY_NOTE_MAX)
     expect(ops.setEntryNote(p, 'e1', '   ').days[0].entries[0]).not.toHaveProperty('note')
     expect(ops.setEntryNote(p, 'e1', undefined).days[0].entries[0]).not.toHaveProperty('note')
+    expect(ops.setEntryNote(p, 'e1', ' seat 4')).toBe(p)
+    expect(ops.setEntryNote(base(), 'e1', '')).toEqual(base())
     expect(ops.copyEntry(p, 'e1', 1, sequentialIds('x')).days[1].entries[0].note).toBe('seat 4')
     expect(Program.safeParse(p).success).toBe(true)
     p = ops.setEntryNote(p, 'e1', 'pause at bottom')
