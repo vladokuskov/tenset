@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures'
 
-// /dev/review is dev only: the production build keeps an empty route stub and ships none of the review code.
+// /dev/* routes are dev only: the production build has no route for them and ships none of their code.
 test('the owner review route is not in the production build', async ({ page, request }) => {
   const calls: string[] = []
   page.on('request', (r) => {
@@ -8,6 +8,7 @@ test('the owner review route is not in the production build', async ({ page, req
   })
   await page.goto('/dev/review')
   await page.waitForLoadState('networkidle')
+  await expect(page.getByRole('heading', { name: 'This page does not exist' })).toBeVisible()
   await expect(page.getByText('Motion review')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Approve|Reject/ })).toHaveCount(0)
   expect(calls).toEqual([])
@@ -16,6 +17,7 @@ test('the owner review route is not in the production build', async ({ page, req
   const sw = await (await request.get('/sw.js')).text()
   const scripts = [...new Set(sw.match(/assets\/[\w.-]+\.js/g) ?? [])]
   expect(scripts.length).toBeGreaterThan(5)
+  expect(scripts.filter((s) => /\/dev\./.test(s))).toEqual([])
   for (const s of scripts) {
     const body = await (await request.get(`/${s}`)).text()
     expect(body, s).not.toContain('__review')

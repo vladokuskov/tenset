@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { lazy, Suspense } from 'react'
 
-// Dev-only: in production builds DEV is false and the figure chunk is dropped from this route.
-const DevMotion = import.meta.env.DEV ? lazy(() => import('../features/figure/motion/DevMotion')) : null
+// Dev only: vite.config.ts leaves src/routes/dev.* out of the production route tree.
+const DevMotion = lazy(() => import('../features/figure/motion/DevMotion'))
 
 const VIEWS = ['front', 'side', 'back', 'hero'] as const
 
@@ -38,7 +38,6 @@ export const Route = createFileRoute('/dev/motion')({
 
 function DevMotionRoute() {
   const { id, t, paused, view, yaw, live, focus, size } = Route.useSearch()
-  if (!DevMotion) return null
   return (
     <Suspense fallback={null}>
       <DevMotion key={`${id}|${live}`} id={id ?? 711} t={t} paused={paused === 1} view={view} yaw={yaw} live={live === 1} focus={focus ? { bone: focus, size: size ?? 0.3 } : undefined} />

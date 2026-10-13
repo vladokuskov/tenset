@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { lazy, Suspense } from 'react'
 
-// Dev-only: in production builds DEV is false and the review chunk is dropped from this route.
-const ReviewPage = import.meta.env.DEV ? lazy(() => import('../features/review/ReviewPage')) : null
+// Dev only: vite.config.ts leaves src/routes/dev.* out of the production route tree.
+const ReviewPage = lazy(() => import('../features/review/ReviewPage'))
 
 const STATUSES = ['pending', 'rejected', 'approved', 'all'] as const
 
@@ -22,7 +22,6 @@ export const Route = createFileRoute('/dev/review')({
 function DevReviewRoute() {
   const { id, status } = Route.useSearch()
   const navigate = Route.useNavigate()
-  if (!ReviewPage) return null
   return (
     <Suspense fallback={null}>
       <ReviewPage id={id} status={status ?? 'pending'} onNavigate={(search) => void navigate({ search, replace: true })} />

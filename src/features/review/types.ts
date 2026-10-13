@@ -1,4 +1,4 @@
-// Shared by the review page and the Vite dev middleware (devServer.ts). Dev only, never in a production build.
+// Shared by the review page and the Vite dev middleware (pipeline/review/devServer.ts). Dev only, never in a production build.
 
 export const REVIEW_API = '/__review'
 
