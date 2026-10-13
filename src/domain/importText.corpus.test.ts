@@ -9,6 +9,7 @@ const show = (l: ParsedLine) =>
     l.restSec !== undefined ? `rest ${l.restSec}` : null,
     l.rir !== undefined ? `rir ${l.rir}` : null,
     l.withPrev ? 'ss' : null,
+    l.unsure ? 'check' : null,
   ]
     .filter(Boolean)
     .join(' | ')
@@ -21,5 +22,6 @@ describe('paste corpus', () => {
       days.map((d) => ({ day: d.day, ...(d.label ? { label: d.label } : {}), ...(d.rest ? { rest: true } : {}), ...(d.lines.length ? { lines: d.lines.map(show) } : {}) })),
     ).toEqual(c.days)
     expect(parsed.warnings.filter((w) => w.kind === 'unreadable')).toHaveLength(c.unreadable ?? 0)
+    expect(parsed.warnings.find((w) => w.kind === 'extra_weeks')).toEqual(c.skippedWeeks ? { kind: 'extra_weeks', count: c.skippedWeeks } : undefined)
   })
 })

@@ -108,10 +108,12 @@ describe('paste parser properties', () => {
         const parsed = parseProgramText(text)
         const seen = new Set(parsed.days.flatMap((d) => d.lines.map((l) => l.raw)))
         const warned = new Set(parsed.warnings.flatMap((w) => (w.kind === 'unreadable' ? [w.raw] : [])))
+        // A weekday that comes round again starts a second week, which is left out with its own warning.
+        const laterWeeks = parsed.warnings.some((w) => w.kind === 'extra_weeks')
         for (const raw of text.split('\n').map((l) => l.trim())) {
           if (!/\d\s*(?:[xх×]|по|sets|підх|\/)/u.test(raw)) continue
           const kept = [...seen].some((s) => s === raw || s.endsWith(raw) || raw.endsWith(s))
-          expect(kept || warned.has(raw), raw).toBe(true)
+          expect(kept || warned.has(raw) || laterWeeks, raw).toBe(true)
         }
       }),
       { numRuns: 300 },

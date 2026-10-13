@@ -14,11 +14,13 @@ import {
   setRir,
   type CustomExerciseInput,
 } from './program.ts'
-import type { ExerciseRef, Program } from './schema.ts'
+import type { CustomExercise, ExerciseRef, Program } from './schema.ts'
 
 export const IMPORT_MAX_CHARS = 20_000
 export const IMPORT_MAX_LINES = 400
 const REPS_MAX = 16
+// More sets than this in one line is rare enough that a first number above it is read as a weight.
+const SETS_FIRST_MAX = 10
 
 type DayIndex = number
 
@@ -31,12 +33,15 @@ export type ParsedLine = {
   rir?: number
   /** Pairs this line with the one above it as a superset. */
   withPrev?: true
+  /** The numbers can be read more than one way, so the review asks to check them. */
+  unsure?: true
 }
 export type ParsedDay = { day: DayIndex | null; label?: string; rest: boolean; lines: ParsedLine[] }
 export type ImportWarning =
   | { kind: 'unreadable'; line: number; raw: string }
   | { kind: 'truncated' }
   | { kind: 'extra_days'; count: number }
+  | { kind: 'extra_weeks'; count: number }
 export type ParsedText = { days: ParsedDay[]; warnings: ImportWarning[] }
 
 const fold = (s: string) => s.toLowerCase().replace(/[ʼ’'`]/g, 'ʼ').trim()
@@ -66,7 +71,11 @@ const SETS_WORD = `(?:sets?|підх${L}*\\.?|подх${L}*\\.?|сет${L}*)`
 const REPS_WORD = `(?:reps?|повт${L}*\\.?|раз${L}*)`
 // A lone Cyrillic "с" is also the Russian "with", so it only counts as seconds when no word follows.
 const SEC_UNIT = `(?:secs?|seconds?|s|сек${L}*\\.?|с(?!\\s*\\p{L})|"|”)`
-const MIN_UNIT = `(?:mins?|minutes?|m|хв${L}*\\.?|мин${L}*\\.?|мін${L}*\\.?|'|’)`
+const MIN_UNIT = `(?:mins?|minutes?|хв${L}*\\.?|мин${L}*\\.?|мін${L}*\\.?|'|’)`
+// A bare "m" is minutes only next to a rest word ("rest 2m"); after a work target it is metres ("3x40m").
+const REST_MIN_UNIT = `(?:${MIN_UNIT}|m)`
+const DIST_UNIT = `(?:m|meters?|metres?|km|yds?|yards?|ft|feet|м|метр${L}*|км)`
+const DIST = `\\d{1,4}(?:[.,]\\d{1,2})?\\s*${DIST_UNIT}`
 const WEIGHT_UNIT = `(?:kgs?|кг|lbs?|фунт${L}*|%)`
 const FAIL = `(?:(?:to\\s+)?failure|amrap|max|макс${L}*\\.?|(?:до\\s+)?відмов${L}*|(?:до\\s+)?отказ${L}*)`
 
@@ -85,9 +94,9 @@ const RX = {
   failTimes: re(`(?<![\\d.])(\\d{1,2})\\s*${TIMES}\\s*${FAIL}${E}`),
   fail: re(`${B}${FAIL}${E}`),
   rest: re(
-    `${B}(?:(?:with|з|із|с)\\s+)?(?:rest|відпочин${L}*|відп\\.?|пауза|отдых${L}*|отд\\.?)\\s*(?:between sets|між підходами|между подходами)?\\s*[:=-]?\\s*(\\d{1,3}(?:[.,]\\d)?)(?:\\s*[-–]\\s*\\d{1,3}(?:[.,]\\d)?)?\\s*(${MIN_UNIT}|${SEC_UNIT}|:\\d{2})?${E}`,
+    `${B}(?:(?:with|з|із|с)\\s+)?(?:rest|відпочин${L}*|відп\\.?|пауза|отдых${L}*|отд\\.?)\\s*(?:between sets|між підходами|между подходами)?\\s*[:=-]?\\s*(\\d{1,3}(?:[.,]\\d)?)(?:\\s*[-–]\\s*\\d{1,3}(?:[.,]\\d)?)?\\s*(${REST_MIN_UNIT}|${SEC_UNIT}|:\\d{2})?${E}`,
   ),
-  restAfter: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d)?)\\s*(${MIN_UNIT}|${SEC_UNIT})\\s*(?:rest|відпочинку?|отдыха?)${E}`),
+  restAfter: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d)?)\\s*(${REST_MIN_UNIT}|${SEC_UNIT})\\s*(?:rest|відпочинку?|отдыха?)${E}`),
   tempo: re(`${B}(?:tempo|темп)\\s*[:=]?\\s*[\\dxXхХ]{1,2}(?:[-/]?[\\dxXхХ]){2,3}${E}`),
   side: re(
     `(?:${B}(?:each|per)\\s+(?:side|leg|arm|hand|way)s?|${B}each|\\/\\s*(?:side|leg|arm)|${B}e\\/s|на\\s+кож(?:ну|ен|ну)\\s+(?:ногу|руку|сторону|бік)|на\\s+каждую\\s+(?:ногу|руку|сторону)|кожною\\s+(?:ногою|рукою)|каждой\\s+(?:ногой|рукой))${E}`,
@@ -95,6 +104,8 @@ const RX = {
   weight: re(`(?:@|${B}(?:по|with|з|с))?\\s*(?<![\\d.])\\d{1,3}(?:[.,]\\d{1,2})?\\s*${WEIGHT_UNIT}${E}`),
   triple: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d{1,2})?)\\s*${TIMES}\\s*(\\d{1,3})\\s*${TIMES}\\s*(\\d{1,3})${E}`),
   pair: re(`(?<![\\d.])(\\d{1,3}(?:[.,]\\d{1,2})?)\\s*${TIMES}\\s*(\\d{1,2})(?![\\d.]|\\s*${TIMES})`, 'giu'),
+  setsDist: re(`(?<![\\d.])(\\d{1,2})\\s*${TIMES}\\s*${DIST}${E}`),
+  dist: re(`(?<![\\d.])${DIST}${E}`),
   setsTimes: re(`(?<![\\d.])(\\d{1,3})\\s*${TIMES}\\s*(${SCHEME}|${RANGE})\\s*(${SEC_UNIT}|${MIN_UNIT}|${REPS_WORD})?${E}`),
   setsOf: re(
     `(?<![\\d.])(\\d{1,2})\\s*(?:${SETS_WORD}\\s*(?:of|x|×|х|по|by|,)?|(?:рази?|раза)\\s+по|по)\\s*(${RANGE})\\s*(?:${REPS_WORD})?${E}`,
@@ -114,7 +125,7 @@ const clampSets = (n: number) => Math.min(MAX_SETS, Math.max(1, Math.round(n) ||
 const clampRir = (n: number) => Math.min(RIR_MAX, Math.max(0, Math.round(n)))
 const cleanReps = (s: string) => s.replace(/\s+/g, '').replace(/[–—]/g, '-').slice(0, REPS_MAX) || undefined
 const num = (s: string) => Number(s.replace(',', '.'))
-const isMinutes = (unit: string) => re(`^${MIN_UNIT}$`).test(unit.toLowerCase().trim())
+const isMinutes = (unit: string) => re(`^${REST_MIN_UNIT}$`).test(unit.toLowerCase().trim())
 
 /** "2 min", "90s", "1:30", "90". A bare number up to 10 reads as minutes, above that as seconds. */
 export function parseDuration(value: string, unit?: string): number | undefined {
@@ -248,6 +259,10 @@ function readLine(raw: string): { line: ParsedLine; tag?: Tag } | null {
     while (rx.test(text)) [, text] = take(text, rx)
   }
   while (RX.weight.test(text)) [, text] = take(text, RX.weight)
+  // Distance is not a rep or a time target: "Farmer's walk 3x40m" keeps its sets only.
+  ;[m, text] = take(text, RX.setsDist)
+  if (m) out.sets = clampSets(Number(m[1]))
+  while (RX.dist.test(text)) [, text] = take(text, RX.dist)
 
   ;[m, text] = take(text, RX.failTimes)
   if (m) {
@@ -307,7 +322,12 @@ function readLine(raw: string): { line: ParsedLine; tag?: Tag } | null {
     ;[m, text] = take(text, RX.triple)
     if (m) {
       const [a, b, c] = [num(m[1]), Number(m[2]), Number(m[3])]
-      const [sets, reps] = a > MAX_SETS ? [b, c] : [a, b]
+      let [sets, reps] = a > SETS_FIRST_MAX ? [b, c] : [a, b]
+      // "16x3x12" is most likely a light weight first, but 16 sets is possible, so it gets a check.
+      if (a > SETS_FIRST_MAX && a <= MAX_SETS) {
+        if (sets > SETS_FIRST_MAX && reps <= SETS_FIRST_MAX) [sets, reps] = [reps, sets]
+        out.unsure = true
+      }
       out.sets = clampSets(sets)
       out.reps = String(reps)
       return
@@ -364,7 +384,16 @@ function strip(f: Fields): Fields {
   return Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined)) as Fields
 }
 
-type Header = { day: DayIndex | null; label?: string; rest: boolean; rest_of_line?: string; also?: DayIndex[] }
+type Header = {
+  day: DayIndex | null
+  label?: string
+  rest: boolean
+  /** Exercises written on the header line itself. */
+  lines?: ParsedLine[]
+  also?: DayIndex[]
+  /** A bare "Label:" that reads as a section ("Warm-up:") when a day is already open. */
+  section?: true
+}
 
 const MONTH = `(?:січ|лют|бер|квіт|трав|черв|лип|серп|вер|жовт|лист|груд|янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)${L}*\\.?`
 const DATE = re(`${B}(?:\\d{1,2}[./]\\d{1,2}(?:[./]\\d{2,4})?|\\d{1,2}\\s+${MONTH}(?:\\s+\\d{4})?|${MONTH}\\s+\\d{1,2})${E}`, 'giu')
@@ -414,8 +443,8 @@ export function parseHeader(rawLine: string): Header | null {
     tail = tail.replace(DATE, ' ').trim()
     const tailFold = fold(label(tail) ?? '')
     if (REST_WORDS.test(tailFold)) return { day, rest: true, ...extra }
-    const asLine = tail && /\d/.test(tail) ? parseLine(tail.replace(/^[\s:\-–—,/|]+/, '')) : null
-    if (asLine && (asLine.sets !== undefined || asLine.reps !== undefined)) return { day, rest: false, rest_of_line: asLine.raw, ...extra }
+    const lines = tailLines(tail.replace(/^[\s:\-–—,/|]+/, ''))
+    if (lines) return { day, rest: false, lines, ...extra }
     return { day, label: label(tail), rest: false, ...extra }
   }
 
@@ -430,9 +459,27 @@ export function parseHeader(rawLine: string): Header | null {
   }
 
   const colon = /^(.{1,30}):$/u.exec(line)
-  if (colon && hasLetters(colon[1]) && !RX.setsTimes.test(colon[1])) return { day: null, label: label(colon[1]), rest: false }
-  if (marked && hasLetters(line)) return { day: null, label: label(line), rest: false }
+  if (colon && hasLetters(colon[1]) && !RX.setsTimes.test(colon[1])) return { day: null, label: label(colon[1]), rest: false, section: true }
+  if (marked && hasLetters(line)) return { day: null, label: label(line), rest: false, section: true }
   return null
+}
+
+const hasTarget = (l: ParsedLine) => l.sets !== undefined || l.reps !== undefined
+
+/**
+ * Exercises after a weekday ("Monday: Bench 3x8, Squat 3x5"), or null when the tail is a session name.
+ * A comma list counts when every part reads as an exercise and they all have numbers or none do.
+ */
+function tailLines(tail: string): ParsedLine[] | null {
+  if (!tail) return null
+  const parts = tail.split(/\s*[,;]\s+|\s*;\s*/).filter((p) => p.trim())
+  if (parts.length > 1 && !isSessionLabel(tail)) {
+    const lines = parts.map((p) => parseLine(p))
+    const all = lines.every((l): l is ParsedLine => !!l)
+    if (all && (lines.every(hasTarget) || lines.every((l) => !hasTarget(l) && !/\d/.test(l.raw)))) return lines.flatMap(splitPair)
+  }
+  const one = /\d/.test(tail) ? parseLine(tail) : null
+  return one && hasTarget(one) ? splitPair(one) : null
 }
 
 // Words that name a session rather than an exercise, so "Push day" or "Груди + трицепс" alone on a line is a header.
@@ -452,11 +499,21 @@ function isSessionLabel(line: string): boolean {
   return words.length > 0 && words.length <= 5 && words.some((w) => w.length > 1) && words.every((w) => SESSION_WORDS.has(w) || /^\d$/.test(w))
 }
 
-const NOISE = re(
-  `^(?:[\\p{P}\\p{S}\\s]*|(?:week|тиждень|неделя)\\s*\\d+.*|notes?:?|нотатки:?|заметки:?|${DATE.source}[\\s,.]*)$`,
-)
+const WEEK = re(`^(?:week|тиждень|неделя)\\s*\\d+.*$`)
+const NOISE = re(`^(?:[\\p{P}\\p{S}\\s]*|notes?:?|нотатки:?|заметки:?|${DATE.source}[\\s,.]*)$`)
 
-const isNoise = (line: string) => NOISE.test(line) || NOISE.test(line.replace(/^#{1,6}\s+|^(\*\*|__)|(\*\*|__):?$/g, '').trim())
+const unmark = (line: string) => line.replace(/^#{1,6}\s+|^(\*\*|__)|(\*\*|__):?$/g, '').trim()
+const isWeek = (line: string) => WEEK.test(line) || WEEK.test(unmark(line))
+const isNoise = (line: string) => isWeek(line) || NOISE.test(line) || NOISE.test(unmark(line))
+
+// Parts of one session ("Warm-up:", "Main:") rather than sessions of their own.
+const SECTION = re(
+  '^(?:warm[- ]?ups?|main(?: (?:lifts?|work|part|block))?|strength|accessor(?:y|ies)(?: work)?|assistance|finisher|conditioning|' +
+    'cool[- ]?down|mobility|stretch(?:ing)?|super ?sets?|tri-?sets?|giant sets?|circuit|' +
+    'розминка|основн\\p{L}*(?: частина)?|допоміжн\\p{L}*(?: вправи)?|аксесуари|фінішер|заминка|розтяжка|суперсет\\p{L}*|трисет\\p{L}*|кругов\\p{L}*|коло|' +
+    'разминка|основн\\p{L}*(?: часть)?|вспомогательн\\p{L}*|финишер|растяжка|круг)(?: \\d)?$',
+)
+const PAIR_SECTION = re('^(?:super ?sets?|суперсет\\p{L}*|супер-сет\\p{L}*)(?: \\d)?$')
 
 // CSV
 
@@ -589,17 +646,51 @@ export function parseProgramText(input: string): ParsedText {
     days.push({ ...h, lines: [] })
   }
   let prevTag: Tag | undefined
+  // The open day came from a weekday or "Day 1", so a bare "Label:" inside it is a section.
+  let anchored = false
+  let pairSection = false
+
+  // "Week 2", or a weekday that comes round again, starts the next week; only the first is read.
+  let week = 0
+  let weekContent = false
+  let weekDays = new Set<DayIndex>()
+  let skippedWeeks = 0
+  const nextWeek = () => {
+    if (week > 0 && weekContent) skippedWeeks++
+    week++
+    weekContent = false
+    weekDays = new Set()
+  }
 
   const clean = lines.map((l) => normalizeText(l).trim())
   const content = clean.map((_, i) => i).filter((i) => !isNoise(clean[i]))
   // "My program" on top of notes that then start with a day: a title, not an exercise.
   const title = content.length > 1 && content[1] > content[0] + 1 && !/\d/.test(clean[content[0]]) && !parseHeader(clean[content[0]]) && !!parseHeader(clean[content[1]]) ? content[0] : -1
   clean.forEach((raw, i) => {
-    if (i === title || isNoise(raw)) return
-    const h = parseHeader(raw) ?? (isSessionLabel(raw) ? { day: null, label: label(stripLead(raw).text), rest: false } : null)
+    if (i === title) return
+    if (isWeek(raw)) {
+      if (weekContent) nextWeek()
+      return
+    }
+    if (isNoise(raw)) return
+    const h: Header | null = parseHeader(raw) ?? (isSessionLabel(raw) ? { day: null, label: label(stripLead(raw).text), rest: false, section: true } : null)
+    if (h && h.day !== null) {
+      if (weekDays.has(h.day) && current()?.day !== h.day) nextWeek()
+      weekDays.add(h.day)
+    }
+    weekContent = true
+    if (week > 0) return
     if (h) {
       prevTag = undefined
       const cur = current()
+      const section = h.section ? fold(h.label ?? '') : null
+      if (section !== null && cur && !cur.rest && (anchored || SECTION.test(section))) {
+        pairSection = PAIR_SECTION.test(section)
+        if (!cur.label && !cur.lines.length && !SECTION.test(section)) cur.label = h.label
+        return
+      }
+      pairSection = false
+      anchored = !h.section
       // "Monday:" then "Rest" marks that day; a lone "Rest" is a day of its own.
       if (h.rest && h.day === null && cur && !cur.lines.length && !cur.rest) {
         cur.rest = true
@@ -607,7 +698,7 @@ export function parseProgramText(input: string): ParsedText {
       }
       open({ day: h.day, rest: h.rest, ...(h.label ? { label: h.label } : {}) })
       if (h.also) also.set(current(), h.also)
-      if (h.rest_of_line) current().lines.push(...splitPair({ ...parseLine(h.rest_of_line)!, raw }))
+      if (h.lines) current().lines.push(...h.lines)
       return
     }
     const read = readLine(raw)
@@ -615,10 +706,13 @@ export function parseProgramText(input: string): ParsedText {
       warnings.push({ kind: 'unreadable', line: i + 1, raw })
       return
     }
-    if (!days.length || current().rest) open({ day: null, rest: false })
+    if (!days.length || current().rest) {
+      open({ day: null, rest: false })
+      anchored = false
+    }
     const cur = current()
     const [head, ...rest] = splitPair(read.line)
-    const tag = read.tag
+    const tag = read.tag ?? (pairSection ? { group: 'SS', index: 0 } : undefined)
     const pairsWithPrev =
       !!tag && !!prevTag && cur.lines.length > 0 && !cur.lines[cur.lines.length - 1].withPrev &&
       (tag.group === 'SS' ? prevTag.group === 'SS' : tag.group === prevTag.group && tag.index === prevTag.index + 1)
@@ -626,6 +720,8 @@ export function parseProgramText(input: string): ParsedText {
     prevTag = rest.length ? undefined : tag && pairsWithPrev && tag.group === 'SS' ? undefined : tag
   })
 
+  nextWeek()
+  if (skippedWeeks) warnings.push({ kind: 'extra_weeks', count: skippedWeeks })
   for (const [d, more] of also) {
     for (const day of more) days.push({ ...d, day, lines: d.lines.map((l) => ({ ...l })) })
   }
@@ -683,6 +779,15 @@ export function assignDays(days: readonly ParsedDay[]): { days: AssignedDay[]; w
 // Program
 
 export type ImportRef = ExerciseRef | { custom: CustomExerciseInput }
+
+/** A match on another program's custom exercise comes along as a copy, so the new program holds no ref it cannot resolve. */
+export function importRefFor(ref: ExerciseRef, sourceCustom: readonly CustomExercise[]): ImportRef | null {
+  if (typeof ref !== 'string') return ref
+  const found = sourceCustom.find((c) => c.id === ref)
+  if (!found) return null
+  const { id: _id, ...custom } = found
+  return { custom }
+}
 export type ImportEntry = { ref: ImportRef; sets?: number; reps?: string; restSec?: number; rir?: number; withPrev?: boolean }
 export type ImportDay = { day: DayIndex; label?: string; rest: boolean; entries: readonly ImportEntry[] }
 

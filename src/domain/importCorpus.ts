@@ -1,10 +1,11 @@
 /**
  * Program notes written the way people keep them, for the paste corpus test. Written for this
  * project; no third-party plans. Each line expects "name | sets x reps | rest N | rir N | ss",
- * leaving out what the line does not give.
+ * leaving out what the line does not give, and "check" when its numbers can be read more than one way.
+ * skippedWeeks counts the later weeks that are left out.
  */
 export type CorpusDay = { day: number; label?: string; rest?: true; lines?: string[] }
-export type CorpusCase = { id: string; text: string; days: CorpusDay[]; unreadable?: number }
+export type CorpusCase = { id: string; text: string; days: CorpusDay[]; unreadable?: number; skippedWeeks?: number }
 
 export const CORPUS: readonly CorpusCase[] = [
   {
@@ -314,5 +315,104 @@ export const CORPUS: readonly CorpusCase[] = [
       { day: 4, label: 'фулбаді', lines: ['жим стоячи | 3x8', 'випади | 3x10'] },
     ],
     unreadable: 0,
+  },
+  // Sections inside a day, lists on the weekday line, more than one week, weights first, distances
+  {
+    id: 'en-sections-inside-weekdays',
+    text: 'Monday\nWarm-up:\nBike 10 min\nMain:\nSquat 3x5\nBench 3x8\n\nWednesday\nSuperset:\nCurl 3x12\nPushdown 3x12\nCircuit:\nBurpee 3x10\nSwing 3x15\n\nFriday\nAccessories:\nFace pull 3x15',
+    days: [
+      { day: 0, lines: ['Bike | -x600s', 'Squat | 3x5', 'Bench | 3x8'] },
+      { day: 2, lines: ['Curl | 3x12', 'Pushdown | 3x12 | ss', 'Burpee | 3x10', 'Swing | 3x15'] },
+      { day: 4, lines: ['Face pull | 3x15'] },
+    ],
+  },
+  {
+    id: 'uk-sections-inside-weekdays',
+    text: 'Понеділок\nРозминка:\nВелосипед 10 хв\nОсновна частина:\nПрисідання 4х6\nСуперсет:\nЗгинання рук 3х12\nРозгинання рук 3х12\n\nЧетвер\nЗаминка:\nРозтяжка 5 хв',
+    days: [
+      { day: 0, lines: ['Велосипед | -x600s', 'Присідання | 4x6', 'Згинання рук | 3x12', 'Розгинання рук | 3x12 | ss'] },
+      { day: 3, lines: ['Розтяжка | -x300s'] },
+    ],
+  },
+  {
+    id: 'ru-sections-inside-weekdays',
+    text: 'Среда\nРазминка:\nСкакалка 5 мин\nКруговая:\nБерпи 3х10\nВыпады 3х12\nПятница\nОсновная часть:\nСтановая тяга 3х5',
+    days: [
+      { day: 2, lines: ['Скакалка | -x300s', 'Берпи | 3x10', 'Выпады | 3x12'] },
+      { day: 4, lines: ['Становая тяга | 3x5'] },
+    ],
+  },
+  {
+    id: 'en-list-on-weekday-line',
+    text: 'Monday: Bench 3x8, Squat 3x5\nTuesday - Bench 3x8, Rows 3x10, Squat 3x5\nThursday: Bench press, Incline DB press, Flyes\nFriday (chest, triceps)\nDips 3x10',
+    days: [
+      { day: 0, lines: ['Bench | 3x8', 'Squat | 3x5'] },
+      { day: 1, lines: ['Bench | 3x8', 'Rows | 3x10', 'Squat | 3x5'] },
+      { day: 3, lines: ['Bench press', 'Incline DB press', 'Flyes'] },
+      { day: 4, label: 'chest, triceps', lines: ['Dips | 3x10'] },
+    ],
+  },
+  {
+    id: 'uk-list-on-weekday-line',
+    text: 'Пн: Жим лежачи 4х8, Тяга 3х10; Присідання 3х5\nЧт: Жим стоячи, Підтягування, Махи',
+    days: [
+      { day: 0, lines: ['Жим лежачи | 4x8', 'Тяга | 3x10', 'Присідання | 3x5'] },
+      { day: 3, lines: ['Жим стоячи', 'Підтягування', 'Махи'] },
+    ],
+  },
+  {
+    id: 'ru-list-on-weekday-line',
+    text: 'Понедельник - Жим лежа 3х8, Присед 3х5\nСреда: Подтягивания, Тяга штанги, Шраги',
+    days: [
+      { day: 0, lines: ['Жим лежа | 3x8', 'Присед | 3x5'] },
+      { day: 2, lines: ['Подтягивания', 'Тяга штанги', 'Шраги'] },
+    ],
+  },
+  {
+    id: 'en-multi-week-reads-week-one',
+    text: 'Week 1\nMonday\nBench 3x8\nThursday\nSquat 3x5\nWeek 2\nMonday\nBench 3x9\nThursday\nSquat 3x6\nWeek 3\nMonday\nBench 3x10',
+    days: [
+      { day: 0, lines: ['Bench | 3x8'] },
+      { day: 3, lines: ['Squat | 3x5'] },
+    ],
+    skippedWeeks: 2,
+  },
+  {
+    id: 'uk-multi-week-reads-week-one',
+    text: 'Тиждень 1\nПн\nЖим 4х8\nЧт\nПрисід 4х6\n\nТиждень 2\nПн\nЖим 4х9\nЧт\nПрисід 4х7',
+    days: [
+      { day: 0, lines: ['Жим | 4x8'] },
+      { day: 3, lines: ['Присід | 4x6'] },
+    ],
+    skippedWeeks: 1,
+  },
+  {
+    id: 'ru-repeated-weekdays-are-a-second-week',
+    text: 'Пн\nЖим 3х8\nЧт\nПрисед 3х5\nПн\nЖим 3х9\nЧт\nПрисед 3х6',
+    days: [
+      { day: 0, lines: ['Жим | 3x8'] },
+      { day: 3, lines: ['Присед | 3x5'] },
+    ],
+    skippedWeeks: 1,
+  },
+  {
+    id: 'en-weight-first-triples',
+    text: 'Goblet squat 16x3x12\nDB curl 12x3x10\nBench 20x5x5\nSquat 100x5x5\nRow 3x10x60',
+    days: [{ day: 0, lines: ['Goblet squat | 3x12 | check', 'DB curl | 3x10 | check', 'Bench | 5x5 | check', 'Squat | 5x5', 'Row | 3x10'] }],
+  },
+  {
+    id: 'uk-ru-weight-first-triples',
+    text: 'Гоблет присід 16х3х12\nЖим 80х5х5\nПодъём на бицепс 12х3х10',
+    days: [{ day: 0, lines: ['Гоблет присід | 3x12 | check', 'Жим | 5x5', 'Подъём на бицепс | 3x10 | check'] }],
+  },
+  {
+    id: 'en-distances-are-not-minutes',
+    text: "Conditioning:\nFarmer's walk 3x40m\nSled push 4x20m rest 2m\nRun 400m",
+    days: [{ day: 0, label: 'Conditioning', lines: ["Farmer's walk | 3x-", 'Sled push | 4x- | rest 120', 'Run'] }],
+  },
+  {
+    id: 'uk-ru-distances-are-not-minutes',
+    text: 'Прогулянка фермера 3х40 м\nШтовхання саней 4х20 м\nФермерская прогулка 3х40 метров',
+    days: [{ day: 0, lines: ['Прогулянка фермера | 3x-', 'Штовхання саней | 4x-', 'Фермерская прогулка | 3x-'] }],
   },
 ]
