@@ -1,9 +1,11 @@
 import { getRouteApi, useNavigate, useRouter } from '@tanstack/react-router'
+import { ChevronRight, ClipboardPaste } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NotMedicalAdvice } from '../../app/brand'
 import { BrandMark } from '../../app/BrandMark'
 import { sortDays, type DayIndex } from '../../app/days'
 import { joinMeta } from '../../app/format'
+import { hasAnyProgram } from '../../app/firstRun'
 import { gapNote } from '../../app/knownGaps'
 import { useCatalog } from '../../app/useCatalog'
 import { computeCoverage } from '../../domain/coverage'
@@ -15,8 +17,9 @@ import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
 import { DayPicker } from '../builder'
+import { PasteSheet } from '../export'
 import { EquipmentPicker } from '../settings/EquipmentPicker'
-import { Button, LanguageCards, Page, PageBody, StickyActions, cx, showToast } from '../../ui'
+import { Button, LanguageCards, Page, PageBody, StickyActions, cx, showToast, useSheet } from '../../ui'
 import { welcomeMessages } from './messages'
 import { TemplateCard } from './TemplateCard'
 
@@ -51,6 +54,7 @@ export function WelcomeScreen() {
   const [equip, setEquip] = useState<string[]>(() => [...prefs.equipment])
   const m = useMessages(welcomeMessages)
   const locale = useLocale()
+  const paste = useSheet('paste')
 
   const template = choice === BLANK ? undefined : splitById.get(choice)
   const trainingDays = days ?? template?.defaultDays ?? [0, 2, 4]
@@ -79,6 +83,12 @@ export function WelcomeScreen() {
   const skip = () => {
     createBlank()
     void navigate({ to: '/', replace: true })
+  }
+
+  // A pasted program is the whole first run; its equipment can be swapped later in Settings.
+  const closePaste = () => {
+    if (hasAnyProgram()) void navigate({ to: '/', replace: true })
+    else paste.close()
   }
 
   const finish = () => {
@@ -157,6 +167,20 @@ export function WelcomeScreen() {
                   }}
                 />
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => paste.show()}
+                  className="flex w-full items-center gap-4 rounded-xl border-2 border-dashed border-line-strong p-4 text-left transition-colors hover:border-ink"
+                >
+                  <ClipboardPaste size={22} strokeWidth={1.75} aria-hidden className="shrink-0 text-ink-2" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-md font-semibold leading-snug">{m.havePlan}</span>
+                    <span className="mt-0.5 block text-sm text-ink-2">{m.havePlanDescription}</span>
+                  </span>
+                  <ChevronRight size={18} aria-hidden className="shrink-0 text-ink-3" />
+                </button>
+              </li>
             </ul>
           )}
 
@@ -195,6 +219,7 @@ export function WelcomeScreen() {
           </Button>
         )}
       </StickyActions>
+      <PasteSheet open={paste.open} onClose={closePaste} />
     </Page>
   )
 }

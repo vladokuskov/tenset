@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { hasAnyProgram } from '../app/firstRun'
-import { stepParam } from '../app/search'
+import { sheetParam, stepParam } from '../app/search'
 import { WelcomeScreen } from '../features/welcome/WelcomeScreen'
 
-// URL contract: /welcome?step=1|2|3 (each step is a history entry, so back goes to the previous step)
-const WelcomeSearch = z.object({ step: stepParam(3) })
+// URL contract: /welcome?step=1|2|3 (each step is a history entry, so back goes to the previous step) &sheet=paste
+const WelcomeSearch = z.object({ step: stepParam(3), sheet: sheetParam(['paste']) })
 
 export const Route = createFileRoute('/welcome')({
   validateSearch: WelcomeSearch,
