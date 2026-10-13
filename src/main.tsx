@@ -5,9 +5,10 @@ import { whenIdle } from './app/idle'
 import { loadExerciseText } from './data/localize'
 import { getLocale } from './i18n/messages'
 import { routeTree } from './routeTree.gen'
+import { RouteError } from './routes/-RouteError'
 import './styles/app.css'
 
-const router = createRouter({ routeTree })
+const router = createRouter({ routeTree, defaultErrorComponent: RouteError })
 
 declare module '@tanstack/react-router' {
   interface Register {
