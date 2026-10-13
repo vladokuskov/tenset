@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
-import { expect, startFromTemplate, storedPrograms, test } from './fixtures'
+import { entryRows, expect, openDay, startFromTemplate, storedPrograms, test } from './fixtures'
 
 const day = (kind: 'train' | 'rest') => ({ kind, entries: [] as unknown[] })
 const program = (id: string, name: string) => ({ id, name, days: [day('train'), ...Array.from({ length: 6 }, () => day('rest'))], custom: [] })
@@ -101,6 +101,23 @@ test('asks for persistent storage after the first change', async ({ page }) => {
   expect(await calls()).toBe(0)
   await startFromTemplate(page)
   await expect.poll(calls).toBe(1)
+})
+
+test('a save failure on an edit is not hidden by its change toast', async ({ page }) => {
+  await startFromTemplate(page, 'Upper/Lower 4x')
+  await openDay(page, 'Monday')
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (key === 'gb:programs') throw new DOMException('full', 'QuotaExceededError')
+      return original.call(this, key, value)
+    }
+  })
+  await entryRows(page).filter({ hasText: 'Barbell Bench Press' }).getByRole('button', { name: 'More sets of Barbell Bench Press' }).click()
+  const warning = page.getByRole('status').filter({ hasText: 'could not be saved on this device' })
+  await expect(warning).toBeVisible()
+  await Promise.all([page.waitForEvent('download'), warning.getByRole('button', { name: 'Download backup' }).click()])
+  await expect(page.getByRole('status').filter({ hasText: 'Barbell Bench Press: 5 sets' })).toBeVisible()
 })
 
 test('says so when a save fails and offers a backup', async ({ page }) => {
