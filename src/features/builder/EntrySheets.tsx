@@ -15,12 +15,13 @@ import { useProgramStore } from '../../store/program.store'
 import { Button, Chip, Sheet, Stepper, cx, useSheet } from '../../ui'
 import { rankAlternatives } from '../catalog'
 import { ChangeBar } from './ChangeBar'
+import { EntryNoteField } from './EntryNoteField'
 import { RestPicker, RirPicker, SupersetToggle } from './EntryTargets'
 import { REPS_PRESETS, SECONDS_PRESETS, defaultReps, isCustom, repsText, unitOf, type AnyExercise } from './labels'
 import { exerciseFor, findEntry } from './lookup'
 import { builderMessages } from './messages'
 import { PickRow } from './PickRow'
-import { undoLastChange, useChange } from './useChange'
+import { carryUndo, undoLastChange, useChange } from './useChange'
 
 const rowClass = 'flex min-h-12 w-full items-center gap-3 rounded-md px-2 text-left text-base hover:bg-surface-2'
 
@@ -77,6 +78,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   const setSets = useProgramStore((s) => s.setSets)
   const removeEntry = useProgramStore((s) => s.removeEntry)
   const reorder = useProgramStore((s) => s.reorder)
+  const setEntryNote = useProgramStore((s) => s.setEntryNote)
   const view = useWeek()
   const upRef = useRef<HTMLButtonElement>(null)
   const downRef = useRef<HTMLButtonElement>(null)
@@ -85,10 +87,18 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   const m = builderMessages[locale]
   const c = common[locale]
   const [status, setStatus] = useState<string | null>(null)
+  const savedNote = data?.found.entry.note ?? ''
+  const [note, setNote] = useState(savedNote)
+  const [shownNote, setShownNote] = useState(savedNote)
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
     setWasOpen(open)
     if (open) setStatus(null)
+  }
+  // Follows the stored note when it changes underneath (opening another entry, Undo).
+  if (savedNote !== shownNote) {
+    setShownNote(savedNote)
+    setNote(savedNote)
   }
   if (!data) return <Sheet open={false} onClose={onClose} title={m.exercise} />
 
@@ -97,6 +107,21 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   const run = (message: string, action: () => void, noteSplit?: boolean) => {
     const res = change(message, action, { toast: false, noteSplit })
     if (res) setStatus(res.message)
+    return res?.message ?? null
+  }
+  const saveNote = () => {
+    if (note.trim() === savedNote) return null
+    return run(note.trim() ? m.noteSaved : m.noteRemoved, () => setEntryNote(entry.id, note))
+  }
+  // A typed note is saved before leaving. On close its Undo moves to a toast, also when blur saved it first.
+  const close = () => {
+    const saved = saveNote() ?? (status === m.noteSaved || status === m.noteRemoved ? status : null)
+    onClose()
+    carryUndo(saved)
+  }
+  const switchTo = (name: string) => {
+    saveNote()
+    onSwitch(name)
   }
   const unit = unitOf(ex)
   const count = view?.program.days[day]?.entries.length ?? 0
@@ -110,7 +135,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
   return (
     <Sheet
       open={open}
-      onClose={onClose}
+      onClose={close}
       title={ex.name}
       description={joinMeta([dayName(day, 'long', locale), c.sets(entry.sets), entry.reps && repsText(entry.reps, unit, locale)])}
       footer={<ChangeBar message={status} onUndo={status && status !== c.undone ? () => undoLastChange() && setStatus(c.undone) : undefined} />}
@@ -131,6 +156,7 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
       <RestPicker key={`rest-${open}`} entry={entry} exercise={ex} onChange={run} className="mt-5" />
       <RirPicker entry={entry} onChange={run} className="mt-5" />
       <SupersetToggle entry={entry} index={data.found.index} day={day} exercise={ex} onChange={run} className="-mx-2 mt-4" />
+      <EntryNoteField value={note} name={ex.name} onChange={setNote} onSave={saveNote} className="mt-4" />
 
       <ul className="-mx-2 mt-5 border-t border-line pt-2">
         {count > 1 && (
@@ -139,12 +165,12 @@ function EntryMenu({ open, onClose, data, onSwitch }: { open: boolean; onClose: 
             <ActionRow ref={downRef} icon={ArrowDown} label={m.moveDown} disabled={index >= count - 1} onClick={() => move(index + 1)} />
           </>
         )}
-        <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => onSwitch('swap')} />
-        <ActionRow icon={CalendarArrowUp} label={m.moveOther} onClick={() => onSwitch('move')} />
-        <ActionRow icon={Copy} label={m.copyOther} onClick={() => onSwitch('copy')} />
+        <ActionRow icon={ArrowLeftRight} label={m.swapSimilar} onClick={() => switchTo('swap')} />
+        <ActionRow icon={CalendarArrowUp} label={m.moveOther} onClick={() => switchTo('move')} />
+        <ActionRow icon={Copy} label={m.copyOther} onClick={() => switchTo('copy')} />
         {!isCustom(ex) && (
           <li>
-            <Link to="/exercise/$slug" params={{ slug: ex.slug }} className={rowClass}>
+            <Link to="/exercise/$slug" params={{ slug: ex.slug }} className={rowClass} onClick={() => saveNote()}>
               <Info size={20} strokeWidth={1.75} className="shrink-0 text-ink-2" aria-hidden />
               <span className="flex-1">{m.exerciseDetails}</span>
               <ChevronRight size={18} className="text-ink-3" aria-hidden />

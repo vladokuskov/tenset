@@ -221,6 +221,13 @@ export const builderMessages = defineMessages({
     supersetMarker: (letter: string, position: 1 | 2) => `Superset ${letter}, ${position === 1 ? 'first' : 'second'} of two`,
     restChip: (time: string) => `Rest ${time}`,
 
+    // Entry note
+    entryNote: 'Note',
+    entryNoteFor: (name: string) => `Note for ${name}`,
+    entryNotePlaceholder: 'e.g. Seat 4, pause at bottom',
+    entryNoteHint: 'Shown with the exercise and on the gym sheet. Never counted.',
+    noteOn: (text: string) => `Note: ${text}`,
+
     // Entry list and board
     sortLabel: (name: string, position: number) => `${name}, position ${position}`,
     boardSortLabel: (name: string, day: number, position: number) => `${name} ${dayName(day, 'on', 'en')}, position ${position}`,
@@ -466,6 +473,12 @@ export const builderMessages = defineMessages({
     supersetSplit: (base) => `${base}. Суперсет розділено`,
     supersetMarker: (letter, position) => `Суперсет ${letter}, ${position === 1 ? 'перша' : 'друга'} з двох`,
     restChip: (time) => `Відпочинок ${time}`,
+
+    entryNote: 'Нотатка',
+    entryNoteFor: (name) => `Нотатка для «${name}»`,
+    entryNotePlaceholder: 'Напр. Сидіння 4, пауза внизу',
+    entryNoteHint: 'Видно біля вправи та на аркуші для залу. Не впливає на підрахунок.',
+    noteOn: (text) => `Нотатка: ${text}`,
 
     sortLabel: (name, position) => `${name}, позиція ${position}`,
     boardSortLabel: (name, day, position) => `${name} ${dayName(day, 'on', 'uk')}, позиція ${position}`,

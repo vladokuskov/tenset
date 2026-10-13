@@ -117,6 +117,16 @@ export const exportMessages = defineMessages({
 
     restPart: (rest: string) => `rest ${rest}`,
 
+    // Gym sheet print layout
+    layoutLabel: 'Layout',
+    layoutWeek: 'Week',
+    layoutGym: 'Gym sheet',
+    gymHeader: (days: number, date: string) => `Gym sheet · ${common.en.trainingDays(days)} · ${date}`,
+    gymHint: 'Write the weight and reps of each set in its box.',
+    gymDate: 'Date',
+    gymEmpty: 'No training days with exercises yet.',
+    setBoxes: (n: number) => `${n} ${plural('en', n, { one: 'box', other: 'boxes' })} to fill in`,
+
     calendar: {
       title: 'Add to calendar',
       text: "Adds a weekly event for each training day. Your calendar app keeps them; changes here don't update it.",
@@ -258,6 +268,15 @@ export const exportMessages = defineMessages({
     footer: (disclaimer) => `${disclaimer} Створено в ${APP_NAME}.`,
 
     restPart: (rest) => `відпочинок ${rest}`,
+
+    layoutLabel: 'Макет',
+    layoutWeek: 'Тиждень',
+    layoutGym: 'Аркуш для залу',
+    gymHeader: (days, date) => `Аркуш для залу · ${common.uk.trainingDays(days)} · ${date}`,
+    gymHint: 'Впишіть вагу та повторення кожного підходу в його клітинку.',
+    gymDate: 'Дата',
+    gymEmpty: 'Поки немає тренувальних днів із вправами.',
+    setBoxes: (n) => `${n} ${plural('uk', n, { one: 'клітинка', few: 'клітинки', many: 'клітинок', other: 'клітинки' })} для запису`,
 
     calendar: {
       title: 'Додати в календар',

@@ -23,4 +23,10 @@ describe('migrations', () => {
     expect(runMigrations(state, 0, PROGRAMS_VERSION, programMigrations)).toEqual(state)
     expect(runMigrations(state, 0, PREFS_VERSION, prefsMigrations)).toEqual(state)
   })
+
+  it('programs v2 adds optional entry notes, so v1 programs pass through unchanged', () => {
+    expect(PROGRAMS_VERSION).toBe(2)
+    const state = { programs: { a: { id: 'a', days: [{ kind: 'train', entries: [{ id: 'e1', exerciseId: 101, sets: 3 }] }] } }, activeId: 'a' }
+    expect(runMigrations(state, 1, PROGRAMS_VERSION, programMigrations)).toEqual(state)
+  })
 })

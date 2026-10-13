@@ -7,20 +7,23 @@ import { uniqueName } from '../share/names'
 export const BACKUP_FORMAT = 'tenset-backup'
 /** Written before the rename to Tenset; still imported. */
 const LEGACY_BACKUP_FORMAT = 'gym-builder-backup'
-export const BACKUP_VERSION = 1
+export const BACKUP_VERSION = 2
 const MAX_BYTES = 5_000_000
 
 // Keyed by the version a step migrates from, like the store migrations.
-export const backupMigrations: MigrationChain = {}
+// v2 added optional entry notes; the bump makes older apps refuse the file instead of dropping them.
+export const backupMigrations: MigrationChain = {
+  1: (file) => ({ ...(file as object), version: 2 }),
+}
 
 const Envelope = z.object({
   format: z.enum([BACKUP_FORMAT, LEGACY_BACKUP_FORMAT]),
   version: z.number().int().min(1),
 })
 
-const BackupV1 = z.object({
+const BackupFile = z.object({
   format: z.enum([BACKUP_FORMAT, LEGACY_BACKUP_FORMAT]),
-  version: z.literal(1),
+  version: z.literal(BACKUP_VERSION),
   exportedAt: z.string(),
   activeId: z.string().nullable(),
   programs: z.array(z.unknown()),
@@ -108,7 +111,7 @@ export function parseBackup(text: string): ParseBackupResult {
   } catch {
     return { ok: false, error: 'invalid' }
   }
-  const file = BackupV1.safeParse(migrated)
+  const file = BackupFile.safeParse(migrated)
   if (!file.success) return { ok: false, error: 'invalid' }
 
   const programs: Program[] = []
