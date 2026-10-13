@@ -28,7 +28,9 @@ export const CODEC_EQUIPMENT_V1 = [
 
 const LATERALITY = ['bilateral', 'unilateral', 'alternating'] as const
 
-const MAX_INPUT = 16384
+/** Longest fragment decodeProgram accepts, and so the longest encodeProgram produces. */
+export const SHARE_LINK_MAX = 16384
+export const SHARE_DAY_ENTRIES_MAX = 255
 
 // entry header byte: bit0 custom ref, bits1-2 reps kind, bits3-7 sets - 1
 const REPS_NONE = 0
@@ -46,6 +48,9 @@ const REST_STEPS_MAX = 40
 const usesV2 = (e: Entry) => e.restSec !== undefined || e.rir !== undefined || !!e.withPrev
 
 class CodecError extends Error {}
+
+/** The program cannot travel in a share link that decodeProgram would accept. */
+export class ShareLinkError extends Error {}
 
 function writer() {
   const bytes: number[] = []
@@ -163,6 +168,7 @@ export function encodeProgram(program: Program): string {
   }
 
   for (const d of program.days) {
+    if (d.entries.length > SHARE_DAY_ENTRIES_MAX) throw new ShareLinkError(`over ${SHARE_DAY_ENTRIES_MAX} entries in a day`)
     w.varint(d.entries.length)
     for (const e of d.entries) {
       const custom = typeof e.exerciseId === 'string'
@@ -182,7 +188,9 @@ export function encodeProgram(program: Program): string {
       }
     }
   }
-  return toBase64Url(w.done())
+  const out = toBase64Url(w.done())
+  if (out.length > SHARE_LINK_MAX) throw new ShareLinkError(`over ${SHARE_LINK_MAX} characters`)
+  return out
 }
 
 export type DecodeOptions = {
@@ -209,7 +217,7 @@ function mapRetired(id: number, replacedBy: ReadonlyMap<number, number> | undefi
 export function decodeProgram(input: string, opts: DecodeOptions = {}): DecodeResult {
   const s = input.trim().replace(/^#/, '')
   if (!s) return { ok: false, error: 'empty' }
-  if (s.length > MAX_INPUT) return { ok: false, error: 'malformed' }
+  if (s.length > SHARE_LINK_MAX) return { ok: false, error: 'malformed' }
 
   let candidate: unknown
   try {
@@ -291,7 +299,7 @@ function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions, ext = false) 
   const days: Day[] = []
   for (let d = 0; d < 7; d++) {
     const count = r.varint()
-    if (count > 255) throw new CodecError('too many entries')
+    if (count > SHARE_DAY_ENTRIES_MAX) throw new CodecError('too many entries')
     const entries: Entry[] = []
     for (let k = 0; k < count; k++) {
       const head = r.u8()

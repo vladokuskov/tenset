@@ -1,4 +1,11 @@
-import { CODEC_EQUIPMENT_V1, CODEC_GROUPS_V1, REPS_PRESETS, decodeProgram, encodeProgram } from '../../src/domain/codec.ts'
+import {
+  CODEC_EQUIPMENT_V1,
+  CODEC_GROUPS_V1,
+  REPS_PRESETS,
+  ShareLinkError,
+  decodeProgram,
+  encodeProgram,
+} from '../../src/domain/codec.ts'
 import { equipment, hasEquipment } from '../../src/domain/equipment.ts'
 import { sequentialIds } from '../../src/domain/ids.ts'
 import {
@@ -235,7 +242,14 @@ function summarize(program: Program) {
 
 export function createProgram(input: ProgramInput, origin: string) {
   const { program, notes } = buildProgram(input)
-  const url = `${origin.replace(/\/$/, '')}/shared#${encodeProgram(program)}`
+  let fragment: string
+  try {
+    fragment = encodeProgram(program)
+  } catch (e) {
+    if (e instanceof ShareLinkError) throw new ToolError([`program is too large for a share link (${e.message}), use fewer exercises`])
+    throw e
+  }
+  const url = `${origin.replace(/\/$/, '')}/shared#${fragment}`
   return { url, ...summarize(program), ...(notes.length ? { notes } : {}) }
 }
 

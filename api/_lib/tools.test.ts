@@ -146,6 +146,13 @@ describe('createProgram', () => {
   })
 })
 
+it('refuses a program its share link could not carry', () => {
+  const entries = Array.from({ length: 256 }, () => ({ exerciseId: 101, sets: 3 }))
+  expect(problemsOf(() => createProgram({ name: 'Big', days: [{ day: 0, entries }] }, ORIGIN))[0]).toMatch(/too large for a share link/)
+  const ok = createProgram({ name: 'Big', days: [{ day: 0, entries: entries.slice(0, 255) }] }, ORIGIN)
+  expect(decodeProgram(ok.url.split('#')[1]).ok).toBe(true)
+})
+
 describe('searchExercises', () => {
   it('filters by group, equipment and words', () => {
     const { exercises } = searchExercises({ group: 'chest', equipment: ['dumbbell', 'flat_bench', 'adjustable_bench'] })
