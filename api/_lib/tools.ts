@@ -26,6 +26,7 @@ import { buildCatalogIndex, englishSearchLabels, searchCatalog } from '../../src
 import { groups } from '../../src/domain/taxonomy.ts'
 import { bandFor, computeWeek } from '../../src/domain/volume.ts'
 import { catalog, exercises, replacedBy, splits } from './catalog.ts'
+import { ENTRIES_MAX, QUERY_MAX } from './inputs.ts'
 
 export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 
@@ -89,6 +90,8 @@ export function getReference() {
       restMaxSec: REST_MAX,
       restStepSec: REST_STEP,
       rirMax: RIR_MAX,
+      entriesPerDayMax: ENTRIES_MAX,
+      queryMax: QUERY_MAX,
     },
   }
 }

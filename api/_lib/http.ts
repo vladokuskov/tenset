@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BodyTooLarge, readBody } from './body.ts'
 import { ProgramInput, ReadInput, SearchInput } from './inputs.ts'
 import { ToolError, createProgram, getReference, listSplits, readProgram, searchExercises } from './tools.ts'
 
@@ -47,8 +48,9 @@ function jsonParam(params: URLSearchParams, name: string): unknown {
 }
 
 async function body(request: Request): Promise<unknown> {
+  const text = await readBody(request)
   try {
-    return await request.json()
+    return JSON.parse(text)
   } catch {
     throw new BadInput(['body is not valid JSON'])
   }
@@ -95,6 +97,7 @@ export async function handleAgentRequest(request: Request): Promise<Response> {
     return reply(405, { error: `${request.method} is not supported here`, routes: ROUTES })
   } catch (e) {
     if (e instanceof BadInput || e instanceof ToolError) return reply(400, { error: 'Fix these and try again', problems: e.problems })
+    if (e instanceof BodyTooLarge) return reply(413, { error: e.message })
     throw e
   }
 }
