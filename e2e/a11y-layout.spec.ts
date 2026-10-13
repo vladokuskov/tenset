@@ -224,6 +224,19 @@ test.describe('200% text size', () => {
     expect(spill).toBeLessThanOrEqual(1)
   })
 
+  test('muscle sheet rows keep room for the exercise next to the stepper', async ({ page }) => {
+    await startFromTemplate(page, 'Upper/Lower 4x')
+    await page.goto('/body?sheet=muscle&group=calves')
+    await zoom(page)
+    const sheet = openSheet(page)
+    await expect(sheet.getByRole('button', { name: /^More sets of/ }).first()).toBeVisible()
+    const widths = await sheet.locator('li:has(button[aria-label^="More sets of"]) > :first-child').evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect().width / parseFloat(getComputedStyle(el).fontSize)),
+    )
+    expect(widths.length).toBeGreaterThan(0)
+    expect(Math.min(...widths), 'exercise column, in ems').toBeGreaterThanOrEqual(5)
+  })
+
   test('Day screen opens without horizontal scroll', async ({ page }) => {
     await startFromTemplate(page, 'Upper/Lower 4x')
     await openDay(page, 'Monday')

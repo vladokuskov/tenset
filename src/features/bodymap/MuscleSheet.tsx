@@ -250,13 +250,13 @@ function Body({
           >
             {m.fromYourExercises}
           </Heading>
-          <ul className="divide-y divide-line">
+          <ul className="@container divide-y divide-line">
             {contributions.map((c) => {
               const name = nameOf(c.exerciseRef) ?? m.unknownExercise
               const ex = typeof c.exerciseRef === 'number' ? catalog.get(c.exerciseRef) : undefined
               const body = (
                 <>
-                  <span className="block truncate text-base text-ink">{name}</span>
+                  <span className="block truncate text-base text-ink @max-3xs:whitespace-normal @max-3xs:break-words">{name}</span>
                   <span className="num block text-sm text-ink-2">
                     {dayName(c.day, 'short', locale)} · {m.contribution(c.sets, c.value)}
                   </span>
@@ -268,13 +268,13 @@ function Body({
                 if (res) onStatus(res.message)
               }
               return (
-                <li key={`${c.entryId}`} className="flex min-h-12 items-center gap-3 py-2">
+                <li key={`${c.entryId}`} className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 py-2">
                   {ex ? (
-                    <Link to="/exercise/$slug" params={{ slug: ex.slug }} className="min-w-0 flex-1">
+                    <Link to="/exercise/$slug" params={{ slug: ex.slug }} className="min-w-0 flex-1 @max-3xs:basis-full">
                       {body}
                     </Link>
                   ) : (
-                    <div className="min-w-0 flex-1">{body}</div>
+                    <div className="min-w-0 flex-1 @max-3xs:basis-full">{body}</div>
                   )}
                   <Stepper
                     value={c.sets}
