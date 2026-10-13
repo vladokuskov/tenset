@@ -253,6 +253,18 @@ describe('rest, RIR and supersets', () => {
     expect(Program.safeParse(p).success).toBe(true)
   })
 
+  it('trims entry notes, caps them at 60 and clears blank ones', () => {
+    let p = ops.setEntryNote(base(), 'e1', '  seat 4  ')
+    expect(p.days[0].entries[0].note).toBe('seat 4')
+    expect(ops.setEntryNote(p, 'e1', 'x'.repeat(90)).days[0].entries[0].note).toHaveLength(ops.ENTRY_NOTE_MAX)
+    expect(ops.setEntryNote(p, 'e1', '   ').days[0].entries[0]).not.toHaveProperty('note')
+    expect(ops.setEntryNote(p, 'e1', undefined).days[0].entries[0]).not.toHaveProperty('note')
+    expect(ops.copyEntry(p, 'e1', 1, sequentialIds('x')).days[1].entries[0].note).toBe('seat 4')
+    expect(Program.safeParse(p).success).toBe(true)
+    p = ops.setEntryNote(p, 'e1', 'pause at bottom')
+    expect(Program.safeParse({ ...p, days: p.days.map((d) => ({ ...d, entries: d.entries.map((e) => ({ ...e, note: 'x'.repeat(61) })) })) }).success).toBe(false)
+  })
+
   it('links pairs only', () => {
     const p = paired()
     expect(flags(p)).toEqual(['e1', 'e2', 'e3+', 'e4'])

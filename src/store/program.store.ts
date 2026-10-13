@@ -55,6 +55,7 @@ export type ProgramActions = {
   setReps(entryId: string, reps: string | undefined): void
   setRestSec(entryId: string, sec: number | undefined): void
   setRir(entryId: string, rir: number | undefined): void
+  setEntryNote(entryId: string, note: string | undefined): void
   linkWithPrev(entryId: string, on: boolean): void
   duplicateDay(from: Day, to: Day): void
   /** Swaps two whole days (kind, label, note and exercises). */
@@ -198,6 +199,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           setReps: (entryId, reps) => mutate('setReps', (p) => ops.setReps(p, entryId, reps)),
           setRestSec: (entryId, sec) => mutate('setRestSec', (p) => ops.setRestSec(p, entryId, sec)),
           setRir: (entryId, rir) => mutate('setRir', (p) => ops.setRir(p, entryId, rir)),
+          setEntryNote: (entryId, note) => mutate('setEntryNote', (p) => ops.setEntryNote(p, entryId, note)),
           linkWithPrev: (entryId, on) => mutate('linkWithPrev', (p) => ops.linkWithPrev(p, entryId, on)),
           duplicateDay: (from, to) => mutate('duplicateDay', (p) => ops.duplicateDay(p, from, to, makeId)),
           moveDay: (from, to) => mutate('moveDay', (p) => swapDays(p, from, to)),

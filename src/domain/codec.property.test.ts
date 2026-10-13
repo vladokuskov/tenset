@@ -22,6 +22,7 @@ const entry = (refs: readonly (number | string)[]) =>
       restSec: fc.integer({ min: 0, max: 40 }).map((n) => n * 15),
       rir: fc.integer({ min: 0, max: 5 }),
       withPrev: fc.constant(true as const),
+      note: fc.string({ minLength: 1, maxLength: 60 }),
     },
     { requiredKeys: ['exerciseId', 'sets'] },
   )

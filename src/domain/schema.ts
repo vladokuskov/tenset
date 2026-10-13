@@ -157,6 +157,8 @@ export const Entry = z.object({
   rir: z.number().int().min(0).max(5).optional(),
   /** Superset: paired with the entry above. Pairs only; program ops keep this consistent. */
   withPrev: z.literal(true).optional(),
+  /** Free text for the gym floor, e.g. "seat 4". Never counted. */
+  note: z.string().max(60).optional(),
 })
 
 export const Day = z.object({

@@ -24,7 +24,7 @@ describe('program store', () => {
     const id = store.getState().createBlank('Mine', [0, 2])
     expect(store.getState().activeId).toBe(id)
     const raw = saved(storage)
-    expect(raw.version).toBe(1)
+    expect(raw.version).toBe(2)
     expect(Object.keys(raw.state)).toEqual(['programs', 'activeId'])
     expect(raw.state.programs[id].name).toBe('Mine')
   })
@@ -292,7 +292,22 @@ describe('program store', () => {
     storage.setItem(PROGRAMS_KEY, JSON.stringify({ state: { programs: { old: p }, activeId: 'old' }, version: 0 }))
     const { store } = make(storage)
     expect(store.getState().programs.old).toEqual(p)
-    expect(saved(storage).version).toBe(1)
+    expect(saved(storage).version).toBe(2)
+  })
+
+  it('migrates v1 state to v2 and keeps entry notes from then on', () => {
+    const storage = memoryStorage()
+    const p = blankProgram('old', 'Old')
+    p.days[0].entries.push({ id: 'e1', exerciseId: BENCH.id, sets: 3, rir: 2 })
+    storage.setItem(PROGRAMS_KEY, JSON.stringify({ state: { programs: { old: p }, activeId: 'old' }, version: 1 }))
+    const { store } = make(storage)
+    expect(store.getState().programs.old).toEqual(p)
+    store.getState().setEntryNote('e1', 'seat 4')
+    expect(saved(storage).version).toBe(2)
+    expect(saved(storage).state.programs.old.days[0].entries[0]).toEqual({ id: 'e1', exerciseId: BENCH.id, sets: 3, rir: 2, note: 'seat 4' })
+    expect(make(storage).store.getState().programs.old.days[0].entries[0].note).toBe('seat 4')
+    store.getState().undo()
+    expect(store.getState().programs.old.days[0].entries[0]).not.toHaveProperty('note')
   })
 
   it('works when storage throws and reports the failed write', () => {

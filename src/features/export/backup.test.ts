@@ -23,6 +23,19 @@ describe('backup', () => {
     expect(res.backup.exportedAt).toBe('2026-09-26T10:00:00.000Z')
   })
 
+  it('carries entry notes and still imports v1 files', () => {
+    const noted = blankProgram('n', 'Noted', [0])
+    noted.days[0].entries.push({ id: 'e1', exerciseId: 101, sets: 3, note: 'seat 4' })
+    const backup = createBackup({ programs: { n: noted }, activeId: 'n' }, prefs)
+    expect(backup.version).toBe(2)
+    const res = parseBackup(serializeBackup(backup))
+    expect(res.ok && res.backup.programs[0].days[0].entries[0].note).toBe('seat 4')
+
+    const v1 = { ...createBackup({ programs: { a }, activeId: 'a' }, prefs), version: 1 }
+    const old = parseBackup(JSON.stringify(v1))
+    expect(old.ok && old.backup.programs).toEqual([a])
+  })
+
   it('still imports backups saved before the rename', () => {
     const legacy = { ...createBackup({ programs: { a }, activeId: 'a' }, prefs), format: 'gym-builder-backup' }
     const res = parseBackup(JSON.stringify(legacy))
@@ -33,6 +46,7 @@ describe('backup', () => {
     expect(parseBackup('nope')).toEqual({ ok: false, error: 'not_json' })
     expect(parseBackup('{"programs":[]}')).toEqual({ ok: false, error: 'wrong_file' })
     expect(parseBackup(JSON.stringify({ format: 'gym-builder-backup', version: 99 }))).toEqual({ ok: false, error: 'newer_version' })
+    expect(parseBackup(JSON.stringify({ format: 'tenset-backup', version: 3 }))).toEqual({ ok: false, error: 'newer_version' })
     expect(parseBackup(JSON.stringify({ format: 'gym-builder-backup', version: 1 }))).toEqual({ ok: false, error: 'invalid' })
     expect(parseBackup('x'.repeat(5_000_001))).toEqual({ ok: false, error: 'too_large' })
   })

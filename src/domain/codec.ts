@@ -4,11 +4,13 @@ import { Program, type CustomExercise, type Day, type Entry, type ExerciseRef } 
 
 // Share link format. Version byte first, then a compact binary program, then base64url.
 // The tables below are part of the v1 wire format: append only, never reorder or remove.
-// v2 is v1 plus one extension byte per entry. Programs that use no v2 field still encode as v1,
-// so older cached apps keep reading them.
+// v2 is v1 plus one extension byte per entry. v3 is v2 plus an entry note flagged in that byte.
+// Each program is written with the lowest version that holds it, so older cached apps keep reading
+// links that use no newer field.
 
-export const CODEC_VERSION = 2
+export const CODEC_VERSION = 3
 const V1 = 1
+const V2 = 2
 
 export const REPS_PRESETS = ['3-5', '6-8', '8-12', '10-15', '15-20', '20-30'] as const
 
@@ -38,14 +40,21 @@ const REPS_PRESET = 1
 const REPS_TEXT = 2
 
 // v2 entry extension byte: bit0 rest follows (u8, steps of 15 s), bit1 has rir, bit2 superset with previous,
-// bits3-5 rir, bits6-7 reserved (0)
+// bits3-5 rir, bit6 note follows the rest byte (v3 only, else 0), bit7 reserved (0)
 const EXT_REST = 1
 const EXT_RIR = 2
 const EXT_WITH_PREV = 4
+const EXT_NOTE = 0x40
 const REST_STEP = 15
 const REST_STEPS_MAX = 40
 
 const usesV2 = (e: Entry) => e.restSec !== undefined || e.rir !== undefined || !!e.withPrev
+const usesV3 = (e: Entry) => !!e.note
+
+function versionFor(days: readonly Day[]): number {
+  const entries = days.flatMap((d) => d.entries)
+  return entries.some(usesV3) ? CODEC_VERSION : entries.some(usesV2) ? V2 : V1
+}
 
 class CodecError extends Error {}
 
@@ -143,8 +152,9 @@ const customNumber = (id: string) => Number(id.slice(1))
 
 export function encodeProgram(program: Program): string {
   const w = writer()
-  const ext = program.days.some((d) => d.entries.some(usesV2))
-  w.u8(ext ? CODEC_VERSION : V1)
+  const version = versionFor(program.days)
+  const ext = version >= V2
+  w.u8(version)
   w.str(program.name)
   w.u8(mask(program.days, (d) => d.kind === 'train'))
   w.u8(mask(program.days, (d) => !!d.label))
@@ -182,9 +192,13 @@ export function encodeProgram(program: Program): string {
       if (ext) {
         const rest = e.restSec === undefined ? -1 : Math.round(e.restSec / REST_STEP)
         w.u8(
-          (rest >= 0 ? EXT_REST : 0) | (e.rir !== undefined ? EXT_RIR | (e.rir << 3) : 0) | (e.withPrev ? EXT_WITH_PREV : 0),
+          (rest >= 0 ? EXT_REST : 0) |
+            (e.rir !== undefined ? EXT_RIR | (e.rir << 3) : 0) |
+            (e.withPrev ? EXT_WITH_PREV : 0) |
+            (e.note ? EXT_NOTE : 0),
         )
         if (rest >= 0) w.u8(rest)
+        if (e.note) w.str(e.note)
       }
     }
   }
@@ -224,8 +238,8 @@ export function decodeProgram(input: string, opts: DecodeOptions = {}): DecodeRe
     const bytes = fromBase64Url(s)
     const r = reader(bytes)
     const version = r.u8()
-    if (version !== V1 && version !== CODEC_VERSION) return { ok: false, error: 'unsupported_version' }
-    candidate = readV1(r, opts, version === CODEC_VERSION)
+    if (version < V1 || version > CODEC_VERSION) return { ok: false, error: 'unsupported_version' }
+    candidate = readV1(r, opts, version)
     if (!r.atEnd()) throw new CodecError('trailing bytes')
   } catch (e) {
     if (e instanceof CodecError || e instanceof TypeError || e instanceof RangeError) return { ok: false, error: 'malformed' }
@@ -244,9 +258,9 @@ export function decodeProgram(input: string, opts: DecodeOptions = {}): DecodeRe
   return { ok: true, program: parsed.data }
 }
 
-function readExtension(r: ReturnType<typeof reader>, entry: Entry) {
+function readExtension(r: ReturnType<typeof reader>, entry: Entry, version: number) {
   const x = r.u8()
-  if (x & 0xc0) throw new CodecError('extension bits')
+  if (x & (version >= CODEC_VERSION ? 0x80 : 0xc0)) throw new CodecError('extension bits')
   const rir = (x >> 3) & 7
   if (x & EXT_RIR) {
     if (rir > 5) throw new CodecError('rir')
@@ -258,9 +272,14 @@ function readExtension(r: ReturnType<typeof reader>, entry: Entry) {
     if (steps > REST_STEPS_MAX) throw new CodecError('rest')
     entry.restSec = steps * REST_STEP
   }
+  if (x & EXT_NOTE) {
+    const note = r.str()
+    if (!note) throw new CodecError('empty note')
+    entry.note = note
+  }
 }
 
-function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions, ext = false) {
+function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions, version: number) {
   const makeId = opts.makeId ?? sequentialIds('e')
   const name = r.str()
   const trainMask = r.u8()
@@ -312,7 +331,7 @@ function readV1(r: ReturnType<typeof reader>, opts: DecodeOptions, ext = false) 
         entry.reps = reps
       } else if (repsKind === REPS_TEXT) entry.reps = r.str()
       else if (repsKind !== REPS_NONE) throw new CodecError('reps kind')
-      if (ext) readExtension(r, entry)
+      if (version >= V2) readExtension(r, entry, version)
       entries.push(entry)
     }
     const day: Day = { kind: trainMask & (1 << d) ? 'train' : 'rest', entries: normalizeSupersets(entries) }

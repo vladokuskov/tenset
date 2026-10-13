@@ -9,6 +9,7 @@ export const MAX_CUSTOM = 30
 export const MAX_CUSTOM_ID = 63
 export const LABEL_MAX = 24
 export const NOTE_MAX = 80
+export const ENTRY_NOTE_MAX = 60
 export const NAME_MAX = 40
 export const DEFAULT_PROGRAM_NAME = 'My program'
 export const REST_STEP = 15
@@ -186,6 +187,13 @@ export function setRir(program: Program, entryId: string, rir: number | undefine
   return updateEntry(program, entryId, ({ rir: _drop, ...e }) =>
     rir === undefined || !Number.isFinite(rir) ? e : { ...e, rir: Math.min(RIR_MAX, Math.max(0, Math.round(rir))) },
   )
+}
+
+export function setEntryNote(program: Program, entryId: string, note: string | undefined): Program {
+  return updateEntry(program, entryId, ({ note: _drop, ...e }) => {
+    const clean = cleanText(note, ENTRY_NOTE_MAX)
+    return clean ? { ...e, note: clean } : e
+  })
 }
 
 /** Whether the entry can be paired with the one above it. */

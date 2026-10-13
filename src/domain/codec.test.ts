@@ -91,6 +91,21 @@ const GOLDEN_EXT: Program = {
 }
 const GOLDEN_EXT_V2 = 'AglTdXBlcnNldHMBAQVVcHBlcgABAg5CYW5kIGZhY2UgcHVsbAAAAQwEGgBlARMMEgExAgIVAgV0byAxNQUECADLAAAAAAAAAA'
 
+// Frozen v3 fixture: v2 plus per-entry notes, one on an entry that has no other extension field.
+const GOLDEN_NOTES: Program = {
+  ...GOLDEN_EXT,
+  name: 'Notes',
+  days: GOLDEN_EXT.days.map((d, i) =>
+    i === 0
+      ? {
+          ...d,
+          entries: d.entries.map((e, k) => (k === 0 ? { ...e, note: 'Seat 4, pause at bottom' } : k === 3 ? { ...e, note: 'Ремінці' } : e)),
+        }
+      : d,
+  ),
+}
+const GOLDEN_NOTES_V3 = 'AwVOb3RlcwEBBVVwcGVyAAECDkJhbmQgZmFjZSBwdWxsAAABDAQaAGUBUwwXU2VhdCA0LCBwYXVzZSBhdCBib3R0b20SATECAhUCBXRvIDE1BQQIAMtADtCg0LXQvNGW0L3RhtGWAAAAAAAA'
+
 const v2 = (b64: string) => {
   const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((b64.length + 3) % 4))
   return Uint8Array.from(bin, (c) => c.charCodeAt(0))
@@ -155,7 +170,8 @@ describe('share codec', () => {
     expect(decodeProgram('A')).toEqual({ ok: false, error: 'malformed' })
     expect(decodeProgram(good.slice(0, -6))).toEqual({ ok: false, error: 'malformed' })
     expect(decodeProgram(`${good}AAAA`)).toEqual({ ok: false, error: 'malformed' })
-    expect(decodeProgram('Aw')).toEqual({ ok: false, error: 'unsupported_version' })
+    expect(decodeProgram('BA')).toEqual({ ok: false, error: 'unsupported_version' })
+    expect(decodeProgram('AA')).toEqual({ ok: false, error: 'unsupported_version' })
     expect(decodeProgram('x'.repeat(20000))).toEqual({ ok: false, error: 'malformed' })
   })
 
@@ -221,6 +237,46 @@ describe('share codec', () => {
     expect(one([2 | (6 << 3)])).toEqual({ ok: false, error: 'malformed' })
     expect(one([3 << 3])).toEqual({ ok: false, error: 'malformed' })
     expect(one([1])).toEqual({ ok: false, error: 'malformed' })
+  })
+
+  it('decodes the frozen v3 string forever and encodes it stably', () => {
+    expect(decodeProgram(GOLDEN_NOTES_V3)).toEqual({ ok: true, program: GOLDEN_NOTES })
+    expect(encodeProgram(GOLDEN_NOTES)).toBe(GOLDEN_NOTES_V3)
+    expect(v2(GOLDEN_NOTES_V3)[0]).toBe(3)
+  })
+
+  it('writes v3 only when an entry has a note, so older links stay readable by older apps', () => {
+    expect(v2(encodeProgram(GOLDEN_EXT))[0]).toBe(2)
+    expect(v2(encodeProgram(GOLDEN_SIMPLE))[0]).toBe(1)
+    const noteOnly = withIds({ ...GOLDEN_SIMPLE, days: GOLDEN_SIMPLE.days.map((d, i) => (i === 0 ? { ...d, entries: [{ id: '', exerciseId: 101, sets: 3, note: 'use straps' }] } : d)) })
+    const encoded = encodeProgram(noteOnly)
+    expect(v2(encoded)[0]).toBe(3)
+    expect(decodeProgram(encoded)).toEqual({ ok: true, program: { ...noteOnly, id: 'shared' } })
+  })
+
+  it('reads a v2 body under a v3 version byte, since v3 only adds a flag', () => {
+    const bytes = v2(GOLDEN_EXT_V2)
+    bytes[0] = 3
+    expect(decodeProgram(toB64(bytes))).toEqual({ ok: true, program: GOLDEN_EXT })
+  })
+
+  it('rejects bad v3 notes', () => {
+    const one = (ext: number[]) => {
+      const head = v2(encodeProgram(withIds({ ...GOLDEN_SIMPLE, days: GOLDEN_SIMPLE.days.map(() => empty()) })))
+      const bytes = [3, ...head.slice(1, -7), 1, 2 << 3, 0, 101, ...ext, 0, 0, 0, 0, 0, 0]
+      return decodeProgram(toB64(Uint8Array.from(bytes)))
+    }
+    const first = (res: ReturnType<typeof decodeProgram>) => res.ok && res.program.days[0].entries[0]
+    const str = (s: string) => {
+      const b = new TextEncoder().encode(s)
+      return [b.length, ...b]
+    }
+    expect(first(one([0x40, ...str('seat 4')]))).toEqual({ id: 'e1', exerciseId: 101, sets: 3, note: 'seat 4' })
+    expect(first(one([0x41, 8, ...str('tempo')]))).toEqual({ id: 'e1', exerciseId: 101, sets: 3, restSec: 120, note: 'tempo' })
+    expect(one([0x40, ...str('')])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([0x40])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([0x80])).toEqual({ ok: false, error: 'malformed' })
+    expect(one([0x40, ...str('x'.repeat(61))])).toEqual({ ok: false, error: 'invalid' })
   })
 
   it('keeps a fully specified week short', () => {
