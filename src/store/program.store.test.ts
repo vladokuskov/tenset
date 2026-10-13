@@ -227,6 +227,26 @@ describe('program store', () => {
     expect(listQuarantined(storage)).toEqual([])
   })
 
+  it('swaps two whole days with moveDay', () => {
+    const { store } = make()
+    store.getState().createBlank('A', [0, 1, 3])
+    store.getState().addEntries(0, [BENCH.id])
+    store.getState().setLabel(0, 'Push')
+    store.getState().setNote(2, 'Walk')
+    const before = store.getState().programs.p1.days
+    store.getState().moveDay(0, 2)
+    const after = store.getState().programs.p1.days
+    expect(after[2]).toEqual(before[0])
+    expect(after[0]).toEqual(before[2])
+    expect(after[1]).toBe(before[1])
+    expect(store.getState().lastChange?.action).toBe('moveDay')
+    store.getState().undo()
+    expect(store.getState().programs.p1.days).toEqual(before)
+    store.getState().moveDay(1, 1)
+    store.getState().moveDay(1, 9)
+    expect(store.getState().programs.p1.days).toEqual(before)
+  })
+
   it('reloads when another tab writes, so neither tab overwrites the other', () => {
     const storage = memoryStorage()
     const tabA = make(storage).store

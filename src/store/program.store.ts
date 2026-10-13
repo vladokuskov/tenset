@@ -54,6 +54,8 @@ export type ProgramActions = {
   setRir(entryId: string, rir: number | undefined): void
   linkWithPrev(entryId: string, on: boolean): void
   duplicateDay(from: Day, to: Day): void
+  /** Swaps two whole days (kind, label, note and exercises). */
+  moveDay(from: Day, to: Day): void
   clearDay(day: Day): void
   setRest(day: Day): void
   setTrain(day: Day): void
@@ -84,6 +86,16 @@ function normalize(data: PersistedPrograms): PersistedPrograms {
   for (const [key, p] of Object.entries(data.programs)) programs[key] = p.id === key ? p : { ...p, id: key }
   const activeId = data.activeId && programs[data.activeId] ? data.activeId : (Object.keys(programs)[0] ?? null)
   return { programs, activeId }
+}
+
+function swapDays(program: Program, from: Day, to: Day): Program {
+  const a = program.days[from]
+  const b = program.days[to]
+  if (!a || !b || from === to) return program
+  const days = [...program.days]
+  days[from] = b
+  days[to] = a
+  return { ...program, days }
 }
 
 /** Fits the localized "copy" name into NAME_MAX by shortening the original name, not the suffix. */
@@ -184,6 +196,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           setRir: (entryId, rir) => mutate('setRir', (p) => ops.setRir(p, entryId, rir)),
           linkWithPrev: (entryId, on) => mutate('linkWithPrev', (p) => ops.linkWithPrev(p, entryId, on)),
           duplicateDay: (from, to) => mutate('duplicateDay', (p) => ops.duplicateDay(p, from, to, makeId)),
+          moveDay: (from, to) => mutate('moveDay', (p) => swapDays(p, from, to)),
           clearDay: (day) => mutate('clearDay', (p) => ops.clearDay(p, day)),
           setRest: (day) => mutate('setRest', (p) => ops.setRest(p, day)),
           setTrain: (day) => mutate('setTrain', (p) => ops.setTrain(p, day)),
