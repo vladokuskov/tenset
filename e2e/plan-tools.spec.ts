@@ -37,3 +37,25 @@ test('move up and move down in the entry menu, with Undo', async ({ page }) => {
   await page.getByRole('button', { name: `Options for ${names.at(-1)}` }).click()
   await expect(openSheet(page, names.at(-1)).getByRole('button', { name: 'Move down' })).toBeDisabled()
 })
+
+test('move a whole day to another day swaps them', async ({ page }) => {
+  await openDay(page, 'Monday')
+  await page.getByRole('button', { name: 'Monday options' }).click()
+  const sheet = openSheet(page, 'Monday')
+  const before = await storedPrograms(page)
+  const monday = before.programs[before.activeId!].days[0]
+
+  await sheet.getByRole('group', { name: 'Move this day to' }).getByRole('button', { name: 'Wed' }).click()
+  await sheet.getByRole('button', { name: 'Move Monday' }).click()
+
+  await expect(openSheet(page)).toHaveCount(0)
+  const toast = page.getByRole('status').filter({ hasText: 'Swapped Monday and Wednesday' })
+  await expect(toast).toBeVisible()
+  await expect(entryRows(page)).toHaveCount(0)
+  const after = await storedPrograms(page)
+  expect(after.programs[after.activeId!].days[2]).toEqual(monday)
+  expect(after.programs[after.activeId!].days[0].kind).toBe('rest')
+
+  await toast.getByRole('button', { name: 'Undo' }).click()
+  await expect(entryRows(page)).toHaveCount(7)
+})
