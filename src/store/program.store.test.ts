@@ -53,6 +53,19 @@ describe('program store', () => {
     expect(store.getState().undo()).toBe(false)
   })
 
+  it('swaps several entries as one change with one undo', () => {
+    const { store } = make()
+    store.getState().createBlank()
+    store.getState().addEntries(0, [BENCH.id, SQUAT.id])
+    store.getState().swapEntries([
+      { entryId: 'e1', day: 0, from: BENCH.id, to: ROW.id },
+      { entryId: 'e2', day: 0, from: SQUAT.id, to: BENCH.id },
+    ])
+    expect(store.getState().programs.p1.days[0].entries.map((e) => e.exerciseId)).toEqual([ROW.id, BENCH.id])
+    expect(store.getState().undo()).toBe(true)
+    expect(store.getState().programs.p1.days[0].entries.map((e) => e.exerciseId)).toEqual([BENCH.id, SQUAT.id])
+  })
+
   it('drops the undo snapshot when switching programs', () => {
     const { store } = make()
     const a = store.getState().createBlank('A')

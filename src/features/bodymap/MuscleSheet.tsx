@@ -14,12 +14,17 @@ import { allHeadsOfGroup, getGroup, headsOfGroup, isBanded } from '../../domain/
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
+import { useProgramStore } from '../../store/program.store'
 import { Button } from '../../ui/Button'
 import { cx } from '../../ui/cx'
 import { Pill } from '../../ui/Pill'
 import { Sheet } from '../../ui/Sheet'
+import { Stepper } from '../../ui/Stepper'
 import { sheetState } from '../../ui/useSheet'
 import { DayPicker } from '../builder'
+import { ChangeBar } from '../builder/ChangeBar'
+import { builderMessages } from '../builder/messages'
+import { carryUndo, undoLastChange, useChange } from '../builder/useChange'
 import { ExerciseRow } from '../catalog'
 import { scheduleText } from './copy'
 import { bodymapMessages } from './messages'
@@ -52,15 +57,39 @@ export function MuscleSheet({ open, onClose, group, head, onSelectHead, view, da
   const g = group ? getGroup(group) : undefined
   const locale = useLocale()
   const m = bodymapMessages[locale]
+  const c = common[locale]
+  const [status, setStatus] = useState<string | null>(null)
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setStatus(null)
+  }
+  const close = () => {
+    carryUndo(status)
+    onClose()
+  }
   return (
     <Sheet
       open={open && Boolean(g)}
-      onClose={onClose}
+      onClose={close}
       title={g ? groupName(g.id, locale) : m.muscle}
       description={g?.banded && g.optional ? m.optionalGroup : undefined}
-      footer={g ? <AddFooter group={g.id} view={view} day={day} /> : undefined}
+      footer={
+        g ? (
+          <>
+            {status && (
+              <ChangeBar
+                className="mb-2"
+                message={status}
+                onUndo={status !== c.undone ? () => undoLastChange() && setStatus(c.undone) : undefined}
+              />
+            )}
+            <AddFooter group={g.id} view={view} day={day} />
+          </>
+        ) : undefined
+      }
     >
-      {g && <Body group={g.id} head={head} onSelectHead={onSelectHead} view={view} day={day} />}
+      {g && <Body group={g.id} head={head} onSelectHead={onSelectHead} view={view} day={day} onStatus={setStatus} />}
     </Sheet>
   )
 }
@@ -71,16 +100,21 @@ function Body({
   onSelectHead,
   view,
   day,
+  onStatus,
 }: {
   group: string
   head?: string
   onSelectHead: (head: string | undefined) => void
   view: WeekView
   day: DayIndex | null
+  onStatus: (message: string) => void
 }) {
   const { catalog } = useCatalog()
   const locale = useLocale()
   const m = bodymapMessages[locale]
+  const b = builderMessages[locale]
+  const setSets = useProgramStore((s) => s.setSets)
+  const change = useChange()
   const nameOfHead = (id: string) => headName(id, locale)
   const equipment = usePrefsStore((s) => s.equipment)
   const overrides = usePrefsStore((s) => s.overrides)
@@ -222,25 +256,34 @@ function Body({
               const ex = typeof c.exerciseRef === 'number' ? catalog.get(c.exerciseRef) : undefined
               const body = (
                 <>
-                  <span className="min-w-0 flex-1 truncate text-base text-ink">{name}</span>
-                  <span className="num shrink-0 text-sm text-ink-2">
+                  <span className="block truncate text-base text-ink">{name}</span>
+                  <span className="num block text-sm text-ink-2">
                     {dayName(c.day, 'short', locale)} · {m.contribution(c.sets, c.value)}
                   </span>
                 </>
               )
+              const onDay = `${name} (${dayName(c.day, 'long', locale)})`
+              const onSets = (v: number) => {
+                const res = change(b.setsChanged(name, v), () => setSets(c.entryId, v), { toast: false })
+                if (res) onStatus(res.message)
+              }
               return (
-                <li key={`${c.entryId}`}>
+                <li key={`${c.entryId}`} className="flex min-h-12 items-center gap-3 py-2">
                   {ex ? (
-                    <Link
-                      to="/exercise/$slug"
-                      params={{ slug: ex.slug }}
-                      className="flex min-h-12 items-center gap-3 py-2"
-                    >
+                    <Link to="/exercise/$slug" params={{ slug: ex.slug }} className="min-w-0 flex-1">
                       {body}
                     </Link>
                   ) : (
-                    <div className="flex min-h-12 items-center gap-3 py-2">{body}</div>
+                    <div className="min-w-0 flex-1">{body}</div>
                   )}
+                  <Stepper
+                    value={c.sets}
+                    onChange={onSets}
+                    label={b.setsFor(onDay)}
+                    decrementLabel={b.fewerSetsOf(onDay)}
+                    incrementLabel={b.moreSetsOf(onDay)}
+                    className="shrink-0"
+                  />
                 </li>
               )
             })}

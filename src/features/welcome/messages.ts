@@ -22,6 +22,8 @@ export const welcomeMessages = defineMessages({
     startBlank: 'Start blank',
     sevenEmpty: 'Seven empty days',
     blankDescription: 'Add exercises day by day and watch the map fill in.',
+    havePlan: 'I already have a program',
+    havePlanDescription: 'Paste it from notes, a spreadsheet or a share link.',
     trainingDays: 'Training days',
     pickOne: 'Pick at least one day.',
     repeats: (name: string, builtFor: number, chosen: number) =>
@@ -50,6 +52,8 @@ export const welcomeMessages = defineMessages({
     startBlank: 'Почати з нуля',
     sevenEmpty: 'Сім порожніх днів',
     blankDescription: 'Додавайте вправи день за днем і стежте, як заповнюється карта.',
+    havePlan: 'У мене вже є програма',
+    havePlanDescription: 'Вставте її з нотаток, таблиці або посилання.',
     trainingDays: 'Тренувальні дні',
     pickOne: 'Оберіть хоча б один день.',
     repeats: (name, builtFor, chosen) =>
