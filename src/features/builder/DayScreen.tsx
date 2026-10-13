@@ -58,32 +58,34 @@ export function DayScreen() {
         back={{ to: '/', label: m.plan }}
         actions={<IconButton icon={Ellipsis} label={m.dayOptionsFor(name)} onClick={() => options.show()} />}
       >
-        <nav aria-label={m.days} className="flex gap-1.5 py-1">
-          {order.map((i) => {
-            const s = days[i]
-            const current = i === day
-            return (
-              <Link
-                key={i}
-                to="/day/$dow"
-                params={{ dow: daySlug(i) }}
-                replace
-                aria-current={current ? 'page' : undefined}
-                aria-label={m.dayLink(i, s.kind === 'rest' ? null : formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes))}
-                className={cx(
-                  'hit flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-full border px-1 text-sm font-medium leading-none transition-colors',
-                  current ? 'border-ink bg-ink text-on-ink' : 'border-line-strong text-ink hover:bg-surface-2',
-                  s.kind === 'rest' && !current && 'border-dashed text-ink-3',
-                )}
-              >
-                <span>{dayName(i, 'short', locale)}</span>
-                <span className={cx('num mt-1 text-[0.6875rem] font-normal', current ? 'text-on-ink/70' : 'text-ink-3')}>
-                  {s.kind === 'rest' ? m.restShort : s.exercises}
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="@container">
+          <nav aria-label={m.days} className="grid grid-cols-7 gap-1.5 py-1 @max-3xs:grid-cols-4">
+            {order.map((i) => {
+              const s = days[i]
+              const current = i === day
+              return (
+                <Link
+                  key={i}
+                  to="/day/$dow"
+                  params={{ dow: daySlug(i) }}
+                  replace
+                  aria-current={current ? 'page' : undefined}
+                  aria-label={m.dayLink(i, s.kind === 'rest' ? null : formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes))}
+                  className={cx(
+                    'hit flex h-11 min-w-0 flex-col items-center justify-center rounded-full border px-1 text-sm font-medium leading-none transition-colors',
+                    current ? 'border-ink bg-ink text-on-ink' : 'border-line-strong text-ink hover:bg-surface-2',
+                    s.kind === 'rest' && !current && 'border-dashed text-ink-3',
+                  )}
+                >
+                  <span>{dayName(i, 'short', locale)}</span>
+                  <span className={cx('num mt-1 text-[0.6875rem] font-normal', current ? 'text-on-ink/70' : 'text-ink-3')}>
+                    {s.kind === 'rest' ? m.restShort : s.exercises}
+                  </span>
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
       </PageHeader>
 
       <PageBody className="space-y-4">
