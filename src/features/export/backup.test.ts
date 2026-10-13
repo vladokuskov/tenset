@@ -46,6 +46,14 @@ describe('backup', () => {
     expect(res.ok && res.backup.prefs).toBeNull()
   })
 
+  it('skips programs whose custom exercise references do not resolve', () => {
+    const dangling = blankProgram('d', 'Dangling')
+    dangling.days[0].entries.push({ id: 'e1', exerciseId: 'c9', sets: 3 })
+    const res = parseBackup(serializeBackup(createBackup({ programs: { a, dangling }, activeId: 'a' }, prefs)))
+    expect(res.ok && res.backup.programs.map((p) => p.id)).toEqual(['a'])
+    expect(res.ok && res.backup.skipped).toBe(1)
+  })
+
   it('gives imported programs free names, like share links', () => {
     const c = blankProgram('c', 'upper lower', [0])
     const named = withUniqueNames([a, b, c], ['Upper Lower', 'Push Pull Legs'])

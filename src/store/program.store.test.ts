@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { sequentialIds } from '../domain/ids.ts'
 import { blankProgram } from '../domain/program.ts'
 import { BENCH, CATALOG, ROW, SQUAT, TEMPLATE } from '../domain/test-fixtures.ts'
+import { storageHealth } from './health.ts'
+import programsV1 from './fixtures/programs.v1.json'
+import { createPrefsStore } from './prefs.store.ts'
 import { PROGRAMS_KEY, createProgramStore } from './program.store.ts'
+import { listQuarantined } from './quarantine.ts'
 import { memoryStorage, type SyncStorage } from './storage.ts'
+import { syncAcrossTabs } from './sync.ts'
 
 const make = (storage: SyncStorage = memoryStorage()) => ({
   storage,
@@ -94,6 +99,9 @@ describe('program store', () => {
     expect(store.getState().programs[first].name).toBe('Mine')
     expect(store.getState().programs[id!].name).toBe('Shared')
     expect(store.getState().importProgram({ nope: true })).toBeNull()
+    const dangling = blankProgram('d', 'Dangling')
+    dangling.days[0].entries.push({ id: 'x', exerciseId: 'c5', sets: 3 })
+    expect(store.getState().importProgram(dangling)).toBeNull()
   })
 
   it('duplicates and renames programs', () => {
@@ -136,18 +144,95 @@ describe('program store', () => {
 
   it.each([
     ['broken JSON', '{"state": {'],
-    ['wrong shape', JSON.stringify({ state: { programs: { a: { id: 'a', name: 'A', days: [], custom: [] } }, activeId: 'a' }, version: 1 })],
+    ['wrong shape', JSON.stringify({ state: { programs: [1, 2], activeId: 'a' }, version: 1 })],
     ['not an object', JSON.stringify('hello')],
-    ['bad entry', JSON.stringify({ state: { programs: { a: { ...blankProgram('a'), days: blankProgram('a').days.map((d) => ({ ...d, entries: [{ id: 'x', exerciseId: 0, sets: 3 }] })) } }, activeId: 'a' }, version: 1 })],
-  ])('rejects corrupt persisted data (%s), starts fresh and keeps a backup', (_label, raw) => {
+  ])('quarantines unreadable persisted data (%s) and starts fresh', (_label, raw) => {
     const storage = memoryStorage()
     storage.setItem(PROGRAMS_KEY, raw)
     const { store } = make(storage)
     expect(store.getState().programs).toEqual({})
     expect(store.getState().activeId).toBeNull()
-    expect(storage.getItem(`${PROGRAMS_KEY}:corrupt`)).not.toBeNull()
+    expect(listQuarantined(storage)).toHaveLength(1)
+  })
+
+  it('keeps valid programs when one is invalid and quarantines only the bad one', () => {
+    const storage = memoryStorage()
+    const good = blankProgram('good', 'Good')
+    const bad = { ...blankProgram('bad', 'Bad'), name: 'x'.repeat(5000) }
+    storage.setItem(PROGRAMS_KEY, JSON.stringify({ state: { programs: { good, bad }, activeId: 'bad' }, version: 1 }))
+    const { store } = make(storage)
+    expect(Object.keys(store.getState().programs)).toEqual(['good'])
+    expect(store.getState().activeId).toBe('good')
+    const [item] = listQuarantined(storage)
+    expect(item.source).toBe(PROGRAMS_KEY)
+    expect(item.data).toEqual({ programs: { bad } })
     store.getState().createBlank()
-    expect(Object.keys(saved(storage).state.programs)).toEqual(['p1'])
+    expect(Object.keys(saved(storage).state.programs)).toEqual(['good', 'p1'])
+  })
+
+  it('never writes an empty list over stored programs that all failed validation', () => {
+    const storage = memoryStorage()
+    const bad = { ...blankProgram('bad'), days: [] }
+    const raw = JSON.stringify({ state: { programs: { bad }, activeId: 'bad' }, version: 0 })
+    storage.setItem(PROGRAMS_KEY, raw)
+    const { store } = make(storage)
+    expect(store.getState().programs).toEqual({})
+    // the v0 migration would normally save right away
+    expect(storage.getItem(PROGRAMS_KEY)).toBe(raw)
+    expect(listQuarantined(storage)[0].data).toEqual({ programs: { bad } })
+    store.getState().createBlank()
+    store.getState().deleteProgram('p1')
+    expect(saved(storage).state.programs).toEqual({})
+  })
+
+  it('keeps every quarantine under its own key and does not repeat identical ones', () => {
+    const storage = memoryStorage()
+    const put = (name: string) =>
+      storage.setItem(PROGRAMS_KEY, JSON.stringify({ state: { programs: { x: { ...blankProgram('x'), name } } }, version: 1 }))
+    put('')
+    make(storage)
+    make(storage)
+    put('y'.repeat(41))
+    make(storage)
+    const items = listQuarantined(storage)
+    expect(items).toHaveLength(2)
+    expect(new Set(items.map((i) => i.key)).size).toBe(2)
+    expect(items.every((i) => i.key.startsWith(`gb:quarantine:${PROGRAMS_KEY}:`))).toBe(true)
+  })
+
+  it('hydrates the frozen v1 fixture unchanged', () => {
+    const storage = memoryStorage()
+    storage.setItem(PROGRAMS_KEY, JSON.stringify(programsV1))
+    const { store } = make(storage)
+    expect(store.getState().programs).toEqual(programsV1.state.programs)
+    expect(store.getState().activeId).toBe('z0z0z0z0z0')
+    expect(listQuarantined(storage)).toEqual([])
+  })
+
+  it('reloads when another tab writes, so neither tab overwrites the other', () => {
+    const storage = memoryStorage()
+    const tabA = make(storage).store
+    const tabB = createProgramStore({ storage, makeId: sequentialIds('f'), newProgramId: sequentialIds('q') })
+    const windowB = new EventTarget()
+    const stop = syncAcrossTabs(windowB as unknown as Window, tabB, createPrefsStore({ storage }))
+    const storageEvent = (key: string | null) => windowB.dispatchEvent(Object.assign(new Event('storage'), { key }))
+
+    tabB.getState().createBlank('Made in tab B')
+    tabB.getState().addEntries(0, [BENCH.id])
+    storageEvent(PROGRAMS_KEY)
+    tabA.persist.rehydrate()
+    tabA.getState().createBlank('Made in tab A')
+    storageEvent(PROGRAMS_KEY)
+    expect(tabB.getState().lastChange).toBeNull()
+    expect(tabB.getState().undo()).toBe(false)
+    tabB.getState().renameProgram('q1', 'Renamed in tab B')
+    const names = Object.values(saved(storage).state.programs as Record<string, { name: string }>).map((p) => p.name)
+    expect(names).toEqual(['Renamed in tab B', 'Made in tab A'])
+
+    storage.removeItem(PROGRAMS_KEY)
+    storageEvent(null)
+    expect(tabB.getState().programs).toEqual({})
+    stop()
   })
 
   it('migrates v0 state through the chain', () => {
@@ -159,7 +244,8 @@ describe('program store', () => {
     expect(saved(storage).version).toBe(1)
   })
 
-  it('works when storage throws', () => {
+  it('works when storage throws and reports the failed write', () => {
+    storageHealth.setState({ writeFailed: false })
     const throwing: SyncStorage = {
       getItem: () => {
         throw new Error('blocked')
@@ -172,5 +258,6 @@ describe('program store', () => {
     const { store } = make(throwing)
     store.getState().createBlank()
     expect(Object.keys(store.getState().programs)).toEqual(['p1'])
+    expect(storageHealth.getState().writeFailed).toBe(true)
   })
 })

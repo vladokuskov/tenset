@@ -9,7 +9,10 @@ import type { Catalog } from '../domain/resolve.ts'
 import { Program, type ExerciseRef, type SplitTemplate } from '../domain/schema.ts'
 import { getMessages } from '../i18n/messages.ts'
 import { PROGRAMS_VERSION, programMigrations, runMigrations } from './migrations/index.ts'
-import { backupCorrupt, browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
+import { adoptLegacyBackup, quarantine } from './quarantine.ts'
+import { salvagePrograms } from './salvage.ts'
+import { browserStorage, safeJSONStorage, type SyncStorage } from './storage.ts'
+import { validateProgram } from './validateProgram.ts'
 
 export const PROGRAMS_KEY = 'gb:programs'
 
@@ -84,8 +87,12 @@ function normalize(data: PersistedPrograms): PersistedPrograms {
 
 export function createProgramStore(options: ProgramStoreOptions = {}) {
   const storage = options.storage ?? browserStorage()
+  adoptLegacyBackup(storage, PROGRAMS_KEY)
   const makeId = options.makeId ?? (() => randomId(8))
   const newProgramId = options.newProgramId ?? (() => randomId(10))
+  const json = safeJSONStorage<PersistedPrograms>(storage)
+  // Set when hydrate found programs but none were usable: an empty list is then never written over them.
+  let holdEmpty = false
 
   return createStore<ProgramState>()(
     persist(
@@ -125,9 +132,9 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           },
 
           importProgram: (raw) => {
-            const parsed = Program.safeParse(raw)
-            if (!parsed.success) return null
-            return addProgram('importProgram', ops.normalizeProgramSupersets({ ...parsed.data, id: newProgramId() }))
+            const program = validateProgram(raw)
+            if (!program) return null
+            return addProgram('importProgram', ops.normalizeProgramSupersets({ ...program, id: newProgramId() }))
           },
 
           duplicateProgram: (id) => {
@@ -200,7 +207,15 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
       {
         name: PROGRAMS_KEY,
         version: PROGRAMS_VERSION,
-        storage: safeJSONStorage<PersistedPrograms>(storage),
+        storage: {
+          ...json,
+          setItem: (name, value) => {
+            const empty = Object.keys(value.state.programs).length === 0
+            if (empty && holdEmpty) return
+            if (!empty) holdEmpty = false
+            json.setItem(name, value)
+          },
+        },
         partialize: (s) => ({ programs: s.programs, activeId: s.activeId }),
         migrate: (state, version) => {
           try {
@@ -210,13 +225,15 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
           }
         },
         merge: (persisted, current) => {
-          if (persisted === undefined || persisted === null) return current
-          const parsed = PersistedPrograms.safeParse(persisted)
-          if (!parsed.success) {
-            backupCorrupt(storage, PROGRAMS_KEY, JSON.stringify(persisted))
-            return current
+          // Hydrating (also from another tab) drops the undo snapshot: it predates what was just loaded.
+          // Nothing stored means no programs, also when another tab deleted them.
+          if (persisted === undefined || persisted === null) return { ...current, programs: {}, activeId: null, lastChange: null }
+          const { programs, activeId, rejected } = salvagePrograms(persisted)
+          if (rejected !== null) {
+            quarantine(storage, PROGRAMS_KEY, rejected)
+            holdEmpty = Object.keys(programs).length === 0
           }
-          return { ...current, ...normalize(parsed.data) }
+          return { ...current, ...normalize({ programs, activeId }), lastChange: null }
         },
       },
     ),

@@ -1,0 +1,12 @@
+{
+  "state": {
+    "locale": "uk",
+    "goal": "strength",
+    "equipment": ["barbell", "dumbbell", "bench"],
+    "countingMode": "primary",
+    "weekStart": 6,
+    "overrides": { "101": { "triceps": "none", "front_delt": "primary" }, "c1": { "chest": "secondary" } },
+    "targets": { "chest": { "mode": "more" }, "calves": { "mode": "custom", "min": 4, "max": 8 } }
+  },
+  "version": 1
+}
