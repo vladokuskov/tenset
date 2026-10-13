@@ -1,8 +1,10 @@
 import { Link, Outlet, createRootRoute, redirect, useLocation, useRouter, type ErrorComponentProps } from '@tanstack/react-router'
 import { Compass, RotateCcw } from 'lucide-react'
 import { BrandMark } from '../app/BrandMark'
+import { installChunkReload, isChunkLoadError } from '../app/chunkReload'
 import { needsWelcome } from '../app/firstRun'
 import { AppProviders } from '../app/providers'
+import { useFocusTitleOnNavigate } from '../app/routeFocus'
 import { useUndoShortcut } from '../app/undo'
 import { StorageNotices } from '../features/export/StorageNotices'
 import { useDocumentLocale } from '../i18n/document'
@@ -10,6 +12,9 @@ import { useMessages } from '../i18n/messages'
 import { UpdatePrompt } from '../sw'
 import { Button, EmptyState, LinkButton, NavRail, Page, PageHeader, TabBar, ToastHost } from '../ui'
 import { rootMessages } from './-messages'
+import { useDocumentTitle } from './-title'
+
+if (typeof window !== 'undefined') installChunkReload()
 
 export const Route = createRootRoute({
   beforeLoad: ({ location }) => {
@@ -26,6 +31,8 @@ function RootLayout() {
   const pathname = useLocation({ select: (l) => l.pathname })
   const bare = BARE.test(pathname)
   useUndoShortcut()
+  useFocusTitleOnNavigate()
+  useDocumentTitle(pathname)
   // Subscribing here re-renders the whole tree when the language changes.
   useDocumentLocale()
   const m = useMessages(rootMessages)
@@ -88,7 +95,14 @@ function RouteError({ error }: ErrorComponentProps) {
         icon={RotateCcw}
         title={m.error.heading}
         actions={
-          <Button variant="primary" onClick={() => void router.invalidate()}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              // A missing chunk needs the new index.html; reloading also clears a cached failed import.
+              if (isChunkLoadError(error)) window.location.reload()
+              else void router.invalidate()
+            }}
+          >
             {m.error.action}
           </Button>
         }
