@@ -24,14 +24,27 @@ registerRoute(
 )
 
 // Posters have hashed names, so a cached one never goes stale; offline, an unseen one falls back to the map card.
-registerRoute(
-  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith(`${import.meta.env.BASE_URL}media/posters/`),
-  new CacheFirst({ cacheName: 'gb-posters', plugins: [new ExpirationPlugin({ maxEntries: 600, purgeOnQuotaError: true })] }),
-)
+const POSTERS = `${import.meta.env.BASE_URL}media/posters/`
+const isPoster = (url: URL) => url.origin === self.location.origin && url.pathname.startsWith(POSTERS)
+const posters = new CacheFirst({ cacheName: 'gb-posters', plugins: [new ExpirationPlugin({ maxEntries: 600, purgeOnQuotaError: true })] })
+registerRoute(({ url }) => isPoster(url), posters)
 
-// A new version waits until the page asks it to take over (the in-app update prompt).
+// The page sends the posters of the user's own days (src/sw/warmPosters.ts); fetched one at a time, missing ones only.
+async function warmPosters(urls: unknown[], event: ExtendableEvent) {
+  const cache = await caches.open('gb-posters')
+  for (const u of urls) {
+    if (typeof u !== 'string') continue
+    const url = new URL(u, self.location.href)
+    if (!isPoster(url) || (await cache.match(url))) continue
+    await posters.handle({ event, request: new Request(url, { priority: 'low' }) }).catch(() => undefined)
+  }
+}
+
 self.addEventListener('message', (event) => {
-  if ((event.data as { type?: string } | null)?.type === 'SKIP_WAITING') void self.skipWaiting()
+  const data = event.data as { type?: string; urls?: unknown } | null
+  // A new version waits until the page asks it to take over (the in-app update prompt).
+  if (data?.type === 'SKIP_WAITING') void self.skipWaiting()
+  if (data?.type === 'WARM_POSTERS' && Array.isArray(data.urls)) event.waitUntil(warmPosters(data.urls, event))
 })
 
 self.addEventListener('activate', (event) => {

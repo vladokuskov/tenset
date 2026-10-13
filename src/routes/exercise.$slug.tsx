@@ -2,7 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { DAY_SLUGS } from '../app/days'
 import { daySlugParam, sheetParam } from '../app/search'
+import { loadExerciseText } from '../data/localize'
 import { ExercisePage } from '../features/catalog/ExerciseDetail'
+import { getLocale } from '../i18n/messages'
 
 // URL contract: /exercise/incline-dumbbell-press?sheet=days|counts
 //   &addTo=0..6 (or mon..sun): the sticky button adds straight to that day
@@ -15,5 +17,7 @@ const ExerciseSearch = z.object({
 
 export const Route = createFileRoute('/exercise/$slug')({
   validateSearch: ExerciseSearch,
+  // cues ship in a lazy chunk; wait for it so the page does not reflow when they arrive
+  loader: () => loadExerciseText(getLocale()).catch(() => undefined),
   component: ExercisePage,
 })
