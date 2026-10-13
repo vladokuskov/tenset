@@ -2,10 +2,11 @@
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { reviewPlugin } from './pipeline/review/devServer.ts'
 import { posterManifest, recordCues, shippedRecord } from './src/data/shipped.ts'
-import { reviewPlugin } from './src/features/review/devServer.ts'
 
 // Everything the service worker precaches. Raise deliberately when baked media lands.
 const PRECACHE_BUDGET = 8 * 1024 * 1024
@@ -39,10 +40,19 @@ function shippedData(): Plugin {
   }
 }
 
-export default defineConfig({
+// Production builds route without the src/routes/dev.* tools. That tree goes outside src/ so the dev tree, which
+// typecheck reads, keeps the /dev/* routes.
+const PROD_ROUTE_TREE = fileURLToPath(new URL('./node_modules/.tmp/routeTree.prod.gen.ts', import.meta.url))
+
+export default defineConfig(({ mode }) => ({
+  resolve: mode === 'production' ? { alias: [{ find: /^\.\/routeTree\.gen$/, replacement: PROD_ROUTE_TREE }] } : undefined,
   plugins: [
     shippedData(),
-    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+      ...(mode === 'production' ? { routeFileIgnorePattern: '^dev\\.', generatedRouteTree: PROD_ROUTE_TREE } : {}),
+    }),
     react(),
     tailwindcss(),
     VitePWA({
@@ -101,4 +111,4 @@ export default defineConfig({
       { extends: true, test: { name: 'motion', include: MOTION_TESTS } },
     ],
   },
-})
+}))

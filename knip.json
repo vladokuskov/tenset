@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["pipeline/**/*.ts", "api/mcp.ts", "api/agent/*.ts", "src/routes/**/*.tsx", "e2e/**/*.ts"],
+  "project": ["src/**/*.{ts,tsx,css}", "api/**/*.ts", "pipeline/**/*.ts", "data/**/*.ts", "e2e/**/*.ts"],
+  "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": ["axe-core"],
+  "ignoreBinaries": ["ffmpeg", "ffprobe"],
+  "rules": { "exports": "warn", "types": "warn", "duplicates": "warn" }
+}

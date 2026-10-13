@@ -2,9 +2,9 @@ import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, s
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import path from 'node:path'
 import type { Plugin } from 'vite'
+import { decide, isReviewFields, NOTE_MAX, readFields, RecordFormatError, writeFields } from '../../src/features/review/record.ts'
+import { REVIEW_API, type DecisionResponse, type QueueResponse, type ReviewFields, type ReviewItem } from '../../src/features/review/types.ts'
 import { parseManifest, type ManifestEntry } from './manifest.ts'
-import { decide, isReviewFields, NOTE_MAX, readFields, RecordFormatError, writeFields } from './record.ts'
-import { REVIEW_API, type DecisionResponse, type QueueResponse, type ReviewFields, type ReviewItem } from './types.ts'
 
 // Dev-server-only endpoints for /dev/review. Writes nothing but qa.motion, qa.note and media.status of
 // data/exercises/<id>-<slug>.json. Never part of a build (apply: serve).
