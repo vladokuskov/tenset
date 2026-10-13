@@ -3,12 +3,14 @@ import { Compass, RotateCcw } from 'lucide-react'
 import { BrandMark } from '../app/BrandMark'
 import { needsWelcome } from '../app/firstRun'
 import { AppProviders } from '../app/providers'
+import { useFocusTitleOnNavigate } from '../app/routeFocus'
 import { useUndoShortcut } from '../app/undo'
 import { useDocumentLocale } from '../i18n/document'
 import { useMessages } from '../i18n/messages'
 import { UpdatePrompt } from '../sw'
 import { Button, EmptyState, LinkButton, NavRail, Page, PageHeader, TabBar, ToastHost } from '../ui'
 import { rootMessages } from './-messages'
+import { useDocumentTitle } from './-title'
 
 export const Route = createRootRoute({
   beforeLoad: ({ location }) => {
@@ -25,6 +27,8 @@ function RootLayout() {
   const pathname = useLocation({ select: (l) => l.pathname })
   const bare = BARE.test(pathname)
   useUndoShortcut()
+  useFocusTitleOnNavigate()
+  useDocumentTitle(pathname)
   // Subscribing here re-renders the whole tree when the language changes.
   useDocumentLocale()
   const m = useMessages(rootMessages)
