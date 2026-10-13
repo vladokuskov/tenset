@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fixtureExercise } from '../../domain/test-fixtures'
-import { matchesQuery, normalize, repsText, rowMeta, supersetLabels } from './exercise'
+import { localReps, matchesQuery, normalize, repsText, rowMeta, supersetLabels } from './exercise'
 
 const press = fixtureExercise(1, {
   name: 'Жим лежачи',
@@ -51,4 +51,11 @@ describe('supersetLabels', () => {
     expect(supersetLabels([{ withPrev: true }, {}]).every((l) => l === null)).toBe(true)
     expect(supersetLabels([{}, { withPrev: true }, { withPrev: true }]).map((l) => l?.label ?? null)).toEqual(['A1', 'A2', null])
   })
+})
+
+it('localReps writes a pasted time target in the locale and leaves reps alone', () => {
+  expect(localReps('60s', 'uk')).toBe('60 с')
+  expect(localReps('30-45s', 'en')).toBe('30-45 s')
+  expect(localReps('8-12', 'uk')).toBe('8-12')
+  expect(localReps(undefined, 'uk')).toBeUndefined()
 })

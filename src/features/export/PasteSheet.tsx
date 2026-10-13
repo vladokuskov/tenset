@@ -23,6 +23,7 @@ import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { programStore, useProgramStore } from '../../store/program.store'
 import { Button, Pill, Select, Sheet, showToast } from '../../ui'
+import { localReps } from '../shared/exercise'
 import { withUniqueNames } from './backup'
 import { createMatcher, type MatchCandidate, type MatchConfidence, type Matcher } from './importMatch'
 import { exportMessages } from './messages'
@@ -317,7 +318,7 @@ function ReviewRow({ row, matcher, onChoice }: { row: Row; matcher: Matcher; onC
   const title =
     choice.kind === 'match' ? choice.pick.name : choice.kind === 'custom' ? m.ownExercise(line.name) : row.confidence === 'none' ? m.noMatch : m.skipped
   const meta = [
-    m.setsReps(line.sets ?? DEFAULT_SETS, line.reps),
+    m.setsReps(line.sets ?? DEFAULT_SETS, localReps(line.reps, locale)),
     line.restSec !== undefined ? m.rest(line.restSec) : null,
     line.rir !== undefined ? m.rir(line.rir) : null,
     line.withPrev ? m.superset : null,

@@ -33,10 +33,20 @@ export function defaultReps(e: AnyExercise, goal: Prefs['goal']): string | undef
 export function repsText(reps: string | undefined, unit: 'reps' | 'seconds', locale: Locale = getLocale()): string {
   const m = sharedMessages[locale]
   if (!reps) return unit === 'seconds' ? m.timeEmpty : m.repsEmpty
-  // A pasted time target ("45s") reads as time whatever the exercise counts in.
-  const time = /^(\d+(?:-\d+)?)s$/.exec(reps)
-  if (time) return m.seconds(time[1])
+  const time = timeTarget(reps)
+  if (time) return m.seconds(time)
   return unit === 'seconds' ? m.seconds(reps) : m.reps(reps)
+}
+
+/** A pasted time target ("45s") reads as time whatever the exercise counts in. */
+function timeTarget(reps: string): string | undefined {
+  return /^(\d+(?:-\d+)?)s$/.exec(reps)?.[1]
+}
+
+/** Reps as stored, with a time target ("45s") written in the locale ("45 с"). */
+export function localReps(reps: string | undefined, locale: Locale = getLocale()): string | undefined {
+  const time = reps && timeTarget(reps)
+  return time ? sharedMessages[locale].seconds(time) : reps
 }
 
 /** Lowercase letters and digits of any script; apostrophes fold to one form so "мʼяз" matches "м'яз". */

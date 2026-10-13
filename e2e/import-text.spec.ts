@@ -163,3 +163,11 @@ test('a title above "Week 1" leaves the first week intact', async ({ page }) => 
   expect(added.days[0].entries.map((e) => e.reps)).toEqual(['8'])
   expect(added.days[3].entries.map((e) => [e.sets, e.reps])).toEqual([[5, '5']])
 })
+
+test('a pasted time target reads as time in the review', async ({ page }) => {
+  await startFromTemplate(page, 'Upper/Lower 4x')
+  const sheet = await openPaste(page)
+  await sheet.getByRole('textbox', { name: 'Program text or share link' }).fill('Monday\nPlank 3x60s')
+  await sheet.getByRole('button', { name: 'Read it' }).click()
+  await expect(sheet.getByText('3 × 60 s')).toBeVisible()
+})
