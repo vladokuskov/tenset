@@ -6,12 +6,12 @@ import type { DayIndex } from '../../app/days'
 import { formatDelta, joinMeta } from '../../app/format'
 import { useCatalog } from '../../app/useCatalog'
 import { useWeek } from '../../app/useWeek'
-import { equipmentName } from '../../data/localize'
-import { computeCoverage, suggestions } from '../../domain/coverage'
+import { equipmentName, sessionLabel } from '../../data/localize'
 import { availableSet, equipment as equipmentItems, hasEquipment } from '../../domain/equipment'
 import { resolveExercise } from '../../domain/resolve'
+import { suggestedSections } from '../../domain/suggest'
 import type { Pattern } from '../../domain/schema'
-import { bandedGroupIds, groupIds } from '../../domain/taxonomy'
+import { groupIds } from '../../domain/taxonomy'
 import { bandFor, type WeekResult } from '../../domain/volume'
 import { common } from '../../i18n/common'
 import { compareText } from '../../i18n/format'
@@ -107,33 +107,28 @@ export function AddSheet({ open, day, tab = 'suggested', group, onParams, onClos
   const suggested = useMemo<Section[]>(() => {
     const week = openWeek ?? view?.week
     if (!week || !program) return []
-    const shown = new Set<number>()
-    const out: Section[] = []
-    const eq = equipMode === 'all' ? ['*'] : prefs.equipment
-    const push = (g: string, note: string, limit: number) => {
-      const items = suggestions(g, catalog, eq, limit + 4, { overrides: prefs.overrides })
-        .map((s) => s.exercise)
-        .filter((e) => !shown.has(e.id) && !openDay.has(e.id))
-        .slice(0, limit)
-      items.forEach((e) => shown.add(e.id))
-      if (items.length) out.push({ key: g, title: groupName(g, locale), note, items })
-    }
-    const { untrained } = computeCoverage(week, prefs.goal)
-    for (const u of untrained.required) push(u.group, m.notTrained, 3)
-    const below = bandedGroupIds
-      .filter((g) => (week.weekly[g] ?? 0) > 0)
-      .filter((g) => {
-        const band = week.bands[g]
-        return band && !band.optional && (band.band === 'light' || band.band === 'moderate')
-      })
-      .sort((a, b) => week.weekly[a] - week.weekly[b])
-    for (const g of below) {
+    const ranked = suggestedSections({
+      week,
+      goal: prefs.goal,
+      catalog,
+      equipment: equipMode === 'all' ? ['*'] : prefs.equipment,
+      overrides: prefs.overrides,
+      day,
+      label: sessionLabel(program.days[day]?.label, 'en'),
+      exclude: [...openDay].filter((id) => typeof id === 'number'),
+    })
+    return ranked.map(({ group: g, kind, exerciseIds }) => {
       const band = week.bands[g]
-      push(g, joinMeta([m.weeklySets(week.weekly[g]), band && bandLabelFor(band, prefs.goal, locale)]), 2)
-    }
-    for (const u of untrained.optional) push(u.group, m.notTrainedOptional, 2)
-    return out
-  }, [openWeek, openDay, view?.week, program, catalog, equipMode, prefs.equipment, prefs.overrides, prefs.goal, m, locale])
+      const note =
+        kind === 'untrained'
+          ? m.notTrained
+          : kind === 'optional'
+            ? m.notTrainedOptional
+            : joinMeta([m.weeklySets(week.weekly[g]), band && bandLabelFor(band, prefs.goal, locale)])
+      const items = exerciseIds.flatMap((id) => catalog.get(id) ?? [])
+      return { key: g, title: groupName(g, locale), note, items }
+    })
+  }, [openWeek, openDay, view?.week, program, day, catalog, equipMode, prefs.equipment, prefs.overrides, prefs.goal, m, locale])
 
   const muscleGroup = group ?? suggested[0]?.key ?? 'chest'
   const muscleChips = useRef<HTMLDivElement>(null)

@@ -36,6 +36,7 @@ export function DayOptionsSheet({
   const [label, setLabel] = useState(sessionLabel(d?.label, locale) ?? '')
   const [note, setNote] = useState(d?.note ?? '')
   const [target, setTarget] = useState<DayIndex | null>(null)
+  const [moveTarget, setMoveTarget] = useState<DayIndex | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
@@ -44,6 +45,7 @@ export function DayOptionsSheet({
       setLabel(sessionLabel(d?.label, locale) ?? '')
       setNote(d?.note ?? '')
       setTarget(null)
+      setMoveTarget(null)
       setStatus(null)
     }
   }
@@ -143,6 +145,34 @@ export function DayOptionsSheet({
           }}
         >
           {m.duplicate(day)}
+        </Button>
+      </div>
+
+      <div className="mt-5">
+        <h3 className="text-sm font-semibold">{m.moveDayTo}</h3>
+        <p className="mt-0.5 text-sm text-ink-2">{m.moveDayHint}</p>
+        <ChipGroup
+          label={m.moveDayTo}
+          className="mt-2"
+          size="sm"
+          allowEmpty
+          options={view.order.filter((x) => x !== day).map((x) => ({ value: x, label: dayName(x, 'short', locale) }))}
+          value={moveTarget}
+          onChange={setMoveTarget}
+        />
+        <Button
+          className="mt-3"
+          disabled={moveTarget === null}
+          onClick={() => {
+            if (moveTarget === null) return
+            saveLabel()
+            saveNote()
+            // The sheet belongs to this weekday, which now holds the other plan, so the result goes to a toast.
+            onClose()
+            change(m.movedDay(day, moveTarget), () => store.moveDay(day, moveTarget))
+          }}
+        >
+          {m.moveDay(day)}
         </Button>
       </div>
 
