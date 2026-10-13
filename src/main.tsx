@@ -1,6 +1,8 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { loadExerciseText } from './data/localize'
+import { getLocale } from './i18n/messages'
 import { routeTree } from './routeTree.gen'
 import './styles/app.css'
 
@@ -12,8 +14,14 @@ declare module '@tanstack/react-router' {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-)
+// English names are on the records; other languages wait for their names so the first screen does not switch language.
+const locale = getLocale()
+void (locale === 'en' ? Promise.resolve() : loadExerciseText(locale))
+  .catch(() => undefined)
+  .then(() =>
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <RouterProvider router={router} />
+      </StrictMode>,
+    ),
+  )

@@ -5,24 +5,27 @@ import ukTaxonomyRaw from '../../data/i18n/uk/taxonomy.json' with { type: 'json'
 import { taxonomy } from '../domain/taxonomy.ts'
 import {
   EquipmentText,
-  ExerciseTextMap,
   SplitText,
   TaxonomyText,
   type Exercise,
   type ExerciseText,
   type SplitTemplate,
 } from '../domain/schema.ts'
-import type { Locale } from '../i18n/locale.ts'
+import { LOCALES, type Locale } from '../i18n/locale.ts'
 import { getLocale } from '../i18n/messages.ts'
+import { bundled } from './bundled.ts'
 
 type Labels = Readonly<Record<string, string>>
+/** English carries only cues (names live on the records); other languages the full text. */
+type ExerciseTexts = Readonly<Record<string, ExerciseText | { name?: undefined; aliases?: undefined; cues: string[] }>>
 type Text = {
   groups: Labels
   heads: Labels
   equipment: Labels
   equipmentGroups: Labels
   presets: Labels
-  exercises: Readonly<Record<string, ExerciseText>>
+  /** Empty until loadExerciseText. */
+  exercises: ExerciseTexts
   splits: SplitText
 }
 
@@ -38,9 +41,8 @@ const en: Text = {
   splits: {},
 }
 
-const ukExerciseModules = import.meta.glob<unknown>('../../data/i18n/uk/exercises/*.json', { eager: true, import: 'default' })
-const ukTaxonomy = TaxonomyText.parse(ukTaxonomyRaw)
-const ukEquipment = EquipmentText.parse(ukEquipmentRaw)
+const ukTaxonomy = bundled(TaxonomyText, ukTaxonomyRaw)
+const ukEquipment = bundled(EquipmentText, ukEquipmentRaw)
 
 const uk: Text = {
   groups: ukTaxonomy.groups,
@@ -48,11 +50,49 @@ const uk: Text = {
   equipment: ukEquipment.equipment,
   equipmentGroups: ukEquipment.groups,
   presets: ukEquipment.presets,
-  exercises: Object.assign({}, ...Object.values(ukExerciseModules).map((m) => ExerciseTextMap.parse(m))),
-  splits: SplitText.parse(ukSplitsRaw),
+  exercises: {},
+  splits: bundled(SplitText, ukSplitsRaw),
 }
 
 const TEXT: Record<Locale, Text> = { en, uk }
+
+// Exercise text stays out of the first-paint bundle. Each language is one lazy chunk, precached by the service worker.
+const LOADERS: Record<Locale, () => Promise<{ default: ExerciseTexts }>> = {
+  en: () => import('./cues.en.ts'),
+  uk: () => import('./text.uk.ts'),
+}
+const loading = new Map<Locale, Promise<void>>()
+const listeners = new Set<() => void>()
+let textVersion = 0
+
+/** Loads a language's exercise names and cues once; localizeExercise uses them from then on. */
+export function loadExerciseText(locale: Locale): Promise<void> {
+  let p = loading.get(locale)
+  if (!p) {
+    p = LOADERS[locale]().then(
+      (m) => {
+        TEXT[locale].exercises = m.default
+        textVersion++
+        for (const l of listeners) l()
+      },
+      (error: unknown) => {
+        loading.delete(locale)
+        throw error
+      },
+    )
+    loading.set(locale, p)
+  }
+  return p
+}
+
+export const loadAllExerciseText = () => Promise.all(LOCALES.map(loadExerciseText)).then(() => undefined)
+
+/** For useSyncExternalStore: bumps each time a language's exercise text arrives. */
+export function subscribeExerciseText(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+export const exerciseTextVersion = () => textVersion
 
 const pick = (table: keyof Omit<Text, 'exercises' | 'splits'>, id: string, locale: Locale) =>
   TEXT[locale][table][id] ?? en[table][id] ?? id
@@ -71,6 +111,7 @@ export const presetName = (id: string, locale: Locale = getLocale()) => pick('pr
 export function localizeExercise(e: Exercise, locale: Locale): Exercise {
   const t = TEXT[locale].exercises[String(e.id)]
   if (!t) return e
+  if (t.name === undefined) return e.cues.length ? e : { ...e, cues: t.cues }
   return { ...e, name: t.name, cues: t.cues, aliases: [...new Set([...t.aliases, e.name, ...e.aliases])] }
 }
 
@@ -78,7 +119,7 @@ export function localizeExercise(e: Exercise, locale: Locale): Exercise {
 export function translatedNames(id: number): string[] {
   return Object.values(TEXT).flatMap((t) => {
     const x = t.exercises[String(id)]
-    return x ? [x.name, ...x.aliases] : []
+    return x?.name !== undefined ? [x.name, ...x.aliases] : []
   })
 }
 

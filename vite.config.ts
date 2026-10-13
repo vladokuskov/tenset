@@ -4,6 +4,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { posterManifest, recordCues, shippedRecord } from './src/data/shipped.ts'
 import { reviewPlugin } from './src/features/review/devServer.ts'
 
 // Everything the service worker precaches. Raise deliberately when baked media lands.
@@ -20,25 +21,27 @@ function precacheBudget<T extends { url: string; size: number }>(entries: T[]) {
   return { manifest: entries }
 }
 
-// Review notes (qa.note) are for /dev/review, which reads the record files directly; keep them out of the app bundle.
-function stripReviewNotes(): Plugin {
+// What the app bundles from data/: catalog.ts imports records with ?shipped, cues.en.ts with ?cues, posters.ts the
+// manifest. Review notes stay out (/dev/review reads the record files directly).
+function shippedData(): Plugin {
+  const record = /[\\/]data[\\/]exercises[\\/][^\\/]+\.json$/
+  const manifest = /[\\/]public[\\/]media[\\/]manifest\.json$/
   return {
-    name: 'strip-review-notes',
-    apply: 'build',
+    name: 'shipped-data',
     enforce: 'pre',
     transform(code, id) {
-      if (!/[\\/]data[\\/]exercises[\\/][^\\/]+\.json$/.test(id)) return null
-      const record = JSON.parse(code) as { qa?: { note?: string } }
-      if (!record.qa?.note) return null
-      delete record.qa.note
-      return { code: JSON.stringify(record), map: null }
+      const [file, query] = id.split('?')
+      if (manifest.test(file)) return { code: posterManifest(code), map: null }
+      if (!record.test(file) || (query !== 'shipped' && query !== 'cues')) return null
+      // Queried JSON is not picked up by the JSON plugin in dev and tests, so it becomes a module here.
+      return { code: `export default ${query === 'shipped' ? shippedRecord(code) : recordCues(code)}`, map: null }
     },
   }
 }
 
 export default defineConfig({
   plugins: [
-    stripReviewNotes(),
+    shippedData(),
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     react(),
     tailwindcss(),
@@ -92,6 +95,7 @@ export default defineConfig({
           name: 'unit',
           include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts', 'api/**/*.test.ts'],
           exclude: [...MOTION_TESTS, '**/node_modules/**'],
+          setupFiles: ['src/data/test-setup.ts'],
         },
       },
       { extends: true, test: { name: 'motion', include: MOTION_TESTS } },

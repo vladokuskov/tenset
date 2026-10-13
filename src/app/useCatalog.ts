@@ -1,7 +1,15 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react'
 import * as data from '../data/catalog'
-import { localizeExercise, localizeSplit } from '../data/localize'
+import {
+  exerciseTextVersion,
+  loadAllExerciseText,
+  loadExerciseText,
+  localizeExercise,
+  localizeSplit,
+  subscribeExerciseText,
+} from '../data/localize'
 import type { Catalog } from '../domain/resolve'
+import { whenIdle } from './idle'
 import type { Exercise, SplitTemplate } from '../domain/schema'
 import type { Locale } from '../i18n/locale'
 import { useLocale } from '../i18n/messages'
@@ -29,9 +37,8 @@ export const defaultCatalogData: CatalogData = {
 
 /** Same records with names, cues and template text in the given language. */
 export function localizeCatalog(base: CatalogData, locale: Locale): CatalogData {
-  if (locale === 'en') return base
   const exercises = base.exercises.map((e) => localizeExercise(e, locale))
-  const splits = base.splits.map((s) => localizeSplit(s, locale))
+  const splits = locale === 'en' ? base.splits : base.splits.map((s) => localizeSplit(s, locale))
   return {
     exercises,
     activeExercises: exercises.filter((e) => e.status === 'active'),
@@ -50,15 +57,25 @@ export function useCatalog(): CatalogData {
   return useContext(CatalogContext)
 }
 
-const cache = new WeakMap<CatalogData, Map<Locale, CatalogData>>()
+const cache = new WeakMap<CatalogData, Map<string, CatalogData>>()
 
+/**
+ * Exercise text fills in as its lazy chunk arrives: names for a non-English UI right away, the rest (cues, other
+ * languages for paste matching) at idle. The detail route loads its cues itself.
+ */
 export function useLocalizedCatalog(base: CatalogData): CatalogData {
   const locale = useLocale()
+  const version = useSyncExternalStore(subscribeExerciseText, exerciseTextVersion)
+  useEffect(() => {
+    if (locale !== 'en') void loadExerciseText(locale).catch(() => undefined)
+    return whenIdle(() => void loadAllExerciseText().catch(() => undefined))
+  }, [locale])
   return useMemo(() => {
-    let byLocale = cache.get(base)
-    if (!byLocale) cache.set(base, (byLocale = new Map()))
-    let c = byLocale.get(locale)
-    if (!c) byLocale.set(locale, (c = localizeCatalog(base, locale)))
+    let byKey = cache.get(base)
+    if (!byKey) cache.set(base, (byKey = new Map()))
+    const key = `${locale}:${version}`
+    let c = byKey.get(key)
+    if (!c) byKey.set(key, (c = localizeCatalog(base, locale)))
     return c
-  }, [base, locale])
+  }, [base, locale, version])
 }
