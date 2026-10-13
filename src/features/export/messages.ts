@@ -140,6 +140,14 @@ export const exportMessages = defineMessages({
       restDay: 'Rest day',
       mapCaption: 'Sets per muscle group, front and back',
     },
+
+    storage: {
+      memoryOnly: 'This browser is not saving changes. Download a backup to keep your programs.',
+      writeFailed: 'Your last change could not be saved on this device. Download a backup to keep your programs.',
+      setAside: 'Some saved data could not be read, so it was set aside. Everything else is here.',
+      downloadBackup: 'Download backup',
+      download: 'Download',
+    },
   },
   uk: {
     errors: {
@@ -272,6 +280,14 @@ export const exportMessages = defineMessages({
       share: 'Поділитися зображенням',
       restDay: 'День відпочинку',
       mapCaption: 'Підходи за групами мʼязів, спереду і ззаду',
+    },
+
+    storage: {
+      memoryOnly: 'Цей браузер не зберігає зміни. Завантажте резервну копію, щоб зберегти програми.',
+      writeFailed: 'Останню зміну не вдалося зберегти на цьому пристрої. Завантажте резервну копію, щоб зберегти програми.',
+      setAside: 'Частину збережених даних не вдалося прочитати, тому їх відкладено окремо. Усе інше на місці.',
+      downloadBackup: 'Завантажити резервну копію',
+      download: 'Завантажити',
     },
   },
 })

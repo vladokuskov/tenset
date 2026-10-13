@@ -10,6 +10,7 @@ import { Button, LanguageToggle, Page, PageBody, PageHeader, Panel, Section, Seg
 import { LANGUAGE_LABEL } from '../../ui/LanguageToggle'
 import { groupName } from '../builder/labels'
 import { CustomExerciseSheet } from './CustomExerciseSheet'
+import { DataSection } from './DataSection'
 import { EquipmentPicker } from './EquipmentPicker'
 import { equipmentSummary } from './equipmentSummary'
 import { settingsMessages } from './messages'
@@ -170,6 +171,8 @@ export function SettingsScreen() {
             </div>
           </Panel>
         </Section>
+
+        <DataSection />
       </PageBody>
 
       <Sheet open={equipmentSheet.open} onClose={equipmentSheet.close} title={m.equipment} description={m.equipmentSheetHint}>
