@@ -49,11 +49,17 @@ function horizontalOverflow(page: Page) {
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
 }
 
-/** Text a list row cuts off with an ellipsis, e.g. a muscle name squeezed to "На...". */
+/** Text a list row cuts off, by ellipsis or line clamp, e.g. a muscle name squeezed to "На...". */
 async function clippedText(page: Page, selector: string) {
   await expect(page.locator(selector).first()).toBeAttached()
   return page.locator(selector).evaluateAll((els) =>
-    els.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent?.trim() ?? ''),
+    els
+      .filter((el) => el.children.length === 0 && el.getClientRects().length > 0)
+      .filter((el) => {
+        const clamped = getComputedStyle(el).webkitLineClamp !== 'none'
+        return el.scrollWidth > el.clientWidth + 1 || (clamped && el.scrollHeight > el.clientHeight + 1)
+      })
+      .map((el) => el.textContent?.trim() ?? ''),
   )
 }
 
@@ -178,17 +184,15 @@ test.describe('Ukrainian at 320px', () => {
   })
 
   test('Plan week rows keep the day summary and muscles readable', async ({ page }) => {
-    test.fixme(true, 'Finding 37: WeekList truncates the uk summary and muscle list at 320px; fixed in wave 2')
     await startInUkrainian(page)
-    expect(await clippedText(page, '[aria-label="Тиждень"] li .truncate')).toEqual([])
+    expect(await clippedText(page, '[aria-label="Тиждень"] li a span')).toEqual([])
   })
 
   test('Body coverage list keeps muscle names readable', async ({ page }) => {
-    test.fixme(true, 'Finding 36: CoverageList squeezes uk group names to a few letters at 320px; fixed in wave 2')
     await startInUkrainian(page)
     await page.goto('/body')
     await expect(pageTitle(page)).toHaveText('Тіло')
-    expect(await clippedText(page, '#content li .truncate')).toEqual([])
+    expect(await clippedText(page, '#content li button span')).toEqual([])
   })
 })
 
@@ -208,10 +212,57 @@ test.describe('200% text size', () => {
   })
 
   test('Day screen opens without horizontal scroll', async ({ page }) => {
-    test.fixme(true, 'Finding 38: the day picker and entry rows overflow at 200% text; fixed in wave 2')
     await startFromTemplate(page, 'Upper/Lower 4x')
     await openDay(page, 'Monday')
     await zoom(page)
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+
+    const chips = await page.getByRole('navigation', { name: 'Days' }).getByRole('link').evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect()).map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
+    )
+    const overlaps = chips.flatMap((a, i) =>
+      chips.slice(i + 1).filter((b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1),
+    )
+    expect(overlaps, 'day chips overlap').toEqual([])
+    expect(await clippedText(page, 'nav[aria-label="Days"] a span')).toEqual([])
+
+    const nameWidths = await page.locator('[data-entry] a > span > span:first-child').evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect().width / parseFloat(getComputedStyle(el).fontSize)),
+    )
+    expect(nameWidths.length).toBeGreaterThan(0)
+    expect(Math.min(...nameWidths), 'exercise name column, in ems').toBeGreaterThanOrEqual(5)
+  })
+
+  test('day chips wrap in the day picker', async ({ page }) => {
+    await startFromTemplate(page, 'Upper/Lower 4x')
+    await page.goto('/exercise/barbell-bench-press')
+    await zoom(page)
+    await page.getByRole('button', { name: /^Add to/ }).first().click()
+    const days = openSheet(page).getByRole('group')
+    await expect(days.getByRole('button').first()).toBeVisible()
+    const right = await days.getByRole('button').evaluateAll((els) => Math.max(...els.map((el) => el.getBoundingClientRect().right)))
+    expect(right).toBeLessThanOrEqual(page.viewportSize()!.width)
+    const rows = await days.getByRole('button').evaluateAll((els) => new Set(els.map((el) => Math.round(el.getBoundingClientRect().top))).size)
+    expect(rows).toBeGreaterThan(1)
+    expect(await clippedText(page, 'dialog[open] [role="group"] button span')).toEqual([])
+  })
+})
+
+test.describe('Phone at 390px', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('welcome day chips show whole session names', async ({ page }) => {
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/welcome/)
+    await page.getByRole('button', { name: /^Upper\/Lower 4x/ }).click()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    const days = page.getByRole('group', { name: 'Training days' })
+    await expect(days).toBeVisible()
+    expect(await clippedText(page, '[role="group"] button span')).toEqual([])
+  })
+
+  test('Plan rows keep the session time', async ({ page }) => {
+    await startFromTemplate(page, 'Upper/Lower 4x')
+    expect(await clippedText(page, '[aria-label="Week"] li a span')).toEqual([])
   })
 })

@@ -68,21 +68,21 @@ function EntryRowView({
 
   const head = (
     <>
-      <ExerciseCardMedia exercise={exercise} size="sm" />
+      <ExerciseCardMedia exercise={exercise} size="sm" className="@max-3xs:hidden" />
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 text-base font-medium leading-snug text-ink">{exercise.name}</span>
-        <span className="mt-0.5 block truncate text-sm text-ink-2">
+        <span className="line-clamp-2 break-words hyphens-auto text-base font-medium leading-snug text-ink @max-3xs:line-clamp-none">{exercise.name}</span>
+        <span className="mt-0.5 line-clamp-2 text-sm text-ink-2">
           {rowMeta(exercise, primaryGroupNames(roles), locale)}
         </span>
       </span>
     </>
   )
-  const headClass = 'flex min-w-0 flex-1 items-center gap-3 rounded-md py-1'
+  const headClass = 'flex min-w-0 flex-1 items-center gap-3 rounded-md py-1 @max-[9rem]:order-last @max-[9rem]:basis-full'
 
   return (
     <li
       ref={rowRef}
-      className={cx('relative px-1 py-2', isDragging && 'z-10 rounded-lg bg-raised shadow-float')}
+      className={cx('@container relative px-1 py-2', isDragging && 'z-10 rounded-lg bg-raised shadow-float')}
       data-entry={entry.id}
       data-superset={superset?.label}
       {...{ [SORT_LABEL]: m.sortLabel(exercise.name, index + 1) }}
@@ -93,7 +93,7 @@ function EntryRowView({
           className={cx('absolute -left-1 w-0.5 rounded-full bg-ink-3', superset.position === 1 ? 'bottom-0 top-4' : 'bottom-4 top-0')}
         />
       )}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between gap-1 @max-[9rem]:flex-wrap">
         {sortable && (
           <button
             ref={handleRef}
@@ -113,7 +113,7 @@ function EntryRowView({
         )}
         <IconButton icon={Ellipsis} size={36} label={m.optionsFor(exercise.name)} onClick={() => onOpen(entry.id)} />
       </div>
-      <div className={cx('mt-1 flex flex-wrap items-center gap-x-3 gap-y-2', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]')}>
+      <div className={cx('mt-1 flex flex-wrap items-center gap-x-3 gap-y-2', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]', '@max-3xs:pl-0')}>
         {superset && (
           <span className="num inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-ink-3 px-1.5 text-sm font-semibold text-ink">
             <span aria-hidden>{superset.label}</span>
