@@ -26,6 +26,13 @@ const STOP = new Set([
   'на', 'з', 'зі', 'із', 'в', 'у', 'до', 'для', 'і', 'й', 'та', 'и', 'с', 'со', 'по', 'к', 'от', 'від', 'під', 'под', 'за',
 ])
 
+// Words too broad to carry a match alone: a name that shares only these with an exercise is a different movement.
+const GENERIC = new Set(
+  'walk walking carry push pull jump box hold run drag throw crawl press raise curl row fly extension kick cable machine band dumbbell barbell kettlebell db bb kb'
+    .split(' ')
+    .map(stem),
+)
+
 /** "Bench press 3x8" -> "Bench press"; the parser already does this for its lines, pasted names may not be clean. */
 export function cleanQuery(name: string): string {
   return (parseLine(name)?.name ?? name).replace(/\d+/g, ' ').replace(/\s+/g, ' ').trim()
@@ -88,6 +95,9 @@ export function createMatcher(exercises: readonly Exercise[], custom: readonly C
     const wanted = new Set(terms.map(stem))
     const top = hits[0]
     const coversQuery = !!top && [...wanted].every((t) => top.queryTerms.includes(t))
+    // "Farmer's walk" shares only "walk" with "Band Lateral Walk": a guess like that is worse than none.
+    const covered = top ? [...wanted].filter((t) => top.queryTerms.includes(t)) : []
+    if (wanted.size > 1 && covered.length <= 1 && covered.every((t) => GENERIC.has(t)) && !customHits.length) return { best: null, confidence: 'none', alternatives: pool.slice(0, 3) }
     const lead = top && hits[1] ? top.score / hits[1].score : Infinity
     const best = catalogHits[0] ?? pool[0]
     // One word is too little to be sure of ("Biceps", "Legs"): it can still be the best guess, flagged to check.

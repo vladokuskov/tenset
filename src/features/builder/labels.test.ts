@@ -33,6 +33,8 @@ describe('copy', () => {
     expect(repsText('8-12', 'reps', 'en')).toBe('8-12 reps')
     expect(repsText('8-12', 'reps', 'uk')).toBe('8-12 повт.')
     expect(repsText(undefined, 'seconds', 'en')).toBe('Time')
+    expect(repsText('45s', 'reps', 'en')).toBe('45 s')
+    expect(repsText('30-45s', 'seconds', 'uk')).toBe('30-45 с')
     expect(rowMeta(press, [], 'en')).toBe('No muscles mapped')
     expect(rowMeta(press, ['Груди'], 'uk')).toBe('Груди')
   })

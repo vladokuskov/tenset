@@ -39,6 +39,9 @@ export function defaultReps(e: AnyExercise, goal: Prefs['goal']): string | undef
 export function repsText(reps: string | undefined, unit: 'reps' | 'seconds', locale: Locale = getLocale()): string {
   const m = builderMessages[locale]
   if (!reps) return unit === 'seconds' ? m.timeEmpty : m.repsEmpty
+  // A pasted time target ("45s") reads as time whatever the exercise counts in.
+  const time = /^(\d+(?:-\d+)?)s$/.exec(reps)
+  if (time) return m.seconds(time[1])
   return unit === 'seconds' ? m.seconds(reps) : m.reps(reps)
 }
 

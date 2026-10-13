@@ -35,6 +35,15 @@ describe('import matcher', () => {
     expect(['weak', 'none']).toContain(r.confidence)
   })
 
+  it('finds no match when a name shares only a broad word with an exercise', () => {
+    for (const name of ["Farmer's walk", 'Sled push 4x20m', 'Box jump']) {
+      const r = createMatcher(activeExercises, [], 'en').match(name)
+      expect(r, name).toMatchObject({ best: null, confidence: 'none' })
+    }
+    expect(matcher.match('Weighted pullups').best).not.toBeNull()
+    expect(matcher.match('Cable fly').best).not.toBeNull()
+  })
+
   it('prefers the program custom exercises by name', () => {
     expect(matcher.match('sled push')).toMatchObject({ best: { ref: 'c1' }, confidence: 'exact' })
   })

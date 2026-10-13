@@ -8,6 +8,7 @@ import { randomId } from '../../domain/ids'
 import {
   assignDays,
   buildImportedProgram,
+  importRefFor,
   parseProgramText,
   type AssignedDay,
   type ImportDay,
@@ -15,7 +16,7 @@ import {
   type ParsedLine,
 } from '../../domain/importText'
 import { DEFAULT_SETS, NAME_MAX } from '../../domain/program'
-import type { Program } from '../../domain/schema'
+import type { CustomExercise, Program } from '../../domain/schema'
 import { groups } from '../../domain/taxonomy'
 import { compareText } from '../../i18n/format'
 import { getMessages, useLocale, useMessages } from '../../i18n/messages'
@@ -60,8 +61,9 @@ function review(text: string, matcher: Matcher): Step {
       return {
         key: String(n++),
         line,
-        confidence: r.confidence,
-        alternatives: r.best ? [r.best, ...r.alternatives] : [],
+        // Numbers that read more than one way ("16x3x12") need a look even when the name is sure.
+        confidence: line.unsure && r.confidence !== 'none' ? 'weak' : r.confidence,
+        alternatives: r.best ? [r.best, ...r.alternatives] : r.alternatives,
         choice: r.best ? { kind: 'match', pick: r.best } : { kind: 'skip' },
         reviewed: false,
       }
@@ -129,6 +131,7 @@ export function PasteSheet({ open, onClose }: PasteSheetProps) {
 
   const create = () => {
     if (step.kind !== 'review') return
+    const source: readonly CustomExercise[] = custom ?? []
     const days: ImportDay[] = step.days.map((d) => ({
       day: d.day,
       label: d.label,
@@ -139,7 +142,7 @@ export function PasteSheet({ open, onClose }: PasteSheetProps) {
         const withPrev = !!r.line.withPrev && i > 0 && d.rows[i - 1].choice.kind !== 'skip'
         const ref =
           r.choice.kind === 'match'
-            ? r.choice.pick.ref
+            ? importRefFor(r.choice.pick.ref, source)
             : r.choice.kind === 'custom'
               ? {
                   custom: {
@@ -292,7 +295,9 @@ function Warnings({ warnings }: { warnings: readonly ImportWarning[] }) {
         </li>
       )}
       {warnings.some((w) => w.kind === 'truncated') && <li>{m.truncated}</li>}
-      {warnings.map((w, i) => (w.kind === 'extra_days' ? <li key={i}>{m.extraDays(w.count)}</li> : null))}
+      {warnings.map((w, i) =>
+        w.kind === 'extra_days' ? <li key={i}>{m.extraDays(w.count)}</li> : w.kind === 'extra_weeks' ? <li key={i}>{m.extraWeeks(w.count)}</li> : null,
+      )}
     </ul>
   )
 }

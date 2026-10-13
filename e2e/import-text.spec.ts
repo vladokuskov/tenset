@@ -109,3 +109,40 @@ test('Ukrainian and Russian notes match the catalog in an English UI', async ({ 
     [3, '5'],
   ])
 })
+
+test('a match on a custom exercise of the active program is copied into the new program', async ({ page }) => {
+  await startFromTemplate(page, 'Upper/Lower 4x')
+  let sheet = await openPaste(page)
+  await sheet.getByRole('textbox', { name: 'Program text or share link' }).fill('Monday\nZercher carry 3x20')
+  await sheet.getByRole('button', { name: 'Read it' }).click()
+  await sheet.getByRole('button', { name: 'Change match for Zercher carry' }).click()
+  await sheet.getByRole('button', { name: 'Add as my own exercise' }).click()
+  await sheet.getByRole('button', { name: 'Create program' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Created "Imported program"' })).toBeVisible()
+
+  sheet = await openPaste(page)
+  await sheet.getByRole('textbox', { name: 'Program text or share link' }).fill('Thursday\nZercher carry 4x15')
+  await sheet.getByRole('button', { name: 'Read it' }).click()
+  await expect(sheet.getByText('Zercher carry', { exact: true })).toBeVisible()
+  await sheet.getByRole('button', { name: 'Create program' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Created "Imported program 2"' })).toBeVisible()
+
+  const { programs, activeId } = await storedPrograms(page)
+  const added = programs[activeId!]
+  expect(added.custom).toEqual([expect.objectContaining({ id: 'c1', name: 'Zercher carry' })])
+  expect(added.days[3].entries.map((e) => [e.exerciseId, e.sets, e.reps])).toEqual([['c1', 4, '15']])
+  await expect(page.getByText('Unknown exercise')).toHaveCount(0)
+})
+
+test('later weeks and metres are not read into the week', async ({ page }) => {
+  await startFromTemplate(page, 'Upper/Lower 4x')
+  const sheet = await openPaste(page)
+  await sheet
+    .getByRole('textbox', { name: 'Program text or share link' })
+    .fill("Week 1\nMonday: Bench press 3x8, Farmer's walk 3x40m\nWeek 2\nMonday\nBench press 3x9")
+  await sheet.getByRole('button', { name: 'Read it' }).click()
+  await expect(sheet.getByText('Only the first week was read. 1 later week was left out.')).toBeVisible()
+  await expect(sheet.getByText('Barbell Bench Press')).toHaveCount(1)
+  await expect(sheet.getByText('No match found')).toBeVisible()
+  await expect(sheet.getByText('3 × 2400s')).toHaveCount(0)
+})

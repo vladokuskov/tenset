@@ -89,6 +89,7 @@ export const exportMessages = defineMessages({
       quote: (raw: string) => `"${raw}"`,
       truncated: 'The text is long, so only the first part was read.',
       extraDays: (n: number) => `${n} ${plural('en', n, { one: 'session', other: 'sessions' })} did not fit into one week and ${n === 1 ? 'was' : 'were'} left out.`,
+      extraWeeks: (n: number) => `Only the first week was read. ${n} later ${plural('en', n, { one: 'week', other: 'weeks' })} ${n === 1 ? 'was' : 'were'} left out.`,
     },
 
     // PrintPage
@@ -231,6 +232,8 @@ export const exportMessages = defineMessages({
       truncated: 'Текст довгий, тому прочитано лише першу частину.',
       extraDays: (n) =>
         `Не вмістилися в один тиждень і пропущені: ${n} ${plural('uk', n, { one: 'тренування', few: 'тренування', many: 'тренувань', other: 'тренування' })}.`,
+      extraWeeks: (n) =>
+        `Прочитано лише перший тиждень. Пропущено наступні: ${n} ${plural('uk', n, { one: 'тиждень', few: 'тижні', many: 'тижнів', other: 'тижня' })}.`,
     },
 
     nothingToPrint: 'Поки нічого друкувати',
