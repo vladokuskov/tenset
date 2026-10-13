@@ -70,3 +70,12 @@ test('the plan headline counts groups by band and lists the ones below range', a
   await expect(coverage.getByRole('heading', { name: 'Below target range' })).toBeVisible()
   await expect(coverage.getByRole('link', { name: /\d/ })).toHaveCount(below)
 })
+
+test('suggestions on an Upper day start with upper body groups', async ({ page }) => {
+  await openDay(page, 'Monday')
+  await page.getByRole('button', { name: 'Add exercise' }).click()
+  const sheet = openSheet(page, 'Add to Monday')
+  const first = sheet.locator('section h3').first()
+  await expect(first).toBeVisible()
+  await expect(first).not.toContainText(/Calves|Quads|Hamstrings|Glutes|Adductors|Glute med/)
+})
