@@ -55,7 +55,7 @@ test('a note travels through reload, the board, a share link and both print layo
   if (isDesktop(page)) {
     await page.goto('/')
     const board = page.getByRole('region', { name: 'Monday' })
-    await expect(board.getByRole('link', { name: /Barbell Bench Press/ })).toContainText(NOTE)
+    await expect(board.getByRole('button', { name: /^Barbell Bench Press/ })).toContainText(NOTE)
   }
 
   await page.goto('/')
