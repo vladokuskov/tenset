@@ -29,6 +29,8 @@ async function seriousViolations(page: Page): Promise<string[]> {
 }
 
 test.describe('axe: no serious or critical violations', () => {
+  // Each test runs axe on several screens, which takes most of the default 30s on a busy machine.
+  test.slow()
   test.skip(!AXE, 'axe-core is not installed (add it as a devDependency or set AXE_CORE_PATH)')
 
   for (const scheme of ['light', 'dark'] as const) {
@@ -72,7 +74,6 @@ test.describe('axe: no serious or critical violations', () => {
     test.use({ locale: 'uk-UA' })
 
     test('welcome, plan, body, exercises, detail and settings', async ({ page }) => {
-      test.slow()
       const found: Record<string, string[]> = {}
       const check = async (name: string) => {
         await page.waitForTimeout(400)
