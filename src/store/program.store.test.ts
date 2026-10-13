@@ -4,7 +4,7 @@ import { blankProgram } from '../domain/program.ts'
 import { BENCH, CATALOG, ROW, SQUAT, TEMPLATE } from '../domain/test-fixtures.ts'
 import { storageHealth } from './health.ts'
 import programsV1 from './fixtures/programs.v1.json'
-import { createPrefsStore } from './prefs.store.ts'
+import { createPrefsStore, prefsStore } from './prefs.store.ts'
 import { PROGRAMS_KEY, createProgramStore } from './program.store.ts'
 import { listQuarantined } from './quarantine.ts'
 import { memoryStorage, type SyncStorage } from './storage.ts'
@@ -113,6 +113,24 @@ describe('program store', () => {
     store.getState().renameProgram(copy, 'Deload')
     expect(store.getState().programs[copy].name).toBe('Deload')
     expect(store.getState().programs[copy].days[0].entries).toHaveLength(1)
+  })
+
+  it('names copies in the current language and keeps the suffix within the name limit', () => {
+    const { store } = make()
+    const id = store.getState().createBlank('Моя програма')
+    const long = store.getState().createBlank('L'.repeat(40))
+    const dup = (src: string) => {
+      const copy = store.getState().duplicateProgram(src)!
+      return store.getState().programs[copy].name
+    }
+    prefsStore.setState({ locale: 'uk' })
+    try {
+      expect(dup(id)).toBe('Моя програма (копія)')
+      expect(dup(long)).toBe(`${'L'.repeat(32)} (копія)`)
+    } finally {
+      prefsStore.setState({ locale: 'en' })
+    }
+    expect(dup(long)).toBe(`${'L'.repeat(35)} copy`)
   })
 
   it('manages custom exercises on the active program', () => {

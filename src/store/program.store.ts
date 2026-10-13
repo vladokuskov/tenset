@@ -8,6 +8,7 @@ import * as ops from '../domain/program.ts'
 import type { Catalog } from '../domain/resolve.ts'
 import { Program, type ExerciseRef, type SplitTemplate } from '../domain/schema.ts'
 import { getMessages } from '../i18n/messages.ts'
+import { storeMessages } from './messages.ts'
 import { PROGRAMS_VERSION, programMigrations, runMigrations } from './migrations/index.ts'
 import { adoptLegacyBackup, quarantine } from './quarantine.ts'
 import { salvagePrograms } from './salvage.ts'
@@ -85,6 +86,13 @@ function normalize(data: PersistedPrograms): PersistedPrograms {
   return { programs, activeId }
 }
 
+/** Fits the localized "copy" name into NAME_MAX by shortening the original name, not the suffix. */
+function copyName(name: string): string {
+  const { copyName: format } = getMessages(storeMessages)
+  const over = format(name).length - ops.NAME_MAX
+  return over > 0 ? format(name.slice(0, Math.max(1, name.length - over)).trimEnd()) : format(name)
+}
+
 export function createProgramStore(options: ProgramStoreOptions = {}) {
   const storage = options.storage ?? browserStorage()
   adoptLegacyBackup(storage, PROGRAMS_KEY)
@@ -141,7 +149,7 @@ export function createProgramStore(options: ProgramStoreOptions = {}) {
             const src = get().programs[id]
             if (!src) return null
             const copy = structuredClone(src)
-            return addProgram('duplicateProgram', ops.rename({ ...copy, id: newProgramId() }, `${src.name} copy`.slice(0, ops.NAME_MAX)))
+            return addProgram('duplicateProgram', ops.rename({ ...copy, id: newProgramId() }, copyName(src.name)))
           },
 
           // Switching drops the undo snapshot so Undo never edits a program that is not on screen.
