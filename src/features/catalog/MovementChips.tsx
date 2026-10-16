@@ -16,7 +16,7 @@ export function MovementChips({
 }) {
   const locale = useLocale()
   return (
-    <div role="group" aria-label={label} className="scrollbar-none -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1">
+    <div role="group" aria-label={label} className="scrollbar-none -mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1.5">
       {MOVEMENT_GROUPS.map(({ id }) => {
         const on = value === id
         return (

@@ -7,10 +7,9 @@ import { useLocale, useMessages } from '../../i18n/messages'
 import { mixParts, MovementSwatch } from '../../ui'
 import { uiMessages } from '../../ui/messages'
 import { exerciseName } from '../share/resolveNames'
-import { defaultReps, repsText, supersetLabels, unitOf } from '../shared/exercise'
+import { defaultReps, groupOf, repsText, supersetLabels, unitOf } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
 import { exportMessages } from './messages'
-import { groupOf } from '../shared/exercise'
 
 /** One block per training day: each exercise with its targets and an empty box per set, for writing by hand. */
 export function GymSheet({ view, catalog }: { view: WeekView; catalog: Catalog }) {

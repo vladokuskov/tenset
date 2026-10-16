@@ -4,8 +4,7 @@ import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
 import { MovementSwatch } from '../../ui/MovementMix'
 import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
-import { rowMeta, type AnyExercise } from '../shared/exercise'
-import { groupOf } from '../shared/exercise'
+import { groupOf, rowMeta, type AnyExercise } from '../shared/exercise'
 
 export type PickRowProps = {
   exercise: AnyExercise

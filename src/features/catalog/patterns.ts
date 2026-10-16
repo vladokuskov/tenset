@@ -1,12 +1,10 @@
-import { MOVEMENT_GROUPS, type MovementGroupId, type MovementKey } from '../../domain/movement'
+import { MOVEMENT_GROUPS, type MovementKey } from '../../domain/movement'
 import type { Pattern } from '../../domain/schema'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
 import { catalogMessages } from './messages'
 
-export { MOVEMENT_GROUPS, movementGroupOf, movementMix, type MovementGroupId, type MovementKey } from '../../domain/movement'
-
-export type PatternGroupId = MovementGroupId
+export { movementGroupOf, type MovementKey } from '../../domain/movement'
 
 /** Pattern groups for pickers, in display order. Labels come from patternGroupLabel. */
 export const PATTERN_GROUPS = MOVEMENT_GROUPS

@@ -13,11 +13,10 @@ import { BackButton, Button, EmptyState, LinkButton, MovementMix, MovementSwatch
 import { uiMessages } from '../../ui/messages'
 import { BodyMap, VolumeLegend } from '../bodymap'
 import { exerciseName } from '../share/resolveNames'
-import { supersetLabels } from '../shared/exercise'
+import { groupOf, supersetLabels } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
 import { GymSheet } from './GymSheet'
 import { exportMessages } from './messages'
-import { groupOf } from '../shared/exercise'
 
 const PRINT_CSS = `
 @page { size: A4 portrait; margin: 12mm; }

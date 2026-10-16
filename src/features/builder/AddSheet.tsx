@@ -27,6 +27,7 @@ import { addPreview } from '../shared/delta'
 import {
   defaultReps,
   defaultSets,
+  groupOf,
   isCustom,
   matchesQuery,
   repsText,
@@ -35,7 +36,6 @@ import {
 } from '../shared/exercise'
 import { undoLastChange, useChange } from '../shared/useChange'
 import { builderMessages } from './messages'
-import { groupOf } from '../shared/exercise'
 import { PickRow } from './PickRow'
 
 export type AddTab = 'suggested' | 'muscle' | 'equipment' | 'pattern'
