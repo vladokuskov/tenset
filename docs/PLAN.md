@@ -51,7 +51,7 @@ Yes, procedurally. The agent can't produce raster images or video from a diffusi
 - **Catalog**: 2-column grid, "Filter by muscle" via the map, search with aliases ("RDL", "OHP").
 - **Empty states**: an empty training day is not a rest day; blank program shows a grey silhouette + "Use a template"; no-results names the active filters with one-tap clear.
 - **Desktop >= 1280 px**: nav rail, 7-column week board (drag between days), sticky ~400 px map panel, catalog drawer to drag from; hover an entry to highlight its muscles and vice versa. 1024-1279: map panel becomes a toggled overlay. < 1024: phone layout, max width 640 px.
-- **Color**: volume is the only data color. One colour-blind-safe single-hue scale in 6 steps matching the bands, legend under the map, retuned for dark mode. Bands are text pills, never colors, so "high" never reads as danger.
+- **Color**: Volume is the only color on the body map and volume legends. Movement groups get categorical pastels on exercise surfaces only, always with `mv-ink` text and a text label, never on volume data. No warning semantics. Volume uses one colour-blind-safe single-hue scale in 6 steps matching the bands, legend under the map, retuned for dark mode. Movement pastels (push, pull, shoulders, arms, legs, core, plus neutral "other" for custom exercises) come from `src/domain/movement.ts`. Bands are text pills, never colors, so "high" never reads as danger.
 
 ## Architecture
 

@@ -1,0 +1,646 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T19:14:42.842Z",
+  "title": "Design System: Tenset",
+  "extensions": {
+    "status": "Instrument color tokens and movement pastels live on feat/movement-colors. Fonts stay system for now (Atkinson and Barlow have no Cyrillic).",
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Graphite Canvas",
+        "canonical": "oklch(0.962 0.004 260)",
+        "dark": "oklch(0.17 0.006 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.002 260)",
+          "oklch(0.26 0.002 260)",
+          "oklch(0.37 0.004 260)",
+          "oklch(0.48 0.004 260)",
+          "oklch(0.6 0.004 260)",
+          "oklch(0.72 0.004 260)",
+          "oklch(0.84 0.004 260)",
+          "oklch(0.95 0.002 260)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "canonical": "oklch(0.993 0.002 260)",
+        "dark": "oklch(0.212 0.007 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.001 260)",
+          "oklch(0.26 0.001 260)",
+          "oklch(0.37 0.002 260)",
+          "oklch(0.48 0.002 260)",
+          "oklch(0.6 0.002 260)",
+          "oklch(0.72 0.002 260)",
+          "oklch(0.84 0.002 260)",
+          "oklch(0.95 0.001 260)"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Well Grey",
+        "canonical": "oklch(0.925 0.006 260)",
+        "dark": "oklch(0.26 0.008 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.004 260)",
+          "oklch(0.26 0.004 260)",
+          "oklch(0.37 0.006 260)",
+          "oklch(0.48 0.006 260)",
+          "oklch(0.6 0.006 260)",
+          "oklch(0.72 0.006 260)",
+          "oklch(0.84 0.006 260)",
+          "oklch(0.95 0.004 260)"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Sheet White",
+        "canonical": "oklch(0.998 0.001 260)",
+        "dark": "oklch(0.24 0.008 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.001 260)",
+          "oklch(0.26 0.001 260)",
+          "oklch(0.37 0.001 260)",
+          "oklch(0.48 0.001 260)",
+          "oklch(0.6 0.001 260)",
+          "oklch(0.72 0.001 260)",
+          "oklch(0.84 0.001 260)",
+          "oklch(0.95 0.001 260)"
+        ]
+      },
+      "thumb": {
+        "role": "neutral",
+        "displayName": "Thumb",
+        "canonical": "oklch(1 0 0)",
+        "dark": "oklch(0.37 0.01 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.000 0)",
+          "oklch(0.26 0.000 0)",
+          "oklch(0.37 0.000 0)",
+          "oklch(0.48 0.000 0)",
+          "oklch(0.6 0.000 0)",
+          "oklch(0.72 0.000 0)",
+          "oklch(0.84 0.000 0)",
+          "oklch(0.95 0.000 0)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.895 0.007 260)",
+        "dark": "oklch(0.29 0.009 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.004 260)",
+          "oklch(0.26 0.004 260)",
+          "oklch(0.37 0.007 260)",
+          "oklch(0.48 0.007 260)",
+          "oklch(0.6 0.007 260)",
+          "oklch(0.72 0.007 260)",
+          "oklch(0.84 0.007 260)",
+          "oklch(0.95 0.004 260)"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "oklch(0.79 0.01 260)",
+        "dark": "oklch(0.385 0.011 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.006 260)",
+          "oklch(0.26 0.006 260)",
+          "oklch(0.37 0.010 260)",
+          "oklch(0.48 0.010 260)",
+          "oklch(0.6 0.010 260)",
+          "oklch(0.72 0.010 260)",
+          "oklch(0.84 0.010 260)",
+          "oklch(0.95 0.006 260)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Graphite Ink",
+        "canonical": "oklch(0.2 0.012 260)",
+        "dark": "oklch(0.95 0.004 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.007 260)",
+          "oklch(0.26 0.007 260)",
+          "oklch(0.37 0.012 260)",
+          "oklch(0.48 0.012 260)",
+          "oklch(0.6 0.012 260)",
+          "oklch(0.72 0.012 260)",
+          "oklch(0.84 0.012 260)",
+          "oklch(0.95 0.007 260)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "oklch(0.42 0.018 260)",
+        "dark": "oklch(0.78 0.012 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.011 260)",
+          "oklch(0.26 0.011 260)",
+          "oklch(0.37 0.018 260)",
+          "oklch(0.48 0.018 260)",
+          "oklch(0.6 0.018 260)",
+          "oklch(0.72 0.018 260)",
+          "oklch(0.84 0.018 260)",
+          "oklch(0.95 0.011 260)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "oklch(0.51 0.016 260)",
+        "dark": "oklch(0.68 0.012 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.010 260)",
+          "oklch(0.26 0.010 260)",
+          "oklch(0.37 0.016 260)",
+          "oklch(0.48 0.016 260)",
+          "oklch(0.6 0.016 260)",
+          "oklch(0.72 0.016 260)",
+          "oklch(0.84 0.016 260)",
+          "oklch(0.95 0.010 260)"
+        ]
+      },
+      "on-ink": {
+        "role": "neutral",
+        "displayName": "On Ink",
+        "canonical": "oklch(0.985 0.002 260)",
+        "dark": "oklch(0.17 0.006 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.001 260)",
+          "oklch(0.26 0.001 260)",
+          "oklch(0.37 0.002 260)",
+          "oklch(0.48 0.002 260)",
+          "oklch(0.6 0.002 260)",
+          "oklch(0.72 0.002 260)",
+          "oklch(0.84 0.002 260)",
+          "oklch(0.95 0.001 260)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Instrument Cobalt",
+        "canonical": "oklch(0.5 0.17 264)",
+        "dark": "oklch(0.74 0.13 262)",
+        "tonalRamp": [
+          "oklch(0.15 0.102 264)",
+          "oklch(0.26 0.102 264)",
+          "oklch(0.37 0.170 264)",
+          "oklch(0.48 0.170 264)",
+          "oklch(0.6 0.170 264)",
+          "oklch(0.72 0.170 264)",
+          "oklch(0.84 0.170 264)",
+          "oklch(0.95 0.102 264)"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Cobalt Wash",
+        "canonical": "oklch(0.93 0.035 264)",
+        "dark": "oklch(0.32 0.06 264)",
+        "tonalRamp": [
+          "oklch(0.15 0.021 264)",
+          "oklch(0.26 0.021 264)",
+          "oklch(0.37 0.035 264)",
+          "oklch(0.48 0.035 264)",
+          "oklch(0.6 0.035 264)",
+          "oklch(0.72 0.035 264)",
+          "oklch(0.84 0.035 264)",
+          "oklch(0.95 0.021 264)"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On Cobalt",
+        "canonical": "oklch(0.985 0.005 264)",
+        "dark": "oklch(0.17 0.02 264)",
+        "tonalRamp": [
+          "oklch(0.15 0.003 264)",
+          "oklch(0.26 0.003 264)",
+          "oklch(0.37 0.005 264)",
+          "oklch(0.48 0.005 264)",
+          "oklch(0.6 0.005 264)",
+          "oklch(0.72 0.005 264)",
+          "oklch(0.84 0.005 264)",
+          "oklch(0.95 0.003 264)"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Scrim",
+        "canonical": "oklch(0.18 0.015 260 / 0.36)",
+        "dark": "oklch(0.06 0.005 260 / 0.6)",
+        "tonalRamp": [
+          "oklch(0.15 0.009 260)",
+          "oklch(0.26 0.009 260)",
+          "oklch(0.37 0.015 260)",
+          "oklch(0.48 0.015 260)",
+          "oklch(0.6 0.015 260)",
+          "oklch(0.72 0.015 260)",
+          "oklch(0.84 0.015 260)",
+          "oklch(0.95 0.009 260)"
+        ]
+      },
+      "map-skin": {
+        "role": "secondary",
+        "displayName": "Map Skin",
+        "canonical": "oklch(0.905 0.006 260)",
+        "dark": "oklch(0.3 0.008 260)",
+        "tonalRamp": [
+          "oklch(0.15 0.004 260)",
+          "oklch(0.26 0.004 260)",
+          "oklch(0.37 0.006 260)",
+          "oklch(0.48 0.006 260)",
+          "oklch(0.6 0.006 260)",
+          "oklch(0.72 0.006 260)",
+          "oklch(0.84 0.006 260)",
+          "oklch(0.95 0.004 260)"
+        ]
+      },
+      "vol-none": {
+        "role": "secondary",
+        "displayName": "Volume: not trained",
+        "canonical": "oklch(0.85 0.008 260)",
+        "dark": "oklch(0.37 0.01 260)",
+        "tonalRamp": [
+          "oklch(0.335 0.13 270)",
+          "oklch(0.44 0.165 267)",
+          "oklch(0.55 0.17 265)",
+          "oklch(0.665 0.125 265)",
+          "oklch(0.78 0.065 265)",
+          "oklch(0.85 0.008 260)"
+        ]
+      },
+      "vol-light": {
+        "role": "secondary",
+        "displayName": "Volume: light",
+        "canonical": "oklch(0.78 0.065 265)",
+        "dark": "oklch(0.44 0.085 264)",
+        "tonalRamp": [
+          "oklch(0.335 0.13 270)",
+          "oklch(0.44 0.165 267)",
+          "oklch(0.55 0.17 265)",
+          "oklch(0.665 0.125 265)",
+          "oklch(0.78 0.065 265)",
+          "oklch(0.85 0.008 260)"
+        ]
+      },
+      "vol-moderate": {
+        "role": "secondary",
+        "displayName": "Volume: moderate",
+        "canonical": "oklch(0.665 0.125 265)",
+        "dark": "oklch(0.54 0.13 264)",
+        "tonalRamp": [
+          "oklch(0.335 0.13 270)",
+          "oklch(0.44 0.165 267)",
+          "oklch(0.55 0.17 265)",
+          "oklch(0.665 0.125 265)",
+          "oklch(0.78 0.065 265)",
+          "oklch(0.85 0.008 260)"
+        ]
+      },
+      "vol-target": {
+        "role": "secondary",
+        "displayName": "Volume: target range",
+        "canonical": "oklch(0.55 0.17 265)",
+        "dark": "oklch(0.645 0.15 263)",
+        "tonalRamp": [
+          "oklch(0.335 0.13 270)",
+          "oklch(0.44 0.165 267)",
+          "oklch(0.55 0.17 265)",
+          "oklch(0.665 0.125 265)",
+          "oklch(0.78 0.065 265)",
+          "oklch(0.85 0.008 260)"
+        ]
+      },
+      "vol-high": {
+        "role": "secondary",
+        "displayName": "Volume: high",
+        "canonical": "oklch(0.44 0.165 267)",
+        "dark": "oklch(0.755 0.12 262)",
+        "tonalRamp": [
+          "oklch(0.335 0.13 270)",
+          "oklch(0.44 0.165 267)",
+          "oklch(0.55 0.17 265)",
+          "oklch(0.665 0.125 265)",
+          "oklch(0.78 0.065 265)",
+          "oklch(0.85 0.008 260)"
+        ]
+      },
+      "vol-very-high": {
+        "role": "secondary",
+        "displayName": "Volume: very high",
+        "canonical": "oklch(0.335 0.13 270)",
+        "dark": "oklch(0.86 0.07 260)",
+        "tonalRamp": [
+          "oklch(0.335 0.13 270)",
+          "oklch(0.44 0.165 267)",
+          "oklch(0.55 0.17 265)",
+          "oklch(0.665 0.125 265)",
+          "oklch(0.78 0.065 265)",
+          "oklch(0.85 0.008 260)"
+        ]
+      },
+      "mv-push": {
+        "role": "tertiary",
+        "displayName": "Movement: push",
+        "canonical": "oklch(0.82 0.1 294)",
+        "dark": "oklch(0.777 0.116 293)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-pull": {
+        "role": "tertiary",
+        "displayName": "Movement: pull",
+        "canonical": "oklch(0.836 0.096 162)",
+        "dark": "oklch(0.802 0.102 162)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-shoulders": {
+        "role": "tertiary",
+        "displayName": "Movement: shoulders",
+        "canonical": "oklch(0.835 0.078 230)",
+        "dark": "oklch(0.797 0.082 231)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-arms": {
+        "role": "tertiary",
+        "displayName": "Movement: arms",
+        "canonical": "oklch(0.834 0.101 358)",
+        "dark": "oklch(0.798 0.107 358)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-legs": {
+        "role": "tertiary",
+        "displayName": "Movement: legs and hips",
+        "canonical": "oklch(0.833 0.11 57)",
+        "dark": "oklch(0.799 0.118 56)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-core": {
+        "role": "tertiary",
+        "displayName": "Movement: core",
+        "canonical": "oklch(0.91 0.128 92)",
+        "dark": "oklch(0.87 0.13 93)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-other": {
+        "role": "tertiary",
+        "displayName": "Movement: other",
+        "canonical": "oklch(0.885 0.012 265)",
+        "dark": "oklch(0.832 0.014 262)",
+        "usage": "Categorical fill for exercise surfaces of this movement group, with mv-ink text and a text label. Never on volume data."
+      },
+      "mv-ink": {
+        "role": "tertiary",
+        "displayName": "Movement Ink",
+        "canonical": "oklch(0.209 0.01 268)",
+        "dark": "oklch(0.209 0.01 268)",
+        "usage": "Text and icons on movement pastels. Stays dark in both themes (at least 8:1 on every fill)."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (font-num, system stack)",
+        "purpose": "The one big number on a screen. Numerals only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings above panels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Rows, descriptions, sheets, inputs (16 px minimum)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Small buttons, chips, row meta, toasts."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Tab labels, stepper units, small pills. The floor."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 1px 2px oklch(0.2 0.015 260 / 0.08), 0 8px 24px -6px oklch(0.2 0.015 260 / 0.18)",
+        "dark": "0 1px 0 oklch(1 0 0 / 0.04) inset, 0 10px 30px -8px oklch(0 0 0 / 0.6)",
+        "purpose": "Toasts, popovers, desktop side sheets."
+      },
+      {
+        "name": "sheet",
+        "value": "0 -1px 0 oklch(0.2 0.015 260 / 0.06), 0 -12px 40px -12px oklch(0.2 0.015 260 / 0.28)",
+        "dark": "0 1px 0 oklch(1 0 0 / 0.05) inset, 0 -12px 40px -12px oklch(0 0 0 / 0.7)",
+        "purpose": "Bottom sheets."
+      },
+      {
+        "name": "thumb",
+        "value": "0 1px 2px oklch(0.2 0.015 260 / 0.14), 0 2px 6px -2px oklch(0.2 0.015 260 / 0.12)",
+        "dark": "0 1px 0 oklch(1 0 0 / 0.06) inset, 0 2px 6px -2px oklch(0 0 0 / 0.5)",
+        "purpose": "Segmented-control thumb only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Entrances and state changes."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.6, 0, 0.3, 1)",
+        "purpose": "Movement between positions."
+      },
+      {
+        "name": "control",
+        "value": "150ms",
+        "purpose": "Button, chip, segment feedback."
+      },
+      {
+        "name": "popover",
+        "value": "140-180ms",
+        "purpose": "Select popover."
+      },
+      {
+        "name": "sheet",
+        "value": "300-340ms",
+        "purpose": "Sheet slide-in."
+      },
+      {
+        "name": "toast",
+        "value": "320ms",
+        "purpose": "Toast entrance."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sheet-desktop",
+        "value": "1024px"
+      },
+      {
+        "name": "desktop",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action on a screen or sheet. Ink, never cobalt.",
+      "html": "<button class=\"ds-btn-primary\">Save to my programs</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;border-radius:0.75rem;background:var(--color-ink);color:var(--color-on-ink);font:500 1rem/1.375rem system-ui,sans-serif;transition:background-color .15s ease-out,scale .15s ease-out;cursor:pointer}.ds-btn-primary:hover{background:color-mix(in oklab,var(--color-ink) 88%,transparent)}.ds-btn-primary:active{scale:.98}.ds-btn-primary:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default button. Tonal well fill.",
+      "html": "<button class=\"ds-btn-secondary\">Use a template</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;height:44px;padding:0 16px;border:0;border-radius:0.75rem;background:var(--color-surface-2);color:var(--color-ink);font:500 1rem/1.375rem system-ui,sans-serif;transition:background-color .15s ease-out,scale .15s ease-out;cursor:pointer}.ds-btn-secondary:hover{background:var(--color-line)}.ds-btn-secondary:active{scale:.98}.ds-btn-secondary:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Inline action in cobalt, underline on hover.",
+      "html": "<button class=\"ds-btn-link\">Why?</button>",
+      "css": ".ds-btn-link{background:none;border:0;padding:0;height:36px;color:var(--color-accent);font:500 1rem/1.375rem system-ui,sans-serif;text-underline-offset:4px;cursor:pointer}.ds-btn-link:hover{text-decoration:underline}.ds-btn-link:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;border-radius:0.5rem}"
+    },
+    {
+      "name": "Filter Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Toggle chips; selected fills ink.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">Mine <span>24</span></button><button class=\"ds-chip\" aria-pressed=\"false\">Chest</button><button class=\"ds-chip\" aria-pressed=\"false\">Pull</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px}.ds-chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:9999px;border:1px solid var(--color-line-strong);background:transparent;color:var(--color-ink);font:500 .8125rem/1.125rem system-ui,sans-serif;transition:background-color .15s,border-color .15s,color .15s;cursor:pointer}.ds-chip span{color:var(--color-ink-3);font-variant-numeric:tabular-nums}.ds-chip:hover{background:var(--color-surface-2)}.ds-chip[aria-pressed=\"true\"]{background:var(--color-ink);border-color:var(--color-ink);color:var(--color-on-ink)}.ds-chip[aria-pressed=\"true\"] span{color:color-mix(in oklab,var(--color-on-ink) 70%,transparent)}.ds-chip:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "Band Pill",
+      "kind": "chip",
+      "refersTo": "pill-outline",
+      "description": "Volume band as a neutral word, never a color.",
+      "html": "<span class=\"ds-pill\">target range</span> <span class=\"ds-pill ds-pill-soft\">custom</span>",
+      "css": ".ds-pill{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:9999px;border:1px solid var(--color-line-strong);color:var(--color-ink-2);font:500 .75rem/1rem system-ui,sans-serif}.ds-pill-soft{border-color:transparent;background:var(--color-surface-2)}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "refersTo": "segmented-track",
+      "description": "Scope and shading switches.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\"><button role=\"radio\" aria-checked=\"true\">Week</button><button role=\"radio\" aria-checked=\"false\">Day</button></div>",
+      "css": ".ds-seg{display:inline-flex;height:44px;padding:2px;border-radius:0.75rem;background:var(--color-surface-2)}.ds-seg button{flex:1;padding:0 12px;border:0;border-radius:calc(0.75rem - 2px);background:transparent;color:var(--color-ink-2);font:500 .8125rem/1.125rem system-ui,sans-serif;transition:background-color .15s,color .15s,box-shadow .15s;cursor:pointer}.ds-seg button:hover{color:var(--color-ink)}.ds-seg button[aria-checked=\"true\"]{background:var(--color-thumb);color:var(--color-ink);box-shadow:var(--shadow-thumb,0 1px 2px oklch(0.2 0.015 260 / .14),0 2px 6px -2px oklch(0.2 0.015 260 / .12))}.ds-seg button:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "Sets Stepper",
+      "kind": "custom",
+      "refersTo": "stepper-button",
+      "description": "Hard sets per entry.",
+      "html": "<div class=\"ds-step\"><button aria-label=\"Fewer\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M5 12h14\"/></svg></button><div class=\"ds-step-v\"><b>3</b><small>sets</small></div><button aria-label=\"More\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M5 12h14M12 5v14\"/></svg></button></div>",
+      "css": ".ds-step{display:inline-flex;align-items:center;gap:4px}.ds-step button{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border:0;border-radius:9999px;background:var(--color-surface-2);color:var(--color-ink);transition:background-color .15s,scale .15s;cursor:pointer}.ds-step button:hover{background:var(--color-line)}.ds-step button:active{scale:.9}.ds-step button:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}.ds-step-v{display:flex;flex-direction:column;align-items:center;min-width:40px;line-height:1;font-variant-numeric:tabular-nums;color:var(--color-ink);font-family:system-ui,sans-serif}.ds-step-v b{font-size:1.0625rem;font-weight:600}.ds-step-v small{margin-top:2px;font-size:.6875rem;color:var(--color-ink-3)}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Borderless well input; focus is the global cobalt ring.",
+      "html": "<input class=\"ds-input\" type=\"search\" placeholder=\"Search exercises\">",
+      "css": ".ds-input{height:44px;width:280px;padding:0 12px;border:0;border-radius:0.75rem;background:var(--color-surface-2);color:var(--color-ink);font:400 1rem/1.375rem system-ui,sans-serif}.ds-input::placeholder{color:var(--color-ink-3)}.ds-input:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "Coverage Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Flat panel with a display number and hairline rows.",
+      "html": "<section class=\"ds-panel\"><p class=\"ds-big\"><b>15</b> <span>of 19</span></p><p class=\"ds-cap\">groups trained</p><ul><li><span>Chest</span><span>12 sets</span></li><li><span>Lats</span><span>9 sets</span></li></ul></section>",
+      "css": ".ds-panel{width:320px;padding:16px;border-radius:1.25rem;background:var(--color-surface);color:var(--color-ink);font-family:system-ui,sans-serif;font-variant-numeric:tabular-nums}.ds-big{margin:0}.ds-big b{font:600 2.75rem/1 system-ui,sans-serif;letter-spacing:-.01em}.ds-big span{font-size:1.25rem;color:var(--color-ink-3)}.ds-cap{margin:4px 0 12px;font-size:.8125rem;color:var(--color-ink-2)}.ds-panel ul{list-style:none;margin:0;padding:0}.ds-panel li{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--color-line);font-size:1rem}.ds-panel li span:last-child{color:var(--color-ink-2)}"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Phone bottom navigation; current tab in cobalt.",
+      "html": "<nav class=\"ds-tabs\"><a aria-current=\"page\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"17\" rx=\"2\"/><path d=\"M3 9h18M8 2v4M16 2v4\"/></svg>Plan</a><a><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><circle cx=\"12\" cy=\"5\" r=\"2.5\"/><path d=\"M12 8v7M7 11h10M9 22l3-7 3 7\"/></svg>Body</a><a><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12\"/></svg>Exercises</a></nav>",
+      "css": ".ds-tabs{display:flex;width:360px;height:56px;padding:0 8px;border-top:1px solid var(--color-line);background:color-mix(in oklab,var(--color-canvas) 90%,transparent);backdrop-filter:saturate(1.4) blur(20px)}.ds-tabs a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--color-ink-3);font:500 .6875rem/1 system-ui,sans-serif;text-decoration:none;cursor:pointer;transition:color .15s}.ds-tabs a:hover{color:var(--color-ink-2)}.ds-tabs a[aria-current=\"page\"]{color:var(--color-accent)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Calibrated Instrument",
+    "overview": "Tenset is a measuring tool for a training week. The chrome is quiet graphite, cool and nearly colorless, so that the cobalt volume scale on the body map reads as data and nothing else. Exercises carry a second, categorical voice: a soft pastel per movement group, so a day or a week shows its balance at a glance. Numbers are the product: they are big, condensed, tabular and always paired with the words that explain them. The interface behaves like a well-made gauge: exact, legible at arm's length in a gym, and silent about what it does not know.\n\nDensity is phone-first and calm: one 640 px column, grouped panels on a slightly darker canvas, hairline rows inside panels instead of nested cards. On desktop the same system widens into a week board with a nav rail and a sticky map panel; it never gains decoration in exchange for space. Recovery and volume are stated, never judged, so no color ever means \"warning\", and Tailwind's default palette is removed on purpose.",
+    "keyCharacteristics": [
+      "Graphite neutrals with a faint cool tint (hue 260) in both themes.",
+      "Cobalt is the brand, the only volume hue, and (one step deeper) the interactive accent.",
+      "Movement groups get categorical pastels on exercise surfaces, always with dark mv-ink text and a text label.",
+      "Primary actions are ink, not color.",
+      "System fonts for now; big numbers use font-num at 600.",
+      "Tabular figures everywhere.",
+      "Flat panels; shadows only on things that float.",
+      "Light and dark themes are first-class, each tuned on its own."
+    ],
+    "rules": [
+      {
+        "name": "The Two Voices Rule",
+        "body": "Volume is the only color on the body map and volume legends. Movement groups get categorical pastels on exercise surfaces only, always with mv-ink text and a text label, never on volume data. Color is never the only cue.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Alarm Rule",
+        "body": "No warning semantics, in either theme. No color ever means \"too much\", \"risk\" or \"too soon\"; the movement pastels are categories, not states. Bands are words in neutral pills. The default Tailwind palette stays removed.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Action Rule",
+        "body": "Primary buttons are ink on on-ink. Cobalt marks interactivity (links, focus, current tab), never the main call to action fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every number is tabular (font-variant-numeric: tabular-nums on body, num utility for emphasis), so stepping 9 → 10 sets never shifts a column.",
+        "section": "typography"
+      },
+      {
+        "name": "The Condensed Is For Numbers Rule",
+        "body": "font-num sets numerals only. Words, units and labels stay in font-sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Panels Don't Float Rule",
+        "body": "Panels and cards never carry a shadow. If something has a shadow, it is above the page and can be dismissed.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the vol-* scale for volume and nothing else.",
+      "Do color exercise surfaces by movement group (bg-mv-<group> with text-mv-ink) and always show the group or exercise name with it.",
+      "Do put thumbnails on white inside a group-colored ring or frame.",
+      "Do make the primary action ink (bg-ink text-on-ink); keep accent for links, focus and the current tab.",
+      "Do set big numbers as font-num text-display font-semibold, followed by a unit in ink-2 or ink-3.",
+      "Do keep every number tabular.",
+      "Do group content in flat surface panels at 1.25rem with hairline rows inside.",
+      "Do give every target a 44 px hit area (hit utility for smaller visuals).",
+      "Do check each new token or surface in both light and dark themes; the dark values are tuned, not inverted."
+    ],
+    "donts": [
+      "Don't add a warning color or any color that means a state (too much, too soon, risk), in either theme, for any reason.",
+      "Don't put movement colors on the body map, volume legends, bands or volume numbers.",
+      "Don't tint the figure or use mix-blend-mode on thumbnails; the owner rejected the purple-tinted figure.",
+      "Don't use ink or ink-2 text on a pastel fill; use mv-ink, which stays dark in dark mode.",
+      "Don't color volume bands. Bands are words in neutral pills.",
+      "Don't put a shadow on a panel or card.",
+      "Don't fill a primary button with cobalt.",
+      "Don't use font-num for words, or a light weight for big numbers.",
+      "Don't reintroduce warm cream surfaces or brass accents; the owner retired that look as an AI default.",
+      "Don't load fonts, textures or icons from a third-party origin; everything is self-hosted.",
+      "Don't nest cards inside panels."
+    ]
+  }
+}

@@ -16,7 +16,7 @@ Proposed split; the lead confirms. Each route file currently holds a working pla
 
 ## Design tokens (`src/styles/app.css`)
 
-Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the only data color, brass marks interactivity.
+Instrument with movement colors. Cool graphite surfaces, cobalt is the only volume color and (deeper) marks interactivity, pastel movement groups mark exercise surfaces. Full spec in `DESIGN.md`.
 
 - Surfaces: `canvas` (page), `surface` (grouped panels), `surface-2` (wells, tracks, tonal buttons), `raised` (sheets), `thumb` (segmented thumb).
 - Lines: `line` (hairlines), `line-strong` (control borders).
@@ -24,8 +24,9 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 - Accent: `accent` (focus ring, current tab, links, toast action), `accent-soft`, `on-accent`. Use it sparingly; primary buttons are `ink`, not accent.
 - Map: `map-skin` (silhouette), `map-gap` (region separators).
 - Volume scale, single hue, lightness only, retuned for dark mode (darker means more in light mode, brighter means more in dark mode): `vol-none`, `vol-light`, `vol-moderate`, `vol-target`, `vol-high`, `vol-very-high`. Role tints for exercise cards: `role-primary`, `role-secondary`.
-- All tokens are Tailwind colors (`bg-surface`, `text-ink-2`, `fill-vol-target`) and CSS variables (`var(--color-vol-target)`). Tailwind's default palette is removed on purpose: no `red-500`, no warning colors anywhere.
-- Type: `system-ui`, tabular numbers everywhere (`num` utility for emphasis). Scale: `text-xs` 12, `text-sm` 13, `text-base` 16, `text-md` 17, `text-lg` 20, `text-xl` 24, `text-2xl` 30, `text-display` 44 (big numbers, use `font-light`).
+- Movement groups (categorical, exercise surfaces only): `mv-push`, `mv-pull`, `mv-shoulders`, `mv-arms`, `mv-legs`, `mv-core`, `mv-other` (custom exercises without a pattern), and `mv-ink` for text on them, which stays dark in both themes. Fills are `bg-mv-<group> text-mv-ink`; thumbnails stay white inside a `ring-3 ring-mv-<group>` ring or a colored frame, never tinted and never with `mix-blend-mode`. Class maps and labels: `mvBg`, `mvRing`, `mvBorder`, `mvVar`, `movementLabel` from `src/ui`; group of an exercise: `movementGroupOf(pattern)` from `src/domain/movement.ts`.
+- All tokens are Tailwind colors (`bg-surface`, `text-ink-2`, `fill-vol-target`) and CSS variables (`var(--color-vol-target)`). Tailwind's default palette is removed on purpose: no `red-500`, no warning colors anywhere. Movement pastels are categories, never states.
+- Type: `system-ui` (fonts stay system for now), tabular numbers everywhere (`num` utility for emphasis). Scale: `text-xs` 12, `text-sm` 13, `text-base` 16, `text-md` 17, `text-lg` 20, `text-xl` 24, `text-2xl` 30, `text-display` 44 (big numbers, use `font-num text-display font-semibold`).
 - Radii by hierarchy: panels `rounded-xl`, controls `rounded-md`, chips and pills `rounded-full`, sheets `rounded-2xl`. Shadows only on things that float (`shadow-float`, `shadow-sheet`, `shadow-thumb`), never on panels.
 - Utilities: `hit` (extends the hit area to at least 44x44 without changing the visual), `px-gutter` (16px plus safe area), `pt-safe`, `pb-safe`, `pb-chrome` (room for tab bar and sticky actions), `glass` (translucent bars), `scrollbar-none`.
 - Layout variables: `--chrome-bottom` (tab bar plus safe area, 0 plus safe area at 1280px and up or on bare screens), `--chrome-left` (rail width at 1280px and up), `--actions-h` (set automatically when a `StickyActions` bar is on screen), `--page-max` (640px, 1440px inside `<Page width="wide">`).
@@ -43,6 +44,7 @@ Clay and cobalt. Warm-gray surfaces sit with the clay mannequin, cobalt is the o
 | `Chip`, `ChipGroup` | Toggle chips (`aria-pressed`). `ChipGroup` single (`allowEmpty` optional) or `multiple`; `scroll` for one horizontal row. |
 | `SegmentedControl` | Radiogroup with roving focus and arrow keys. |
 | `Stepper` | Sets -/+ with a focusable spinbutton (arrows, Page Up/Down, Home/End). Defaults min 1, max 20. |
+| `MovementMix`, `MovementSwatch` | `MovementMix({ mix, size: 'hair' \| 'thin' \| 'big', legend?, className? })` is a stacked bar of sets per movement group (`mix` from `DaySummary.mix` or `WeekView.mix`); its `aria-label` names every group with sets, and `legend` shows each group with its count. `MovementSwatch({ group, shape: 'dot' \| 'square', label?, className? })` is a group dot; without `label` it is decorative, so name the group nearby. |
 | `Sheet` + `useSheet` | See URL conventions. Native `<dialog>`: bottom sheet on phone, floating side panel from 1024px (`desktop="center"` for small dialogs). Optional `footer` is pinned. Focus goes to the dialog itself on open, so no keyboard pops up. |
 | `showToast`, `ToastHost` | One toast at a time, `action` for Undo. Host is mounted in the root layout. Use `toastWithUndo(message)` from `src/app/undo.ts` for program changes. |
 | `EmptyState`, `Pill`, `VisuallyHidden`, `Placeholder` | `Pill` is the neutral band pill (`outline` or `soft`); bands are words, never colors. `Placeholder` is temporary. |
@@ -164,7 +166,7 @@ DayPicker(props: {
 ## Copy and color rules (from the plan, enforced in review)
 
 - Neutral tone, sentence case, no em-dashes. Recovery is plain facts in secondary text; never "risk", "too soon", "overtrained", "recover", readiness numbers, "!" badges or warning colors, never in toasts.
-- Volume is the only data color. Bands are text pills. "High" is described as diminishing returns, never as danger.
+- Volume is the only color on the body map and volume legends. Movement groups get categorical pastels on exercise surfaces only, always with `mv-ink` text and a text label, never on volume data. No warning semantics. Color is never the only cue: swatches and fills always sit next to a group or exercise name. Bands are text pills. "High" is described as diminishing returns, never as danger.
 - An empty training day is not a rest day. Destructive actions use an Undo toast, not a confirm dialog.
 - Not-medical-advice line (`NOT_MEDICAL_ADVICE`) on first run, exercise detail footer, coverage footer and print.
 - Every string ships in English and Ukrainian (`docs/I18N.md`). Ukrainian follows the same rules: no «ризик», «зарано», «перетренованість», «відновлення», «оптимальний»; apostrophe `ʼ`; polite plural imperative. The language switch (`LanguageToggle`, bilingual label «Мова / Language») sits in the Plan, Body and Exercises headers, the desktop rail, Settings and the first welcome step.
