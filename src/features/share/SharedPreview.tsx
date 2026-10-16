@@ -8,15 +8,18 @@ import { useWeek } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
 import { decodeProgram } from '../../domain/codec'
 import { applyEquipmentSwap, type EquipmentSwap } from '../../domain/equipmentSwap'
+import { movementGroupOf } from '../../domain/movement'
 import type { Program } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { getMessages, useLocale, useMessages } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
-import { Button, EmptyState, LinkButton, Page, PageBody, PageHeader, Panel, Section, StickyActions, showToast } from '../../ui'
+import { Button, EmptyState, LinkButton, MovementMix, MovementSwatch, Page, PageBody, PageHeader, Panel, Section, StickyActions, showToast } from '../../ui'
+import { uiMessages } from '../../ui/messages'
 import { BodyMini } from '../bodymap'
 import { EquipmentSwapPanel } from '../shared/EquipmentSwapPanel'
 import { supersetLabels } from '../shared/exercise'
+import { exerciseFor } from '../shared/lookup'
 import { sharedMessages } from '../shared/messages'
 import { shareMessages } from './messages'
 import { uniqueName } from './names'
@@ -38,6 +41,7 @@ export function SharedPreview() {
   const router = useRouter()
   const m = useMessages(shareMessages)
   const swapText = useMessages(sharedMessages).swap
+  const ui = useMessages(uiMessages)
   const locale = useLocale()
 
   const close = () => {
@@ -128,6 +132,12 @@ export function SharedPreview() {
           className="mt-4"
         />
 
+        <Section title={ui.byMovement} className="mt-6">
+          <Panel className="p-4">
+            <MovementMix mix={view.mix} legend />
+          </Panel>
+        </Section>
+
         <Section title={m.week} className="mt-6">
           <Panel as="ul" className="divide-y divide-line">
             {order.map((d) => {
@@ -143,23 +153,28 @@ export function SharedPreview() {
                       <span className="shrink-0 text-sm text-ink-2 num">{formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes)}</span>
                     )}
                   </div>
+                  {s.kind === 'train' && entries.length > 0 && <MovementMix mix={s.mix} className="mt-2 pl-[3.25rem]" />}
                   {s.kind === 'train' && entries.length > 0 && (
                     <ul className="mt-2 space-y-1 pl-[3.25rem] text-sm">
-                      {entries.map((e, i) => (
-                        <li key={e.id} className="flex gap-3">
-                          <span className="min-w-0 flex-1 text-ink">
-                            {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
-                            {exerciseName(e.exerciseId, catalog, shared.custom, locale)}
-                          </span>
-                          <span className="shrink-0 text-ink-2 num">
-                            {joinMeta([
-                              e.reps ? `${e.sets} × ${e.reps}` : setsLabel(e.sets, locale),
-                              e.restSec !== undefined && formatRest(e.restSec, locale),
-                              e.rir !== undefined && formatRir(e.rir, locale),
-                            ])}
-                          </span>
-                        </li>
-                      ))}
+                      {entries.map((e, i) => {
+                        const ex = exerciseFor(e.exerciseId, catalog, shared)
+                        return (
+                          <li key={e.id} className="flex gap-3">
+                            <span className="min-w-0 flex-1 text-ink">
+                              <MovementSwatch group={movementGroupOf(ex && 'pattern' in ex ? ex.pattern : null)} className="mr-2 align-[0.05em]" />
+                              {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
+                              {exerciseName(e.exerciseId, catalog, shared.custom, locale)}
+                            </span>
+                            <span className="shrink-0 text-ink-2 num">
+                              {joinMeta([
+                                e.reps ? `${e.sets} × ${e.reps}` : setsLabel(e.sets, locale),
+                                e.restSec !== undefined && formatRest(e.restSec, locale),
+                                e.rir !== undefined && formatRir(e.rir, locale),
+                              ])}
+                            </span>
+                          </li>
+                        )
+                      })}
                     </ul>
                   )}
                   {s.note && <p className="mt-1.5 pl-[3.25rem] text-sm text-ink-3">{s.note}</p>}

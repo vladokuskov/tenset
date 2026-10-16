@@ -1,11 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { ellipsize, IMAGE_WIDTH, layoutDay, layoutWeek, wrapText, type DayImageContent, type DrawOp, type Measure, type WeekImageContent } from './image'
+import { emptyMix, movementGroupNames } from '../../domain/movement'
+import { BENCH, CATALOG, CURL, programOf } from '../../domain/test-fixtures'
+import {
+  ellipsize,
+  FALLBACK_PALETTE,
+  IMAGE_WIDTH,
+  layoutDay,
+  layoutWeek,
+  mixBar,
+  wrapText,
+  type DayImageContent,
+  type DrawOp,
+  type Measure,
+  type WeekImageContent,
+} from './image'
+import { dayEntries } from './planText'
 
 // Every character is half the font size wide.
 const measure: Measure = (text, font) => [...text].length * font.size * 0.5
 const tenPx = (s: string) => [...s].length * 10
 
 const texts = (ops: DrawOp[]) => ops.flatMap((o) => (o.t === 'text' ? [o.text] : []))
+const fills = (ops: DrawOp[]) => ops.flatMap((o) => (o.t === 'fill' ? [o] : []))
 
 const day = (rows: DayImageContent['rows'], extra: Partial<DayImageContent> = {}): DayImageContent => ({
   title: 'Monday · Push',
@@ -66,6 +82,30 @@ describe('day image', () => {
     }
   })
 
+  it('puts each row on a fill in its group color with dark ink and the group name first', () => {
+    const layout = layoutDay(
+      day(
+        [
+          { name: 'Bench press', group: 'push', parts: ['3 × 6-8'] },
+          { name: 'Sled push', parts: ['2 × 20'] },
+        ],
+        { groupNames: movementGroupNames.en },
+      ),
+      measure,
+    )
+    const rows = fills(layout.ops)
+    expect(rows.map((f) => f.group)).toEqual(['push', 'other'])
+    expect(rows[1].y).toBeGreaterThan(rows[0].y + rows[0].h)
+    expect(texts(layout.ops)).toEqual(expect.arrayContaining(['Push · 3 × 6-8', '2 × 20']))
+    for (const o of layout.ops) {
+      if (o.t !== 'text' || !['Bench press', 'Push · 3 × 6-8'].includes(o.text)) continue
+      expect(o.color === 'mvInk' || o.color === 'mvInk2').toBe(true)
+      expect(o.y).toBeGreaterThan(rows[0].y)
+      expect(o.y + o.font.size).toBeLessThan(rows[0].y + rows[0].h)
+    }
+    expect(layout.ops.some((o) => o.t === 'rule' && o.y > rows[0].y && o.y < rows[1].y + rows[1].h)).toBe(false)
+  })
+
   it('shows the empty line for a rest day', () => {
     const layout = layoutDay(day([], { summary: 'Rest day', empty: 'Rest day' }), measure)
     expect(texts(layout.ops).filter((t) => t === 'Rest day')).toHaveLength(2)
@@ -81,10 +121,21 @@ describe('week image', () => {
       title: rest ? undefined : 'Upper',
       summary: rest ? 'Rest day' : '5 exercises · 17 sets · about 55 min',
       groups: rest ? undefined : 'Chest, Lats, Triceps',
+      mix: rest ? undefined : { ...emptyMix(), push: 9, arms: 3 },
       rest,
     })),
     legend: (['none', 'light', 'moderate', 'target', 'high', 'very_high'] as const).map((band) => ({ band, label: band })),
     mapCaption: 'Sets per muscle group, front and back',
+    mix: rest
+      ? undefined
+      : {
+          title: 'Movement mix',
+          total: { ...emptyMix(), push: 36, arms: 12 },
+          legend: [
+            { group: 'push', label: 'Push 36 sets' },
+            { group: 'arms', label: 'Arms 12 sets' },
+          ],
+        },
     footer: 'General information for planning training. Not medical advice.',
     app: 'Tenset',
   })
@@ -96,5 +147,50 @@ describe('week image', () => {
     expect(texts(train.ops).filter((t) => t === 'Upper')).toHaveLength(7)
     expect(rest.height).toBeLessThan(train.height)
     expect(train.scale).toBe('week')
+  })
+
+  it('adds the week mix with a named legend and a mix bar per training row', () => {
+    const train = layoutWeek(week(false), measure)
+    expect(texts(train.ops)).toEqual(expect.arrayContaining(['Movement mix', 'Push 36 sets', 'Arms 12 sets']))
+    // Week bar (2) + legend swatches (2) + one bar of two segments per row.
+    expect(fills(train.ops)).toHaveLength(4 + 7 * 2)
+    expect(fills(layoutWeek(week(true), measure).ops)).toHaveLength(0)
+    for (const f of fills(train.ops)) expect(f.x + f.w).toBeLessThanOrEqual(IMAGE_WIDTH - 72 + 0.001)
+  })
+})
+
+describe('mix bar', () => {
+  it('splits the width by sets in display order and skips empty groups', () => {
+    const ops: DrawOp[] = []
+    mixBar(ops, { ...emptyMix(), legs: 2, push: 1, other: 1 }, 10, 0, 408, 8, 4)
+    const segs = fills(ops)
+    expect(segs.map((f) => f.group)).toEqual(['push', 'legs', 'other'])
+    expect(segs.map((f) => f.w)).toEqual([100, 200, 100])
+    expect(segs[2].x + segs[2].w).toBe(418)
+    const none: DrawOp[] = []
+    mixBar(none, emptyMix(), 0, 0, 100, 8, 4)
+    expect(none).toEqual([])
+  })
+
+  it('has a fallback color for every group and keeps the fill ink dark', () => {
+    expect(Object.keys(FALLBACK_PALETTE.mv).sort()).toEqual(['arms', 'core', 'legs', 'other', 'pull', 'push', 'shoulders'])
+    expect(FALLBACK_PALETTE.mvInk).toBe('#16181d')
+  })
+})
+
+describe('plan text', () => {
+  it('tags entries with their movement group, custom and unknown ids as other', () => {
+    const program = programOf(
+      {
+        0: [
+          [BENCH.id, 3],
+          [CURL.id, 2],
+          ['c1', 2],
+          [99999, 1],
+        ],
+      },
+      [{ id: 'c1', name: 'Sled push', equipment: [], laterality: 'bilateral', groups: { quads: 'primary' } }],
+    )
+    expect(dayEntries(program, 0, CATALOG, 'en').map((e) => e.group)).toEqual(['push', 'arms', 'other', 'other'])
   })
 })

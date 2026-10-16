@@ -1,10 +1,12 @@
 import { dayName, type DayIndex } from '../../app/days'
 import { formatRest, formatRir } from '../../app/format'
 import type { Catalog } from '../../domain/resolve'
+import { movementGroupOf, type MovementKey } from '../../domain/movement'
 import type { Entry, Program } from '../../domain/schema'
 import type { Locale } from '../../i18n/locale'
 import { exerciseName } from '../share/resolveNames'
-import { localReps, supersetLabels } from '../shared/exercise'
+import { localReps, supersetLabels, type AnyExercise } from '../shared/exercise'
+import { exerciseFor } from '../shared/lookup'
 import { sharedMessages } from '../shared/messages'
 import { exportMessages } from './messages'
 
@@ -12,9 +14,14 @@ export type EntryText = {
   /** A1, A2... for supersets. */
   marker?: string
   name: string
+  /** Movement group; 'other' for custom exercises without a pattern and unknown ids. */
+  group?: MovementKey
   /** "3 × 6-8", "rest 2 min", "RIR 2". */
   parts: string[]
 }
+
+/** Custom exercises have no pattern and unknown ids no exercise; both count as 'other'. */
+export const exerciseGroup = (ex: AnyExercise | null): MovementKey => movementGroupOf(ex && 'pattern' in ex ? ex.pattern : null)
 
 /** Sets and reps, rest and RIR of one entry as short phrases. */
 export function entryParts(e: Pick<Entry, 'sets' | 'reps' | 'restSec' | 'rir'>, unit: 'reps' | 'seconds', locale: Locale): string[] {
@@ -37,6 +44,7 @@ export function dayEntries(program: Program, day: DayIndex, catalog: Catalog, lo
     return {
       marker: pairs[i]?.label,
       name: exerciseName(e.exerciseId, catalog, program.custom, locale),
+      group: exerciseGroup(exerciseFor(e.exerciseId, catalog, program)),
       parts: entryParts(e, unit, locale),
     }
   })
