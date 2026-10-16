@@ -17,6 +17,11 @@ const AXE = axeSource()
 type Violation = { id: string; impact: string | null; help: string; nodes: { target: string[] }[] }
 
 async function seriousViolations(page: Page): Promise<string[]> {
+  // The live figure renders every frame; in software WebGL on GPU-less CI runners that starves axe for 20s+.
+  // Stopping requestAnimationFrame freezes it on the current frame without changing the DOM under test.
+  await page.evaluate(() => {
+    if (document.querySelector('canvas')) window.requestAnimationFrame = () => 0
+  })
   await page.addScriptTag({ path: AXE! })
   const violations = await page.evaluate(async () => {
     const axe = (window as unknown as { axe: { run: (ctx: Document, opts: object) => Promise<{ violations: Violation[] }> } }).axe
@@ -35,6 +40,7 @@ test.describe('axe: no serious or critical violations', () => {
 
   for (const scheme of ['light', 'dark'] as const) {
     test(`core screens (${scheme})`, async ({ page }) => {
+      test.slow()
       await page.emulateMedia({ colorScheme: scheme })
       await startFromTemplate(page, 'Upper/Lower 4x')
       const found: Record<string, string[]> = {}
@@ -80,6 +86,7 @@ test.describe('axe: no serious or critical violations', () => {
     test.use({ locale: 'uk-UA' })
 
     test('welcome, plan, body, exercises, detail and settings', async ({ page }) => {
+      test.slow()
       const found: Record<string, string[]> = {}
       const check = async (name: string) => {
         await page.waitForTimeout(400)
