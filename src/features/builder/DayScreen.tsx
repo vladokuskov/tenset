@@ -8,7 +8,7 @@ import { useWeek } from '../../app/useWeek'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
-import { Button, EmptyState, IconButton, Page, PageBody, PageHeader, StickyActions, cx, useSheet } from '../../ui'
+import { Button, EmptyState, IconButton, MovementMix, MovementSwatch, Page, PageBody, PageHeader, StickyActions, cx, useSheet } from '../../ui'
 import { ImageSheet } from '../export'
 import { CustomExerciseSheet } from '../settings/CustomExerciseSheet'
 import { exerciseFor } from '../shared/lookup'
@@ -18,6 +18,7 @@ import { DayOptionsSheet } from './DayOptionsSheet'
 import { EntryList } from './EntryList'
 import { EntrySheets } from './EntrySheets'
 import { builderMessages } from './messages'
+import { groupOf } from './movement'
 import { NoProgram } from './NoProgram'
 import { ThisDayCard } from './ThisDayCard'
 
@@ -72,7 +73,7 @@ export function DayScreen() {
                   aria-current={current ? 'page' : undefined}
                   aria-label={m.dayLink(i, s.kind === 'rest' ? null : formatDaySummary(s.exercises, s.hardSets, locale, s.estMinutes))}
                   className={cx(
-                    'hit flex h-11 min-w-0 flex-col items-center justify-center rounded-full border px-1 text-sm font-medium leading-none transition-colors',
+                    'hit flex h-11 min-w-0 flex-col items-center justify-center rounded-full border px-1 pb-2 text-sm font-medium leading-none transition-colors',
                     current ? 'border-ink bg-ink text-on-ink' : 'border-line-strong text-ink hover:bg-surface-2',
                     s.kind === 'rest' && !current && 'border-dashed text-ink-3',
                   )}
@@ -81,6 +82,7 @@ export function DayScreen() {
                   <span className={cx('num mt-1 text-[0.6875rem] font-normal', current ? 'text-on-ink/70' : 'text-ink-3')}>
                     {s.kind === 'rest' ? m.restShort : s.exercises}
                   </span>
+                  {s.hardSets > 0 && <MovementMix mix={s.mix} size="hair" className="absolute inset-x-2.5 bottom-1.5" />}
                 </Link>
               )
             })}
@@ -108,11 +110,15 @@ export function DayScreen() {
             </EmptyState>
             {d.entries.length > 0 && (
               <ul className="border-t border-line px-4 py-2 text-sm text-ink-2">
-                {d.entries.map((e) => (
-                  <li key={e.id} className="py-1">
-                    {joinMeta([exerciseFor(e.exerciseId, catalog, program)?.name ?? m.unknownExercise, m.setsPlain(e.sets)])}
-                  </li>
-                ))}
+                {d.entries.map((e) => {
+                  const ex = exerciseFor(e.exerciseId, catalog, program)
+                  return (
+                    <li key={e.id} className="flex items-center gap-2.5 py-1">
+                      <MovementSwatch group={ex ? groupOf(ex) : 'other'} />
+                      <span className="min-w-0">{joinMeta([ex?.name ?? m.unknownExercise, m.setsPlain(e.sets)])}</span>
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </div>

@@ -2,8 +2,11 @@ import { ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
+import { MovementSwatch } from '../../ui/MovementMix'
+import { mvRing } from '../../ui/movement'
 import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
 import { rowMeta, type AnyExercise } from '../shared/exercise'
+import { groupOf } from './movement'
 
 export type PickRowProps = {
   exercise: AnyExercise
@@ -20,13 +23,15 @@ export type PickRowProps = {
 export function PickRow({ exercise, meta, expanded, onToggle, trailing, children, className }: PickRowProps) {
   const roles = useRoles(exercise)
   const locale = useLocale()
+  const group = groupOf(exercise)
   const body = (
     <>
-      <ExerciseCardMedia exercise={exercise} size="sm" />
+      <ExerciseCardMedia exercise={exercise} size="sm" className={cx('ring-3', mvRing[group])} />
       <span className="min-w-0 flex-1">
         <span className="line-clamp-2 text-base font-medium leading-snug text-ink">{exercise.name}</span>
-        <span className="mt-0.5 block truncate text-sm text-ink-2">
-          {meta ?? rowMeta(exercise, primaryGroupNames(roles), locale)}
+        <span className="mt-0.5 flex items-center gap-1.5 text-sm text-ink-2">
+          <MovementSwatch group={group} />
+          <span className="min-w-0 truncate">{meta ?? rowMeta(exercise, primaryGroupNames(roles), locale)}</span>
         </span>
       </span>
     </>

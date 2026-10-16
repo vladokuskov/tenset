@@ -19,7 +19,7 @@ import type { Locale } from '../../i18n/locale'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
-import { Button, ChipGroup, IconButton, SegmentedControl, Sheet, cx } from '../../ui'
+import { Button, ChipGroup, IconButton, MovementSwatch, SegmentedControl, Sheet, cx } from '../../ui'
 import { BodyMini } from '../bodymap'
 import { PATTERN_GROUPS, buildIndex, filterExercises, patternLabel } from '../catalog'
 import { ChangeBar } from '../shared/ChangeBar'
@@ -35,6 +35,7 @@ import {
 } from '../shared/exercise'
 import { undoLastChange, useChange } from '../shared/useChange'
 import { builderMessages } from './messages'
+import { groupOf } from './movement'
 import { PickRow } from './PickRow'
 
 export type AddTab = 'suggested' | 'muscle' | 'equipment' | 'pattern'
@@ -423,6 +424,10 @@ function AddPreview({
     <div className="mb-3 flex gap-4 rounded-lg bg-surface-2/60 p-3">
       <BodyMini view="both" roles={roles} height={88} />
       <div className="min-w-0 flex-1">
+        <p className="mb-1 flex min-w-0 items-center gap-2 text-sm font-medium text-ink">
+          <MovementSwatch group={groupOf(exercise)} label />
+          {!isCustom(exercise) && <span className="min-w-0 truncate font-normal text-ink-2">· {patternLabel(exercise.pattern, locale)}</span>}
+        </p>
         {already && <p className="text-sm font-medium text-ink">{m.alreadyOn(day)}</p>}
         <p className="text-sm text-ink-2">
           {m.previewLine(sets, reps ? repsText(reps, unitOf(exercise), locale) : undefined, day)}

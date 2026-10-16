@@ -10,11 +10,12 @@ import { groupIds } from '../../../domain/taxonomy'
 import { common } from '../../../i18n/common'
 import { useLocale } from '../../../i18n/messages'
 import { usePrefsStore } from '../../../store/prefs.store'
-import { Button, IconButton, Select, cx } from '../../../ui'
+import { Button, IconButton, MovementSwatch, Select, cx, mvRing } from '../../../ui'
 import { ExerciseCardMedia, buildIndex, filterExercises, primaryGroupNames, useRoles } from '../../catalog'
 import { FilterSelect } from '../../catalog/FilterSelect'
 import { matchesQuery, rowMeta, type AnyExercise } from '../../shared/exercise'
 import { SORT_LABEL } from '../dnd'
+import { groupOf } from '../movement'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './board'
 import { desktopMessages } from './messages'
 
@@ -70,6 +71,7 @@ function DrawerRow({
   const locale = useLocale()
   const m = desktopMessages[locale]
   const primaries = primariesOf(roles)
+  const group = groupOf(exercise)
   const data: DrawerDragData = { exercise }
   const { ref, handleRef, isDragSource } = useDraggable({ id: `drawer:${exercise.id}`, type: DRAWER_ITEM, data, sensors })
   return (
@@ -80,16 +82,19 @@ function DrawerRow({
       onPointerEnter={() => onPreview(primaries)}
       onPointerLeave={() => onPreview(null)}
       className={cx(
-        'relative flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-2/70',
+        'relative flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-2/70',
         isDragSource && 'opacity-45',
       )}
     >
       {/* Drag handle over the row. The drag library marks it up as a button; hidden, the row keeps its text. */}
       <span ref={handleRef} aria-hidden tabIndex={-1} className="absolute inset-0 cursor-grab rounded-lg active:cursor-grabbing" />
-      <ExerciseCardMedia exercise={exercise} size="sm" />
+      <ExerciseCardMedia exercise={exercise} size="sm" className={cx('ring-3', mvRing[group])} />
       <span className="min-w-0 flex-1">
         <span className="line-clamp-2 text-sm font-medium leading-snug text-ink">{exercise.name}</span>
-        <span className="mt-0.5 block truncate text-xs text-ink-2">{rowMeta(exercise, primaryGroupNames(roles), locale)}</span>
+        <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-2">
+          <MovementSwatch group={group} />
+          <span className="min-w-0 truncate">{rowMeta(exercise, primaryGroupNames(roles), locale)}</span>
+        </span>
       </span>
       <IconButton
         icon={Plus}
