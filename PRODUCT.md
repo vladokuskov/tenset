@@ -40,7 +40,7 @@ Nobody else ships a detailed body map that fills in live while *planning* a week
 
 ## Brand Commitments
 
-- Name: **Tenset** (nods to roughly ten weekly sets per muscle). Logo: the "Dial" mark with a lowercase wordmark (`docs/brand/`).
+- Name: **Tenset** (nods to roughly ten weekly sets per muscle). Logo: the "Mix t" mark, a lowercase t stacked from movement-colored blocks on an ink tile, with a lowercase wordmark (`docs/brand/`).
 - Voice: neutral, plain, factual. No hype, no fear, no medical claims. A "not medical advice" line appears in first run, exercise detail, coverage and print.
 - No brand names or logos of equipment makers or gyms anywhere.
 
