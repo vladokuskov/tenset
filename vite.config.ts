@@ -71,8 +71,8 @@ export default defineConfig(({ mode }) => ({
         scope: '/',
         display: 'standalone',
         // --color-canvas (light); index.html sets the dark theme-color per scheme
-        theme_color: '#ece9e5',
-        background_color: '#ece9e5',
+        theme_color: '#f2f3f5',
+        background_color: '#f2f3f5',
         categories: ['health', 'fitness', 'sports'],
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

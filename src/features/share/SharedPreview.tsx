@@ -104,7 +104,7 @@ export function SharedPreview() {
         <Panel className="flex items-center gap-4 p-4">
           <BodyMini view="both" groups={week.weekly} height={112} label={m.mapLabel} />
           <div className="min-w-0">
-            <p className="text-display font-light num">
+            <p className="font-num text-display font-semibold num">
               {coverage.trainedBanded}
               <span className="text-lg font-normal text-ink-3">{m.ofTotal(coverage.totalBanded)}</span>
             </p>

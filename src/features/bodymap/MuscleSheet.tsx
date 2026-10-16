@@ -140,7 +140,7 @@ function Body({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="num">
-            <span className="text-display font-light">{formatSets(weekly, locale)}</span>
+            <span className="font-num text-display font-semibold">{formatSets(weekly, locale)}</span>
             <span className="ml-2 text-base text-ink-2">{m.weeklySets(weekly)}</span>
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
