@@ -4,7 +4,7 @@ import { formatSets } from '../../../app/format'
 import type { WeekView } from '../../../app/useWeek'
 import { groupName } from '../../../data/localize'
 import { useLocale } from '../../../i18n/messages'
-import { cx } from '../../../ui'
+import { cx, MovementMix } from '../../../ui'
 import { useMediaQuery } from '../../../ui/useMediaQuery'
 import { BodyMap, VolumeLegend } from '../../bodymap'
 import { CoverageCard } from '../CoverageCard'
@@ -98,6 +98,10 @@ export function DeskMapPanel({ view, focus, lit, onFocusGroup, title = true }: D
           </div>
         )}
       </div>
+      <section className="rounded-xl bg-surface p-4" data-desk-mix>
+        <h3 className="text-sm font-semibold">{m.byMovement}</h3>
+        <MovementMix mix={view.mix} size="big" legend className="mt-3" />
+      </section>
       <CoverageCard view={view} compact />
       <p className="px-1 text-xs text-ink-3"><NotMedicalAdvice /></p>
     </div>

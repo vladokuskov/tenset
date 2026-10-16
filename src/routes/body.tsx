@@ -5,7 +5,7 @@ import { NotMedicalAdvice } from '../app/brand'
 import { DAY_SLUGS, dayFromSlug, dayName, daySlug } from '../app/days'
 import { groupParam, headParam, optionalEnum, sheetParam } from '../app/search'
 import { useWeek } from '../app/useWeek'
-import { BodyMap, CoverageList, Insights, MuscleSheet, VolumeLegend } from '../features/bodymap'
+import { BodyMap, CoverageList, Insights, MovementPanel, movementRows, MuscleSheet, VolumeLegend } from '../features/bodymap'
 import { useMessages } from '../i18n/messages'
 import { SlidersHorizontal } from 'lucide-react'
 import { ChipGroup, IconButton, Page, PageBody, PageHeader, Panel, SegmentedControl, Sheet, cx, useSheet } from '../ui'
@@ -46,6 +46,7 @@ function BodyPage() {
     const col = (s: Record<string, number[]>) => Object.fromEntries(Object.entries(s).map(([k, v]) => [k, v[day]]))
     return { groups: col(week.daily), heads: col(week.shade.daily) }
   }, [week, day])
+  const movement = useMemo(() => (week ? movementRows(week.entries, day) : []), [week, day])
 
   if (!view) return null
   const { coverage, order, prefs } = view
@@ -113,6 +114,7 @@ function BodyPage() {
           </Panel>
 
           <div className="mt-7 desktop:mt-0">
+            <MovementPanel rows={movement} />
             <CoverageList
               week={view.week}
               coverage={coverage}

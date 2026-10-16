@@ -93,6 +93,10 @@ export const bodymapMessages = defineMessages({
     optionalNotTrained: 'Optional, not trained',
     alsoTracked: 'Also tracked',
 
+    byMovement: 'By movement',
+    movementDescription: (sets: number) => `${common.en.sets(sets)} by movement pattern`,
+    setsUnit: (n: number) => plural('en', n, { one: 'set', other: 'sets' }),
+
     // insights
     balance: 'Balance',
     balanceDescription: 'Side-by-side counts, not rules.',
@@ -223,6 +227,10 @@ export const bodymapMessages = defineMessages({
     notTrained: 'Не тренуються:',
     optionalNotTrained: 'Необовʼязкові, не тренуються',
     alsoTracked: 'Також відстежуються',
+
+    byMovement: 'За рухами',
+    movementDescription: (sets) => `${common.uk.sets(sets)} за типом руху`,
+    setsUnit: (n) => plural('uk', n, { one: 'підхід', few: 'підходи', many: 'підходів', other: 'підходу' }),
 
     balance: 'Баланс',
     balanceDescription: 'Порівняння чисел, а не правила.',
