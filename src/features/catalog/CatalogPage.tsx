@@ -3,6 +3,7 @@ import { ChevronDown, LayoutGrid, List, Search, SearchX, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useCatalog } from '../../app/useCatalog'
 import { groupName } from '../../data/localize'
+import { movementGroupOf, type MovementGroupId } from '../../domain/movement'
 import type { Pattern } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
@@ -13,8 +14,10 @@ import { ExerciseGrid } from './ExerciseGrid'
 import { ExerciseList } from './ExerciseList'
 import { FilterSheet } from './FilterSheet'
 import { catalogMessages } from './messages'
+import { MovementChips } from './MovementChips'
 import { MuscleFilterSheet } from './MuscleFilterSheet'
 import { levelLabel, PATTERN_GROUPS, patternGroupLabel, patternLabel } from './patterns'
+import { movementLabel } from '../../ui/movement'
 import { applyOverride } from './roles'
 import { buildIndex, filterExercises } from './search'
 
@@ -28,6 +31,7 @@ type Patch = Partial<{
   q: string
   muscle: string
   equip: 'mine' | 'all'
+  move: MovementGroupId
   pattern: Pattern
   level: number
   sheet: 'muscle' | 'pattern' | 'level'
@@ -62,8 +66,8 @@ export function CatalogPage() {
   const set = (patch: Patch) => void navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true })
 
   const base = useMemo(
-    () => ({ q: search.q, pattern: search.pattern, level: search.level }),
-    [search.q, search.pattern, search.level],
+    () => ({ q: search.q, move: search.move, pattern: search.pattern, level: search.level }),
+    [search.q, search.move, search.pattern, search.level],
   )
   const available = equip === 'mine' ? equipment : undefined
   const list = useMemo(
@@ -97,11 +101,12 @@ export function CatalogPage() {
   )
 
   const muscleName = search.muscle ? groupName(search.muscle, locale) : undefined
-  const narrowed = Boolean(search.q || search.muscle || search.pattern || search.level)
+  const narrowed = Boolean(search.q || search.muscle || search.move || search.pattern || search.level)
   const active: ActiveFilter[] = []
   if (search.q) active.push({ key: 'q', label: m.quoted(search.q), clear: { q: undefined } })
   if (muscleName) active.push({ key: 'muscle', label: muscleName, clear: { muscle: undefined } })
   if (equip === 'mine') active.push({ key: 'equip', label: m.myEquipment, clear: { equip: 'all' } })
+  if (search.move) active.push({ key: 'move', label: movementLabel(search.move, locale), clear: { move: undefined } })
   if (search.pattern) active.push({ key: 'pattern', label: patternLabel(search.pattern, locale), clear: { pattern: undefined } })
   if (search.level) active.push({ key: 'level', label: levelLabel(search.level, locale), clear: { level: undefined } })
 
@@ -168,7 +173,7 @@ export function CatalogPage() {
               anyLabel={m.anyPattern}
               value={search.pattern}
               groups={patternGroups}
-              onChange={(v) => set({ pattern: v as Pattern | undefined, sheet: undefined })}
+              onChange={(v) => set({ pattern: v as Pattern | undefined, move: undefined, sheet: undefined })}
             />
             <FilterSheet
               sheet="level"
@@ -186,13 +191,18 @@ export function CatalogPage() {
                 className="ml-1 shrink-0"
                 onClick={() => {
                   setText('')
-                  set({ q: undefined, muscle: undefined, pattern: undefined, level: undefined })
+                  set({ q: undefined, muscle: undefined, move: undefined, pattern: undefined, level: undefined })
                 }}
               >
                 {m.clear}
               </Button>
             )}
           </div>
+          <MovementChips
+            label={m.movementGroups}
+            value={search.move ?? (search.pattern ? movementGroupOf(search.pattern) : undefined)}
+            onChange={(move) => set({ move, pattern: undefined })}
+          />
         </div>
       </PageHeader>
 
@@ -212,7 +222,7 @@ export function CatalogPage() {
                   variant="primary"
                   onClick={() => {
                     setText('')
-                    set({ q: undefined, muscle: undefined, pattern: undefined, level: undefined, equip: 'all' })
+                    set({ q: undefined, muscle: undefined, move: undefined, pattern: undefined, level: undefined, equip: 'all' })
                   }}
                 >
                   {m.clearAll}

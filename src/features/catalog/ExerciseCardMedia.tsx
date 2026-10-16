@@ -1,13 +1,16 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { equipmentName } from '../../data/localize'
 import type { Locale } from '../../i18n/locale'
 import { useLocale } from '../../i18n/messages'
+import type { MovementKey } from '../../domain/movement'
 import { cx } from '../../ui/cx'
+import { movementLabel, mvBg, mvBorder } from '../../ui/movement'
 import { cropViewBox, MAP_HEIGHT, MAP_WIDTH, regionBounds, useAnatomy, type AnatomyView } from '../bodymap/anatomy'
 import { AnatomyFigure, type FigureVars } from '../bodymap/AnatomyFigure'
 import { tintVars } from '../bodymap/fills'
-import { cardView, equipmentGlyph, isCatalogExercise, showsMotion, type CardExercise } from './media'
+import { cardView, equipmentGlyph, exerciseGroup, isCatalogExercise, showsMotion, type CardExercise } from './media'
 import { catalogMessages } from './messages'
+import { patternLabel } from './patterns'
 import { posterUrl } from '../../data/posters'
 import { useRoles } from './useRoles'
 
@@ -15,6 +18,8 @@ export type ExerciseCardMediaProps = {
   exercise: CardExercise
   /** sm: 48px row poster. md: grid card, fills its column. lg: detail hero, both views. */
   size: 'sm' | 'md' | 'lg'
+  /** lg only: wrap the hero in its movement-colored frame (default). ExerciseMotion frames its own well. */
+  frame?: boolean
   className?: string
 }
 
@@ -97,13 +102,14 @@ function PosterMedia({ exercise, size, className, src, onError }: ExerciseCardMe
   const label = equipmentLabel(exercise.equipment, locale)
   if (size === 'sm') {
     return (
-      <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-md bg-white', className)} aria-hidden>
+      <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-lg bg-white', className)} aria-hidden>
         <img src={src} alt="" width={480} height={480} loading="lazy" decoding="async" onError={onError} className="block size-full object-cover" />
+        <GroupRing group={exerciseGroup(exercise)} />
       </div>
     )
   }
   return (
-    <div className={cx('relative aspect-[4/5] overflow-hidden rounded-lg bg-white', className)}>
+    <div className={cx('relative aspect-[4/5] overflow-hidden rounded-xl bg-white', className)}>
       <img
         src={src}
         alt={catalogMessages[locale].posterAlt(exercise.name, label)}
@@ -118,11 +124,33 @@ function PosterMedia({ exercise, size, className, src, onError }: ExerciseCardMe
         <Glyph size={12} strokeWidth={2} aria-hidden className="shrink-0" />
         <span className="truncate font-medium">{label}</span>
       </span>
+      <GroupRing group={exerciseGroup(exercise)} />
     </div>
   )
 }
 
-function MapCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
+/** 3px group-colored ring drawn over the tile edge, so the white tile keeps its footprint and the image is never tinted. */
+function GroupRing({ group }: { group: MovementKey }) {
+  return <span aria-hidden className={cx('pointer-events-none absolute inset-0 rounded-[inherit] border-3', mvBorder[group])} />
+}
+
+/** Detail hero frame: a group-colored band with a "Push · Horizontal push" label above white media. */
+export function MovementFrame({ exercise, className, children }: { exercise: CardExercise; className?: string; children: ReactNode }) {
+  const locale = useLocale()
+  const group = exerciseGroup(exercise)
+  const pattern = isCatalogExercise(exercise) ? patternLabel(exercise.pattern, locale) : ''
+  const name = movementLabel(group, locale)
+  return (
+    <div className={cx('relative rounded-[1.25rem] p-2 pt-10', mvBg[group], className)}>
+      <span className="absolute left-3.5 top-2.5 max-w-[calc(100%-1.75rem)] truncate rounded-full bg-white/55 px-2.5 py-0.5 text-xs font-semibold leading-5 text-mv-ink">
+        {pattern ? `${name} · ${pattern}` : name}
+      </span>
+      {children}
+    </div>
+  )
+}
+
+function MapCardMedia({ exercise, size, frame = true, className }: ExerciseCardMediaProps) {
   const roles = useRoles(exercise)
   const heads = isCatalogExercise(exercise) ? exercise.heads : undefined
   const view = cardView(exercise, roles)
@@ -142,22 +170,24 @@ function MapCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
 
   if (size === 'sm') {
     return (
-      <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-md bg-surface-2', className)} aria-hidden>
+      <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-lg bg-raised', className)} aria-hidden>
         {smCrop && <AnatomyFigure view={view} kind="groups" viewBox={smCrop.viewBox} vars={vars} className="block size-full" />}
+        <GroupRing group={exerciseGroup(exercise)} />
       </div>
     )
   }
 
   const lineVars = { '--gb-line': 'var(--color-raised)', '--gb-line-w': size === 'lg' ? '0.75px' : '0.6px' } as CSSProperties
   const name = catalogMessages[locale].cardAlt(exercise.name, label)
-  return (
+  const framed = size === 'lg' && frame
+  const card = (
     <div
       role="img"
       aria-label={name}
       className={cx(
-        'relative overflow-hidden bg-surface-2',
-        size === 'lg' ? 'aspect-[5/4] rounded-xl' : 'aspect-[4/5] rounded-lg',
-        className,
+        'relative overflow-hidden bg-raised',
+        size === 'lg' ? 'aspect-[5/4] rounded-xl' : 'aspect-[4/5] rounded-xl',
+        !framed && className,
       )}
       style={lineVars}
     >
@@ -183,6 +213,14 @@ function MapCardMedia({ exercise, size, className }: ExerciseCardMediaProps) {
         <Glyph size={size === 'lg' ? 14 : 12} strokeWidth={2} aria-hidden className="shrink-0" />
         <span className="truncate font-medium">{label}</span>
       </span>
+      {size === 'md' && <GroupRing group={exerciseGroup(exercise)} />}
     </div>
+  )
+  return framed ? (
+    <MovementFrame exercise={exercise} className={className}>
+      {card}
+    </MovementFrame>
+  ) : (
+    card
   )
 }

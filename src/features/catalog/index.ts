@@ -1,7 +1,7 @@
 // Shared contract (owner: catalog agent). Keep these props stable; replace internals freely.
-export { ExerciseCardMedia, type ExerciseCardMediaProps } from './ExerciseCardMedia'
+export { ExerciseCardMedia, MovementFrame, type ExerciseCardMediaProps } from './ExerciseCardMedia'
 export { ExerciseRow, type ExerciseRowProps } from './ExerciseRow'
-export { equipmentGlyph, isCatalogExercise, primaryGroupNames, type CardExercise } from './media'
+export { equipmentGlyph, exerciseGroup, isCatalogExercise, primaryGroupNames, type CardExercise } from './media'
 export { useIsCustomized, useRoles } from './useRoles'
 export { applyOverride, isCustomized } from './roles'
 export { levelLabel, PATTERN_GROUPS, patternGroupLabel, patternLabel, PATTERNS } from './patterns'

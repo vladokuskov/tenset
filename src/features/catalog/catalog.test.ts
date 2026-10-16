@@ -8,8 +8,9 @@ import type { CustomExercise } from '../../domain/schema'
 import { catalogOf, fixtureExercise } from '../../domain/test-fixtures'
 import { alternativesFor, headOverlap, headVector, rankAlternatives } from '../../domain/alternatives'
 import { lightestTrainingDay, shortCite } from './detail'
+import { exerciseGroup } from './media'
 import { catalogMessages } from './messages'
-import { PATTERN_GROUPS, patternLabel } from './patterns'
+import { movementGroupOf, PATTERN_GROUPS, patternLabel } from './patterns'
 import { applyOverride, isCustomized } from './roles'
 import { buildIndex, filterExercises, tokenize } from './search'
 
@@ -172,5 +173,29 @@ describe('detail helpers', () => {
   it('labels every pattern in both languages', () => {
     expect(PATTERN_GROUPS.flatMap((g) => g.patterns).sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
     expect(Object.keys(catalogMessages.uk.pattern).sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
+  })
+})
+
+describe('movement filter', () => {
+  it('keeps only exercises whose pattern is in the group', () => {
+    const legs = filterExercises(activeExercises, index, { move: 'legs' })
+    expect(legs.length).toBeGreaterThan(0)
+    expect(legs.every((e) => movementGroupOf(e.pattern) === 'legs')).toBe(true)
+    expect(slugs(legs)).toContain('barbell-romanian-deadlift')
+  })
+
+  it('splits the catalog without overlap', () => {
+    const total = PATTERN_GROUPS.reduce((n, g) => n + filterExercises(activeExercises, index, { move: g.id }).length, 0)
+    expect(total).toBe(filterExercises(activeExercises, index, {}).length)
+  })
+
+  it('narrows a search', () => {
+    expect(filterExercises(activeExercises, index, { q: 'RDL', move: 'push' })).toEqual([])
+  })
+
+  it('colors custom exercises as other', () => {
+    const mine: CustomExercise = { id: 'c1', name: 'Mine', equipment: [], laterality: 'bilateral', groups: { chest: 'primary' } }
+    expect(exerciseGroup(mine)).toBe('other')
+    expect(exerciseGroup(activeExercises.find((e) => e.pattern === 'squat')!)).toBe('legs')
   })
 })
