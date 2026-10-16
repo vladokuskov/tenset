@@ -1,5 +1,6 @@
 import { equipmentName, groupName } from '../../data/localize'
 import { hasEquipment } from '../../domain/equipment'
+import { movementGroupOf, type MovementGroupId } from '../../domain/movement'
 import { buildCatalogIndex, searchCatalog, type CatalogIndex, type SearchLabels } from '../../domain/search'
 import type { Exercise, Pattern, Prefs } from '../../domain/schema'
 import { common } from '../../i18n/common'
@@ -33,6 +34,8 @@ export type CatalogFilters = {
   /** Only exercises the listed equipment allows; undefined means any equipment. */
   available?: readonly string[]
   pattern?: Pattern
+  /** Movement group, e.g. every push pattern. */
+  move?: MovementGroupId
   level?: number
 }
 
@@ -48,6 +51,7 @@ export function filterExercises(
   const keep = (e: Exercise) =>
     (!available || hasEquipment(e, available)) &&
     (!filters.pattern || e.pattern === filters.pattern) &&
+    (!filters.move || movementGroupOf(e.pattern) === filters.move) &&
     (!filters.level || e.level === filters.level) &&
     (!filters.muscle || roles(e)[filters.muscle] === 'primary')
   return searchCatalog(exercises, index, filters.q ?? '', roles).filter(keep)

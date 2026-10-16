@@ -10,14 +10,14 @@ import type { Locale } from '../../i18n/locale'
 import { useLocale, useMessages } from '../../i18n/messages'
 import { useActiveProgram } from '../../store/program.store'
 import { usePrefsStore } from '../../store/prefs.store'
-import { Button, EmptyState, IconButton, LinkButton, Page, PageBody, PageHeader, Panel, Pill, Section, StickyActions, useSheet } from '../../ui'
+import { Button, EmptyState, IconButton, LinkButton, movementLabel, MovementSwatch, Page, PageBody, PageHeader, Panel, Pill, Section, StickyActions, useSheet } from '../../ui'
 import { AddToPlanSheet } from './AddToPlanSheet'
 import { addToDays } from './addToPlan'
 import { alternativesFor } from '../../domain/alternatives'
 import { CountsSheet } from './CountsSheet'
 import { shortCite } from './detail'
 import { ExerciseMedia } from './ExerciseMotion'
-import { showsMotion } from './media'
+import { exerciseGroup, showsMotion } from './media'
 import { catalogMessages } from './messages'
 import { ExerciseRow } from './ExerciseRow'
 import { MuscleSection } from './MuscleSection'
@@ -145,7 +145,12 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
               <Fact label={m.equipment}>
                 {exercise.equipment.length ? listEquipment(exercise.equipment, locale) : m.noneBodyweight}
               </Fact>
-              <Fact label={m.patternFact}>{patternLabel(exercise.pattern, locale)}</Fact>
+              <Fact label={m.patternFact}>
+                <span className="inline-flex items-center gap-2">
+                  <MovementSwatch group={exerciseGroup(exercise)} />
+                  {movementLabel(exerciseGroup(exercise), locale)} · {patternLabel(exercise.pattern, locale)}
+                </span>
+              </Fact>
               <Fact label={m.levelFilter}>{levelLabel(exercise.level, locale)}</Fact>
               <Fact label={m.defaultFact}>
                 {m.dose(

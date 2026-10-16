@@ -1,13 +1,17 @@
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { Exercise } from '../../domain/schema'
+import { useLocale } from '../../i18n/messages'
+import { movementLabel } from '../../ui/movement'
+import { exerciseGroup } from './media'
 import { ExerciseRow } from './ExerciseRow'
 
 const ROW_H = 73
 
-/** Virtualized compact list on the window scroller: poster, name and muscles per row. */
+/** Virtualized compact list on the window scroller: poster, name, muscles and movement group per row. */
 export function ExerciseList({ exercises, label }: { exercises: readonly Exercise[]; label: string }) {
   const ref = useRef<HTMLDivElement>(null)
+  const locale = useLocale()
   const [offset, setOffset] = useState(0)
 
   useLayoutEffect(() => {
@@ -43,7 +47,11 @@ export function ExerciseList({ exercises, label }: { exercises: readonly Exercis
             className="absolute left-0 top-0 w-full border-line px-3 [&:not(:first-child)]:border-t"
             style={{ transform: `translateY(${item.start - virtualizer.options.scrollMargin}px)` }}
           >
-            <ExerciseRow exercise={e} link />
+            <ExerciseRow
+              exercise={e}
+              link
+              trailing={<span className="max-w-20 text-right text-xs leading-tight text-ink-3">{movementLabel(exerciseGroup(e), locale)}</span>}
+            />
           </div>
         )
       })}

@@ -7,14 +7,14 @@ import type { MotionExercise, MotionScene, ViewPreset } from '../figure/motion/c
 import { loadMotionFile, type MotionFile } from '../figure/motion/library'
 import { IconButton, SegmentedControl } from '../../ui'
 import { cx } from '../../ui/cx'
-import { ExerciseCardMedia } from './ExerciseCardMedia'
+import { ExerciseCardMedia, MovementFrame } from './ExerciseCardMedia'
 import { showsMotion } from './media'
 import { catalogMessages } from './messages'
 import { useRoles } from './useRoles'
 
 const MotionStage = lazy(() => import('../figure/motion/MotionStage'))
 
-/** one fixed well colour in both themes, as the baked loops will use */
+/** one fixed well colour in both themes, as the baked loops will use; it reads as the white media inside the group frame */
 const WELL = '#f6f6f4'
 
 const VIEWS: readonly ViewPreset[] = ['hero', 'front', 'side', 'back']
@@ -139,28 +139,30 @@ export function ExerciseMotion({ exercise }: { exercise: Exercise }) {
   const name = m.motionAlt(exercise.name)
   return (
     <div>
-      <div className="relative aspect-[5/4] overflow-hidden rounded-xl" style={{ background: WELL }}>
-        {!failed && file && (
-          <div
-            role="img"
-            aria-label={name}
-            className={cx('absolute inset-0 cursor-grab touch-pan-y transition-opacity duration-500 active:cursor-grabbing', ready ? 'opacity-100' : 'opacity-0')}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={endDrag}
-            onPointerCancel={endDrag}
-          >
-            <Fallback onError={onError}>
-              <Suspense fallback={null}>
-                <MotionStage exercise={target} motion={file.motion} clock={clock} view={view} yaw={yaw} onReady={onReady} />
-              </Suspense>
-            </Fallback>
+      <MovementFrame exercise={exercise}>
+        <div className="relative aspect-[5/4] overflow-hidden rounded-xl" style={{ background: WELL }}>
+          {!failed && file && (
+            <div
+              role="img"
+              aria-label={name}
+              className={cx('absolute inset-0 cursor-grab touch-pan-y transition-opacity duration-500 active:cursor-grabbing', ready ? 'opacity-100' : 'opacity-0')}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+            >
+              <Fallback onError={onError}>
+                <Suspense fallback={null}>
+                  <MotionStage exercise={target} motion={file.motion} clock={clock} view={view} yaw={yaw} onReady={onReady} />
+                </Suspense>
+              </Fallback>
+            </div>
+          )}
+          <div className={cx('pointer-events-none absolute inset-0 transition-opacity duration-500', ready && 'opacity-0')} aria-hidden={ready}>
+            <ExerciseCardMedia exercise={exercise} size="lg" frame={false} className="size-full !rounded-none" />
           </div>
-        )}
-        <div className={cx('pointer-events-none absolute inset-0 transition-opacity duration-500', ready && 'opacity-0')} aria-hidden={ready}>
-          <ExerciseCardMedia exercise={exercise} size="lg" className="size-full !rounded-none" />
         </div>
-      </div>
+      </MovementFrame>
       {!failed && (
         <div className="mt-2 flex flex-col gap-1">
           <div className="flex items-center gap-1">

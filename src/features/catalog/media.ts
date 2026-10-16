@@ -1,6 +1,7 @@
 import { Cable, Cog, Dumbbell, PersonStanding, Spline, type LucideIcon } from 'lucide-react'
 import type { CustomExercise, Exercise, Role } from '../../domain/schema'
 import { groupName } from '../../data/localize'
+import { movementGroupOf, type MovementKey } from '../../domain/movement'
 import { visibleHeads } from '../../domain/taxonomy'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
@@ -11,6 +12,11 @@ export type CardExercise = Exercise | CustomExercise
 
 export function isCatalogExercise(e: CardExercise): e is Exercise {
   return typeof e.id === 'number'
+}
+
+/** Movement group for the exercise's color; custom exercises have no pattern, so they are "other". */
+export function exerciseGroup(e: CardExercise): MovementKey {
+  return isCatalogExercise(e) ? movementGroupOf(e.pattern) : 'other'
 }
 
 /**
