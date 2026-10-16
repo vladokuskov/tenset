@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { sessionLabel } from '../data/localize'
 import { computeCoverage, type Coverage } from '../domain/coverage'
+import { emptyMix, movementMix, type MovementMix } from '../domain/movement'
 import { dayFacts, weekSchedule, type GroupSchedule, type RecoveryFact } from '../domain/recovery'
 import type { ResolveContext } from '../domain/resolve'
 import type { Prefs, Program } from '../domain/schema'
@@ -25,6 +26,8 @@ export type DaySummary = {
   topGroups: string[]
   /** Planned session length in minutes (nearest 5); 0 for rest or empty days. */
   estMinutes: number
+  /** Hard sets per movement group; all zero on rest days. */
+  mix: MovementMix
 }
 
 export type WeekView = {
@@ -37,12 +40,14 @@ export type WeekView = {
   order: DayIndex[]
   /** Indexed by stored day (0 = Monday). */
   days: DaySummary[]
+  /** Hard sets per movement group across the week. */
+  mix: MovementMix
   /** Neutral recovery facts for one day, nearest earlier session first. */
   dayFacts: (day: DayIndex) => RecoveryFact[]
   prefs: Pick<Prefs, 'goal' | 'countingMode' | 'weekStart'>
 }
 
-function summarize(program: Program, week: WeekResult, locale: Locale, ctx: ResolveContext): DaySummary[] {
+export function summarize(program: Program, week: WeekResult, locale: Locale, ctx: ResolveContext): DaySummary[] {
   return program.days.map((d, day) => {
     const topGroups = Object.entries(week.daily)
       .filter(([, days]) => days[day] > 0)
@@ -58,6 +63,7 @@ function summarize(program: Program, week: WeekResult, locale: Locale, ctx: Reso
       hardSets: d.kind === 'train' ? d.entries.reduce((s, e) => s + e.sets, 0) : 0,
       topGroups: d.kind === 'train' ? topGroups : [],
       estMinutes: estimateDay(d, ctx),
+      mix: d.kind === 'train' ? movementMix(week.entries.filter((e) => e.day === day)) : emptyMix(),
     }
   })
 }
@@ -87,6 +93,7 @@ export function useWeek(programOverride?: Program | null): WeekView | null {
       schedule: weekSchedule(week.daily, weekStart),
       order: weekOrder(weekStart),
       days: summarize(program, week, locale, { catalog, custom: program.custom, countingMode, overrides }),
+      mix: movementMix(week.entries),
       dayFacts: (day: DayIndex) => dayFacts(week.daily, day),
       prefs: { goal, countingMode, weekStart },
     }

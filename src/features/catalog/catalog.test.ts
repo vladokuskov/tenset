@@ -169,10 +169,8 @@ describe('detail helpers', () => {
     expect(shortCite('anatomy-general')).toBe('Standard functional anatomy')
   })
 
-  it('labels every pattern and groups each once', () => {
-    const grouped = PATTERN_GROUPS.flatMap((g) => g.patterns)
-    expect(new Set(grouped).size).toBe(grouped.length)
-    expect(grouped.sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
+  it('labels every pattern in both languages', () => {
+    expect(PATTERN_GROUPS.flatMap((g) => g.patterns).sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
     expect(Object.keys(catalogMessages.uk.pattern).sort()).toEqual(Object.keys(catalogMessages.en.pattern).sort())
   })
 })

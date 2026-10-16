@@ -10,6 +10,9 @@ export const uiMessages = defineMessages({
     search: 'Search',
     noMatches: 'No matches',
     language: { en: 'English', uk: 'Ukrainian' },
+    movementMix: 'Movement mix',
+    byMovement: 'By movement',
+    noSets: 'No sets',
   },
   uk: {
     nav: { main: 'Головне', plan: 'План', body: 'Тіло', exercises: 'Вправи', settings: 'Налаштування' },
@@ -20,5 +23,8 @@ export const uiMessages = defineMessages({
     search: 'Пошук',
     noMatches: 'Нічого не знайдено',
     language: { en: 'Англійська', uk: 'Українська' },
+    movementMix: 'Розподіл рухів',
+    byMovement: 'За рухами',
+    noSets: 'Немає підходів',
   },
 })

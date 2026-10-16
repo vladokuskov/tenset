@@ -1,4 +1,5 @@
 import { dayName, formatDayList, type DayIndex } from '../../app/days'
+import { movementGroupNames } from '../../domain/movement'
 import { patternNames } from '../../domain/patternNames'
 import type { Exercise } from '../../domain/schema'
 import { common } from '../../i18n/common'
@@ -10,7 +11,7 @@ type Choice = 'primary' | 'secondary' | 'none'
 export const catalogMessages = defineMessages({
   en: {
     pattern: patternNames.en,
-    patternGroup: { push: 'Push', pull: 'Pull', shoulders: 'Shoulders', arms: 'Arms', legs: 'Legs and hips', core: 'Core' },
+    patternGroup: movementGroupNames.en,
     level: { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' } as Record<number, string>,
     area: { upper: 'Upper body', core: 'Core', lower: 'Lower body' },
     choice: { primary: 'Primary', secondary: 'Secondary', none: 'None' },
@@ -163,7 +164,7 @@ export const catalogMessages = defineMessages({
   },
   uk: {
     pattern: patternNames.uk,
-    patternGroup: { push: 'Жим', pull: 'Тяга', shoulders: 'Плечі', arms: 'Руки', legs: 'Ноги й таз', core: 'Кор' },
+    patternGroup: movementGroupNames.uk,
     level: { 1: 'Початковий', 2: 'Середній', 3: 'Просунутий' },
     area: { upper: 'Верх тіла', core: 'Кор', lower: 'Низ тіла' },
     choice: { primary: 'Основна', secondary: 'Допоміжна', none: 'Немає' },
