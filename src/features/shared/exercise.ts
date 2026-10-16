@@ -1,3 +1,4 @@
+import { movementGroupOf, type MovementKey } from '../../domain/movement'
 import type { CustomExercise, Entry, Exercise, Prefs } from '../../domain/schema'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
@@ -15,6 +16,9 @@ export function rowMeta(e: AnyExercise, primaries: readonly string[], locale: Lo
   const muscles = primaries.join(', ') || m.noMusclesMapped
   return isCustom(e) ? m.customMeta(muscles) : muscles
 }
+
+/** Movement group for the exercise's color; custom exercises (no pattern) and unknown ids are "other". */
+export const groupOf = (e: AnyExercise | null): MovementKey => (e && !isCustom(e) ? movementGroupOf(e.pattern) : 'other')
 
 export function unitOf(e: AnyExercise): 'reps' | 'seconds' {
   return isCustom(e) ? 'reps' : e.unit

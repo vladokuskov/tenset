@@ -8,7 +8,8 @@ import { movementLabel, mvBg, mvBorder } from '../../ui/movement'
 import { cropViewBox, MAP_HEIGHT, MAP_WIDTH, regionBounds, useAnatomy, type AnatomyView } from '../bodymap/anatomy'
 import { AnatomyFigure, type FigureVars } from '../bodymap/AnatomyFigure'
 import { tintVars } from '../bodymap/fills'
-import { cardView, equipmentGlyph, exerciseGroup, isCatalogExercise, showsMotion, type CardExercise } from './media'
+import { cardView, equipmentGlyph, isCatalogExercise, showsMotion, type CardExercise } from './media'
+import { groupOf } from '../shared/exercise'
 import { catalogMessages } from './messages'
 import { patternLabel } from './patterns'
 import { posterUrl } from '../../data/posters'
@@ -104,7 +105,7 @@ function PosterMedia({ exercise, size, className, src, onError }: ExerciseCardMe
     return (
       <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-lg bg-white', className)} aria-hidden>
         <img src={src} alt="" width={480} height={480} loading="lazy" decoding="async" onError={onError} className="block size-full object-cover" />
-        <GroupRing group={exerciseGroup(exercise)} />
+        <GroupRing group={groupOf(exercise)} />
       </div>
     )
   }
@@ -124,7 +125,7 @@ function PosterMedia({ exercise, size, className, src, onError }: ExerciseCardMe
         <Glyph size={12} strokeWidth={2} aria-hidden className="shrink-0" />
         <span className="truncate font-medium">{label}</span>
       </span>
-      <GroupRing group={exerciseGroup(exercise)} />
+      <GroupRing group={groupOf(exercise)} />
     </div>
   )
 }
@@ -137,7 +138,7 @@ function GroupRing({ group }: { group: MovementKey }) {
 /** Detail hero frame: a group-colored band with a "Push · Horizontal push" label above white media. */
 export function MovementFrame({ exercise, className, children }: { exercise: CardExercise; className?: string; children: ReactNode }) {
   const locale = useLocale()
-  const group = exerciseGroup(exercise)
+  const group = groupOf(exercise)
   const pattern = isCatalogExercise(exercise) ? patternLabel(exercise.pattern, locale) : ''
   const name = movementLabel(group, locale)
   return (
@@ -172,7 +173,7 @@ function MapCardMedia({ exercise, size, frame = true, className }: ExerciseCardM
     return (
       <div className={cx('relative size-12 shrink-0 overflow-hidden rounded-lg bg-raised', className)} aria-hidden>
         {smCrop && <AnatomyFigure view={view} kind="groups" viewBox={smCrop.viewBox} vars={vars} className="block size-full" />}
-        <GroupRing group={exerciseGroup(exercise)} />
+        <GroupRing group={groupOf(exercise)} />
       </div>
     )
   }
@@ -213,7 +214,7 @@ function MapCardMedia({ exercise, size, frame = true, className }: ExerciseCardM
         <Glyph size={size === 'lg' ? 14 : 12} strokeWidth={2} aria-hidden className="shrink-0" />
         <span className="truncate font-medium">{label}</span>
       </span>
-      {size === 'md' && <GroupRing group={exerciseGroup(exercise)} />}
+      {size === 'md' && <GroupRing group={groupOf(exercise)} />}
     </div>
   )
   return framed ? (

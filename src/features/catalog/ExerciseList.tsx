@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import type { Exercise } from '../../domain/schema'
 import { useLocale } from '../../i18n/messages'
 import { movementLabel } from '../../ui/movement'
-import { exerciseGroup } from './media'
+import { groupOf } from '../shared/exercise'
 import { ExerciseRow } from './ExerciseRow'
 
 const ROW_H = 73
@@ -50,7 +50,7 @@ export function ExerciseList({ exercises, label }: { exercises: readonly Exercis
             <ExerciseRow
               exercise={e}
               link
-              trailing={<span className="max-w-20 text-right text-xs leading-tight text-ink-3">{movementLabel(exerciseGroup(e), locale)}</span>}
+              trailing={<span className="max-w-20 text-right text-xs leading-tight text-ink-3">{movementLabel(groupOf(e), locale)}</span>}
             />
           </div>
         )

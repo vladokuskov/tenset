@@ -5,7 +5,8 @@ import { cx } from '../../ui/cx'
 import { Pill } from '../../ui/Pill'
 import { ExerciseCardMedia } from './ExerciseCardMedia'
 import { movementLabel } from '../../ui/movement'
-import { exerciseGroup, primaryGroupNames } from './media'
+import { groupOf } from '../shared/exercise'
+import { primaryGroupNames } from './media'
 import { catalogMessages } from './messages'
 import { useIsCustomized, useRoles } from './useRoles'
 
@@ -25,7 +26,7 @@ export function ExerciseCard({ exercise, className }: { exercise: Exercise; clas
       <span className="mt-2 line-clamp-2 px-0.5 text-sm font-semibold leading-snug text-ink">{exercise.name}</span>
       <span className="mt-0.5 flex min-w-0 items-center gap-1.5 px-0.5 text-xs text-ink-2">
         <span className="truncate">
-          {movementLabel(exerciseGroup(exercise), locale)} · {primaryGroupNames(roles, locale).join(', ') || m.noMuscles}
+          {movementLabel(groupOf(exercise), locale)} · {primaryGroupNames(roles, locale).join(', ') || m.noMuscles}
         </span>
         {customized && (
           <Pill variant="soft" size="sm">

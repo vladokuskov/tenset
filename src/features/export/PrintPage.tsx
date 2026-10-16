@@ -17,7 +17,7 @@ import { supersetLabels } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
 import { GymSheet } from './GymSheet'
 import { exportMessages } from './messages'
-import { exerciseGroup } from './planText'
+import { groupOf } from '../shared/exercise'
 
 const PRINT_CSS = `
 @page { size: A4 portrait; margin: 12mm; }
@@ -163,7 +163,7 @@ export function PrintPage() {
                           <tr>
                             {i === 0 && dayCell}
                             <td className="py-1 pr-2">
-                              <MovementSwatch group={exerciseGroup(exerciseFor(e.exerciseId, catalog, program))} className="mr-1.5 align-[0.05em]" />
+                              <MovementSwatch group={groupOf(exerciseFor(e.exerciseId, catalog, program))} className="mr-1.5 align-[0.05em]" />
                               {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
                               {exerciseName(e.exerciseId, catalog, program.custom, locale)}
                               {e.note && <span className="block text-xs text-ink-2">{e.note}</span>}

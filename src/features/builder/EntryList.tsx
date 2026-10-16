@@ -15,7 +15,7 @@ import { sharedMessages } from '../shared/messages'
 import { useChange } from '../shared/useChange'
 import { SORT_LABEL, SortableLists, type SortMove } from './dnd'
 import { builderMessages } from './messages'
-import { groupOf } from './movement'
+import { groupOf } from '../shared/exercise'
 import { useSortableItem } from './useSortable'
 
 type Open = (entryId: string) => void

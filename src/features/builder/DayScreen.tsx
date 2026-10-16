@@ -18,7 +18,7 @@ import { DayOptionsSheet } from './DayOptionsSheet'
 import { EntryList } from './EntryList'
 import { EntrySheets } from './EntrySheets'
 import { builderMessages } from './messages'
-import { groupOf } from './movement'
+import { groupOf } from '../shared/exercise'
 import { NoProgram } from './NoProgram'
 import { ThisDayCard } from './ThisDayCard'
 
@@ -114,7 +114,7 @@ export function DayScreen() {
                   const ex = exerciseFor(e.exerciseId, catalog, program)
                   return (
                     <li key={e.id} className="flex items-center gap-2.5 py-1">
-                      <MovementSwatch group={ex ? groupOf(ex) : 'other'} />
+                      <MovementSwatch group={groupOf(ex)} />
                       <span className="min-w-0">{joinMeta([ex?.name ?? m.unknownExercise, m.setsPlain(e.sets)])}</span>
                     </li>
                   )

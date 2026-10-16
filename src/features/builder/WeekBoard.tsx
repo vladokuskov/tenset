@@ -19,7 +19,7 @@ import { useChange } from '../shared/useChange'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './desktop/board'
 import { SORT_LABEL, SortableLists, type OtherDrag, type SortMove } from './dnd'
 import { builderMessages } from './messages'
-import { groupOf } from './movement'
+import { groupOf } from '../shared/exercise'
 import { PulseMini } from './PulseMini'
 import { useSortableItem, useSortableList } from './useSortable'
 

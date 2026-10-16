@@ -17,7 +17,8 @@ import { alternativesFor } from '../../domain/alternatives'
 import { CountsSheet } from './CountsSheet'
 import { shortCite } from './detail'
 import { ExerciseMedia } from './ExerciseMotion'
-import { exerciseGroup, showsMotion } from './media'
+import { groupOf } from '../shared/exercise'
+import { showsMotion } from './media'
 import { catalogMessages } from './messages'
 import { ExerciseRow } from './ExerciseRow'
 import { MuscleSection } from './MuscleSection'
@@ -147,8 +148,8 @@ function ExerciseDetail({ exercise }: { exercise: Exercise }) {
               </Fact>
               <Fact label={m.patternFact}>
                 <span className="inline-flex items-center gap-2">
-                  <MovementSwatch group={exerciseGroup(exercise)} />
-                  {movementLabel(exerciseGroup(exercise), locale)} · {patternLabel(exercise.pattern, locale)}
+                  <MovementSwatch group={groupOf(exercise)} />
+                  {movementLabel(groupOf(exercise), locale)} · {patternLabel(exercise.pattern, locale)}
                 </span>
               </Fact>
               <Fact label={m.levelFilter}>{levelLabel(exercise.level, locale)}</Fact>

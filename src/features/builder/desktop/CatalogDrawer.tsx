@@ -10,12 +10,12 @@ import { groupIds } from '../../../domain/taxonomy'
 import { common } from '../../../i18n/common'
 import { useLocale } from '../../../i18n/messages'
 import { usePrefsStore } from '../../../store/prefs.store'
-import { Button, IconButton, MovementSwatch, Select, cx, mvRing } from '../../../ui'
+import { Button, IconButton, MovementSwatch, Select, cx } from '../../../ui'
 import { ExerciseCardMedia, buildIndex, filterExercises, primaryGroupNames, useRoles } from '../../catalog'
 import { FilterSelect } from '../../catalog/FilterSelect'
 import { matchesQuery, rowMeta, type AnyExercise } from '../../shared/exercise'
 import { SORT_LABEL } from '../dnd'
-import { groupOf } from '../movement'
+import { groupOf } from '../../shared/exercise'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './board'
 import { desktopMessages } from './messages'
 
@@ -88,7 +88,7 @@ function DrawerRow({
     >
       {/* Drag handle over the row. The drag library marks it up as a button; hidden, the row keeps its text. */}
       <span ref={handleRef} aria-hidden tabIndex={-1} className="absolute inset-0 cursor-grab rounded-lg active:cursor-grabbing" />
-      <ExerciseCardMedia exercise={exercise} size="sm" className={cx('ring-3', mvRing[group])} />
+      <ExerciseCardMedia exercise={exercise} size="sm" />
       <span className="min-w-0 flex-1">
         <span className="line-clamp-2 text-sm font-medium leading-snug text-ink">{exercise.name}</span>
         <span className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-2">

@@ -10,7 +10,7 @@ import { exerciseName } from '../share/resolveNames'
 import { defaultReps, repsText, supersetLabels, unitOf } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
 import { exportMessages } from './messages'
-import { exerciseGroup } from './planText'
+import { groupOf } from '../shared/exercise'
 
 /** One block per training day: each exercise with its targets and an empty box per set, for writing by hand. */
 export function GymSheet({ view, catalog }: { view: WeekView; catalog: Catalog }) {
@@ -63,7 +63,7 @@ export function GymSheet({ view, catalog }: { view: WeekView; catalog: Catalog }
                   <li key={e.id} className="break-inside-avoid gap-3 py-1.5 sm:flex sm:items-center print:flex print:items-center">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">
-                        <MovementSwatch group={exerciseGroup(ex)} className="mr-1.5 align-[0.05em]" />
+                        <MovementSwatch group={groupOf(ex)} className="mr-1.5 align-[0.05em]" />
                         {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
                         {exerciseName(e.exerciseId, catalog, program.custom, locale)}
                       </p>

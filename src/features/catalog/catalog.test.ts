@@ -8,7 +8,7 @@ import type { CustomExercise } from '../../domain/schema'
 import { catalogOf, fixtureExercise } from '../../domain/test-fixtures'
 import { alternativesFor, headOverlap, headVector, rankAlternatives } from '../../domain/alternatives'
 import { lightestTrainingDay, shortCite } from './detail'
-import { exerciseGroup } from './media'
+import { groupOf } from '../shared/exercise'
 import { catalogMessages } from './messages'
 import { movementGroupOf, PATTERN_GROUPS, patternLabel } from './patterns'
 import { applyOverride, isCustomized } from './roles'
@@ -195,7 +195,7 @@ describe('movement filter', () => {
 
   it('colors custom exercises as other', () => {
     const mine: CustomExercise = { id: 'c1', name: 'Mine', equipment: [], laterality: 'bilateral', groups: { chest: 'primary' } }
-    expect(exerciseGroup(mine)).toBe('other')
-    expect(exerciseGroup(activeExercises.find((e) => e.pattern === 'squat')!)).toBe('legs')
+    expect(groupOf(mine)).toBe('other')
+    expect(groupOf(activeExercises.find((e) => e.pattern === 'squat')!)).toBe('legs')
   })
 })
