@@ -1,4 +1,5 @@
 import type { MapScale } from '../../app/volumeScale'
+import { MOVEMENT_KEYS, type MovementKey, type MovementMix } from '../../domain/movement'
 import type { BandId } from '../../domain/volume'
 import { MAP_ASPECT, MAP_HEIGHT, type AnatomyDoc, type AnatomyView } from '../bodymap/anatomy'
 import type { EntryText } from './planText'
@@ -9,13 +10,15 @@ const CONTENT = IMAGE_WIDTH - 2 * PAD
 
 export type FontSpec = { size: number; weight: 400 | 600 | 700 }
 export type Measure = (text: string, font: FontSpec) => number
-export type TextColor = 'ink' | 'ink2' | 'ink3'
+/** mvInk and mvInk2 are for text on movement fills; they stay dark whatever the theme. */
+export type TextColor = 'ink' | 'ink2' | 'ink3' | 'mvInk' | 'mvInk2'
 
 export type DrawOp =
   | { t: 'text'; x: number; y: number; text: string; font: FontSpec; color: TextColor; align?: 'left' | 'center' }
   | { t: 'rule'; x: number; y: number; w: number }
   | { t: 'map'; x: number; y: number; h: number; view: AnatomyView }
   | { t: 'swatch'; x: number; y: number; w: number; h: number; band: BandId }
+  | { t: 'fill'; x: number; y: number; w: number; h: number; r: number; group: MovementKey }
 
 export type ImageLayout = { width: number; height: number; scale: MapScale; ops: DrawOp[] }
 
@@ -23,6 +26,8 @@ export type DayImageContent = {
   title: string
   summary: string
   rows: readonly EntryText[]
+  /** Movement group names; a row with a group shows its name before the details. */
+  groupNames?: Readonly<Record<MovementKey, string>>
   /** Shown instead of rows: "Rest day", "No exercises yet". */
   empty?: string
   note?: string
@@ -30,7 +35,7 @@ export type DayImageContent = {
   app: string
 }
 
-export type WeekImageRow = { day: string; title?: string; summary: string; groups?: string; rest: boolean }
+export type WeekImageRow = { day: string; title?: string; summary: string; groups?: string; mix?: MovementMix; rest: boolean }
 
 export type WeekImageContent = {
   title: string
@@ -38,6 +43,8 @@ export type WeekImageContent = {
   rows: readonly WeekImageRow[]
   legend: readonly { band: BandId; label: string }[]
   mapCaption: string
+  /** The whole week's movement mix with a "Push 24 sets" style label per group with sets. */
+  mix?: { title: string; total: MovementMix; legend: readonly { group: MovementKey; label: string }[] }
   footer: string
   app: string
 }
@@ -99,6 +106,8 @@ const F = {
   rowSummary: { size: 28, weight: 400 },
   rowGroups: { size: 26, weight: 400 },
   legend: { size: 22, weight: 400 },
+  mixTitle: { size: 26, weight: 600 },
+  mixLegend: { size: 24, weight: 400 },
   footer: { size: 24, weight: 400 },
   app: { size: 24, weight: 600 },
 } satisfies Record<string, FontSpec>
@@ -130,6 +139,20 @@ function mapPair(ops: DrawOp[], x: number, y: number, h: number, gap: number) {
   return 2 * w + gap
 }
 
+/** Stacked bar of sets per group, segments in display order with a small gap; nothing for an empty mix. */
+export function mixBar(ops: DrawOp[], mix: MovementMix, x: number, y: number, w: number, h: number, gap: number) {
+  const parts = MOVEMENT_KEYS.filter((k) => mix[k] > 0)
+  const total = parts.reduce((n, k) => n + mix[k], 0)
+  if (!total) return
+  const free = w - gap * (parts.length - 1)
+  let at = x
+  parts.forEach((group, i) => {
+    const sw = i === parts.length - 1 ? x + w - at : (free * mix[group]) / total
+    ops.push({ t: 'fill', x: at, y, w: sw, h, r: Math.min(h / 2, 6), group })
+    at += sw + gap
+  })
+}
+
 function footer(ops: DrawOp[], measure: Measure, y: number, text: string, app: string): number {
   y += 48
   ops.push({ t: 'rule', x: PAD, y, w: CONTENT })
@@ -140,6 +163,10 @@ function footer(ops: DrawOp[], measure: Measure, y: number, text: string, app: s
 
 const DAY_MAP_H = 340
 const MAP_GAP = 20
+const ROW_GAP = 16
+const ROW_PAD = 24
+const ROW_INSET = 28
+const ROW_R = 28
 
 export function layoutDay(c: DayImageContent, measure: Measure): ImageLayout {
   const ops: DrawOp[] = []
@@ -156,14 +183,23 @@ export function layoutDay(c: DayImageContent, measure: Measure): ImageLayout {
     ops.push({ t: 'rule', x: PAD, y, w: CONTENT })
   }
   const markerW = c.rows.some((r) => r.marker) ? 76 : 0
+  if (c.rows.length) y += ROW_GAP - 2
   for (const row of c.rows) {
-    const top = y + 26
-    if (row.marker) ops.push({ t: 'text', x: PAD, y: top + 2, text: row.marker, font: F.marker, color: 'ink' })
-    const x = PAD + markerW
-    y = textBlock(ops, measure, row.name, F.name, 'ink', x, top, CONTENT - markerW, 2)
-    y = textBlock(ops, measure, row.parts.join(' · '), F.detail, 'ink2', x, y + 6, CONTENT - markerW, 2) + 26
-    ops.push({ t: 'rule', x: PAD, y, w: CONTENT })
+    const fill: DrawOp = { t: 'fill', x: PAD, y, w: CONTENT, h: 0, r: ROW_R, group: row.group ?? 'other' }
+    ops.push(fill)
+    const top = y + ROW_PAD
+    const left = PAD + ROW_INSET
+    const inner = CONTENT - 2 * ROW_INSET - markerW
+    if (row.marker) ops.push({ t: 'text', x: left, y: top + 2, text: row.marker, font: F.marker, color: 'mvInk' })
+    const x = left + markerW
+    const group = row.group && c.groupNames?.[row.group]
+    const details = (group ? [group, ...row.parts] : row.parts).join(' · ')
+    let ty = textBlock(ops, measure, row.name, F.name, 'mvInk', x, top, inner, 2)
+    ty = textBlock(ops, measure, details, F.detail, 'mvInk2', x, ty + 6, inner, 2) + ROW_PAD
+    fill.h = ty - y
+    y = ty + ROW_GAP
   }
+  if (c.rows.length) y -= ROW_GAP
   if (c.note) y = textBlock(ops, measure, c.note, F.note, 'ink2', PAD, y + 28, CONTENT, 4)
   y = footer(ops, measure, y, c.footer, c.app)
   return { width: IMAGE_WIDTH, height: Math.ceil(y), scale: 'day', ops }
@@ -194,6 +230,22 @@ export function layoutWeek(c: WeekImageContent, measure: Measure): ImageLayout {
   }
   y = textBlock(ops, measure, c.mapCaption, F.legend, 'ink3', PAD, y + 10, CONTENT, 2, 'center') + 36
 
+  if (c.mix && c.mix.legend.length) {
+    y = textBlock(ops, measure, c.mix.title, F.mixTitle, 'ink', PAD, y, CONTENT, 1) + 14
+    mixBar(ops, c.mix.total, PAD, y, CONTENT, 16, 4)
+    y += 16 + 20
+    const cols = 3
+    const col = CONTENT / cols
+    const lh = lineHeight(F.mixLegend)
+    c.mix.legend.forEach((l, i) => {
+      const x = PAD + (i % cols) * col
+      const ly = y + Math.floor(i / cols) * (lh + 12)
+      ops.push({ t: 'fill', x, y: ly + (lh - 20) / 2, w: 20, h: 20, r: 5, group: l.group })
+      ops.push({ t: 'text', x: x + 32, y: ly, text: ellipsize(l.label, col - 44, (s) => measure(s, F.mixLegend)), font: F.mixLegend, color: 'ink2' })
+    })
+    y += Math.ceil(c.mix.legend.length / cols) * (lh + 12) + 24
+  }
+
   ops.push({ t: 'rule', x: PAD, y, w: CONTENT })
   const textW = CONTENT - DAY_COL
   for (const row of c.rows) {
@@ -205,6 +257,11 @@ export function layoutWeek(c: WeekImageContent, measure: Measure): ImageLayout {
     if (row.title) ty = textBlock(ops, measure, row.title, F.rowTitle, 'ink', x, ty, textW, 1)
     ty = textBlock(ops, measure, row.summary, F.rowSummary, row.rest ? 'ink3' : 'ink2', x, row.title ? ty + 4 : ty + 2, textW, 2)
     if (row.groups) ty = textBlock(ops, measure, row.groups, F.rowGroups, 'ink3', x, ty + 4, textW, 1)
+    const mix = row.mix
+    if (mix && MOVEMENT_KEYS.some((k) => mix[k] > 0)) {
+      mixBar(ops, mix, x, ty + 12, textW, 8, 3)
+      ty += 12 + 8
+    }
     y = Math.max(ty, top + lineHeight(F.day)) + pad
     ops.push({ t: 'rule', x: PAD, y, w: CONTENT })
   }
@@ -223,28 +280,42 @@ export type Palette = {
   skin: string
   untracked: string
   vol: Record<BandId, string>
+  mv: Record<MovementKey, string>
+  mvInk: string
+  mvInk2: string
 }
 
 /** Light-theme token values in sRGB, used when the browser's canvas cannot read the computed color. */
 export const FALLBACK_PALETTE: Palette = {
-  bg: '#f7f5f3',
-  ink: '#1d1a17',
-  ink2: '#57514d',
-  ink3: '#6d6863',
-  line: '#d9d5d0',
-  skin: '#e1ddd9',
-  untracked: '#dad6d1',
+  bg: '#fcfdfe',
+  ink: '#13161c',
+  ink2: '#474d57',
+  ink3: '#616670',
+  line: '#dadce1',
+  skin: '#dde0e4',
+  untracked: '#d5d8dc',
   vol: {
-    none: '#d2cdc8',
-    light: '#a3b5d4',
-    moderate: '#7493d0',
-    target: '#4b70c7',
-    high: '#314ea9',
-    very_high: '#22337c',
+    none: '#cbced3',
+    light: '#a3b7e2',
+    moderate: '#6e91e0',
+    target: '#3f69d3',
+    high: '#2a47ac',
+    very_high: '#1f2c78',
   },
+  mv: {
+    push: '#c7b8ff',
+    pull: '#8eddb6',
+    shoulders: '#93d3f2',
+    arms: '#ffadc8',
+    legs: '#ffb680',
+    core: '#ffdf78',
+    other: '#d5d9e1',
+  },
+  mvInk: '#16181d',
+  mvInk2: 'rgba(22, 24, 29, 0.72)',
 }
 
-const TOKENS: Record<Exclude<keyof Palette, 'vol'>, string> = {
+const TOKENS: Record<Exclude<keyof Palette, 'vol' | 'mv' | 'mvInk2'>, string> = {
   bg: 'var(--color-surface)',
   ink: 'var(--color-ink)',
   ink2: 'var(--color-ink-2)',
@@ -252,6 +323,7 @@ const TOKENS: Record<Exclude<keyof Palette, 'vol'>, string> = {
   line: 'var(--color-line)',
   skin: 'var(--color-map-skin)',
   untracked: 'color-mix(in oklab, var(--color-vol-none) 45%, var(--color-map-skin))',
+  mvInk: 'var(--color-mv-ink)',
 }
 
 const VOL_TOKENS: Record<BandId, string> = {
@@ -293,9 +365,10 @@ export function resolvePalette(): Palette {
     return (ctx && computed && toRgb(ctx, computed)) || fallback
   }
   try {
-    const out = { ...FALLBACK_PALETTE, vol: { ...FALLBACK_PALETTE.vol } }
+    const out = { ...FALLBACK_PALETTE, vol: { ...FALLBACK_PALETTE.vol }, mv: { ...FALLBACK_PALETTE.mv } }
     for (const key of Object.keys(TOKENS) as (keyof typeof TOKENS)[]) out[key] = read(TOKENS[key], FALLBACK_PALETTE[key])
     for (const band of Object.keys(VOL_TOKENS) as BandId[]) out.vol[band] = read(VOL_TOKENS[band], FALLBACK_PALETTE.vol[band])
+    for (const key of MOVEMENT_KEYS) out.mv[key] = read(`var(--color-mv-${key})`, FALLBACK_PALETTE.mv[key])
     return out
   } finally {
     probe.remove()
@@ -385,6 +458,12 @@ export function renderImage(input: RenderInput, family: string): Promise<File> {
     } else if (op.t === 'swatch') {
       ctx.fillStyle = palette.vol[op.band]
       ctx.fillRect(op.x, op.y, op.w, op.h)
+    } else if (op.t === 'fill') {
+      ctx.fillStyle = palette.mv[op.group]
+      ctx.beginPath()
+      if (ctx.roundRect) ctx.roundRect(op.x, op.y, op.w, op.h, op.r)
+      else ctx.rect(op.x, op.y, op.w, op.h)
+      ctx.fill()
     } else {
       drawFigure(ctx, input.docs[op.view], op, input)
     }

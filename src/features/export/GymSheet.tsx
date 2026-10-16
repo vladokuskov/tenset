@@ -4,16 +4,20 @@ import type { WeekView } from '../../app/useWeek'
 import type { Catalog } from '../../domain/resolve'
 import { common } from '../../i18n/common'
 import { useLocale, useMessages } from '../../i18n/messages'
+import { mixParts, MovementSwatch } from '../../ui'
+import { uiMessages } from '../../ui/messages'
 import { exerciseName } from '../share/resolveNames'
 import { defaultReps, repsText, supersetLabels, unitOf } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
 import { exportMessages } from './messages'
+import { exerciseGroup } from './planText'
 
 /** One block per training day: each exercise with its targets and an empty box per set, for writing by hand. */
 export function GymSheet({ view, catalog }: { view: WeekView; catalog: Catalog }) {
   const m = useMessages(exportMessages)
   const locale = useLocale()
   const c = common[locale]
+  const ui = useMessages(uiMessages)
   const { program, order, prefs } = view
   const days = order.filter((d) => program.days[d].kind === 'train' && program.days[d].entries.length > 0)
 
@@ -22,6 +26,13 @@ export function GymSheet({ view, catalog }: { view: WeekView; catalog: Catalog }
   return (
     <div className="mt-3 space-y-5 print:space-y-4">
       <p className="text-sm text-ink-2 print:text-[8.5pt]">{m.gymHint}</p>
+      <ul aria-label={ui.byMovement} className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-2 print:text-[8pt]">
+        {mixParts(view.mix).map((p) => (
+          <li key={p.key}>
+            <MovementSwatch group={p.key} label />
+          </li>
+        ))}
+      </ul>
       {days.map((d) => {
         const day = program.days[d]
         const pairs = supersetLabels(day.entries)
@@ -52,6 +63,7 @@ export function GymSheet({ view, catalog }: { view: WeekView; catalog: Catalog }
                   <li key={e.id} className="break-inside-avoid gap-3 py-1.5 sm:flex sm:items-center print:flex print:items-center">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">
+                        <MovementSwatch group={exerciseGroup(ex)} className="mr-1.5 align-[0.05em]" />
                         {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
                         {exerciseName(e.exerciseId, catalog, program.custom, locale)}
                       </p>

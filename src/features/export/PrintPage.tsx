@@ -9,12 +9,15 @@ import { useWeek } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
 import { dateFormat } from '../../i18n/format'
 import { useLocale, useMessages } from '../../i18n/messages'
-import { BackButton, Button, EmptyState, LinkButton, SegmentedControl } from '../../ui'
+import { BackButton, Button, EmptyState, LinkButton, MovementMix, MovementSwatch, SegmentedControl } from '../../ui'
+import { uiMessages } from '../../ui/messages'
 import { BodyMap, VolumeLegend } from '../bodymap'
 import { exerciseName } from '../share/resolveNames'
 import { supersetLabels } from '../shared/exercise'
+import { exerciseFor } from '../shared/lookup'
 import { GymSheet } from './GymSheet'
 import { exportMessages } from './messages'
+import { exerciseGroup } from './planText'
 
 const PRINT_CSS = `
 @page { size: A4 portrait; margin: 12mm; }
@@ -55,6 +58,7 @@ export function PrintPage() {
   const view = useWeek()
   const { catalog } = useCatalog()
   const m = useMessages(exportMessages)
+  const ui = useMessages(uiMessages)
   const locale = useLocale()
   const layout = useSearch({ from: '/print' }).layout ?? 'week'
   const navigate = useNavigate({ from: '/print' })
@@ -159,6 +163,7 @@ export function PrintPage() {
                           <tr>
                             {i === 0 && dayCell}
                             <td className="py-1 pr-2">
+                              <MovementSwatch group={exerciseGroup(exerciseFor(e.exerciseId, catalog, program))} className="mr-1.5 align-[0.05em]" />
                               {pairs[i] && <span className="mr-1.5 font-semibold num">{pairs[i].label}</span>}
                               {exerciseName(e.exerciseId, catalog, program.custom, locale)}
                               {e.note && <span className="block text-xs text-ink-2">{e.note}</span>}
@@ -199,6 +204,8 @@ export function PrintPage() {
                 {m.groupsTrained}
                 {untrained.length > 0 && <span className="text-ink-2">{m.notTrained(untrained.join(', '))}</span>}
               </p>
+              <h2 className="mt-4 text-sm font-semibold print:mt-3 print:text-[8.5pt]">{ui.byMovement}</h2>
+              <MovementMix mix={view.mix} legend className="mt-2 print:text-[8pt]" />
             </aside>
           </div>
         )}
