@@ -5,7 +5,7 @@ import { formatDaySummary } from '../../app/format'
 import type { WeekView } from '../../app/useWeek'
 import { groupName } from '../../data/localize'
 import { useLocale, useMessages } from '../../i18n/messages'
-import { cx } from '../../ui'
+import { cx, MovementMix } from '../../ui'
 import { builderMessages } from './messages'
 import { PulseMini } from './PulseMini'
 
@@ -32,7 +32,7 @@ export function WeekList({ view }: { view: WeekView }) {
                 {dayName(d, 'short', locale)}
                 {d === today && <span className="block text-[0.6875rem] font-normal text-ink-3">{m.today}</span>}
               </span>
-              <span className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1">
                 {rest ? (
                   <span className="block truncate text-base text-ink-3">{m.rest}</span>
                 ) : (
@@ -42,9 +42,14 @@ export function WeekList({ view }: { view: WeekView }) {
                     {s.topGroups.length > 0 && (
                       <span className="line-clamp-2 text-xs text-ink-3">{s.topGroups.map((g) => groupName(g, locale)).join(', ')}</span>
                     )}
+                    {s.exercises > 0 && (
+                      <div aria-hidden className="mt-2 max-w-60">
+                        <MovementMix mix={s.mix} />
+                      </div>
+                    )}
                   </>
                 )}
-              </span>
+              </div>
               {!rest && s.exercises > 0 && <PulseMini view="both" groups={groups} scale="day" height={46} pulseScope={d} className="@max-xs:hidden" />}
               <ChevronRight size={20} className="shrink-0 text-ink-3" aria-hidden />
             </Link>

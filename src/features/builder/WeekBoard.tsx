@@ -11,7 +11,7 @@ import type { Entry, Role } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { useLocale } from '../../i18n/messages'
 import { useProgramStore } from '../../store/program.store'
-import { cx, useScrollFade } from '../../ui'
+import { cx, MovementMix, mvBg, useScrollFade } from '../../ui'
 import { useRoles } from '../catalog'
 import { defaultSets, repsText, supersetLabels, unitOf, type AnyExercise, type SupersetLabel } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
@@ -19,6 +19,7 @@ import { useChange } from '../shared/useChange'
 import { DRAWER_ITEM, WEEK_BOARD_ID, type DrawerDragData } from './desktop/board'
 import { SORT_LABEL, SortableLists, type OtherDrag, type SortMove } from './dnd'
 import { builderMessages } from './messages'
+import { groupOf } from './movement'
 import { PulseMini } from './PulseMini'
 import { useSortableItem, useSortableList } from './useSortable'
 
@@ -29,7 +30,7 @@ export type BoardHighlight = Readonly<Record<string, Role>>
 
 // Catalog names need up to four lines below 1920px. Columns under 120px (1280-1439 beside the map panel) use a
 // smaller size; the cramped drawer-open columns drop the clamp so no name is ever cut.
-const NAME = 'line-clamp-4 text-sm font-medium leading-snug text-ink break-words hyphens-auto @max-[7.5rem]:text-xs @max-[6.5rem]:line-clamp-none'
+const NAME = 'line-clamp-4 text-sm font-medium leading-snug break-words hyphens-auto @max-[7.5rem]:text-xs @max-[6.5rem]:line-clamp-none'
 
 function BoardCard({
   entry,
@@ -72,18 +73,20 @@ function BoardCard({
         onFocus={() => onHover(primaries)}
         onBlur={() => onHover(null)}
         className={cx(
-          'block cursor-grab rounded-lg border border-line bg-raised px-2 py-1.5 transition-[opacity,box-shadow] duration-150 hover:border-line-strong active:cursor-grabbing',
+          'block cursor-grab rounded-lg px-2 py-1.5 text-mv-ink transition-[opacity,box-shadow] duration-150 hover:shadow-thumb active:cursor-grabbing',
+          mvBg[groupOf(exercise)],
           isDragging && 'shadow-float',
-          lit === 'primary' && 'ring-2 ring-accent',
-          lit === 'secondary' && 'ring-2 ring-accent/45',
+          lit && 'ring-2 ring-offset-2 ring-offset-surface',
+          lit === 'primary' && 'ring-accent',
+          lit === 'secondary' && 'ring-accent/45',
           lit === null ? 'opacity-40' : dim && !lit && 'opacity-55',
         )}
       >
         <span className={NAME}>{exercise.name}</span>
-        <span className="num mt-0.5 block text-xs text-ink-2">
+        <span className="num mt-0.5 block text-xs text-mv-ink/75">
           {superset && (
             <>
-              <span aria-hidden className="font-semibold text-ink">{superset.label}</span>
+              <span aria-hidden className="font-semibold text-mv-ink">{superset.label}</span>
               <span className="sr-only">{m.supersetMarker(superset.letter, superset.position)}</span>
               {' · '}
             </>
@@ -91,7 +94,7 @@ function BoardCard({
           {entry.reps ? `${entry.sets} × ${repsText(entry.reps, unitOf(exercise), locale)}` : common[locale].sets(entry.sets)}
         </span>
         {entry.note && (
-          <span className="mt-0.5 line-clamp-2 break-words text-xs text-ink-2">
+          <span className="mt-0.5 line-clamp-2 break-words text-xs text-mv-ink/75">
             <span aria-hidden>{entry.note}</span>
             <span className="sr-only">{m.noteOn(entry.note)}</span>
           </span>
@@ -167,6 +170,7 @@ function BoardColumn({
           </span>
         )}
       </Link>
+      {!rest && s.exercises > 0 && <MovementMix mix={s.mix} className="shrink-0 px-3 pb-1 pt-1.5" />}
       {/* Short laptop screens give the mini map's height to the list; the week panel shows the same map. */}
       <div className="flex h-12 shrink-0 items-center justify-center px-2 [@media(max-height:52rem)]:hidden">
         {!rest && s.exercises > 0 && <PulseMini view="both" groups={groups} scale="day" height={44} pulseScope={day} />}
@@ -202,9 +206,9 @@ function DragCard({ exercise }: { exercise: AnyExercise }) {
   const sets = defaultSets(exercise)
   const c = common[useLocale()]
   return (
-    <div className="flex h-full w-full flex-col justify-center rounded-lg border border-line-strong bg-raised px-3 py-2 shadow-float">
-      <span className="line-clamp-2 text-sm font-medium leading-snug text-ink">{exercise.name}</span>
-      <span className="num mt-0.5 block text-xs text-ink-2">
+    <div className={cx('flex h-full w-full flex-col justify-center rounded-lg px-3 py-2 text-mv-ink shadow-float', mvBg[groupOf(exercise)])}>
+      <span className="line-clamp-2 text-sm font-medium leading-snug">{exercise.name}</span>
+      <span className="num mt-0.5 block text-xs text-mv-ink/75">
         {c.sets(sets)}
       </span>
     </div>

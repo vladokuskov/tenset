@@ -14,6 +14,7 @@ export const builderMessages = defineMessages({
   en: {
     plan: 'Plan',
     week: 'Week',
+    setsThisWeek: 'Sets this week',
     today: 'Today',
     rest: 'Rest',
     /** Under the day chip, which is about 44px wide. */
@@ -247,6 +248,7 @@ export const builderMessages = defineMessages({
   uk: {
     plan: 'План',
     week: 'Тиждень',
+    setsThisWeek: 'Підходи за тиждень',
     today: 'Сьогодні',
     rest: 'Відпочинок',
     restShort: 'Відп.',

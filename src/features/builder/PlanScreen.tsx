@@ -4,9 +4,11 @@ import { useEffect } from 'react'
 import { NotMedicalAdvice } from '../../app/brand'
 import { dayFromSlug, daySlug, todayIndex } from '../../app/days'
 import { useWeek } from '../../app/useWeek'
+import { mixTotal } from '../../domain/movement'
 import { useMessages } from '../../i18n/messages'
 import { InstallNudge } from '../../sw'
-import { Button, buttonClass, IconButton, Page, PageBody, PageHeader, Section, useSheet } from '../../ui'
+import { Button, buttonClass, IconButton, MovementMix, Page, PageBody, PageHeader, Section, useSheet } from '../../ui'
+import { uiMessages } from '../../ui/messages'
 import { DESKTOP_QUERY, useMediaQuery } from '../../ui/useMediaQuery'
 import { CalendarSheet, ExportDialog, ImageSheet, PasteSheet } from '../export'
 import { ProgramsSheet } from '../programs'
@@ -24,6 +26,7 @@ const route = getRouteApi('/')
 export function PlanScreen() {
   const view = useWeek()
   const m = useMessages(builderMessages)
+  const um = useMessages(uiMessages)
   const search = route.useSearch()
   const desktop = useMediaQuery(BOARD_QUERY)
   const wide = useMediaQuery(DESKTOP_QUERY)
@@ -133,6 +136,13 @@ export function PlanScreen() {
               {m.useTemplate}
             </Button>
           </div>
+        )}
+        {mixTotal(view.mix) > 0 && (
+          <Section title={um.movementMix} description={m.setsThisWeek} className="mt-6">
+            <div className="rounded-xl bg-surface p-4">
+              <MovementMix mix={view.mix} size="big" legend />
+            </div>
+          </Section>
         )}
         <Section title={m.week} className="mt-6">
           <WeekList view={view} />

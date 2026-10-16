@@ -7,7 +7,7 @@ import type { Entry, Program } from '../../domain/schema'
 import { useLocale } from '../../i18n/messages'
 import { usePrefsStore } from '../../store/prefs.store'
 import { useProgramStore } from '../../store/program.store'
-import { IconButton, Stepper, cx } from '../../ui'
+import { IconButton, Stepper, cx, mvBg } from '../../ui'
 import { ExerciseCardMedia, primaryGroupNames, useRoles } from '../catalog'
 import { defaultReps, isCustom, repsText, rowMeta, supersetLabels, unitOf, type AnyExercise, type SupersetLabel } from '../shared/exercise'
 import { exerciseFor } from '../shared/lookup'
@@ -15,6 +15,7 @@ import { sharedMessages } from '../shared/messages'
 import { useChange } from '../shared/useChange'
 import { SORT_LABEL, SortableLists, type SortMove } from './dnd'
 import { builderMessages } from './messages'
+import { groupOf } from './movement'
 import { useSortableItem } from './useSortable'
 
 type Open = (entryId: string) => void
@@ -32,7 +33,7 @@ type RowProps = {
 
 type RefFn = (el: Element | null) => void
 
-const TAG = 'num inline-flex h-8 items-center rounded-full bg-surface-2 px-3 text-sm text-ink-2'
+const TAG = 'num inline-flex h-8 items-center rounded-full bg-white/55 px-3 text-sm text-mv-ink'
 
 // A disabled dnd-kit sortable still stamps role="button" and aria-disabled on the row, which
 // disables every control inside it for assistive tech, so single rows skip the hook entirely.
@@ -72,8 +73,8 @@ function EntryRowView({
     <>
       <ExerciseCardMedia exercise={exercise} size="sm" className="@max-3xs:hidden" />
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 break-words hyphens-auto text-base font-medium leading-snug text-ink @max-3xs:line-clamp-none">{exercise.name}</span>
-        <span className="mt-0.5 line-clamp-2 text-sm text-ink-2">
+        <span className="line-clamp-2 break-words hyphens-auto text-base font-medium leading-snug @max-3xs:line-clamp-none">{exercise.name}</span>
+        <span className="mt-0.5 line-clamp-2 text-sm text-mv-ink/75">
           {rowMeta(exercise, primaryGroupNames(roles), locale)}
         </span>
       </span>
@@ -84,7 +85,7 @@ function EntryRowView({
   return (
     <li
       ref={rowRef}
-      className={cx('@container relative px-1 py-2', isDragging && 'z-10 rounded-lg bg-raised shadow-float')}
+      className={cx('@container relative rounded-xl py-2.5 pl-1 pr-1.5 text-mv-ink', mvBg[groupOf(exercise)], isDragging && 'z-10 shadow-float')}
       data-entry={entry.id}
       data-superset={superset?.label}
       {...{ [SORT_LABEL]: m.sortLabel(exercise.name, index + 1) }}
@@ -92,7 +93,7 @@ function EntryRowView({
       {superset && !isDragging && (
         <span
           aria-hidden
-          className={cx('absolute -left-1 w-0.5 rounded-full bg-ink-3', superset.position === 1 ? 'bottom-0 top-4' : 'bottom-4 top-0')}
+          className={cx('absolute -left-2 w-0.5 rounded-full bg-ink-3', superset.position === 1 ? '-bottom-1 top-5' : '-top-1 bottom-5')}
         />
       )}
       <div className="flex items-center justify-between gap-1 @max-[9rem]:flex-wrap">
@@ -101,7 +102,7 @@ function EntryRowView({
             ref={handleRef}
             type="button"
             aria-label={m.reorder(exercise.name)}
-            className="hit flex h-12 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-ink-3 hover:text-ink-2 active:cursor-grabbing"
+            className="hit flex h-12 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-mv-ink/60 hover:text-mv-ink active:cursor-grabbing"
           >
             <GripVertical size={18} strokeWidth={1.75} aria-hidden />
           </button>
@@ -113,11 +114,11 @@ function EntryRowView({
             {head}
           </Link>
         )}
-        <IconButton icon={Ellipsis} size={36} label={m.optionsFor(exercise.name)} onClick={() => onOpen(entry.id)} />
+        <IconButton icon={Ellipsis} size={36} variant="fill" label={m.optionsFor(exercise.name)} onClick={() => onOpen(entry.id)} />
       </div>
       <div className={cx('mt-1 flex flex-wrap items-center gap-x-3 gap-y-2', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]', '@max-3xs:pl-0')}>
         {superset && (
-          <span className="num inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-ink-3 px-1.5 text-sm font-semibold text-ink">
+          <span className="num inline-flex h-8 min-w-8 items-center justify-center rounded-md border border-mv-ink/45 bg-white/55 px-1.5 text-sm font-semibold">
             <span aria-hidden>{superset.label}</span>
             <span className="sr-only">{m.supersetMarker(superset.letter, superset.position)}</span>
           </span>
@@ -127,6 +128,7 @@ function EntryRowView({
           onChange={(v) => change(sm.setsChanged(exercise.name, v), () => setSets(entry.id, v))}
           label={sm.setsFor(exercise.name)}
           unit={m.setsUnit}
+          tone="fill"
           decrementLabel={sm.fewerSetsOf(exercise.name)}
           incrementLabel={sm.moreSetsOf(exercise.name)}
         />
@@ -135,12 +137,12 @@ function EntryRowView({
           onClick={() => onOpenReps(entry.id)}
           aria-label={m.repsButton(repsText(reps, unit, locale), !entry.reps, exercise.name)}
           className={cx(
-            'hit inline-flex h-8 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors hover:bg-surface-2',
-            entry.reps ? 'border-line-strong text-ink' : 'border-dashed border-line-strong text-ink-2',
+            'hit inline-flex h-8 items-center gap-1 rounded-full border border-mv-ink/30 px-3 text-sm font-medium transition-colors hover:bg-white/45',
+            entry.reps ? 'text-mv-ink' : 'border-dashed text-mv-ink/75',
           )}
         >
           <span className="num">{repsText(reps, unit, locale)}</span>
-          <ChevronDown size={14} strokeWidth={2} aria-hidden className="text-ink-3" />
+          <ChevronDown size={14} strokeWidth={2} aria-hidden className="text-mv-ink/60" />
         </button>
         {entry.restSec !== undefined && (
           <span className={TAG}>
@@ -151,7 +153,7 @@ function EntryRowView({
         {entry.rir !== undefined && <span className={TAG}>{formatRir(entry.rir, locale)}</span>}
       </div>
       {entry.note && (
-        <p className={cx('mt-1.5 break-words text-sm text-ink-2', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]', '@max-3xs:pl-0')}>
+        <p className={cx('mt-1.5 break-words text-sm text-mv-ink/75', sortable ? 'pl-[5.5rem]' : 'pl-[3.75rem]', '@max-3xs:pl-0')}>
           <span aria-hidden>{entry.note}</span>
           <span className="sr-only">{m.noteOn(entry.note)}</span>
         </p>
@@ -183,14 +185,14 @@ export function EntryList({ program, day, onOpen, onOpenReps }: { program: Progr
   return (
     <SortableLists lists={{ [key]: d.entries.map((e) => e.id) }} onMove={onMove}>
       {(lists) => (
-        <ul className="divide-y divide-line rounded-xl bg-surface px-2">
+        <ul className="flex flex-col gap-2">
           {(lists[key] ?? []).map((id, index) => {
             const entry = byId.get(id)
             if (!entry) return null
             const ex = exerciseFor(entry.exerciseId, catalog, program)
             if (!ex) {
               return (
-                <li key={id} className="flex items-center gap-2 py-1 pl-2 text-sm text-ink-2">
+                <li key={id} className="flex items-center gap-2 rounded-xl bg-surface py-1 pl-3 pr-1.5 text-sm text-ink-2">
                   <span className="min-w-0 flex-1">{m.goneExercise}</span>
                   <IconButton
                     icon={Trash2}
