@@ -3,7 +3,7 @@ import { cx } from './cx'
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'link'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 export type ButtonStyleProps = { variant?: ButtonVariant; size?: ButtonSize; block?: boolean }
-export type IconButtonVariant = 'ghost' | 'tonal' | 'solid' | 'fill'
+export type IconButtonVariant = 'ghost' | 'tonal' | 'solid' | 'fill' | 'inverse'
 
 const base =
   'inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-medium transition-[background-color,color,box-shadow,scale] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45'
@@ -38,6 +38,7 @@ const iconVariants: Record<IconButtonVariant, string> = {
   tonal: 'bg-surface-2 text-ink hover:bg-line',
   solid: 'bg-ink text-on-ink hover:bg-ink/88',
   fill: 'text-mv-ink/75 hover:bg-white/45 hover:text-mv-ink',
+  inverse: 'text-on-ink hover:bg-on-ink/10',
 }
 
 export function iconButtonClass({ variant = 'ghost', size = 44 }: { variant?: IconButtonVariant; size?: 36 | 44 }, className?: string) {

@@ -19,7 +19,7 @@ export function UpdatePrompt() {
         <button type="button" className="hit h-10 shrink-0 rounded-md px-3 text-sm font-semibold text-accent-soft hover:bg-on-ink/10" onClick={apply}>
           {m.reload}
         </button>
-        <IconButton icon={X} label={m.later} size={36} className="text-on-ink hover:bg-on-ink/10" onClick={() => setDismissed(true)} />
+        <IconButton icon={X} label={m.later} size={36} variant="inverse" onClick={() => setDismissed(true)} />
       </div>
     </div>
   )
