@@ -77,3 +77,16 @@ test('optional groups under their range read "some sets", not light or moderate'
   await expect(row).toContainText('some sets')
   await expect(row).not.toContainText(/light|moderate/)
 })
+
+test('by movement panel follows the scope chips', async ({ page }) => {
+  const panel = page.locator('section', { has: page.getByRole('heading', { name: 'By movement' }) })
+  await expect(panel).toBeVisible()
+  await expect(panel.getByRole('listitem')).toHaveCount(6)
+  await expect(panel.getByRole('listitem').filter({ hasText: 'Push' })).toContainText(/\d+ exercises?/)
+  const week = await panel.locator('p').first().textContent()
+
+  await page.getByRole('group', { name: 'Scope' }).getByRole('button', { name: 'Mon' }).click()
+  await expect(panel.locator('p').first()).not.toHaveText(week ?? '')
+  await page.getByRole('group', { name: 'Scope' }).getByRole('button', { name: 'Wed' }).click()
+  await expect(panel.locator('p').first()).toHaveText('0 sets by movement pattern')
+})

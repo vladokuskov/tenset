@@ -31,6 +31,7 @@ export const desktopMessages = defineMessages({
     thisWeek: 'This week',
     mapLabel: 'Weekly volume by muscle',
     trainedThisWeek: 'Trained this week',
+    byMovement: 'By movement',
     setsSr: (_n: number): string => ' sets',
     weekMap: 'Week map',
   },
@@ -67,6 +68,7 @@ export const desktopMessages = defineMessages({
     thisWeek: 'Цей тиждень',
     mapLabel: 'Тижневий обсяг за мʼязами',
     trainedThisWeek: 'Тренуються цього тижня',
+    byMovement: 'За рухами',
     setsSr: (n) =>
       ` ${plural('uk', n, { one: 'підхід', few: 'підходи', many: 'підходів', other: 'підходу' })}`,
     weekMap: 'Карта тижня',

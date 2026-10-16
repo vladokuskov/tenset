@@ -229,3 +229,15 @@ test.describe('1280 and up: catalog drawer, board and map panel', () => {
     await expect(status).toHaveText('Hover a muscle')
   })
 })
+
+test.describe('map panel movement mix', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+
+  test('shows the week mix below the cobalt map', async ({ page }) => {
+    desktopOnly()
+    await startFromTemplate(page, 'Upper/Lower 4x')
+    const panel = page.getByRole('complementary', { name: 'Week map' })
+    await expect(panel.getByRole('heading', { name: 'By movement' })).toBeVisible()
+    await expect(panel.getByRole('img', { name: /^Movement mix: Push \d+ sets/ })).toBeVisible()
+  })
+})
