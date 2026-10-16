@@ -19,6 +19,8 @@ export type StepperProps = {
   decrementLabel?: string
   incrementLabel?: string
   disabled?: boolean
+  /** fill: sits on a movement color, so it uses translucent white and mv-ink in both themes. */
+  tone?: 'default' | 'fill'
   className?: string
 }
 
@@ -34,6 +36,7 @@ export function Stepper({
   decrementLabel,
   incrementLabel,
   disabled,
+  tone = 'default',
   className,
 }: StepperProps) {
   const m = useMessages(uiMessages)
@@ -58,8 +61,11 @@ export function Stepper({
     set(map[e.key])
   }
 
-  const btn =
-    'hit flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink transition-[background-color,scale] duration-150 hover:bg-line active:scale-90 disabled:pointer-events-none disabled:opacity-35'
+  const fill = tone === 'fill'
+  const btn = cx(
+    'hit flex size-9 shrink-0 items-center justify-center rounded-full transition-[background-color,scale] duration-150 active:scale-90 disabled:pointer-events-none disabled:opacity-35',
+    fill ? 'bg-white/55 text-mv-ink hover:bg-white/75' : 'bg-surface-2 text-ink hover:bg-line',
+  )
 
   return (
     <div role="group" aria-label={label} className={cx('inline-flex items-center gap-1', className)}>
@@ -85,7 +91,7 @@ export function Stepper({
         className="num flex min-w-10 flex-col items-center justify-center rounded-sm px-1 leading-none"
       >
         <span className="text-md font-semibold">{value}</span>
-        {unit && <span className="mt-0.5 text-[0.6875rem] text-ink-3">{unit}</span>}
+        {unit && <span className={cx('mt-0.5 text-[0.6875rem]', fill ? 'text-mv-ink/75' : 'text-ink-3')}>{unit}</span>}
       </div>
       <button
         type="button"
