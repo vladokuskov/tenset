@@ -1,17 +1,17 @@
 import { attachHand, root1d } from '../constraints.ts'
-import { bodyCapsules } from '../collide.ts'
-import { fk, localToWorld, segPos, sitePos } from '../fk.ts'
-import type { ImplementSpec } from '../implements.ts'
+import { bodyCapsules, segmentDistance } from '../collide.ts'
+import { fk, segPos, sitePos } from '../fk.ts'
+import { siteWorld, type ImplementSpec } from '../implements.ts'
 import { around, band, bandNode, bandPose, segmentPose } from '../implements/index.ts'
 import { palmRest } from '../implements/press-vertical-bodyweight.ts'
 import { PLYO_BOX, plyoBox } from '../implements/shared.ts'
 import { dls } from '../ik.ts'
-import { add, DEG, lerp, norm, qalign, qconj, qid, qrot, RAD, scale, sub, type V3 } from '../math.ts'
+import { add, cross, DEG, dot, len, lerp, lerp3, norm, qalign, qconj, qid, qrot, RAD, reject, scale, sub, type V3 } from '../math.ts'
 import { setDofs, zeroQ, type Contact, type ImplementPose, type Pose, type Skeleton } from '../skeleton.ts'
 import { DEFAULT_TEMPO, minJerk, phaseAt, type Tempo } from '../timing.ts'
 import { SCHEMAS, type ParamsOf } from './schemas.ts'
 import { monotoneCubic } from './solve.ts'
-import { clearNode } from './press-cable.ts'
+import { closestOn } from './press-cable.ts'
 import { ringContacts, ringPoses, ringRig, ringSpread, type RingRig } from './rings.ts'
 import { RING_HEIGHT } from '../implements/index.ts'
 import { memo, type Setup, type Template } from './types.ts'
@@ -117,17 +117,15 @@ const FOOT_SINK_BOX = 30
 
 /**
  * Band push-up: the strip crosses the upper back (an arc round the trunk at the armpits, thorax2 frame: lateral and
- * back half axes, m), wraps over the back of each shoulder (a node lifted off the straight run just far enough to clear
- * the shoulder, checked every frame), passes the outside of each deltoid (humerus frame) and runs to the floor beside
- * the little finger, then under the palm. The runs down the arms face the hero camera (az -45), so they read as a band
+ * back half axes, m), wraps the outside and back of each shoulder like a cable over a pulley (a sphere of `BAND_WRAP.r` on the
+ * upper arm's axis by the shoulder: straight in from the palm, tangent onto the sphere, round it and tangent off towards
+ * the back arc, every frame) and runs under the palm from the little finger edge. Every point
+ * faces away from the body there, so the strip lies flat on it from any camera angle
  */
-const BAND_BACK = { at: [0, 0.03, 0.083] as V3, r: [0.19, 0.15] as [number, number], from: -40, to: -140 }
-const BAND_DELT: V3 = [0.08, -0.07, -0.015]
-/** the back-of-shoulder node: off the shoulder joint centre (thorax frame: lateral, towards the head, back), m, and the
- * way it moves if the upper arm still needs room */
-const BAND_REAR: V3 = [0.07, -0.02, -0.065]
-const BAND_REAR_DIR: V3 = [0, 1, -0.6]
-const BAND_FACE: V3 = [-Math.SQRT1_2, 0, Math.SQRT1_2]
+const BAND_BACK = { at: [0, 0.05, 0.083] as V3, r: [0.2, 0.165] as [number, number], from: -35, to: -145 }
+/** the shoulder pulley: radius (m, just outside the deltoid and the top of the upper arm), how far down the upper arm
+ * its centre may slide (fraction of the humerus), the side it wraps (thorax frame: outside and behind) and points */
+const BAND_WRAP = { r: 0.072, reach: 0, side: [1, 0, -1] as V3, n: 5 }
 /** under the palm (palm rest frame, from the grip site at the finger roots): the palm's middle and the little finger edge */
 const BAND_PALM = { mid: [0, 0.001, -0.045] as V3, edge: [0.05, 0.001, -0.045] as V3 }
 
@@ -158,6 +156,35 @@ type Ctx = {
   pole: V3
   /** plank pitch along the rep (deg above horizontal, head up) */
   pitch: (c: number) => number
+}
+
+const wrapId = (s: 'l' | 'r', k: number) => `wrap_${s}${k}`
+
+/**
+ * A band from `a` to `b` wrapped round a sphere (centre `c`, radius `r`) like a cable over a pulley, in the plane
+ * through the three points, on the `side` of the centre: tangent off the sphere towards each end and round it, or
+ * straight past it when the line a-b already clears it on that side. `n` points, each with its outward normal and the
+ * plane normal.
+ */
+export function pulley(a: V3, b: V3, c: V3, r: number, side: V3, n: number): { pos: V3; out: V3; axis: V3 }[] {
+  const pa = sub(a, c), pb = sub(b, c)
+  const axis = norm(cross(pa, pb))
+  const near = sub(closestOn(a, b, c), c)
+  const e1 = norm(reject(len(near) > 1e-4 ? scale(near, -1) : side, axis))
+  const e2 = cross(axis, e1)
+  const wrap = (x: number) => Math.atan2(Math.sin(x), Math.cos(x))
+  // in-plane angle (from e1) of the tangent point from p on the e1 side
+  const tangent = (p: V3) => {
+    const phi = Math.atan2(dot(p, e2), dot(p, e1))
+    const t = Math.acos(r / Math.max(len(p), r * 1.0001))
+    return Math.cos(phi - t) > Math.cos(phi + t) ? wrap(phi - t) : wrap(phi + t)
+  }
+  const t0 = tangent(pa), t1 = tangent(pb)
+  return Array.from({ length: n }, (_, k) => {
+    const t = lerp(t0, t1, k / (n - 1))
+    const out = add(scale(e1, Math.cos(t)), scale(e2, Math.sin(t)))
+    return { pos: add(c, scale(out, r)), out, axis }
+  })
 }
 
 const ramp = (c: number, a: number, b: number) => minJerk((c - a) / (b - a))
@@ -424,13 +451,14 @@ const context = memo((p: P, skel: Skeleton): Ctx => {
   }
   if (p.implement === 'band') {
     const under = (side: 'l' | 'r', at: V3) => ({ implement: palms.id, site: side, at: side === 'l' ? at : ([-at[0], at[1], at[2]] as V3), face: [0, 1, 0] as V3 })
-    const delt = (s: 'l' | 'r') => ({ implement: `delt_${s}`, face: BAND_FACE })
-    implements_.push(...['back', 'delt_l', 'delt_r', 'rear_l', 'rear_r'].map((id) => bandNode(id)), band({
+    const wrap = (s: 'l' | 'r') => Array.from({ length: BAND_WRAP.n }, (_, k) => ({ implement: wrapId(s, k), face: [1, 0, 0] as V3 }))
+    const ids = (['l', 'r'] as const).flatMap((s) => Array.from({ length: BAND_WRAP.n }, (_, k) => wrapId(s, k)))
+    implements_.push(...['back', ...ids].map((id) => bandNode(id)), band({
       size: 'heavy',
       path: [
-        under('l', BAND_PALM.mid), under('l', BAND_PALM.edge), delt('l'), 'rear_l',
+        under('l', BAND_PALM.mid), under('l', BAND_PALM.edge), ...wrap('l'),
         ...around('back', { r: BAND_BACK.r, from: BAND_BACK.from, to: BAND_BACK.to, n: 7, center: BAND_BACK.at }),
-        'rear_r', delt('r'), under('r', BAND_PALM.edge), under('r', BAND_PALM.mid),
+        ...wrap('r').reverse(), under('r', BAND_PALM.edge), under('r', BAND_PALM.mid),
       ],
     }))
   }
@@ -462,20 +490,19 @@ function sample(u: number, p: P, skel: Skeleton): Pose {
     const f = fk(skel, q)
     const mirror = (v: V3): V3 => [-v[0], v[1], v[2]]
     const back = segmentPose(skel, f, 'back', 'thorax2')
-    const caps = bodyCapsules(skel, f)
-    const dir = norm(qrot(back.rot, BAND_REAR_DIR))
     implements_.push(back)
     for (const s of ['l', 'r'] as const) {
       const m = (v: V3): V3 => (s === 'l' ? v : mirror(v))
-      const delt = localToWorld(skel, f, `humerus_${s}`, m(BAND_DELT))
+      const palm = add(siteWorld(ctx.palms, ctx.palmPose, s).pos, qrot(ctx.palmPose.rot, m(BAND_PALM.edge)))
       const ang = BAND_BACK.from * DEG
-      const arc = localToWorld(skel, f, 'thorax2', add(BAND_BACK.at, m([BAND_BACK.r[0] * Math.cos(ang), 0, BAND_BACK.r[1] * Math.sin(ang)])))
-      // on the back of the shoulder (thorax frame off the joint centre), lifted only as far as the upper arm needs
-      const near = caps.filter((c) => c.region === `upperarm_${s}`)
-      const base = add(segPos(skel, f, `humerus_${s}`), qrot(back.rot, m(BAND_REAR)))
-      const rear = clearNode(near, delt, arc, base, dir, 0.004, 0.06)
-      // world-aligned nodes, so the strip's face (BAND_FACE) is a world direction
-      implements_.push({ id: `delt_${s}`, pos: delt, rot: qid() }, { id: `rear_${s}`, pos: rear, rot: qid() })
+      const arc = qrot(back.rot, add(BAND_BACK.at, m([BAND_BACK.r[0] * Math.cos(ang), 0, BAND_BACK.r[1] * Math.sin(ang)])))
+      const to = add(back.pos, arc)
+      // the pulley sits on the upper arm's axis where the straight band would cross it, near the shoulder
+      const joint = segPos(skel, f, `humerus_${s}`), elbow = segPos(skel, f, `forearm_${s}`)
+      const k = Math.min(BAND_WRAP.reach, segmentDistance(joint, elbow, palm, to).s)
+      const wrap = pulley(palm, to, lerp3(joint, elbow, k), BAND_WRAP.r, qrot(back.rot, m(BAND_WRAP.side)), BAND_WRAP.n)
+      // each node's local X is its outward normal (the path's face)
+      wrap.forEach((w, k) => implements_.push({ id: wrapId(s, k), pos: w.pos, rot: qalign([1, 0, 0], [0, 1, 0], w.out, w.axis) }))
     }
     implements_.push(bandPose())
   }
