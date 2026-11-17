@@ -40,7 +40,7 @@ Nobody else ships a detailed body map that fills in live while *planning* a week
 
 ## Brand Commitments
 
-- Name: **Tenset** (nods to roughly ten weekly sets per muscle). Logo: the "Mix t" mark, a lowercase t stacked from movement-colored blocks on an ink tile, with a lowercase wordmark (`docs/brand/`).
+- Name: **Tenset** (nods to roughly ten weekly sets per muscle). Logo: the "Ladder t" mark, a lowercase t built from ten bars shaded down the cobalt volume scale on an ink tile, with a lowercase wordmark (`docs/brand/`). App icons (96 px and up) use the ten-bar cut; the favicon and in-app mark use a five-bar cut of the same t.
 - Voice: neutral, plain, factual. No hype, no fear, no medical claims. A "not medical advice" line appears in first run, exercise detail, coverage and print.
 - No brand names or logos of equipment makers or gyms anywhere.
 
