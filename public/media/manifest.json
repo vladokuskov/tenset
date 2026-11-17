@@ -360,16 +360,16 @@
     }
   },
   "125": {
-    "poster": "media/posters/125-c2aea3aee714.webp",
-    "loop": "media/loops/125-c2aea3aee714.mp4",
-    "hash": "c2aea3aee714",
+    "poster": "media/posters/125-94a28ffdbbf4.webp",
+    "loop": "media/loops/125-94a28ffdbbf4.mp4",
+    "hash": "94a28ffdbbf4",
     "frames": 111,
     "duration": 3.7,
     "inputs": {
       "body": "b66660eb",
       "skeleton": "b4e70b3d",
       "record": "03905006",
-      "motion": "27b2639f",
+      "motion": "7b42a013",
       "camera": "391afcc7",
       "renderer": "f46e5060"
     }
