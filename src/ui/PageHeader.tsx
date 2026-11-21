@@ -1,10 +1,9 @@
-import { Link, useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
-import { ChevronLeft, Settings } from 'lucide-react'
+import { useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
+import { ChevronLeft } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useMessages } from '../i18n/messages'
 import { cx } from './cx'
 import { uiMessages } from './messages'
-import { iconButtonClass } from './styles'
 
 export type BackTarget = {
   /** Where back goes when there is no in-app history (deep link, Home Screen launch). */
@@ -47,8 +46,6 @@ export type PageHeaderProps = {
   actions?: ReactNode
   /** Rendered under the title, e.g. day chips or a segmented control. */
   children?: ReactNode
-  /** Top-level screens link to Settings from the toolbar (the desktop rail has its own link). */
-  settings?: boolean
   className?: string
 }
 
@@ -56,8 +53,7 @@ export type PageHeaderProps = {
  * Sticky translucent toolbar plus a large title that scrolls away; the title moves into the
  * toolbar once it is out of view so context is never lost.
  */
-export function PageHeader({ title, compactTitle, subtitle, back, actions, children, settings, className }: PageHeaderProps) {
-  const m = useMessages(uiMessages)
+export function PageHeader({ title, compactTitle, subtitle, back, actions, children, className }: PageHeaderProps) {
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [compact, setCompact] = useState(false)
 
@@ -79,11 +75,6 @@ export function PageHeader({ title, compactTitle, subtitle, back, actions, child
             {back && <BackButton {...back} iconOnly={compact} />}
           </div>
           <div className="flex shrink-0 items-center justify-end gap-1">
-            {settings && (
-              <Link to="/settings" aria-label={m.nav.settings} title={m.nav.settings} className={iconButtonClass({}, 'desktop:hidden')}>
-                <Settings size={22} strokeWidth={1.75} aria-hidden />
-              </Link>
-            )}
             {actions}
           </div>
           <p

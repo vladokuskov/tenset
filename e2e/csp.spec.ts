@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { expect, startFromTemplate, test } from './fixtures'
+import { expect, test } from './fixtures'
 
 // vite preview ignores vercel.json, so the test applies the production CSP to documents itself.
 type VercelHeaders = { headers: { source: string; headers: { key: string; value: string }[] }[] }
@@ -28,9 +28,7 @@ test('the production CSP reports no violations', async ({ page }) => {
     violations.push(...v.map((x) => `${where}: ${x}`))
   }
 
-  await startFromTemplate(page, 'Upper/Lower 4x')
-  await collect('plan')
-  for (const url of ['/day/mon?sheet=add', '/body', '/exercises', '/exercise/barbell-bench-press', '/settings', '/?sheet=share', '/print']) {
+  for (const url of ['/', '/?sheet=equipment', '/?sheet=muscle', '/privacy', '/credits']) {
     await page.goto(url)
     await expect(page.locator('main')).toBeVisible()
     await collect(url)

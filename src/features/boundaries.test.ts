@@ -32,24 +32,12 @@ function crossImports(test: (from: string, to: string, rest: string) => boolean)
 
 // Older reaches into another feature, to move behind an index or into shared. Nothing new goes here.
 const KNOWN = new Set([
-  'builder -> catalog/FilterSelect',
-  'builder -> settings/CustomExerciseSheet',
-  'catalog -> bodymap/anatomy',
-  'catalog -> bodymap/AnatomyFigure',
-  'catalog -> bodymap/fills',
-  'catalog -> figure/motion/clock',
-  'catalog -> figure/motion/compose',
   'catalog -> figure/motion/library',
-  'catalog -> figure/motion/MotionStage',
-  'export -> bodymap/anatomy',
-  'export -> bodymap/messages',
-  'export -> catalog/search',
-  'export -> share/names',
-  'export -> share/resolveNames',
-  'review -> catalog/ExerciseMotion',
-  'review -> catalog/useRoles',
   'review -> figure/highlight',
-  'welcome -> settings/EquipmentPicker',
+  'review -> figure/motion/clock',
+  'review -> figure/motion/compose',
+  'review -> figure/motion/library',
+  'review -> figure/motion/MotionStage',
 ])
 
 describe('feature boundaries', () => {

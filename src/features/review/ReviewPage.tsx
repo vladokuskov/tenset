@@ -1,9 +1,7 @@
-import { Link } from '@tanstack/react-router'
 import { Check, ChevronLeft, ChevronRight, Circle, ClipboardCheck, RotateCw, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCatalog } from '../../app/useCatalog'
 import type { Exercise } from '../../domain/schema'
-import { useIsCustomized } from '../catalog/useRoles'
 import { Button, ChipGroup, EmptyState, IconButton, Pill, showToast } from '../../ui'
 import { cx } from '../../ui/cx'
 import { fetchQueue, postDecision, postRestore } from './api'
@@ -275,7 +273,6 @@ function Notices({ queue }: { queue: QueueResponse }) {
 }
 
 function Item({ item, exercise, filterDone, status }: { item: ReviewItem; exercise: Exercise; filterDone: boolean; status: StatusFilter }) {
-  const customized = useIsCustomized(exercise)
   return (
     <article>
       {filterDone && (
@@ -289,9 +286,6 @@ function Item({ item, exercise, filterDone, status }: { item: ReviewItem; exerci
         </Pill>
         <span className="num text-sm text-ink-3">{item.file}</span>
         <span className="flex gap-3 text-sm">
-          <Link to="/exercise/$slug" params={{ slug: exercise.slug }} className="font-medium text-accent underline-offset-2 hover:underline">
-            Detail page
-          </Link>
           <a href={`/dev/motion?id=${exercise.id}&live=1`} className="font-medium text-accent underline-offset-2 hover:underline">
             Motion view
           </a>
@@ -302,7 +296,6 @@ function Item({ item, exercise, filterDone, status }: { item: ReviewItem; exerci
           <span className="font-medium">Saved note:</span> {item.fields.note}
         </p>
       )}
-      {customized && <p className="mb-4 text-sm text-ink-2">Your local "Edit how this counts" override changes the live figure tint for this exercise.</p>}
 
       <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         <LoopPanel item={item} />

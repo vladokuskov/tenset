@@ -19,11 +19,11 @@ describe('shipped data', () => {
     }
   })
 
-  it('bundles only the poster path from the media manifest', () => {
+  it('bundles only the poster and loop paths from the media manifest', () => {
     const json = JSON.stringify({ 101: { poster: 'p/101.webp', loop: 'l/101.mp4', inputs: { body: 'x' } }, 102: { loop: 'l/102.mp4' } })
-    expect(JSON.parse(posterManifest(json))).toEqual({ 101: { poster: 'p/101.webp' } })
+    expect(JSON.parse(posterManifest(json))).toEqual({ 101: { poster: 'p/101.webp', loop: 'l/101.mp4' } })
     const entries = Object.values(manifest as Record<string, object>)
     expect(entries.length).toBeGreaterThan(0)
-    for (const entry of entries) expect(Object.keys(entry)).toEqual(['poster'])
+    for (const entry of entries) expect(Object.keys(entry).filter((k) => k !== 'loop')).toEqual(['poster'])
   })
 })

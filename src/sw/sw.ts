@@ -11,8 +11,8 @@ declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (string | { url:
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
-// Client-side routes (including /shared#...) get the cached shell. Paths with a file extension are real files.
-registerRoute(new NavigationRoute(createHandlerBoundToURL(`${import.meta.env.BASE_URL}index.html`), { denylist: [/\/[^/]+\.[a-z0-9]+$/i, /^\/api\//, /^\/\.well-known\//] }))
+// Client-side routes get the cached shell. Paths with a file extension are real files.
+registerRoute(new NavigationRoute(createHandlerBoundToURL(`${import.meta.env.BASE_URL}index.html`), { denylist: [/\/[^/]+\.[a-z0-9]+$/i] }))
 
 // Exercise loops are cached on first play; Safari needs range responses for video.
 registerRoute(
@@ -29,22 +29,10 @@ const isPoster = (url: URL) => url.origin === self.location.origin && url.pathna
 const posters = new CacheFirst({ cacheName: 'gb-posters', plugins: [new ExpirationPlugin({ maxEntries: 600, purgeOnQuotaError: true })] })
 registerRoute(({ url }) => isPoster(url), posters)
 
-// The page sends the posters of the user's own days (src/sw/warmPosters.ts); fetched one at a time, missing ones only.
-async function warmPosters(urls: unknown[], event: ExtendableEvent) {
-  const cache = await caches.open('gb-posters')
-  for (const u of urls) {
-    if (typeof u !== 'string') continue
-    const url = new URL(u, self.location.href)
-    if (!isPoster(url) || (await cache.match(url))) continue
-    await posters.handle({ event, request: new Request(url, { priority: 'low' }) }).catch(() => undefined)
-  }
-}
-
 self.addEventListener('message', (event) => {
-  const data = event.data as { type?: string; urls?: unknown } | null
+  const data = event.data as { type?: string } | null
   // A new version waits until the page asks it to take over (the in-app update prompt).
   if (data?.type === 'SKIP_WAITING') void self.skipWaiting()
-  if (data?.type === 'WARM_POSTERS' && Array.isArray(data.urls)) event.waitUntil(warmPosters(data.urls, event))
 })
 
 self.addEventListener('activate', (event) => {

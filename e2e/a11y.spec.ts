@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { Page } from '@playwright/test'
-import { expect, isDesktop, openDay, openSheet, shareLink, startFromTemplate, test } from './fixtures'
+import { expect, test } from './fixtures'
 
 function axeSource(): string | null {
   try {
@@ -34,88 +34,21 @@ async function seriousViolations(page: Page): Promise<string[]> {
 }
 
 test.describe('axe: no serious or critical violations', () => {
-  // Each test runs axe on several screens, which takes most of the default 30s on a busy machine.
   test.slow()
   test.skip(!AXE, 'axe-core is not installed (add it as a devDependency or set AXE_CORE_PATH)')
 
   for (const scheme of ['light', 'dark'] as const) {
-    test(`core screens (${scheme})`, async ({ page }) => {
-      test.slow()
+    test(`library screens (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme })
-      await startFromTemplate(page, 'Upper/Lower 4x')
       const found: Record<string, string[]> = {}
-      const check = async (name: string) => {
+      for (const url of ['/', '/?q=zzzz', '/?sheet=equipment', '/?sheet=muscle', '/privacy', '/credits']) {
+        await page.goto(url)
+        await expect(page.locator('main')).toBeVisible()
         await page.waitForTimeout(400)
         const v = await seriousViolations(page)
-        if (v.length) found[name] = v
+        if (v.length) found[url] = v
       }
-
-      await check('plan')
-      if (!isDesktop(page)) {
-        // Scrolled, the header repeats the title in its toolbar.
-        await page.mouse.wheel(0, 600)
-        await expect(page.locator('[data-compact]')).toBeAttached()
-        await check('plan scrolled')
-      }
-      await openDay(page, 'Monday')
-      await check('day')
-      await page.getByRole('button', { name: 'Add exercise' }).click()
-      await expect(openSheet(page, 'Add to Monday')).toBeVisible()
-      await check('add sheet')
-
-      await page.goto('/body')
-      await expect(page.getByRole('img', { name: /^Weekly volume by muscle/ }).locator('path').first()).toBeAttached()
-      await check('body')
-      await page.getByRole('button', { name: /^Chest/ }).first().click()
-      await expect(openSheet(page, 'Chest')).toBeVisible()
-      await check('muscle sheet')
-
-      await page.goto('/exercises')
-      await expect(page.getByRole('link', { name: /Barbell Bench Press/ }).first()).toBeVisible()
-      await check('exercises')
-
-      await page.goto('/exercise/barbell-bench-press')
-      await expect(page.getByRole('heading', { level: 1, name: 'Barbell Bench Press' })).toBeVisible()
-      await check('detail')
-
       expect(found).toEqual({})
     })
   }
-
-  test.describe('in Ukrainian', () => {
-    test.use({ locale: 'uk-UA' })
-
-    test('welcome, plan, body, exercises, detail and settings', async ({ page }) => {
-      test.slow()
-      const found: Record<string, string[]> = {}
-      const check = async (name: string) => {
-        await page.waitForTimeout(400)
-        const v = await seriousViolations(page)
-        if (v.length) found[name] = v
-      }
-      await page.goto('/welcome')
-      await expect(page.locator('html')).toHaveAttribute('lang', 'uk')
-      await check('welcome')
-      await page.getByRole('button', { name: 'Пропустити' }).click()
-      await expect(page).toHaveURL(/\/$/)
-      await check('plan')
-      for (const url of ['/body', '/exercises', '/exercise/barbell-bench-press', '/settings']) {
-        await page.goto(url)
-        await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-        await check(url)
-      }
-      expect(found).toEqual({})
-    })
-  })
-
-  test('welcome and shared preview', async ({ page }) => {
-    await page.goto('/welcome')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-    expect(await seriousViolations(page)).toEqual([])
-
-    await startFromTemplate(page, 'Push/Pull/Legs 6x')
-    await page.goto(await shareLink(page))
-    await expect(page.getByRole('button', { name: 'Save to my programs' })).toBeVisible()
-    expect(await seriousViolations(page)).toEqual([])
-  })
 })

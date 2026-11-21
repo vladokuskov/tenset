@@ -15,10 +15,10 @@ const list = 'mt-2 list-disc space-y-1.5 pl-5 marker:text-ink-3'
 
 function PrivacyPage() {
   const m = useMessages(privacyMessages)
-  const plan = useMessages(rootMessages).plan
+  const back = useMessages(rootMessages).library
   return (
     <Page>
-      <PageHeader title={m.title} subtitle={m.subtitle} back={{ to: '/', label: plan }} />
+      <PageHeader title={m.title} subtitle={m.subtitle} back={{ to: '/', label: back }} />
       <PageBody className="text-base leading-relaxed text-ink-2">
         <Section title={m.whoTitle}>
           {OPERATOR ? (
@@ -50,15 +50,6 @@ function PrivacyPage() {
           <p className="mt-3 px-1">{m.deleteSafari}</p>
         </Section>
 
-        <Section title={m.shareTitle}>
-          <p className="px-1">{m.share}</p>
-        </Section>
-
-        <Section title={m.claudeTitle}>
-          <p className="px-1">{m.claude}</p>
-          <p className="mt-3 px-1">{m.claudeGet}</p>
-        </Section>
-
         <Section title={m.hostingTitle}>
           <p className="px-1">
             {m.hosting(
@@ -74,10 +65,6 @@ function PrivacyPage() {
         </Section>
 
         <p className="mt-8 px-1 text-sm">
-          <Link to="/about" className={link}>
-            {m.about}
-          </Link>
-          <span className="text-ink-3"> · </span>
           <Link to="/credits" className={link}>
             {m.credits}
           </Link>

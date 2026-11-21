@@ -22,10 +22,9 @@ describe('exercise text', () => {
   }
 
   it('loads English cues and Ukrainian text on demand, then notifies', async () => {
-    const { bench, localizeExercise, loadExerciseText, subscribeExerciseText, exerciseTextVersion, translatedNames } = await fresh()
+    const { bench, localizeExercise, loadExerciseText, subscribeExerciseText, exerciseTextVersion } = await fresh()
     expect(localizeExercise(bench, 'en').cues).toEqual([])
     expect(localizeExercise(bench, 'uk').name).toBe('Barbell Bench Press')
-    expect(translatedNames(bench.id)).toEqual([])
 
     const listener = vi.fn()
     subscribeExerciseText(listener)
@@ -39,7 +38,6 @@ describe('exercise text', () => {
     const uk = localizeExercise(bench, 'uk')
     expect(uk.name).not.toBe('Barbell Bench Press')
     expect(uk.cues).toHaveLength(localizeExercise(bench, 'en').cues.length)
-    expect(translatedNames(bench.id)).toContain(uk.name)
   })
 
   it('keeps cues a record already has', async () => {

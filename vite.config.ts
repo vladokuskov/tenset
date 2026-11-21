@@ -66,7 +66,7 @@ export default defineConfig(({ mode }) => ({
         id: '/',
         name: 'Tenset',
         short_name: 'Tenset',
-        description: 'Plan a weekly gym program and see which muscles each day and the whole week train.',
+        description: 'An exercise library with demo loops and the muscles each exercise works, filtered by the equipment you have.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
@@ -82,11 +82,11 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,bin,glb,txt,woff2}', 'models/*.json'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,bin,txt,woff2}'],
         // The notices file (~250 KB) is only opened from /credits, so it stays network-only. The figure model and
-        // atlas (~1.1 MB) are precached so the detail demos work offline. Loops and posters are cached on first use
+        // atlas only feed the dev review page and the loop bake. Loops and posters are cached on first use
         // (src/sw/sw.ts) so the precache does not grow with the catalog.
-        globIgnores: ['**/media/loops/**', '**/media/posters/**', '**/THIRD_PARTY_NOTICES.txt'],
+        globIgnores: ['**/media/loops/**', '**/media/posters/**', '**/models/**', '**/THIRD_PARTY_NOTICES.txt'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         manifestTransforms: [precacheBudget],
       },
@@ -103,7 +103,7 @@ export default defineConfig(({ mode }) => ({
         extends: true,
         test: {
           name: 'unit',
-          include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts', 'api/**/*.test.ts'],
+          include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts', 'data/**/*.test.ts'],
           exclude: [...MOTION_TESTS, '**/node_modules/**'],
           setupFiles: ['src/data/test-setup.ts'],
         },

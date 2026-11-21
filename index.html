@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Tenset</title>
-    <meta name="description" content="Plan a weekly gym program and see which muscles each day and the whole week train." />
+    <meta name="description" content="An exercise library with demo loops and the muscles each exercise works, filtered by the equipment you have." />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f2f3f5" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />
@@ -16,7 +16,6 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="alternate" type="text/markdown" href="/llms.txt" title="Guide for AI agents" />
     <style>
       html { background: #f2f3f5; }
       @media (prefers-color-scheme: dark) { html { background: #0f1114; } }
@@ -25,8 +24,7 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <p>Tenset needs JavaScript to run. It plans a weekly gym program and shows weekly sets per muscle group on a body map.</p>
-      <p>AI agents: read <a href="/llms.txt">/llms.txt</a>. There is an MCP server at https://tenset-app.vercel.app/api/mcp and a plain HTTP API at /api/agent/ that return a share link to the program.</p>
+      <p>Tenset needs JavaScript to run. It is an exercise library with demo loops and the muscles each exercise works.</p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

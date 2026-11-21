@@ -1,7 +1,7 @@
 import { MOVEMENT_GROUPS, type MovementGroupId, type MovementKey } from '../../domain/movement'
 import { useLocale } from '../../i18n/messages'
 import { cx } from '../../ui/cx'
-import { MovementSwatch } from '../../ui/MovementMix'
+import { MovementSwatch } from '../../ui/MovementSwatch'
 import { movementLabel, mvBg, mvVar } from '../../ui/movement'
 
 /** One row of movement group toggles: tinted by group, the selected one filled with an ink dot. */
