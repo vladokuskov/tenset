@@ -1,27 +1,35 @@
 # Tenset
 
-A phone-first, offline exercise library. Search about 300 exercises, filter by muscle, movement group and the equipment your gym has, and watch each one as a short loop of our own procedural 3D figure with the worked muscles highlighted. English and Ukrainian.
-
-No accounts and no backend: the chosen language and equipment live in the browser (localStorage).
+A phone-first, offline exercise library. Every exercise plays as a short loop of our own procedural 3D figure, with the worked muscles highlighted.
 
 Live: https://tenset-app.vercel.app
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phones-dark.png">
-  <img src="docs/screenshots/phones-light.png" alt="Tenset on a phone: the week plan, a training day, the body map, the exercise catalog and an animated exercise">
+  <img src="docs/screenshots/phones-light.png" alt="Tenset on a phone: the exercise library, a search for squat, the equipment picker, and the library in Ukrainian filtered to pull exercises">
 </picture>
+
+## What it does
+
+- **Search** about 300 exercises by name, common abbreviation (RDL, OHP), muscle or equipment. Ukrainian search also matches English names.
+- **Filter** by muscle (tap it on a body map or pick from a list), by movement group (push, pull, shoulders, arms, legs, core), and by the equipment your gym has: start from a preset (full gym, basic gym, home gym, dumbbells and bench, bodyweight) and adjust single items.
+- **Watch** each exercise on its card: the loop plays while the card is on screen, and the poster stays still under reduced motion. Exercises without an approved loop show their worked muscles on a body map.
+- **English and Ukrainian**, picked from the toolbar. The first visit follows the browser language.
+- **Works offline** after the first visit. Loops and posters are cached as you see them.
+
+No accounts, no backend, no analytics. The chosen language and equipment stay in the browser (localStorage); nothing is sent anywhere.
 
 ## Docs
 
-- `docs/PLAN.md`: scope, architecture and every lead and owner decision (source of truth)
-- `docs/FAMILIES.md`: motion templates, extension points, QA gates and the definition of done per exercise
-- `docs/UI-CONTRACTS.md`: UI component contracts
 - `CLAUDE.md`: hard rules (banned sources, licensing, copy tone)
+- `docs/FAMILIES.md`: motion templates, extension points, QA gates and the definition of done per exercise
+- `docs/I18N.md`: translation rules and glossary
+- `docs/PLAN.md`: content, motion and media decisions (its planner scope is historical)
 - `ATTRIBUTION.md`: credits and third-party licenses (rendered at `/credits`)
 
 ## Stack
 
-Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js / React Three Fiber (lazy chunk), vite-plugin-pwa with our own service worker, Vitest, Playwright. Package manager: pnpm. Node 24 runs the `pipeline/*.ts` scripts directly.
+Vite, React 19, TypeScript, Tailwind 4, TanStack Router, Zustand + zod, three.js / React Three Fiber (dev review and the bake pipeline only), vite-plugin-pwa with our own service worker, Vitest, Playwright. Package manager: pnpm. Node 24 runs the `pipeline/*.ts` scripts directly.
 
 ## App commands
 
@@ -47,7 +55,7 @@ The figure, motions, loops and posters are generated locally and committed; CI n
 | Bake loops and posters | `node pipeline/render/bake-loops.ts --qa qa/out/loops` (`--only <ids>`; a full run prunes stale files) |
 | Stale-media check | `node pipeline/render/check-media.ts` |
 | Approved renders unchanged | `node pipeline/render/verify-posters.ts` |
-| README phone screenshots (after `pnpm build`) | `node pipeline/render/readme-shots.ts` |
+| README phone screenshots (after `pnpm build`; library, search, equipment sheet, Ukrainian) | `node pipeline/render/readme-shots.ts` |
 
 An exercise shows its animation in production only when its record has `media.status: "loop"` (owner-approved). Dev shows every baked motion.
 
