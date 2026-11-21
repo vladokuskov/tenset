@@ -5,14 +5,11 @@ import { activeExercises } from '../../data/catalog'
 import type { Exercise } from '../../domain/schema'
 import { motionIds } from '../figure/motion/library'
 import { ExerciseCardMedia } from './ExerciseCardMedia'
-import { ExerciseMedia } from './ExerciseMotion'
 import { showsMotion } from './media'
 
 // Vite replaces import.meta.env.DEV with false in a production build; stubbing it renders what that build renders.
-const render = (exercise: Exercise) => renderToStaticMarkup(createElement(ExerciseMedia, { exercise }))
-const CARD = 'Muscles worked by'
-const PLAYER = 'Position in the rep'
-const card = (exercise: Exercise, size: 'sm' | 'md') => renderToStaticMarkup(createElement(ExerciseCardMedia, { exercise, size }))
+const card = (exercise: Exercise) => renderToStaticMarkup(createElement(ExerciseCardMedia, { exercise }))
+const MAP = 'Muscles worked by'
 const POSTER = '/media/posters/'
 
 describe('baked media gating', () => {
@@ -23,7 +20,7 @@ describe('baked media gating', () => {
   const noMotion: Exercise = { ...activeExercises[0], id: 65000, slug: 'no-motion' }
 
   beforeEach(() => {
-    // the M1 card fetches its map; keep it pending so nothing leaves the test
+    // the map card fetches its anatomy; keep it pending so nothing leaves the test
     vi.stubGlobal('fetch', () => new Promise(() => {}))
   })
   afterEach(() => {
@@ -31,40 +28,25 @@ describe('baked media gating', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows the M1 card for an unapproved exercise in a production build', () => {
+  it('shows the body map card for an unapproved exercise in a production build', () => {
     vi.stubEnv('DEV', false)
     vi.stubEnv('PROD', true)
     expect(baked.length).toBeGreaterThan(0)
     for (const e of baked.filter((x) => x.media.status !== 'loop')) expect(showsMotion(e), e.slug).toBe(false)
-    const html = render(unapproved)
-    expect(html).toContain(CARD)
-    expect(html).not.toContain(PLAYER)
+    expect(card(unapproved)).toContain(MAP)
+    expect(card(unapproved)).not.toContain(POSTER)
   })
 
-  it('shows the live figure in production once the loop is approved', () => {
+  it('shows the poster once the loop is approved, and never without a baked motion', () => {
     vi.stubEnv('DEV', false)
     vi.stubEnv('PROD', true)
-    expect(showsMotion(approved)).toBe(true)
-    expect(render(approved)).toContain(PLAYER)
-    expect(showsMotion({ ...noMotion, media: { ...noMotion.media, status: 'loop' } })).toBe(false)
+    expect(card(approved)).toContain(`${POSTER}${approved.id}-`)
+    expect(card({ ...noMotion, media: { ...noMotion.media, status: 'loop' } })).not.toContain(POSTER)
   })
 
   it('shows every baked motion in dev', () => {
     vi.stubEnv('DEV', true)
-    expect(showsMotion(unapproved)).toBe(true)
-    expect(render(unapproved)).toContain(PLAYER)
-    expect(render(noMotion)).not.toContain(PLAYER)
-  })
-
-  it('shows the baked poster on list and grid cards only where the motion may show', () => {
-    vi.stubEnv('DEV', false)
-    vi.stubEnv('PROD', true)
-    for (const size of ['sm', 'md'] as const) {
-      expect(card(approved, size)).toContain(`${POSTER}${approved.id}-`)
-      expect(card(unapproved, size)).not.toContain(POSTER)
-    }
-    expect(card({ ...noMotion, media: { ...noMotion.media, status: 'loop' } }, 'md')).not.toContain(POSTER)
-    vi.stubEnv('DEV', true)
-    expect(card(unapproved, 'md')).toContain(POSTER)
+    expect(card(unapproved)).toContain(POSTER)
+    expect(card(noMotion)).toContain(MAP)
   })
 })

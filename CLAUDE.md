@@ -1,6 +1,6 @@
 # Tenset
 
-No-backend, phone-first PWA for planning a weekly gym program with a head-level body map. Full plan: `docs/PLAN.md` (source of truth for scope, lanes, gates).
+No-backend, phone-first PWA: an exercise library with search, muscle / movement / equipment filters, a language picker and baked demo loops. On 2026-11-21 the planner (programs, body page, settings, share/export, welcome flow) and the `api/` MCP endpoint were removed; `docs/PLAN.md` still holds content, motion and media rules, but its planner scope is historical.
 
 ## Stack
 Vite 8, React 19, TypeScript 6, Tailwind 4, TanStack Router (file routes in `src/routes`), Zustand + zod, three/R3F (lazy chunk only), Vitest, Playwright. pnpm. Node 24 runs `pipeline/*.ts` directly (type stripping, so no enums or namespaces).
@@ -8,7 +8,6 @@ Vite 8, React 19, TypeScript 6, Tailwind 4, TanStack Router (file routes in `src
 ## Layout rules
 - `src/domain/` is pure TS, no React, no DOM. All volume/coverage math lives here with tests.
 - `data/` is the content source of truth: `taxonomy.json` (frozen, changes by PR only), `exercises/<id>-<slug>.json`, `splits/*.json`, `backlog.csv` (the only work queue), `sources.json` (citation ids used in `basis`).
-- `api/` is the only server code: a stateless MCP endpoint (`api/mcp.ts`, logic in `api/_lib/`). It may import `src/domain` and `src/data/parse.ts`, never React or `src/features`; `src/` never imports `api/`. It stores and logs no program data.
 - `pipeline/` is build-time only and never imported by `src/`. GPL tools (Blender, MPFB2, ffmpeg) may be used there as tools; never port their code.
 - Contracts: `src/domain/schema.ts`. Don't change a schema another lane depends on without updating all users.
 

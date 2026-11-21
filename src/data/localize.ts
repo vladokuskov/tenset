@@ -98,8 +98,6 @@ const pick = (table: keyof Omit<Text, 'exercises' | 'splits'>, id: string, local
   TEXT[locale][table][id] ?? en[table][id] ?? id
 
 export const groupName = (id: string, locale: Locale = getLocale()) => pick('groups', id, locale)
-/** Visible, deep and untracked heads. */
-export const headName = (id: string, locale: Locale = getLocale()) => pick('heads', id, locale)
 export const equipmentName = (id: string, locale: Locale = getLocale()) => pick('equipment', id, locale)
 export const equipmentGroupName = (id: string, locale: Locale = getLocale()) => pick('equipmentGroups', id, locale)
 export const presetName = (id: string, locale: Locale = getLocale()) => pick('presets', id, locale)
@@ -113,14 +111,6 @@ export function localizeExercise(e: Exercise, locale: Locale): Exercise {
   if (!t) return e
   if (t.name === undefined) return e.cues.length ? e : { ...e, cues: t.cues }
   return { ...e, name: t.name, cues: t.cues, aliases: [...new Set([...t.aliases, e.name, ...e.aliases])] }
-}
-
-/** Names and aliases in every translation, for matching text in any language. */
-export function translatedNames(id: number): string[] {
-  return Object.values(TEXT).flatMap((t) => {
-    const x = t.exercises[String(id)]
-    return x?.name !== undefined ? [x.name, ...x.aliases] : []
-  })
 }
 
 /** Template text in the given language; session labels fall back one by one. */

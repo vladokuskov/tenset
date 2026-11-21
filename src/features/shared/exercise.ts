@@ -1,5 +1,5 @@
 import { movementGroupOf, type MovementKey } from '../../domain/movement'
-import type { CustomExercise, Entry, Exercise, Prefs } from '../../domain/schema'
+import type { CustomExercise, Entry, Exercise } from '../../domain/schema'
 import type { Locale } from '../../i18n/locale'
 import { getLocale } from '../../i18n/messages'
 import { sharedMessages } from './messages'
@@ -19,19 +19,6 @@ export function rowMeta(e: AnyExercise, primaries: readonly string[], locale: Lo
 
 /** Movement group for the exercise's color; custom exercises (no pattern) and unknown ids are "other". */
 export const groupOf = (e: AnyExercise | null): MovementKey => (e && !isCustom(e) ? movementGroupOf(e.pattern) : 'other')
-
-export function unitOf(e: AnyExercise): 'reps' | 'seconds' {
-  return isCustom(e) ? 'reps' : e.unit
-}
-
-export function defaultSets(e: AnyExercise): number {
-  return isCustom(e) ? 3 : e.defaults.sets
-}
-
-export function defaultReps(e: AnyExercise, goal: Prefs['goal']): string | undefined {
-  if (isCustom(e)) return undefined
-  return goal === 'strength' ? (e.defaults.strengthReps ?? e.defaults.reps) : e.defaults.reps
-}
 
 /** "8-12 reps", "30-45 s". */
 export function repsText(reps: string | undefined, unit: 'reps' | 'seconds', locale: Locale = getLocale()): string {
