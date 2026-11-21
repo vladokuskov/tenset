@@ -93,7 +93,7 @@ for (const scheme of Object.keys(SCHEMES) as Scheme[]) {
   const shots = await capture(scheme)
   const page = await browser.newPage({ deviceScaleFactor: 1.5 })
   await page.setContent(sheet(scheme, shots))
-  const file = path.join(OUT, `phones-${scheme}.png`)
+  const file = path.join(OUT, `library-${scheme}.png`)
   await page.locator('.row').screenshot({ path: file, omitBackground: true })
   await page.close()
   console.log(`${path.relative(ROOT, file)} ${(statSync(file).size / 1024).toFixed(0)} KiB`)

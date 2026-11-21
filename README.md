@@ -5,8 +5,8 @@ A phone-first, offline exercise library. Every exercise plays as a short loop of
 Live: https://tenset-app.vercel.app
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/phones-dark.png">
-  <img src="docs/screenshots/phones-light.png" alt="Tenset on a phone: the exercise library, a search for squat, the equipment picker, and the library in Ukrainian filtered to pull exercises">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/library-dark.png">
+  <img src="docs/screenshots/library-light.png" alt="Tenset on a phone: the exercise library, a search for squat, the equipment picker, and the library in Ukrainian filtered to pull exercises">
 </picture>
 
 ## What it does
