@@ -11,6 +11,7 @@ import { Button, Chip, EmptyState, LanguagePicker, Page, PageBody, PageHeader, S
 import { EquipmentPicker } from './EquipmentPicker'
 import { equipmentSummary } from './equipmentSummary'
 import { ExerciseGrid } from './ExerciseGrid'
+import { ExercisePreview } from './ExercisePreview'
 import { catalogMessages } from './messages'
 import { MovementChips } from './MovementChips'
 import { MuscleFilterSheet } from './MuscleFilterSheet'
@@ -18,16 +19,17 @@ import { buildIndex, filterExercises } from './search'
 
 const route = getRouteApi('/')
 
-type Patch = Partial<{ q: string; muscle: string; equip: 'mine' | 'all'; move: MovementGroupId; sheet: 'muscle' | 'equipment' }>
+type Patch = Partial<{ q: string; muscle: string; equip: 'mine' | 'all'; move: MovementGroupId; sheet: 'muscle' | 'equipment' | 'exercise' }>
 
 export function LibraryPage() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { activeExercises } = useCatalog()
+  const { activeExercises, exerciseBySlug } = useCatalog()
   const equipment = usePrefsStore((s) => s.equipment)
   const setEquipment = usePrefsStore((s) => s.setEquipment)
   const muscleSheet = useSheet('muscle')
   const equipmentSheet = useSheet('equipment')
+  const exerciseSheet = useSheet('exercise', ['ex'])
   const locale = useLocale()
   const m = catalogMessages[locale]
   const index = useMemo(() => buildIndex(activeExercises, locale), [activeExercises, locale])
@@ -149,7 +151,7 @@ export function LibraryPage() {
           />
         ) : (
           <>
-            <ExerciseGrid exercises={list} label={m.exercises} />
+            <ExerciseGrid exercises={list} label={m.exercises} onOpen={(e) => exerciseSheet.show({ ex: e.slug })} />
             {(muscleName || (mine && anyEquipment > list.length)) && (
               <div className="mt-2 space-y-1 px-1 text-sm text-ink-2">
                 {muscleName && <p>{m.primaryNote(muscleName)}</p>}
@@ -181,6 +183,11 @@ export function LibraryPage() {
         value={search.muscle}
         counts={muscleCounts}
         onSelect={(g) => void navigate({ search: (prev) => ({ ...prev, muscle: g, sheet: undefined }), replace: true })}
+      />
+      <ExercisePreview
+        exercise={search.ex ? exerciseBySlug.get(search.ex) : undefined}
+        open={exerciseSheet.open}
+        onClose={exerciseSheet.close}
       />
       <Sheet open={equipmentSheet.open} onClose={equipmentSheet.close} title={m.equipmentTitle} description={m.equipmentHint}>
         <SegmentedControl

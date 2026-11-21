@@ -9,7 +9,7 @@ import { cx } from '../../ui/cx'
 import { mvBorder } from '../../ui/movement'
 import { AnatomyFigure, cropViewBox, regionBounds, tintVars, useAnatomy, type FigureVars } from '../bodymap'
 import { groupOf } from '../shared/exercise'
-import { cardView, equipmentGlyph, showsMotion } from './media'
+import { cardView, equipmentGlyph, reducedMotion, showsMotion } from './media'
 import { catalogMessages } from './messages'
 
 // Implements first; supports (benches, racks, steps) only name the card when nothing else does.
@@ -37,7 +37,6 @@ const CARD_VARS: FigureVars = {
   '--gb-untracked': REST,
 }
 
-const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** True while the element is on screen (with a small margin so loops start just before they scroll in). */
 function useInView(ref: RefObject<HTMLElement | null>): boolean {
@@ -121,7 +120,8 @@ function GroupRing({ group }: { group: MovementKey }) {
   return <span aria-hidden className={cx('pointer-events-none absolute inset-0 rounded-[inherit] border-3', mvBorder[group])} />
 }
 
-function MapMedia({ exercise, className }: { exercise: Exercise; className?: string }) {
+/** Body map crop with the worked muscles tinted; `aspect` is width / height. */
+export function MapMedia({ exercise, className, aspect = 4 / 5 }: { exercise: Exercise; className?: string; aspect?: number }) {
   const roles = exercise.groups
   const view = cardView(exercise)
   const locale = useLocale()
@@ -134,15 +134,15 @@ function MapMedia({ exercise, className }: { exercise: Exercise; className?: str
     const b =
       regionBounds(doc, (r) => !!r.group && wanted.includes(r.group)) ??
       regionBounds(doc, (r) => r.group === 'abs' || r.group === 'lower_back')
-    return b ? cropViewBox(b, 4 / 5, 1040, 0.1) : null
-  }, [doc, tinted])
+    return b ? cropViewBox(b, aspect, 1040, 0.1) : null
+  }, [doc, tinted, aspect])
 
   return (
     <div
       role="img"
       aria-label={catalogMessages[locale].cardAlt(exercise.name, equipmentLabel(exercise.equipment, locale))}
-      className={cx('relative aspect-[4/5] overflow-hidden rounded-xl bg-raised', className)}
-      style={{ '--gb-line': 'var(--color-raised)', '--gb-line-w': '0.6px' } as CSSProperties}
+      className={cx('relative overflow-hidden rounded-xl bg-raised', className)}
+      style={{ aspectRatio: aspect, '--gb-line': 'var(--color-raised)', '--gb-line-w': '0.6px' } as CSSProperties}
     >
       {viewBox && (
         <AnatomyFigure view={view} kind="full" viewBox={viewBox} vars={vars} className="absolute inset-0 block size-full" style={FADE} />

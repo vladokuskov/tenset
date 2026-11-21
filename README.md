@@ -13,7 +13,7 @@ Live: https://tenset-app.vercel.app
 
 - **Search** about 300 exercises by name, common abbreviation (RDL, OHP), muscle or equipment. Ukrainian search also matches English names.
 - **Filter** by muscle (tap it on a body map or pick from a list), by movement group (push, pull, shoulders, arms, legs, core), and by the equipment your gym has: start from a preset (full gym, basic gym, home gym, dumbbells and bench, bodyweight) and adjust single items.
-- **Watch** each exercise on its card: the loop plays while the card is on screen, and the poster stays still under reduced motion. Exercises without an approved loop show their worked muscles on a body map.
+- **Watch** each exercise on its card: the loop plays while the card is on screen, and the poster stays still under reduced motion. Tap a card to preview it large, with pause and half speed, the primary and secondary muscles, the equipment and short how-to cues. Exercises without an approved loop show their worked muscles on a body map.
 - **English and Ukrainian**, picked from the toolbar. The first visit follows the browser language.
 - **Works offline** after the first visit. Loops and posters are cached as you see them.
 

@@ -86,4 +86,33 @@ test.describe('Ukrainian browser', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'uk')
     await expect(page.getByRole('heading', { level: 1, name: 'Вправи' })).toBeVisible()
   })
+
+  test('a deep-linked preview opens with translated cues', async ({ page }) => {
+    await page.goto('/?sheet=exercise&ex=barbell-bench-press')
+    const sheet = openSheet(page, 'Жим штанги лежачи')
+    await expect(sheet.getByRole('heading', { name: 'Як виконувати' })).toBeVisible()
+  })
+})
+
+test('a card opens a preview with the loop, controls and cues; back closes it', async ({ page }) => {
+  await page.goto('/?equip=all')
+  const card = page.getByRole('button', { name: 'Preview Barbell Bench Press' })
+  await card.click()
+  await expect(page).toHaveURL(/sheet=exercise/)
+  await expect(page).toHaveURL(/ex=barbell-bench-press/)
+  const sheet = openSheet(page, 'Barbell Bench Press')
+  const video = sheet.locator('video')
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0)
+
+  await sheet.getByRole('button', { name: 'Half speed' }).click()
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.playbackRate)).toBe(0.5)
+  await sheet.getByRole('button', { name: 'Pause' }).click()
+  await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
+
+  await expect(sheet.getByRole('heading', { name: 'How to do it' })).toBeVisible()
+  await expect(sheet.getByRole('listitem')).not.toHaveCount(0)
+
+  await page.goBack()
+  await expect(openSheet(page)).toHaveCount(0)
+  await expect(card).toBeFocused()
 })
