@@ -1,4 +1,4 @@
-// README screenshots: five phone screens in a plain phone frame, one image per color scheme.
+// README screenshots: four phone screens of the library in a plain phone frame, one image per color scheme.
 // Run `pnpm build` first; this serves dist/ so only owner-approved animations show.
 import { existsSync, mkdirSync, statSync } from 'node:fs'
 import path from 'node:path'
@@ -10,14 +10,12 @@ const OUT = path.join(ROOT, 'docs/screenshots')
 const SCALE = 2
 const SCREEN = { width: 390, height: 844 }
 const STATUS_H = 47
-const TEMPLATE = /^Upper\/Lower 4x/
-
+// Loops play on cards, so each shot waits long enough for the on-screen ones to start.
 const SHOTS = [
-  { route: '/', wait: 1200 },
-  { route: '/day/mon', wait: 1200 },
-  { route: '/body', wait: 2500 },
-  { route: '/exercises', wait: 1500 },
-  { route: '/exercise/barbell-bench-press', wait: 4000 },
+  { route: '/', wait: 2500, locale: 'en-US' },
+  { route: '/?q=squat&equip=all', wait: 2500, locale: 'en-US' },
+  { route: '/?sheet=equipment', wait: 1200, locale: 'en-US' },
+  { route: '/?move=pull&equip=all', wait: 2500, locale: 'uk-UA' },
 ] as const
 
 const SCHEMES = {
@@ -36,28 +34,24 @@ if (!base) throw new Error('preview server has no local url')
 const { browser } = await launchMetal()
 
 async function capture(scheme: Scheme): Promise<string[]> {
-  const context = await browser.newContext({
-    viewport: { width: SCREEN.width, height: SCREEN.height - STATUS_H },
-    deviceScaleFactor: SCALE,
-    isMobile: true,
-    hasTouch: true,
-    colorScheme: scheme,
-    locale: 'en-US',
-  })
-  const page = await context.newPage()
-  await page.goto(`${base}/welcome`)
-  await page.getByRole('button', { name: TEMPLATE }).click()
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await page.getByRole('button', { name: 'Continue' }).click()
-  await page.getByRole('button', { name: /^Show my week/ }).click()
-  await page.waitForURL(`${base}/`)
   const shots: string[] = []
-  for (const { route, wait } of SHOTS) {
+  for (const { route, wait, locale } of SHOTS) {
+    // a fresh context per shot, so the language comes from the browser locale and no saved choice carries over
+    const context = await browser.newContext({
+      viewport: { width: SCREEN.width, height: SCREEN.height - STATUS_H },
+      deviceScaleFactor: SCALE,
+      isMobile: true,
+      hasTouch: true,
+      colorScheme: scheme,
+      locale,
+      serviceWorkers: 'block',
+    })
+    const page = await context.newPage()
     await page.goto(`${base}${route}`)
     await page.waitForTimeout(wait)
     shots.push((await page.screenshot({ type: 'png' })).toString('base64'))
+    await context.close()
   }
-  await context.close()
   return shots
 }
 
