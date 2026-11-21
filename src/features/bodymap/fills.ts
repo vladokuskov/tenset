@@ -58,20 +58,3 @@ export function regionFill(group?: string, head?: string, untracked?: string): s
   return head ? `var(--h-${head},var(--g-${group},${REST_FILL}))` : `var(--g-${group},${REST_FILL})`
 }
 
-/** Group-level fills for mini maps: role tint when given, else volume. */
-export function miniVars(
-  groups: Readonly<Record<string, number>> | undefined,
-  roles: Readonly<Record<string, Role>> | undefined,
-  scale: MapScale,
-  targets?: Targets,
-): FigureVars {
-  const vars: FigureVars = {}
-  if (roles) {
-    for (const [g, r] of Object.entries(roles)) vars[`--g-${g}`] = ROLE_COLOR[r]
-    return vars
-  }
-  for (const [g, sets] of Object.entries(groups ?? {})) {
-    if (sets > 0) vars[`--g-${g}`] = VOLUME_COLOR[groupShade(g, sets, scale, targets)]
-  }
-  return vars
-}

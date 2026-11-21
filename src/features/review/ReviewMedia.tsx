@@ -1,7 +1,7 @@
 import { ExternalLink, Film, Images } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 import type { Exercise } from '../../domain/schema'
-import { ExerciseMedia } from '../catalog/ExerciseMotion'
+import { ExerciseMotion } from './LiveFigure'
 import type { ReviewItem } from './types'
 
 /** the detail page's media well, so the loop, the live figure and the sheet sit on the same colour */
@@ -63,7 +63,7 @@ export function LoopPanel({ item }: { item: ReviewItem }) {
 export function LivePanel({ exercise }: { exercise: Exercise }) {
   return (
     <Frame title="Live figure">
-      <ExerciseMedia key={exercise.id} exercise={exercise} />
+      <ExerciseMotion key={exercise.id} exercise={exercise} />
     </Frame>
   )
 }

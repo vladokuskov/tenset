@@ -1,7 +1,6 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { whenIdle } from './app/idle'
 import { loadExerciseText } from './data/localize'
 import { getLocale } from './i18n/messages'
 import { routeTree } from './routeTree.gen'
@@ -27,5 +26,3 @@ void (locale === 'en' ? Promise.resolve() : loadExerciseText(locale))
       </StrictMode>,
     ),
   )
-
-if (import.meta.env.PROD) whenIdle(() => void import('./sw/warmPosters').then((m) => m.startPosterWarming()))

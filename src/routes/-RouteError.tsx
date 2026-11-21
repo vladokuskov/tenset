@@ -11,7 +11,7 @@ export function RouteError({ error }: ErrorComponentProps) {
   const m = useMessages(rootMessages)
   return (
     <Page>
-      <PageHeader title={m.error.title} back={{ to: '/', label: m.plan }} />
+      <PageHeader title={m.error.title} back={{ to: '/', label: m.library }} />
       <EmptyState
         icon={RotateCcw}
         title={m.error.heading}

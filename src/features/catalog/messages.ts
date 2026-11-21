@@ -1,12 +1,10 @@
-import { dayName, formatDayList, type DayIndex } from '../../app/days'
 import { movementGroupNames } from '../../domain/movement'
 import { patternNames } from '../../domain/patternNames'
-import type { Exercise } from '../../domain/schema'
 import { common } from '../../i18n/common'
 import { defineMessages } from '../../i18n/messages'
 import { plural, pluralCategory } from '../../i18n/plural'
 
-type Choice = 'primary' | 'secondary' | 'none'
+const ukItems = (n: number) => plural('uk', n, { one: 'позиції', few: 'позицій', many: 'позицій', other: 'позиції' })
 
 export const catalogMessages = defineMessages({
   en: {
@@ -14,7 +12,6 @@ export const catalogMessages = defineMessages({
     patternGroup: movementGroupNames.en,
     level: { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' } as Record<number, string>,
     area: { upper: 'Upper body', core: 'Core', lower: 'Lower body' },
-    choice: { primary: 'Primary', secondary: 'Secondary', none: 'None' },
     equipmentShort: {
       cable: 'Cable',
       smith: 'Smith',
@@ -38,137 +35,49 @@ export const catalogMessages = defineMessages({
       belt_squat: 'Belt squat',
     } as Record<string, string>,
     glyph: { cable: 'Cable', free: 'Free weights', band: 'Band', bodyweight: 'Bodyweight', machine: 'Machine' },
-    sides: {
-      unilateral: 'One side at a time. Sets count once, not per side.',
-      alternating: 'Alternating sides. Sets count once, not per side.',
-    },
-    views: { hero: 'Default', front: 'Front', side: 'Side', back: 'Back' },
-
-    // shared
     exercises: 'Exercises',
-    showList: 'Show as list',
-    showGrid: 'Show as grid',
-    custom: 'custom',
     noMuscles: 'No muscles mapped',
-    addToPlan: 'Add to plan',
-    editCounts: 'Edit how this counts',
-    rest: 'Rest',
-    anyOf: (placeholder: string) => `Any ${placeholder.toLowerCase()}`,
-
-    // toast
-    added: (name: string, days: readonly DayIndex[], weekStart: DayIndex) =>
-      `Added ${name} to ${formatDayList(days, weekStart, days.length === 1 ? 'long' : 'short', 'en')}`,
-
-    // add to plan sheet
-    addDescription: (name: string, sets: number) => `${name}, ${sets} sets per day. Numbers show sets already planned.`,
-    noPlanDescription: 'Create a plan first, then add exercises to its days.',
-    createPlan: 'Create a plan',
-    addToDays: (days: readonly DayIndex[], weekStart: DayIndex) =>
-      `Add to ${formatDayList(days, weekStart, days.length === 1 ? 'long' : 'short', 'en')}`,
-    pickDays: 'Pick one or more days',
-    daysToAddTo: 'Days to add to',
-    preselected: 'Preselected your lightest training day.',
-
-    // counts sheet
-    countsDescription: (name: string) =>
-      `Changes how ${name} counts toward weekly sets in all your programs, on this device only.`,
-    countsReset: (name: string) => `${name} counts as default again`,
-    resetDefault: 'Reset to default',
-    isDefault: 'default',
-    defaultWas: (r: Choice) => `default: ${r === 'none' ? 'not counted' : r}`,
-    roleOf: (name: string) => `${name} role`,
-    addMuscle: 'Add a muscle',
-    chooseGroup: 'Choose a muscle group',
-    countsNote:
-      'Primary muscles count each set as 1, secondary as 0.5. Only the muscle groups change here; which heads light up inside a group stays as mapped.',
-
-    // catalog page
     searchExercises: 'Search exercises',
     searchPlaceholder: 'Search, e.g. squat or row',
     clearSearch: 'Clear search',
     filters: 'Filters',
     muscle: 'Muscle',
     myEquipment: 'My equipment',
-    movementPattern: 'Movement',
     movementGroups: 'Movement groups',
-    patternPlaceholder: 'Movement',
-    anyPattern: 'Any movement',
-    levelFilter: 'Level',
-    anyLevel: 'Any level',
     clear: 'Clear',
     noMatch: 'No exercises match',
     showForAny: (n: number) => `Show ${n} ${plural('en', n, { one: 'match', other: 'matches' })} for any equipment`,
     clearAll: 'Clear all filters',
-    activeFilters: 'Active filters. Tap one to remove it.',
-    quoted: (q: string) => `"${q}"`,
-    removeFilter: (label: string) => `Remove filter ${label}`,
     primaryNote: (name: string) => `Exercises where ${name.toLowerCase()} is a primary muscle.`,
     moreNeedOther: (n: number) =>
       `${n} more ${plural('en', n, { one: 'exercise', other: 'exercises' })} ${n === 1 ? 'needs' : 'need'} other equipment.`,
     showAll: 'Show all',
-
-    // muscle filter sheet
     filterByMuscle: 'Filter by muscle',
     filterDescription: 'Tap a muscle on the map or pick one below. Shows exercises where it is a primary muscle.',
     filterMap: 'Body map, tap a muscle to filter',
-
-    // muscle section
-    onMap: (name: string) => `${name} on the body map`,
-    workedOnMap: 'Muscles worked on the body map',
-    primary: 'Primary',
-    secondary: 'Secondary',
-    none: 'None',
-    countPrimaryOnly: 'Each set counts 1 for primary muscles. Secondary muscles are not counted in your settings.',
-    countFractional: 'Each set counts 1 for primary muscles and 0.5 for secondary ones.',
-
-    // card media
     posterAlt: (name: string, label: string) => `${name} demonstration, worked muscles highlighted. ${label}.`,
     cardAlt: (name: string, label: string) =>
       `Muscles worked by ${name}: primary in the darker tint, secondary in the lighter tint. ${label}.`,
-
-    // motion
-    motionAlt: (name: string) =>
-      `${name}: animated figure with the worked muscles highlighted, primary in red, secondary in orange.`,
-    pause: 'Pause',
-    play: 'Play',
-    position: 'Position in the rep',
-    toNormal: 'Playing at half speed, switch to normal speed',
-    toHalf: 'Playing at normal speed, switch to half speed',
-    half: '0.5x',
-    normal: '1x',
-    camera: 'Camera',
-
-    // detail
-    exercise: 'Exercise',
-    notFound: 'Exercise not found',
-    browse: 'Browse exercises',
-    notFoundBody: 'It may have been renamed or removed from the catalog.',
-    demoComing: 'Demo coming. Until then the map shows the muscles worked.',
-    muscles: 'Muscles',
-    mappingConfidence: (c: Exercise['confidence']) => `How sure we are about the muscles: ${c}.`,
-    basedOn: (cites: string) => `Based on ${cites}.`,
-    sources: 'Sources',
-    details: 'Details',
-    equipment: 'Equipment',
-    patternFact: 'Movement',
-    defaultFact: 'Default',
-    sidesFact: 'Sides',
-    noneBodyweight: 'None, bodyweight',
-    dose: (sets: number, reps: string, seconds: boolean) => `${sets} sets of ${reps}${seconds ? ' s' : ''}`,
-    howTo: 'How to do it',
-    alternatives: 'Alternatives',
-    alternativesDescription: 'Same movement pattern, your equipment first.',
-    needs: (list: string) => `Needs ${list.toLowerCase()}`,
-    noAlternatives: 'No close alternatives in the catalog yet.',
-    addToDay: (day: DayIndex) => `Add to ${dayName(day, 'long', 'en')}`,
-    otherDays: 'Choose other days',
+    anyEquipment: 'Any equipment',
+    equipmentTitle: 'Your equipment',
+    equipmentHint: 'Pick what your gym has. The library shows exercises you can do with it.',
+    presetGroup: 'Equipment preset',
+    noEquipment: 'No equipment',
+    itemsOf: (n: number, total: number) => `${n} of ${total} items`,
+    customOf: (n: number, total: number) => `Custom, ${n} of ${total} items`,
+    adjustItems: 'Adjust items',
+    equipmentYouCanUse: 'Equipment you can use',
+    allOf: (group: string) => `All ${group.toLowerCase()}`,
+    countOf: (n: number, total: number) => `${n} of ${total}`,
+    nothingSelected: 'Nothing selected. Only bodyweight exercises are shown.',
+    credits: 'Credits and licenses',
+    privacy: 'Privacy',
   },
   uk: {
     pattern: patternNames.uk,
     patternGroup: movementGroupNames.uk,
     level: { 1: 'Початковий', 2: 'Середній', 3: 'Просунутий' },
     area: { upper: 'Верх тіла', core: 'Кор', lower: 'Низ тіла' },
-    choice: { primary: 'Основна', secondary: 'Допоміжна', none: 'Немає' },
     equipmentShort: {
       cable: 'Блок',
       smith: 'Сміт',
@@ -192,122 +101,43 @@ export const catalogMessages = defineMessages({
       belt_squat: 'Присід з поясом',
     },
     glyph: { cable: 'Блок', free: 'Вільні ваги', band: 'Стрічка', bodyweight: 'Власна вага', machine: 'Тренажер' },
-    sides: {
-      unilateral: 'По одній стороні. Підходи рахуються один раз, а не на кожну сторону.',
-      alternating: 'Сторони почергово. Підходи рахуються один раз, а не на кожну сторону.',
-    },
-    views: { hero: 'Типово', front: 'Спереду', side: 'Збоку', back: 'Ззаду' },
-
     exercises: 'Вправи',
-    showList: 'Показати списком',
-    showGrid: 'Показати сіткою',
-    custom: 'власна',
     noMuscles: 'Мʼязи не вказано',
-    addToPlan: 'Додати в план',
-    editCounts: 'Змінити підрахунок',
-    rest: 'Відпочинок',
-    anyOf: (placeholder) => `${placeholder}: усі`,
-
-    added: (name, days, weekStart) =>
-      days.length === 1
-        ? `«${name}» додано ${dayName(days[0], 'to', 'uk')}`
-        : `«${name}» додано: ${formatDayList(days, weekStart, 'short', 'uk')}`,
-
-    addDescription: (name, sets) => `«${name}», ${common.uk.sets(sets)} на день. Числа показують уже заплановані підходи.`,
-    noPlanDescription: 'Спершу створіть план, потім додавайте вправи в його дні.',
-    createPlan: 'Створити план',
-    addToDays: (days, weekStart) =>
-      days.length === 1 ? `Додати ${dayName(days[0], 'to', 'uk')}` : `Додати: ${formatDayList(days, weekStart, 'short', 'uk')}`,
-    pickDays: 'Оберіть один або кілька днів',
-    daysToAddTo: 'Дні для додавання',
-    preselected: 'Вибрано ваш найлегший тренувальний день.',
-
-    countsDescription: (name) =>
-      `Змінює, як «${name}» входить у тижневі підходи в усіх ваших програмах. Лише на цьому пристрої.`,
-    countsReset: (name) => `«${name}» знову рахується типово`,
-    resetDefault: 'Скинути до типових',
-    isDefault: 'типово',
-    defaultWas: (r) => `типово: ${{ primary: 'основна', secondary: 'допоміжна', none: 'не враховується' }[r]}`,
-    roleOf: (name) => `Роль: ${name}`,
-    addMuscle: 'Додати мʼяз',
-    chooseGroup: 'Оберіть групу мʼязів',
-    countsNote:
-      'Для основних мʼязів кожен підхід рахується як 1, для допоміжних як 0,5. Тут змінюються лише групи мʼязів; які пучки й частини підсвічуються всередині групи, лишається як у розмітці.',
-
     searchExercises: 'Пошук вправ',
     searchPlaceholder: 'Пошук, напр. «жим» або «тяга»',
     clearSearch: 'Очистити пошук',
     filters: 'Фільтри',
     muscle: 'Мʼяз',
     myEquipment: 'Моє обладнання',
-    movementPattern: 'Тип руху',
     movementGroups: 'Групи рухів',
-    patternPlaceholder: 'Рух',
-    anyPattern: 'Будь-який рух',
-    levelFilter: 'Рівень',
-    anyLevel: 'Будь-який рівень',
     clear: 'Скинути',
     noMatch: 'Немає відповідних вправ',
     showForAny: (n) =>
       `Показати ${n} ${plural('uk', n, { one: 'збіг', few: 'збіги', many: 'збігів', other: 'збігу' })} з будь-яким обладнанням`,
     clearAll: 'Скинути всі фільтри',
-    activeFilters: 'Активні фільтри. Торкніться фільтра, щоб прибрати його.',
-    quoted: (q) => `«${q}»`,
-    removeFilter: (label) => `Прибрати фільтр: ${label}`,
     primaryNote: (name) => `Вправи, де група «${name}» основна.`,
     moreNeedOther: (n) =>
       `Ще ${common.uk.exercises(n)} ${pluralCategory('uk', n) === 'one' ? 'потребує' : 'потребують'} іншого обладнання.`,
     showAll: 'Показати всі',
-
     filterByMuscle: 'Фільтр за мʼязом',
     filterDescription: 'Торкніться мʼяза на мапі або оберіть нижче. Показує вправи, де він основний.',
     filterMap: 'Мапа тіла, торкніться мʼяза, щоб відфільтрувати',
-
-    onMap: (name) => `${name} на мапі тіла`,
-    workedOnMap: 'Задіяні мʼязи на мапі тіла',
-    primary: 'Основні',
-    secondary: 'Допоміжні',
-    none: 'Немає',
-    countPrimaryOnly: 'Кожен підхід рахується як 1 для основних мʼязів. Допоміжні мʼязи у ваших налаштуваннях не враховуються.',
-    countFractional: 'Кожен підхід рахується як 1 для основних мʼязів і 0,5 для допоміжних.',
-
     posterAlt: (name, label) => `«${name}», демонстрація з підсвіченими задіяними мʼязами. ${label}.`,
     cardAlt: (name, label) =>
       `Мʼязи, задіяні у вправі «${name}»: основні темнішим відтінком, допоміжні світлішим. ${label}.`,
-
-    motionAlt: (name) =>
-      `«${name}»: анімована фігура з підсвіченими задіяними мʼязами, основні червоним, допоміжні помаранчевим.`,
-    pause: 'Пауза',
-    play: 'Відтворити',
-    position: 'Позиція в повторенні',
-    toNormal: 'Відтворення на половині швидкості, перемкнути на звичайну',
-    toHalf: 'Відтворення на звичайній швидкості, перемкнути на половину',
-    half: '0,5x',
-    normal: '1x',
-    camera: 'Камера',
-
-    exercise: 'Вправа',
-    notFound: 'Вправу не знайдено',
-    browse: 'Переглянути вправи',
-    notFoundBody: 'Можливо, її перейменували або прибрали з каталогу.',
-    demoComing: 'Демонстрація зʼявиться згодом. Поки що мапа показує задіяні мʼязи.',
-    muscles: 'Мʼязи',
-    mappingConfidence: (c) => `Наскільки ми впевнені щодо мʼязів: ${{ high: 'висока', medium: 'середня', low: 'низька' }[c]}.`,
-    basedOn: (cites) => `Джерела розмітки: ${cites}.`,
-    sources: 'Усі джерела',
-    details: 'Деталі',
-    equipment: 'Обладнання',
-    patternFact: 'Тип руху',
-    defaultFact: 'Типово',
-    sidesFact: 'Сторони',
-    noneBodyweight: 'Немає, власна вага',
-    dose: (sets, reps, seconds) => `${common.uk.sets(sets)} по ${reps}${seconds ? ' с' : ''}`,
-    howTo: 'Як виконувати',
-    alternatives: 'Альтернативи',
-    alternativesDescription: 'Той самий тип руху, спершу з вашим обладнанням.',
-    needs: (list) => `Потрібно: ${list}`,
-    noAlternatives: 'Близьких альтернатив у каталозі поки немає.',
-    addToDay: (day) => `Додати ${dayName(day, 'to', 'uk')}`,
-    otherDays: 'Обрати інші дні',
+    anyEquipment: 'Будь-яке обладнання',
+    equipmentTitle: 'Ваше обладнання',
+    equipmentHint: 'Оберіть, що є у вашому залі. Бібліотека покаже вправи, які можна з ним виконати.',
+    presetGroup: 'Набір обладнання',
+    noEquipment: 'Без обладнання',
+    itemsOf: (n, total) => `${n} з ${total} ${ukItems(total)}`,
+    customOf: (n, total) => `Власний набір, ${n} з ${total} ${ukItems(total)}`,
+    adjustItems: 'Налаштувати перелік',
+    equipmentYouCanUse: 'Обладнання, яке у вас є',
+    allOf: (group) => `Усе: ${group}`,
+    countOf: (n, total) => `${n} з ${total}`,
+    nothingSelected: 'Нічого не вибрано. Показано лише вправи з власною вагою.',
+    credits: 'Подяки та ліцензії',
+    privacy: 'Конфіденційність',
   },
 })

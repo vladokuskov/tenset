@@ -21,10 +21,6 @@ export function reportWriteFailed(): void {
   if (!storageHealth.getState().writeFailed) storageHealth.setState({ writeFailed: true })
 }
 
-export function reportNewerVersion(): void {
-  if (!storageHealth.getState().newerVersion) storageHealth.setState({ newerVersion: true })
-}
-
 export function reportQuarantined(key: string): void {
   storageHealth.setState((s) => ({ quarantined: [...s.quarantined, key] }))
 }

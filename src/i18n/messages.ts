@@ -20,7 +20,3 @@ export function getLocale(): Locale {
 export function useMessages<T>(messages: Messages<T>): T {
   return messages[useLocale()]
 }
-
-export function getMessages<T>(messages: Messages<T>): T {
-  return messages[getLocale()]
-}

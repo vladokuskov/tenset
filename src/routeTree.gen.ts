@@ -10,34 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as BodyRouteImport } from './routes/body'
 import { Route as CreditsRouteImport } from './routes/credits'
-import { Route as ExercisesRouteImport } from './routes/exercises'
-import { Route as PrintRouteImport } from './routes/print'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SharedRouteImport } from './routes/shared'
-import { Route as WelcomeRouteImport } from './routes/welcome'
-import { Route as DayDowRouteImport } from './routes/day.$dow'
 import { Route as DevFigureRouteImport } from './routes/dev.figure'
 import { Route as DevMotionRouteImport } from './routes/dev.motion'
 import { Route as DevReviewRouteImport } from './routes/dev.review'
-import { Route as ExerciseSlugRouteImport } from './routes/exercise.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BodyRoute = BodyRouteImport.update({
-  id: '/body',
-  path: '/body',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreditsRoute = CreditsRouteImport.update({
@@ -45,39 +26,9 @@ const CreditsRoute = CreditsRouteImport.update({
   path: '/credits',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExercisesRoute = ExercisesRouteImport.update({
-  id: '/exercises',
-  path: '/exercises',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrintRoute = PrintRouteImport.update({
-  id: '/print',
-  path: '/print',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SharedRoute = SharedRouteImport.update({
-  id: '/shared',
-  path: '/shared',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WelcomeRoute = WelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DayDowRoute = DayDowRouteImport.update({
-  id: '/day/$dow',
-  path: '/day/$dow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevFigureRoute = DevFigureRouteImport.update({
@@ -95,134 +46,66 @@ const DevReviewRoute = DevReviewRouteImport.update({
   path: '/dev/review',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExerciseSlugRoute = ExerciseSlugRouteImport.update({
-  id: '/exercise/$slug',
-  path: '/exercise/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/body': typeof BodyRoute
   '/credits': typeof CreditsRoute
-  '/exercises': typeof ExercisesRoute
-  '/print': typeof PrintRoute
   '/privacy': typeof PrivacyRoute
-  '/settings': typeof SettingsRoute
-  '/shared': typeof SharedRoute
-  '/welcome': typeof WelcomeRoute
-  '/day/$dow': typeof DayDowRoute
   '/dev/figure': typeof DevFigureRoute
   '/dev/motion': typeof DevMotionRoute
   '/dev/review': typeof DevReviewRoute
-  '/exercise/$slug': typeof ExerciseSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/body': typeof BodyRoute
   '/credits': typeof CreditsRoute
-  '/exercises': typeof ExercisesRoute
-  '/print': typeof PrintRoute
   '/privacy': typeof PrivacyRoute
-  '/settings': typeof SettingsRoute
-  '/shared': typeof SharedRoute
-  '/welcome': typeof WelcomeRoute
-  '/day/$dow': typeof DayDowRoute
   '/dev/figure': typeof DevFigureRoute
   '/dev/motion': typeof DevMotionRoute
   '/dev/review': typeof DevReviewRoute
-  '/exercise/$slug': typeof ExerciseSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/body': typeof BodyRoute
   '/credits': typeof CreditsRoute
-  '/exercises': typeof ExercisesRoute
-  '/print': typeof PrintRoute
   '/privacy': typeof PrivacyRoute
-  '/settings': typeof SettingsRoute
-  '/shared': typeof SharedRoute
-  '/welcome': typeof WelcomeRoute
-  '/day/$dow': typeof DayDowRoute
   '/dev/figure': typeof DevFigureRoute
   '/dev/motion': typeof DevMotionRoute
   '/dev/review': typeof DevReviewRoute
-  '/exercise/$slug': typeof ExerciseSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
-    | '/body'
     | '/credits'
-    | '/exercises'
-    | '/print'
     | '/privacy'
-    | '/settings'
-    | '/shared'
-    | '/welcome'
-    | '/day/$dow'
     | '/dev/figure'
     | '/dev/motion'
     | '/dev/review'
-    | '/exercise/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
-    | '/body'
     | '/credits'
-    | '/exercises'
-    | '/print'
     | '/privacy'
-    | '/settings'
-    | '/shared'
-    | '/welcome'
-    | '/day/$dow'
     | '/dev/figure'
     | '/dev/motion'
     | '/dev/review'
-    | '/exercise/$slug'
   id:
     | '__root__'
     | '/'
-    | '/about'
-    | '/body'
     | '/credits'
-    | '/exercises'
-    | '/print'
     | '/privacy'
-    | '/settings'
-    | '/shared'
-    | '/welcome'
-    | '/day/$dow'
     | '/dev/figure'
     | '/dev/motion'
     | '/dev/review'
-    | '/exercise/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  BodyRoute: typeof BodyRoute
   CreditsRoute: typeof CreditsRoute
-  ExercisesRoute: typeof ExercisesRoute
-  PrintRoute: typeof PrintRoute
   PrivacyRoute: typeof PrivacyRoute
-  SettingsRoute: typeof SettingsRoute
-  SharedRoute: typeof SharedRoute
-  WelcomeRoute: typeof WelcomeRoute
-  DayDowRoute: typeof DayDowRoute
   DevFigureRoute: typeof DevFigureRoute
   DevMotionRoute: typeof DevMotionRoute
   DevReviewRoute: typeof DevReviewRoute
-  ExerciseSlugRoute: typeof ExerciseSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -234,20 +117,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/body': {
-      id: '/body'
-      path: '/body'
-      fullPath: '/body'
-      preLoaderRoute: typeof BodyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/credits': {
       id: '/credits'
       path: '/credits'
@@ -255,53 +124,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/exercises': {
-      id: '/exercises'
-      path: '/exercises'
-      fullPath: '/exercises'
-      preLoaderRoute: typeof ExercisesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/print': {
-      id: '/print'
-      path: '/print'
-      fullPath: '/print'
-      preLoaderRoute: typeof PrintRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shared': {
-      id: '/shared'
-      path: '/shared'
-      fullPath: '/shared'
-      preLoaderRoute: typeof SharedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/welcome': {
-      id: '/welcome'
-      path: '/welcome'
-      fullPath: '/welcome'
-      preLoaderRoute: typeof WelcomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/day/$dow': {
-      id: '/day/$dow'
-      path: '/day/$dow'
-      fullPath: '/day/$dow'
-      preLoaderRoute: typeof DayDowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/figure': {
@@ -325,32 +152,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/exercise/$slug': {
-      id: '/exercise/$slug'
-      path: '/exercise/$slug'
-      fullPath: '/exercise/$slug'
-      preLoaderRoute: typeof ExerciseSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  BodyRoute: BodyRoute,
   CreditsRoute: CreditsRoute,
-  ExercisesRoute: ExercisesRoute,
-  PrintRoute: PrintRoute,
   PrivacyRoute: PrivacyRoute,
-  SettingsRoute: SettingsRoute,
-  SharedRoute: SharedRoute,
-  WelcomeRoute: WelcomeRoute,
-  DayDowRoute: DayDowRoute,
   DevFigureRoute: DevFigureRoute,
   DevMotionRoute: DevMotionRoute,
   DevReviewRoute: DevReviewRoute,
-  ExerciseSlugRoute: ExerciseSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

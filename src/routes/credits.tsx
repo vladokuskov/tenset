@@ -72,10 +72,10 @@ const BLOCKS: Record<Locale, Block[]> = { en: parse(attribution), uk: parse(attr
 function CreditsPage() {
   const blocks = BLOCKS[useLocale()]
   const m = useMessages(creditsMessages)
-  const plan = useMessages(rootMessages).plan
+  const back = useMessages(rootMessages).library
   return (
     <Page>
-      <PageHeader title={m.title} back={{ to: '/', label: plan }} />
+      <PageHeader title={m.title} back={{ to: '/', label: back }} />
       <PageBody className="text-base leading-relaxed">
         {blocks.map((b, i) =>
           b.kind === 'h2' ? (
@@ -101,9 +101,6 @@ function CreditsPage() {
             </a>,
             <Link key="privacy" to="/privacy" className={linkClass}>
               {m.privacy}
-            </Link>,
-            <Link key="about" to="/about" className={linkClass}>
-              {m.about}
             </Link>,
           )}
         </p>

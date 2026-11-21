@@ -12,11 +12,9 @@ import {
   type EquipmentGroup,
 } from '../../domain/equipment'
 import { useLocale, useMessages } from '../../i18n/messages'
-import { useActiveProgram } from '../../store/program.store'
 import { cx } from '../../ui'
 import { equipmentSummary } from './equipmentSummary'
-import { ActiveProgramSwap } from './EquipmentSwap'
-import { settingsMessages } from './messages'
+import { catalogMessages } from './messages'
 
 const box = (on: boolean) =>
   cx(
@@ -34,9 +32,8 @@ export function EquipmentPicker({
   onChange: (next: string[]) => void
   className?: string
 }) {
-  const m = useMessages(settingsMessages)
+  const m = useMessages(catalogMessages)
   const locale = useLocale()
-  const program = useActiveProgram()
   const selected = new Set(value)
   const preset = matchPreset(value)
   const [open, setOpen] = useState<ReadonlySet<string>>(
@@ -69,11 +66,11 @@ export function EquipmentPicker({
 
   return (
     <div className={className}>
-      <ul className="space-y-2" role="radiogroup" aria-label={m.presetGroup}>
+      <div className="space-y-2" role="radiogroup" aria-label={m.presetGroup}>
         {presets.map((p) => {
           const on = preset === p.id
           return (
-            <li key={p.id}>
+            <div key={p.id}>
               <button
                 type="button"
                 role="radio"
@@ -95,10 +92,10 @@ export function EquipmentPicker({
                   className={cx('size-5 shrink-0 rounded-full border-2', on ? 'border-ink bg-ink ring-4 ring-surface ring-inset' : 'border-line-strong')}
                 />
               </button>
-            </li>
+            </div>
           )
         })}
-      </ul>
+      </div>
 
       <div className="mt-6 flex items-baseline justify-between gap-3">
         <h3 className="text-base font-medium">{m.adjustItems}</h3>
@@ -173,7 +170,6 @@ export function EquipmentPicker({
 
       {value.length === 0 && <p className="mt-4 text-sm text-ink-2">{m.nothingSelected}</p>}
       {gaps && <p className="mt-4 text-sm text-ink-2">{gaps}</p>}
-      {program && <ActiveProgramSwap program={program} available={value} className="mt-4" />}
     </div>
   )
 }

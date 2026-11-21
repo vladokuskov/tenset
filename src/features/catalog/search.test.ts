@@ -49,13 +49,6 @@ describe('muscle word queries', () => {
     expect(primaries(filterExercises(ukExercises, uk, { q: 'biceps' }))).toBe(primaries(filterExercises(activeExercises, en, { q: 'biceps' })))
   })
 
-  it('applies muscle overrides to the ranking', () => {
-    const list = filterExercises(activeExercises, en, { q: 'biceps' })
-    const last = list.at(-1)!
-    const boosted = filterExercises(activeExercises, en, { q: 'biceps' }, { [last.id]: { biceps: 'primary' } })
-    expect(boosted.indexOf(last)).toBeLessThan(list.indexOf(last))
-  })
-
   it('leaves other queries in score order', () => {
     expect(filterExercises(activeExercises, en, { q: 'ohp' })[0].slug).toBe('barbell-overhead-press')
   })

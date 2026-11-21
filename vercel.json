@@ -1,16 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/mcp.ts": {
-      "includeFiles": "data/{exercises,splits}/*.json"
-    },
-    "api/agent/[tool].ts": {
-      "includeFiles": "data/{exercises,splits}/*.json"
-    }
-  },
   "rewrites": [
     {
-      "source": "/((?!api/|assets/|media/|models/|anatomy/|icons/|\\.well-known/|llms\\.txt|robots\\.txt).*)",
+      "source": "/((?!assets/|media/|models/|anatomy/|icons/|robots\\.txt).*)",
       "destination": "/index.html"
     }
   ],
@@ -41,15 +33,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
         }
       ]
     },
@@ -86,32 +69,6 @@
         {
           "key": "Content-Type",
           "value": "application/manifest+json"
-        }
-      ]
-    },
-    {
-      "source": "/llms.txt",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/markdown; charset=utf-8"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
-    },
-    {
-      "source": "/.well-known/mcp.json",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/json"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
         }
       ]
     }

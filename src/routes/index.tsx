@@ -1,17 +1,19 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { daySlugParam, groupParam, optionalEnum, sheetParam } from '../app/search'
-import { PlanScreen } from '../features/builder/PlanScreen'
+import { groupParam, optionalEnum, sheetParam, textParam } from '../app/search'
+import type { MovementGroupId } from '../domain/movement'
+import { LibraryPage } from '../features/catalog/LibraryPage'
 
-// URL contract: /?sheet=menu | programs | share | export | paste | image (week PNG) | calendar (.ics) | map (1024-1279 week map) | add (&day=mon &tab=... &group=chest for add)
-const PlanSearch = z.object({
-  sheet: sheetParam(['menu', 'programs', 'share', 'export', 'paste', 'image', 'calendar', 'map', 'add']),
-  day: daySlugParam,
-  tab: optionalEnum(['suggested', 'muscle', 'equipment', 'pattern']),
-  group: groupParam,
+// URL contract: /?q=rdl&muscle=hamstrings&equip=mine|all&move=legs&sheet=muscle|equipment
+const LibrarySearch = z.object({
+  q: textParam,
+  muscle: groupParam,
+  equip: optionalEnum(['mine', 'all']),
+  move: optionalEnum(['push', 'pull', 'shoulders', 'arms', 'legs', 'core'] as const satisfies readonly MovementGroupId[]),
+  sheet: sheetParam(['muscle', 'equipment']),
 })
 
 export const Route = createFileRoute('/')({
-  validateSearch: PlanSearch,
-  component: PlanScreen,
+  validateSearch: LibrarySearch,
+  component: LibraryPage,
 })
