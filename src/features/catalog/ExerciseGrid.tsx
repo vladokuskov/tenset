@@ -21,7 +21,7 @@ function useWidth(ref: RefObject<HTMLElement | null>) {
 }
 
 /** Virtualized card grid on the window scroller: two columns on phones, three from 560px. */
-export function ExerciseGrid({ exercises, label }: { exercises: readonly Exercise[]; label: string }) {
+export function ExerciseGrid({ exercises, label, onOpen }: { exercises: readonly Exercise[]; label: string; onOpen: (exercise: Exercise) => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const width = useWidth(ref)
   const cols = width >= 560 ? 3 : 2
@@ -61,7 +61,7 @@ export function ExerciseGrid({ exercises, label }: { exercises: readonly Exercis
           >
             {items.map((e, i) => (
               <div key={e.id} role="listitem" aria-setsize={exercises.length} aria-posinset={row.index * cols + i + 1}>
-                <ExerciseCard exercise={e} />
+                <ExerciseCard exercise={e} onOpen={onOpen} />
               </div>
             ))}
           </div>

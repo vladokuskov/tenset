@@ -14,6 +14,8 @@ export function showsMotion(e: Exercise, dev: boolean = import.meta.env.DEV): bo
   return hasMotion(e.id) && (dev || e.media.status === 'loop')
 }
 
+export const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 const FREE_WEIGHTS = new Set(['barbell', 'dumbbell', 'ez_bar', 'plate', 'kettlebell', 'trap_bar', 'landmine'])
 const BODYWEIGHT = new Set(['pullup_bar', 'dip_station', 'step', 'flat_bench', 'adjustable_bench', 'rack', 'rings', 'ab_wheel', 'ghd'])
 

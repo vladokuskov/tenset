@@ -41,7 +41,7 @@ test.describe('axe: no serious or critical violations', () => {
     test(`library screens (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme })
       const found: Record<string, string[]> = {}
-      for (const url of ['/', '/?q=zzzz', '/?sheet=equipment', '/?sheet=muscle', '/privacy', '/credits']) {
+      for (const url of ['/', '/?q=zzzz', '/?sheet=equipment', '/?sheet=muscle', '/?sheet=exercise&ex=barbell-bench-press', '/privacy', '/credits']) {
         await page.goto(url)
         await expect(page.locator('main')).toBeVisible()
         await page.waitForTimeout(400)
