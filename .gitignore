@@ -29,3 +29,6 @@ qa/out/
 test-results/
 playwright-report/
 coverage/
+
+# local session handoff notes
+docs/HANDOFF.md
